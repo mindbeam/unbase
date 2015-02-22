@@ -1,29 +1,16 @@
 
+var slab_cls = require('./slab');
+var mesh     = new (require('./mesh'))();
 
-var th = require("telehash");
-var fs = require("fs");
+var slab1 = new slab_cls({node: "00000001", mesh: mesh });
+var slab2 = new slab_cls({node: "00000001", mesh: mesh });
 
-var idfh = process.argv[2];
-console.log('reading', idfh);
-var id = fs.readFileSync(idfh);
-if(id){
-    id = JSON.parse(id);
+
+var i = 100,g;
+while(i--){
+    g = slab1.new_grain({ _parent: g });
+
+//    slab1.evict_grain( g );
 }
-console.log('id loaded');
 
-th.mesh({id:id}, function(err, mesh){
-        if(err) return console.log("mesh failed to initialize",err);
-        // use mesh.* now
-        console.log('mesh initialized');
-        ready(mesh);
-});
-
-
-function ready( mesh ){
-    mesh.extending({link:function(link){
-      link.status(function(err){
-        console.log('extending', link.hashname.substr(0,8),err?'down':'up',err||'');
-      });
-    }});
-
-}
+console.log( g );
