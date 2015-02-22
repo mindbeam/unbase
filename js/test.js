@@ -1,8 +1,29 @@
 
+
 var th = require("telehash");
-th.generate(function(err, endpoint){
-  if(err) return console.log("endpoint generation failed",err);
-  // endpoint contains a `keys:{}`, `secrets:{}`, and `hashname:"..."` 
+var fs = require("fs");
+
+var idfh = process.argv[2];
+console.log('reading', idfh);
+var id = fs.readFileSync(idfh);
+if(id){
+    id = JSON.parse(id);
+}
+console.log('id loaded');
+
+th.mesh({id:id}, function(err, mesh){
+        if(err) return console.log("mesh failed to initialize",err);
+        // use mesh.* now
+        console.log('mesh initialized');
+        ready(mesh);
 });
 
-console.log(th);
+
+function ready( mesh ){
+    mesh.extending({link:function(link){
+      link.status(function(err){
+        console.log('extending', link.hashname.substr(0,8),err?'down':'up',err||'');
+      });
+    }});
+
+}
