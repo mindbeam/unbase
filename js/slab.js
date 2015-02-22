@@ -1,6 +1,16 @@
+/**
+ * Slab - A storage substrate for grains
+ * Very loosely based on Rasmus Andersson's js-lru
+ * A doubly linked list-based Least Recently Used (LRU) cache. Will keep most
+ * recently used items while discarding least recently used items when its limit
+ * is reached.
+ * 
+ */
+
 var grain_cls = require('./grain');
 
 var slab_increment = 0;
+
 function Slab(args) {
 
   if(slab_increment > 1296)                 throw "cannot create more than 1296 slabs";
@@ -14,83 +24,208 @@ function Slab(args) {
   if(this.id.length != 10) throw "sanity error " + this.id;
 
   this.grain_increment = 0;
-  this._registry = {};
+  this._idmap = {};
 
-  this._grain_quota = 50;
-
+  this.size = 0;
+  this.quota = args.quota || 50;
+  this.limit = args.limit || 100;
+  
   this.mesh = args.mesh;
   this.mesh.register_slab( this );
-
+  
 }
-//Slab.prototype._registry = {};
 
-Slab.prototype.enforceQuota = function() {
+/* Store a grain in this slab + manage LRU */
+Slab.prototype.putGrain = function(grain) {
+    if( ! grain instanceof grain_cls ) throw "invalid grain";
     
-}
-
-Slab.prototype.isAccepting = function() {
-   var ct = this._grain_quota - Object.keys( this._registry ).length;
-   return ct > 1;
-}
-
-Slab.prototype.acceptGrain = function(g) {
-    if(! g instanceof grain_cls ) throw "not valid grain";
-
-    this._registry[g.id] = g;
-    console.log( 'Slab ', this.id, 'accepted grain', g.id );
+    // Note: No protection against replacing, and thus orphan entries. By design.
+    this._idmap[grain.id] = grain;
+    
+    if (this.tail) {
+        // link previous tail to the new tail grain
+        this.tail._newer = grain;
+        grain._older = this.tail;
+    } else {
+        // we're first in -- yay
+        this.head = grain;
+    }
+    
+    // add new entry to the end of the linked list -- it's now the freshest grain.
+    this.tail = grain;
+    if (this.size === this.limit) {
+        this.evictGrains();
+    } else {
+        // increase the size counter
+        this.size++;
+    }
+    
+    console.log( 'Put grain', grain.id, 'to slab', this.id );
 };
 
-Slab.prototype.new_grain = function(vals,cb) {
-    var me = this,
-        id = this.id + (this.grain_increment++).toString(36),
-        g = new grain_cls(id,vals)
+
+Slab.prototype.evictGrains = function() {
+    var grain = this.head,
+        ct    = this.size - this.quota
     ;
-
-    this._registry[id] = g;
-    this.push_grain( g, cb );
-
-    return g;
-}
-
-Slab.prototype.push_grain = function(g,cb){
-    var me     = this,
-        rep_ct = g.desiredReplicas(),
-        ap     = this.mesh.get_accepting_peers( this, rep_ct );
-
-    ap.forEach(function(peer){
-        me.mesh.push_grain( peer, g );
-        rep_ct--;
-    });
-
-    if( rep_ct > 0 ) console.error( "unable to achieve required replica count" );
-    if(cb) cb( rep_ct == 0 );
-
-    this.enforceQuota();
-
+    if(ct <= 0) return;
+    
+    /* Evict enough grains to get back to the quota */
+    while( grain && ct-- ){
+        this.evictGrain( grain );
+        grain = grain._newer;
+    }
+    
 };
 
-Slab.prototype.evict_grain = function(id){
+/* Time for this grain to go. Lets make sure there are enough copies elsewhere first */
+Slab.prototype.evictGrain = function(grain){
     var me = this;
-    if( id instanceof grain_cls ) id = id.id;
-
-    var g = this._registry[id];
-    console.log( 'Evicting grain', id );
-
-    this.push_grain( g, function( success ){
+    if( !grain instanceof grain_cls ) grain = this._idmap[ grain ];
+    if( !grain ) throw 'attempted to evict invalid grain';
+    
+    console.log( 'Evicting grain', grain.id, 'from slab', me.id );
+    this.pushGrain( grain, function( success ){
         if( success ){
-            console.log( 'Successfully evicted grain', id );
-            delete me._registry[id];
+            me.killGrain(grain);
+            console.log( 'Successfully evicted grain', grain.id );
         }else{
-            console.log( 'Failed to evict grain', id );
+            console.log( 'Failed to evict grain', grain.id );
         }
     });
 
     return g;
 }
 
-Slab.prototype.get_grain = function(id,cb){
-    var g = this._registry[id];
-    if( g ) cb(g);
+
+/* Remove grain from slab without delay */
+Slab.prototype.killGrain = function(grain) {
+    if( !grain instanceof grain_cls ) grain = this._idmap[ grain ];
+    if( !grain || !this._idmap[grain.id] ){
+        console.error('invalid grain');
+        return;
+    }
+    
+    delete this._idmap[grain.id]; // need to do delete unfortunately
+    
+    if (grain._newer && grain._older) {
+        // relink the older entry with the newer entry
+        grain._older._newer = grain._newer;
+        grain._newer._older = grain._older;
+      
+    } else if (grain._newer) {
+        
+        // remove the link to us
+        grain._newer._older = undefined;
+        // link the newer entry to head
+        this.head = grain._newer;
+      
+    } else if (grain._older) {
+        
+        // remove the link to us
+        grain._older._newer = undefined;
+        // link the newer entry to head
+        this.tail = grain._older;
+      
+    } else { // if(grain._older === undefined && grain._newer === undefined) {
+        this.head = this.tail = undefined;
+      
+    }
+    
+    this.size--;
+    this.mesh.deregisterSlabGrain(this,grain);
+};
+
+Slab.prototype.deregisterGrainPeer = function( grain_id, peer_id ) {
+    var grain = this._idmap[grain_id];
+    
+    if( grain ){
+        return grain.deregisterPeer( peer_id );
+    }else{
+        return false;
+    }
 }
+
+/*
+ * pushGrain - Ensure that this grain is sufficiently replicated
+ *
+*/
+Slab.prototype.pushGrain = function(g,cb){
+    var me     = this,
+        rep_ct = g.desiredReplicas(),
+        ap     = this.mesh.getAcceptingPeers( this, rep_ct );
+        
+    ap.forEach(function(peer){
+        me.mesh.pushGrain( peer, g );
+        rep_ct--;
+    });
+
+    if( rep_ct > 0 ) console.error( "unable to achieve required replica count" );
+    if(cb) cb( rep_ct == 0 );
+};
+
+Slab.prototype.quotaRemaining = function() {
+   return this.quota - this.size;
+}
+
+/*
+ * Create a totally new grain and attempt to replicate it to other peers 
+ * Grain IDs must be globally unique, and consist of:
+ *    eight digit base36 node id ( enumerated by central authority )
+ *    two digit base36 slab id   ( enumerated by node )
+ *    N digit base36 grain id    ( enumerated by slab )
+ *
+ * Discuss: How to prevent a malicious node/slab from originating a non-authorized grain id?
+ * Is there any difference between that vs propagating an authorized edit to a pre-existing grain id?
+ * 
+*/
+
+Slab.prototype.newGrain = function(vals,cb) {
+    var me = this,
+        id = this.id + (this.grain_increment++).toString(36),
+        g = new grain_cls(id,vals)
+    ;
+
+    this.putGrain(g);
+    this.pushGrain( g, cb );
+
+    return g;
+}
+
+/* getGrain - Retrieve grain from this slab by id
+ * Update LRU cache accordingly
+*/
+
+Slab.prototype.getGrain = function(id,cb){
+    
+    // First, find our cache entry
+    var grain = this._idmap[id];
+    if (grain === undefined) return; // Not cached. Sorry.
+    
+    // As <key> was found in the cache, register it as being requested recently
+    if (grain === this.tail) {
+        // Already the most recenlty used entry, so no need to update the list
+        return grain;
+    }
+    
+    // HEAD--------------TAIL
+    //   <.older   .newer>
+    //  <--- add direction --
+    //   A  B  C  <D>  E
+    if (grain._newer) {
+        if ( grain === this.head ) this.head = grain._newer;
+        grain._newer._older = grain._older; // C <-- E.
+    }
+    
+    if (grain._older) grain._older._newer = grain._newer; // C. --> E
+    grain._newer = undefined; // D --x
+    grain._older = this.tail; // D. --> E
+    
+    if (this.tail) this.tail._newer = grain; // E. <-- D
+    this.tail = grain;
+    
+    return grain;
+
+};
 
 module.exports = Slab;

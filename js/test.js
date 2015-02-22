@@ -8,7 +8,7 @@ var slab2 = new slab_cls({node: "00000001", mesh: mesh });
 
 var i = 100,g;
 while(i--){
-    g = slab1.new_grain({ _parent: g });
+    g = slab1.newGrain({ $parent: g });
 
 //    slab1.evict_grain( g );
 }
