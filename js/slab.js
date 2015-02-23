@@ -19,27 +19,30 @@ function Slab(args) {
   if(!args.mesh)                            throw "must provide mesh object";
 
   // encode and zerofill the slab id
-  this.id = args.node + ( "00" + (slab_increment++).toString(36)).substr(-2,2);
+  this.id = args.node + ( "00" + (++slab_increment).toString(36)).substr(-2,2);
   console.log('Initialized Slab', this.id);
-  if(this.id.length != 10) throw "sanity error " + this.id;
-
+  //if(this.id.length != 10) throw "sanity error " + this.id;
+  
+  // Temporarily assuming nods ids are one character for simplicity
+  if(this.id.length != 3) throw "sanity error " + this.id;
+  
   this.grain_increment = 0;
   this._idmap = {};
 
   this.size = 0;
-  this.quota = args.quota || 50;
-  this.limit = args.limit || 100;
+  this.quota = args.quota || 5;
+  this.limit = args.limit || 10;
   
   this.mesh = args.mesh;
-  this.mesh.register_slab( this );
+  this.mesh.registerSlab( this );
   
 }
 
 /* Store a grain in this slab + manage LRU */
 Slab.prototype.putGrain = function(grain) {
     if( ! grain instanceof grain_cls ) throw "invalid grain";
+    if( this._idmap[grain.id] ) throw "attempt to put grain twice";
     
-    // Note: No protection against replacing, and thus orphan entries. By design.
     this._idmap[grain.id] = grain;
     
     if (this.tail) {
@@ -93,8 +96,6 @@ Slab.prototype.evictGrain = function(grain){
             console.log( 'Failed to evict grain', grain.id );
         }
     });
-
-    return g;
 }
 
 
@@ -140,7 +141,7 @@ Slab.prototype.deregisterGrainPeer = function( grain_id, peer_id ) {
     var grain = this._idmap[grain_id];
     
     if( grain ){
-        return grain.deregisterPeer( peer_id );
+        return grain.deregisterReplica( peer_id );
     }else{
         return false;
     }
@@ -148,15 +149,16 @@ Slab.prototype.deregisterGrainPeer = function( grain_id, peer_id ) {
 
 /*
  * pushGrain - Ensure that this grain is sufficiently replicated
- *
+ * TODO: Ensure that we don't attempt to push to a replica that already has this grain
+ *       Verify that eviction from one slab ensures proper replica count on other peers before grain is killed
 */
 Slab.prototype.pushGrain = function(g,cb){
     var me     = this,
         rep_ct = g.desiredReplicas(),
-        ap     = this.mesh.getAcceptingPeers( this, rep_ct );
+        ap     = this.mesh.getAcceptingPeers( this.id, rep_ct );
         
     ap.forEach(function(peer){
-        me.mesh.pushGrain( peer, g );
+        me.mesh.pushGrainToPeer( me, peer, g );
         rep_ct--;
     });
 
@@ -182,7 +184,7 @@ Slab.prototype.quotaRemaining = function() {
 
 Slab.prototype.newGrain = function(vals,cb) {
     var me = this,
-        id = this.id + (this.grain_increment++).toString(36),
+        id = this.id + '-' + (this.grain_increment++).toString(36),
         g = new grain_cls(id,vals)
     ;
 
@@ -227,5 +229,9 @@ Slab.prototype.getGrain = function(id,cb){
     return grain;
 
 };
+
+Slab.prototype.dumpGrainIds = function(){
+    return Object.keys(this._idmap);
+}
 
 module.exports = Slab;
