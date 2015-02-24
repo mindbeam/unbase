@@ -71,6 +71,7 @@ Slab.prototype.evictGrains = function() {
     var grain = this.head,
         ct    = this.size - this.quota
     ;
+    
     if(ct <= 0) return;
     
     /* Evict enough grains to get back to the quota */
@@ -87,6 +88,7 @@ Slab.prototype.evictGrain = function(grain){
     if( !grain instanceof grain_cls ) grain = this._idmap[ grain ];
     if( !grain ) throw 'attempted to evict invalid grain';
     
+    grain.evicting(true);
     console.log( 'Evicting grain', grain.id, 'from slab', me.id );
     this.pushGrain( grain, function( success ){
         if( success ){
@@ -153,17 +155,24 @@ Slab.prototype.deregisterGrainPeer = function( grain_id, peer_id ) {
  *       Verify that eviction from one slab ensures proper replica count on other peers before grain is killed
 */
 Slab.prototype.pushGrain = function(g,cb){
-    var me     = this,
-        rep_ct = g.desiredReplicas(),
-        ap     = this.mesh.getAcceptingPeers( this.id, rep_ct );
+    var me      = this,
+        desired = g.desiredReplicas();
         
+    if (desired <= 0) return;
+    var ap     = this.mesh.getAcceptingPeers( this.id, desired );
+
+    /* TODO:
+     * Update to be async
+     * Handle the possibility of push failure
+    */
+    
     ap.forEach(function(peer){
         me.mesh.pushGrainToPeer( me, peer, g );
-        rep_ct--;
+        desired--;
     });
 
-    if( rep_ct > 0 ) console.error( "unable to achieve required replica count" );
-    if(cb) cb( rep_ct == 0 );
+    if( desired > 0 ) console.error( "unable to achieve required replica count" );
+    if(cb) cb( desired <= 0 );
 };
 
 Slab.prototype.quotaRemaining = function() {
@@ -198,7 +207,7 @@ Slab.prototype.newGrain = function(vals,cb) {
  * Update LRU cache accordingly
 */
 
-Slab.prototype.getGrain = function(id,cb){
+Slab.prototype.getGrain = function(id){
     
     // First, find our cache entry
     var grain = this._idmap[id];
@@ -231,7 +240,13 @@ Slab.prototype.getGrain = function(id,cb){
 };
 
 Slab.prototype.dumpGrainIds = function(){
-    return Object.keys(this._idmap);
+    var ids = [];
+    var grain = this.tail;
+    while(grain){
+        ids.push(grain.id);
+        grain = grain._older;
+    }
+    return ids;
 }
 
 module.exports = Slab;

@@ -67,9 +67,12 @@ Mesh.prototype.pushGrainToPeer = function( slab, peer, grain ) {
         
         cloned_packet.replicas.push(slab.id); // origin 
         var cloned_grain = new grain_cls( cloned_packet.id, cloned_packet.vals, cloned_packet.replicas );
-        
+
         peer.putGrain( cloned_grain );
         grain.registerReplica( peer.id );
+      
+        //console.log(slab.id, '(origin) grain  ', grain.packetize());
+        //console.log(peer.id, '(dest)   grain  ',   cloned_grain.packetize());
         
         /* 
          console.log('pushGrain completed for grain id', cloned_grain.id, 'replicas are:', cloned_packet.replicas );
@@ -86,7 +89,7 @@ Mesh.prototype.deregisterSlabGrain = function( slab, grain ) {
         var peer = me._slabs[id];
         if( peer ){
             var rv = peer.deregisterGrainPeer( grain.id, slab.id );
-            console.log('deregisterGrainPeer', grain.id, slab.id, rv ? 'Succeeded' : 'Failed' );
+            console.log('deregisterGrainPeer from', slab.id, grain.id, 'to', peer.id, rv ? 'Succeeded' : 'Failed' );
         }
     });
     

@@ -4,7 +4,7 @@
  *   but is replicated across several other peer slabs for persistence, redundancy, and scalability
  *
  *  TODO: work out the most memory efficient way to structure the grain object
- *  while still being colllision resistant
+ *  while still being collision resistant
 */
 function Grain(id,vals,replicas) {
   this.id = id;
@@ -17,11 +17,16 @@ function Grain(id,vals,replicas) {
   */
 }
 
+Grain.prototype._evicting    = 0;
 Grain.prototype.__replica_ct = 1;
 
-// class methods
+/* should we un-set this if an eviction fails? */
+Grain.prototype.evicting = function(v) {
+    this._evicting = v ? 1 : 0;
+};
+
 Grain.prototype.desiredReplicas = function() {
-   return this.__replica_ct - this.r.length;
+   return Math.max(0,(this.__replica_ct - this.r.length) + this._evicting);
 };
 
 Grain.prototype.registerReplica   = function( peer_id ) {
