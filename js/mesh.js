@@ -95,5 +95,15 @@ Mesh.prototype.deregisterSlabGrain = function( slab, grain ) {
     
 }
 
+Mesh.prototype.replicateGrainEdit = function(grain,diff){
+    var me   = this,
+        reps = grain.getReplicas();
+    
+    reps.forEach(function(id){
+        var peer = me._slabs[id];
+        if( peer ) peer.receiveGrainReplication( grain.id, diff);
+    });
+}
+
 // export the class
 module.exports = Mesh;

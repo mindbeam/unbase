@@ -239,6 +239,42 @@ Slab.prototype.getGrain = function(id){
 
 };
 
+Slab.prototype.editGrain = function(grain,vals){
+    if(!grain instanceof grain_cls) throw "invalid grain";
+    var diff = {}, val;
+    
+    Object.keys(vals).forEach(function(key){
+        val = vals[key];
+        if( key.charAt(0) == '$' ){
+            if( val instanceof Grain ){
+                val = val.id;
+            }else{
+                // TODO validate grain id
+            }
+        }
+        
+        if(grain.v[key] != val){
+            diff[key] = val;
+            grain.v[key] = val; // apply to local grain
+        }
+    });
+    
+    
+    /* TODO IMPLEMENT MVCC - NBD */
+    
+    this.mesh.replicateGrainEdit(grain,diff);
+}
+
+Slab.prototype.receiveGrainReplication = function( grain_id, diff ){
+    var grain = this._idmap[grain_id];
+    if( grain ){
+        Object.keys(diff).forEach(function(key){
+            grain.v[key] = diff[key];
+        });
+        console.log('Slab', this.id, 'receiveGrainReplication', grain.id, diff );
+    }
+}
+
 Slab.prototype.dumpGrainIds = function(){
     var ids = [];
     var grain = this.tail;
