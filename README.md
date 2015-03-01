@@ -45,6 +45,6 @@ Here, the same principal applies, it's just a bit more spread out.
 * Support for complex data types to limit unnecessary entity-attribute-value structures
 * Virtualized objects, accessable from any node, complete with synchronous, asynchronous business logic enforcement
 
-# Design Non-Goals:
+## Design Non-Goals:
 
 * SQL support - SQL may be added at a later date, but it should be considered only as a means of introspection / administration.
