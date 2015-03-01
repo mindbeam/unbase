@@ -2,7 +2,9 @@
 # What is Unbase?
 
 The idea behind Unbase is to create a framework that is fundimentally reactive, fault tolerant, and decentralized.
+Unbase is presently being designed.
 
+## Why
 In the interest of addressing some very specific shortcomings in traditional application design,
 Unbase is an attempt to create a truly distributed architecture that trancends device,
 geography, programming language, and orthodoxy.
@@ -17,6 +19,8 @@ Some modern RDBMSes are trying to fix this, but largely they are trying to gain 
  * Once for the DB replication itself, and again via an out-of-band message queue.
 * Parallel replication streams race each other toward event consumers, who lack the practical ability to synchronize them
 
+## How
+
 You can't argue with CAP theorem, that's settled. All the same, centralization has too many shortcomings to ignore.
 We need a better answer to service the demands of modern software. Humans can do this, why can't software?
 We need to build in delegation, compromise, and regionality from the start.
@@ -28,7 +32,7 @@ In the abstract, this is actually a very old idea. Stored procedures have been a
 to be more like application servers. A user would call a stored procedure, and business logic happens.
 Here, the same principal applies, it's just a bit more spread out.
 
-# Unbase Design Goals:
+## Design Goals:
 
 * Efficient push notifications for all changes to all interested parties
 * Drastically reduce latency by moving data close to where you need it [closer to the processor][what_is_distance]
@@ -41,6 +45,6 @@ Here, the same principal applies, it's just a bit more spread out.
 * Support for complex data types to limit unnecessary entity-attribute-value structures
 * Virtualized objects, accessable from any node, complete with synchronous, asynchronous business logic enforcement
 
-# Unbase Design Non-Goals:
+# Design Non-Goals:
 
 * SQL support - SQL may be added at a later date, but it should be considered only as a means of introspection / administration.
