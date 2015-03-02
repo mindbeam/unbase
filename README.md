@@ -1,19 +1,23 @@
 
 # What is Unbase?
 
-The idea behind Unbase is to create a framework that is fundimentally reactive, fault tolerant, and decentralized.
-Unbase is presently being designed.
+Unbase is a concept for a database+application framework that is fundimentally reactive, fault tolerant, and decentralized.
+It seeks to address some very specific shortcomings in traditional database+application paradigms.
+Unbase is presently under active design.
 
 ## Why
-In the interest of addressing some very specific shortcomings in traditional application design,
-Unbase is an attempt to create a truly distributed architecture that trancends device,
-geography, programming language, and orthodoxy.
-It seeks to blur the lines between application/database, and client/server.
+The Unbase concept is an attempt to create a truly distributed architecture that trancends device, geography, programming language,
+and present orthodoxy about what constitutes a "database". It seeks to blur the lines between application/database, and client/server.
 
 Classical relational databases are inherantly poor when it comes to decentralization.
-Multi-master has never been a buy-word for simplicity, nor will it magically solve all your operational problems.
+(Multi-master has never been a buy-word for simplicity, nor will it magically solve all your operational problems.)
 
-Some modern RDBMSes are trying to fix this, but largely they are trying to gain marketshare by pretending to be old-fasioned database:
+Some [modern](http://www.nuodb.com/) [databases](http://www.clustrix.com/) are trying to solve this, but they are trying primarily to gain
+marketshare by pretending to be old-fasioned database. They may be successful in this endeavor, but the solution they offer is far from holistic.
+They play nice with existing software stacks, offer a familiar SQL interface, solve a few problems, and leave lots more unresolved.
+
+
+
 * You must connect to them to transact business - Even if it's a process on the same machine, it's still far slower than if it were in-process
 * They lack integral queueing and push notifications. You must propagate these changes twice if your aim is to be reactive
  * Once for the DB replication itself, and again via an out-of-band message queue.
@@ -47,4 +51,5 @@ Here, the same principal applies, it's just a bit more spread out.
 
 ## Design Non-Goals:
 
-* SQL support - SQL may be added at a later date, but it should be considered only as a means of introspection / administration.
+* Serializability - [Fundimentally incompatible](https://groups.google.com/forum/#!msg/cloud-computing/nn7Sw5T0eSE/NxOTUwD_0ykJ) with distributed systems.
+* SQL support     - SQL might be added at a later date, but only as a means of introspection / administration. It

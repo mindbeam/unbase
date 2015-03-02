@@ -7,6 +7,10 @@
 * Employ MVCC to eliminate locking
  * Configurable MVCC history persistence for integral audit trail ( with edit metadata )
  * Configurable consistency per object, allow some transactions to complete with reduced confirmation
+
+![Example topology](./docs/Model.png)
+
+
  
 # Distance Buckets
 
