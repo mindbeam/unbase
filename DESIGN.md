@@ -13,7 +13,7 @@
     
 # Possible Consistency Models
 
-## Causal Tree - A form of strong eventual consistency
+## Explicit Causal Graph - A form of strong eventual consistency
 
 Each object is comprised of a series of edit atoms, each of which corresponds to the creation, amendment, or deletion of the object.
 Question: Is each of the fields in the edit object necessarily a CRDT?
