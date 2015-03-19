@@ -45,7 +45,7 @@ The application is *inside* the database. The database simply happens to lack a 
 
 In the abstract, this is actually a very old idea. Stored procedures have been around for quite some time, and databases used
 to be more like application servers. A user would call a stored procedure, and business logic happens.
-Here, the same principal applies, it's just a bit more spread out.
+Here, the same principle applies, it's just a bit more spread out.
 
 ## Design Goals:
 
