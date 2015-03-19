@@ -9,14 +9,12 @@ Unbase is presently under active design.
 The Unbase concept is an attempt to create a truly distributed architecture that transcends device, geography, programming language,
 and present orthodoxy about what constitutes a "database". It seeks to blur the lines between application/database, and client/server.
 
-When you're looking to scale, there are two couple ways to achieve this:
+When you're looking to scale, there are a couple ways to achieve this:
 
 ### Build a bunker
 Big iron, a large diesel generator, maybe some thick concrete walls, some guards; and a moat perhaps, and an RDBMS
-But you still have to do business in Beijing, Sydney, Seattle, Buenos Aires, and Kansas City... what about latency? Ok, five bunkers then.
-<_< .oO(Hmm, sounds expensive)
-   
-This bun
+But you still have to do business in Beijing, Sydney, Seattle, Buenos Aires, and Kansas City... what about latency? Ok, five bunkers then. (Hmm, sounds expensive)
+
 Classical relational databases are inherently poor when it comes to decentralization.
 Multi-master has never been a byword for simplicity, nor will it magically solve all your operational problems.
 
