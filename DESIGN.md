@@ -44,7 +44,7 @@ Brewer's CAP theorem dictates that the order of events among disconnected system
 Einstein's theory of relativity dictates that it's not in fact possible to determine this at all.
 Clock-skew isn't just an irritation for satelite operators and spacecraft, it's a fundimental property of the universe.
 
-## Causal Tree - A form of strong eventual consistency
+## Explicit Causal Graph - A form of strong eventual consistency
 
 Each object is comprised of a series of atoms, each recording an action corresponding to the creation, amendment, or deletion of the object.
 Question: Is each of the fields in the edit object necessarily a CRDT?
