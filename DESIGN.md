@@ -2,11 +2,13 @@
 # Design Goals
 
 * Minimize latency
-  Users must have a [perceptably-instant](http://www.nngroup.com/articles/response-times-3-important-limits/) experience.
+Users must have a [perceptably-instant](http://www.nngroup.com/articles/response-times-3-important-limits/) experience.
+
 * Scalability
-  The system must handle millions of nodes participants.
+The system must handle millions of nodes participants.
+
 * Regional autonomy (geographical, planetary)
-  No significant fraction of the system should be offlined due to network partition.
+No significant fraction of the system should be offlined due to network partition.
   Must handle significant latency between regions (minutes, hours, days), as well as relativistic effects. No, this is not a joke.
 * Distributed service oriented architecture
   Advertise, execute relevant business logic from any node in the network - Via nearest-peer RMI when necessary, but optionally by replicating the action code itself.
