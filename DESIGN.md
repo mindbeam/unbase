@@ -22,10 +22,7 @@
 
 # Functional Topology
 
-In a nutshell: Move data inside the process, and closer to the processor.
-Don't copy your working set from the database, move the relevant portion of the "database" into your process.
-Per
-
+In a nutshell: Move data inside the process, and closer to the processor. Don't copy your working set from the database, move the relevant portion of the "database" into your process.
 
 ![Example topology](./docs/Model.png)
 
@@ -41,8 +38,23 @@ This is undeniably correct, [IF you are using a traditional serializable/lineari
 That is to say, if you must conclusively know which event happened first, then you have to choose CA, CP, or AP; no ifs-ands-or-buts.
 
 Brewer's CAP theorem dictates that the order of events among disconnected systems cannot be reliably determined.
-Einstein's theory of relativity dictates that it's not in fact possible to determine this at all.
+Einstein's theory of relativity dictates that it's not in fact possible to determine this with any certainty at all.
 Clock-skew isn't just an irritation for satelite operators and spacecraft, it's a fundimental property of the universe.
+
+We puny humans have a common sense of event sequence, but this is only within certain frames of reference.
+What is actually happening in reality is a causal graph, not a single timeline.
+So, using causality as the basis of our consistency model is not only achievable, but it is also more compatible with the basic laws of physics.
+
+For instance: If two parties are one light-year apart, they may act concurrently; however, it is not possible for them to transmit information faster than the speed of light.
+Therefore, the time required for one party may influence the other is one year (at a minimum).
+As a result, a universal sequence of actions is not relevant (even if it were possible) to their respective experiences.
+The only relevant factor is causal influence of having received it.
+
+We tend to think of earth as being in a single temporal frame of reference, and give or take a couple hundred miliseconds, it's not an unreasonable simplification.
+*However* When dealing with high frequency roundtripping/decisionmaking, this matters a lot more.
+
+We can also model a network partition simply as higher latency.
+For our purposes, there is *no meaningful difference* between fifteen minute outage due to a backhoe, and communication with a node on mars.
 
 ## Explicit Causal Graph - A form of strong eventual consistency
 
