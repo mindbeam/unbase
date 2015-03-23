@@ -2,7 +2,7 @@
 # Design Goals
 
 * Minimize latency
-  Users must have a [http://www.nngroup.com/articles/response-times-3-important-limits/](perceptably-instant) experience.
+  Users must have a [perceptably-instant](http://www.nngroup.com/articles/response-times-3-important-limits/) experience.
 * Scalability
   The system must handle millions of nodes participants.
 * Regional autonomy (geographical, planetary)
@@ -55,6 +55,7 @@ We tend to think of earth as being in a single temporal frame of reference, and 
 
 We can also model a network partition simply as higher latency.
 For our purposes, there is *no meaningful difference* between fifteen minute outage due to a backhoe, and communication with a node on mars.
+Much like mars explorers carrying their own food and water, so too, must our system go about it's business regionally.
 
 ## Explicit Causal Graph - A form of strong eventual consistency
 
