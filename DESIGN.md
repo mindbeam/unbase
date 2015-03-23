@@ -2,29 +2,43 @@
 # Design Goals
 
 * Minimize latency
-Users must have a [perceptably-instant](http://www.nngroup.com/articles/response-times-3-important-limits/) experience.
+
+    Users must have a [perceptably-instant](http://www.nngroup.com/articles/response-times-3-important-limits/) experience.
 
 * Scalability
-The system must handle millions of nodes participants.
+
+    The system must handle millions of nodes participants.
 
 * Regional autonomy (geographical, planetary)
-No significant fraction of the system should be offlined due to network partition.
-  Must handle significant latency between regions (minutes, hours, days), as well as relativistic effects. No, this is not a joke.
+
+    No significant fraction of the system should be offlined due to network partition.
+  Must handle significant latency between regions (minutes, hours, days), as well as relativistic effects.
+  No, this is not a joke.
+  
 * Distributed service oriented architecture
-  Advertise, execute relevant business logic from any node in the network - Via nearest-peer RMI when necessary, but optionally by replicating the action code itself.
+
+    Advertise, execute relevant business logic from any node in the network - Via nearest-peer RMI when necessary, but optionally by replicating the action code itself.
   "Actions" should be callable synchronously, or asynchronously. (With asynchronicity being strongly preferred)
+  
 * Decouple business logic via triggers
-  Authorized parties may advertise "triggers", such that business logic can be called synchronously, or (preferably) asynchronously.
+
+    Authorized parties may advertise "triggers", such that business logic can be called synchronously, or (preferably) asynchronously.
+
 * Integral push-updates
-  Data replication and event notification are the same thing. Out of band event propagation is not compatible with reasonable consistency-models. (RabbitMQ is not your friend)
+
+    Data replication and event notification are the same thing. Out of band event propagation is not compatible with reasonable consistency-models. (RabbitMQ is not your friend)
+    
 * Integral content-filtered subscriptions
+
   Allow the creation of (in-band) distributed content-matching trees.
+
 * Integral audit trail
+
   Given the mechanics of replication, significant efficiency can be gained by extending the system to handle audit trails natively, rather than storing audit trails in standard tablespace.
 
 # Functional Topology
 
-In a nutshell: Move data inside the process, and closer to the processor. Don't copy your working set from the database, move the relevant portion of the "database" into your process.
+  In a nutshell: Move data inside the process, and closer to the processor. Don't copy your working set from the database, move the relevant portion of the "database" into your process.
 
 ![Example topology](./docs/Model.png)
 
