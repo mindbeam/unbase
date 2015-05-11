@@ -96,24 +96,42 @@ Question: Is each of the fields in the edit object necessarily a CRDT?
 
 One or more actions are initiated within the context of a transaction ID, a non-sequential generated ID which is guaranteed to be unique.
 
+Note: bold indicates peering reference
+
 Each transaction ID in the below table is in the format of: Node ID.Transaction Counter
-The first edit atom is called 
 
-| Object ID | Trans ID  | Parent Trans IDs | Payload 
-| --------- | --------- | -----------------| -------
-| 123       | A.1       | NULL             | foo=1
-| 123       | A.2       | A.1              | foo=3
-| 123       | B.1       | A.1              | foo=9
-| 123       | B.2       | A.2, B.1         | foo=9
+Transaction Log
 
-Alternate:
+| Trans ID | Parent Trans IDs | Action | Initiating User | Endorsing User | Signature
+| -------- | ---------------- | ------ | --------------- | -------------- | ---------    
+| A.T1     |                  | Begin  | 1               | 2              | XXXXXXXX
+| A.T1     |                  | Commit | 1               | 2              | XXXXXXXX
+| A.T2     | A.T1             | Begin  | 1               |                | YYYYYYYY
+| A.T2     | A.T1             | Commit | 1               |                | YYYYYYYY
 
-| Atom ID | Object ID | Trans ID  | Parent Atom IDs | Payload 
-| ------- | --------- | --------- | --------------- | -------
-| 1       | 123       | A.1       | NULL            | foo=1
-| 2       | 123       | A.2       | 1               | foo=3
-| 3       | 123       | B.1       | 1               | foo=9
-| 4       | 123       | B.2       | 1, 3            | foo=9
+
+Edit Log
+
+| Edit ID | Object ID | Trans ID | *Parent Edit IDs* | Payload
+| ------- | --------- | -------- | ----------------- | -------       
+| A.E1    | 123       | A.T1     | NULL              | foo=1
+| A.E2    | 123       | A.T2     | A.E1              | foo=3
+| A.E3    | 123       | B.T1     | A.E1              | foo=9
+| A.E4    | 123       | B.T2     | A.E2, B.E1        | foo=9
+
+
+Peering
+
+Every Object must publish its peering status whenever moved, cloned, or decloned. Object peering is not specific to any edit. Any node which believes it has the HEAD edit for a given object should be included in this peering. Non-HEAD edits should not participate in object peering.
+Object references to other objects themselves MUST participate in the peering for the referenced object.
+
+Every Edit must publish its peering status whenever moved, cloned, or decloned.
+
+| Object ID | Edit ID | Node      |  
+| --------- | ------- | --------- |
+| A.E1      | NULL    | A,B,C     |
+| A.E1      | A.E2    | A,B,C     |
+
 
 
 The Working copy of the object maintains a pre-calculated representation of it's values.
