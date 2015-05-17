@@ -1,5 +1,5 @@
 /**
- * Slab - A storage substrate for grains
+ * Slab - A storage substrate for records
  * Very loosely based on Rasmus Andersson's js-lru
  * A doubly linked list-based Least Recently Used (LRU) cache. Will keep most
  * recently used items while discarding least recently used items when its limit
@@ -7,7 +7,7 @@
  * 
  */
 
-var grain_cls = require('./grain');
+var record_cls = require('./record');
 
 var slab_increment = 0;
 
@@ -26,7 +26,7 @@ function Slab(args) {
   // Temporarily assuming nods ids are one character for simplicity
   if(this.id.length != 3) throw "sanity error " + this.id;
   
-  this.grain_increment = 0;
+  this.record_increment = 0;
   this._idmap = {};
 
   this.size = 0;
@@ -38,123 +38,123 @@ function Slab(args) {
   
 }
 
-/* Store a grain in this slab + manage LRU */
-Slab.prototype.putGrain = function(grain) {
-    if( ! grain instanceof grain_cls ) throw "invalid grain";
-    if( this._idmap[grain.id] ) throw "attempt to put grain twice";
+/* Store a record in this slab + manage LRU */
+Slab.prototype.putRecord = function(record) {
+    if( ! record instanceof record_cls ) throw "invalid record";
+    if( this._idmap[record.id] ) throw "attempt to put record twice";
     
-    this._idmap[grain.id] = grain;
+    this._idmap[record.id] = record;
     
     if (this.tail) {
-        // link previous tail to the new tail grain
-        this.tail._newer = grain;
-        grain._older = this.tail;
+        // link previous tail to the new tail record
+        this.tail._newer = record;
+        record._older = this.tail;
     } else {
         // we're first in -- yay
-        this.head = grain;
+        this.head = record;
     }
     
-    // add new entry to the end of the linked list -- it's now the freshest grain.
-    this.tail = grain;
+    // add new entry to the end of the linked list -- it's now the freshest record.
+    this.tail = record;
     if (this.size === this.limit) {
-        this.evictGrains();
+        this.evictRecords();
     } else {
         // increase the size counter
         this.size++;
     }
     
-    console.log( 'Put grain', grain.id, 'to slab', this.id );
+    console.log( 'Put record', record.id, 'to slab', this.id );
 };
 
 
-Slab.prototype.evictGrains = function() {
-    var grain = this.head,
+Slab.prototype.evictRecords = function() {
+    var record = this.head,
         ct    = this.size - this.quota
     ;
     
     if(ct <= 0) return;
     
-    /* Evict enough grains to get back to the quota */
-    while( grain && ct-- ){
-        this.evictGrain( grain );
-        grain = grain._newer;
+    /* Evict enough records to get back to the quota */
+    while( record && ct-- ){
+        this.evictRecord( record );
+        record = record._newer;
     }
     
 };
 
-/* Time for this grain to go. Lets make sure there are enough copies elsewhere first */
-Slab.prototype.evictGrain = function(grain){
+/* Time for this record to go. Lets make sure there are enough copies elsewhere first */
+Slab.prototype.evictRecord = function(record){
     var me = this;
-    if( !grain instanceof grain_cls ) grain = this._idmap[ grain ];
-    if( !grain ) throw 'attempted to evict invalid grain';
+    if( !record instanceof record_cls ) record = this._idmap[ record ];
+    if( !record ) throw 'attempted to evict invalid record';
     
-    grain.evicting(true);
-    console.log( 'Evicting grain', grain.id, 'from slab', me.id );
-    this.pushGrain( grain, function( success ){
+    record.evicting(true);
+    console.log( 'Evicting record', record.id, 'from slab', me.id );
+    this.pushRecord( record, function( success ){
         if( success ){
-            me.killGrain(grain);
-            console.log( 'Successfully evicted grain', grain.id );
+            me.killRecord(record);
+            console.log( 'Successfully evicted record', record.id );
         }else{
-            console.log( 'Failed to evict grain', grain.id );
+            console.log( 'Failed to evict record', record.id );
         }
     });
 }
 
 
-/* Remove grain from slab without delay */
-Slab.prototype.killGrain = function(grain) {
-    if( !grain instanceof grain_cls ) grain = this._idmap[ grain ];
-    if( !grain || !this._idmap[grain.id] ){
-        console.error('invalid grain');
+/* Remove record from slab without delay */
+Slab.prototype.killRecord = function(record) {
+    if( !record instanceof record_cls ) record = this._idmap[ record ];
+    if( !record || !this._idmap[record.id] ){
+        console.error('invalid record');
         return;
     }
     
-    delete this._idmap[grain.id]; // need to do delete unfortunately
+    delete this._idmap[record.id]; // need to do delete unfortunately
     
-    if (grain._newer && grain._older) {
+    if (record._newer && record._older) {
         // relink the older entry with the newer entry
-        grain._older._newer = grain._newer;
-        grain._newer._older = grain._older;
+        record._older._newer = record._newer;
+        record._newer._older = record._older;
       
-    } else if (grain._newer) {
+    } else if (record._newer) {
         
         // remove the link to us
-        grain._newer._older = undefined;
+        record._newer._older = undefined;
         // link the newer entry to head
-        this.head = grain._newer;
+        this.head = record._newer;
       
-    } else if (grain._older) {
+    } else if (record._older) {
         
         // remove the link to us
-        grain._older._newer = undefined;
+        record._older._newer = undefined;
         // link the newer entry to head
-        this.tail = grain._older;
+        this.tail = record._older;
       
-    } else { // if(grain._older === undefined && grain._newer === undefined) {
+    } else { // if(record._older === undefined && record._newer === undefined) {
         this.head = this.tail = undefined;
       
     }
     
     this.size--;
-    this.mesh.deregisterSlabGrain(this,grain);
+    this.mesh.deregisterSlabRecord(this,record);
 };
 
-Slab.prototype.deregisterGrainPeer = function( grain_id, peer_id ) {
-    var grain = this._idmap[grain_id];
+Slab.prototype.deregisterRecordPeer = function( record_id, peer_id ) {
+    var record = this._idmap[record_id];
     
-    if( grain ){
-        return grain.deregisterReplica( peer_id );
+    if( record ){
+        return record.deregisterReplica( peer_id );
     }else{
         return false;
     }
 }
 
 /*
- * pushGrain - Ensure that this grain is sufficiently replicated
- * TODO: Ensure that we don't attempt to push to a replica that already has this grain
- *       Verify that eviction from one slab ensures proper replica count on other peers before grain is killed
+ * pushRecord - Ensure that this record is sufficiently replicated
+ * TODO: Ensure that we don't attempt to push to a replica that already has this record
+ *       Verify that eviction from one slab ensures proper replica count on other peers before record is killed
 */
-Slab.prototype.pushGrain = function(g,cb){
+Slab.prototype.pushRecord = function(g,cb){
     var me      = this,
         desired = g.desiredReplicas();
         
@@ -167,7 +167,7 @@ Slab.prototype.pushGrain = function(g,cb){
     */
     
     ap.forEach(function(peer){
-        me.mesh.pushGrainToPeer( me, peer, g );
+        me.mesh.pushRecordToPeer( me, peer, g );
         desired--;
     });
 
@@ -180,107 +180,107 @@ Slab.prototype.quotaRemaining = function() {
 }
 
 /*
- * Create a totally new grain and attempt to replicate it to other peers 
- * Grain IDs must be globally unique, and consist of:
+ * Create a totally new record and attempt to replicate it to other peers 
+ * Record IDs must be globally unique, and consist of:
  *    eight digit base36 node id ( enumerated by central authority )
  *    two digit base36 slab id   ( enumerated by node )
- *    N digit base36 grain id    ( enumerated by slab )
+ *    N digit base36 record id    ( enumerated by slab )
  *
- * Discuss: How to prevent a malicious node/slab from originating a non-authorized grain id?
- * Is there any difference between that vs propagating an authorized edit to a pre-existing grain id?
+ * Discuss: How to prevent a malicious node/slab from originating a non-authorized record id?
+ * Is there any difference between that vs propagating an authorized edit to a pre-existing record id?
  * 
 */
 
-Slab.prototype.newGrain = function(vals,cb) {
+Slab.prototype.newRecord = function(vals,cb) {
     var me = this,
-        id = this.id + '-' + (this.grain_increment++).toString(36),
-        g = new grain_cls(id,vals)
+        id = this.id + '-' + (this.record_increment++).toString(36),
+        g = new record_cls(id,vals)
     ;
 
-    this.putGrain(g);
-    this.pushGrain( g, cb );
+    this.putRecord(g);
+    this.pushRecord( g, cb );
 
     return g;
 }
 
-/* getGrain - Retrieve grain from this slab by id
+/* getRecord - Retrieve record from this slab by id
  * Update LRU cache accordingly
 */
 
-Slab.prototype.getGrain = function(id){
+Slab.prototype.getRecord = function(id){
     
     // First, find our cache entry
-    var grain = this._idmap[id];
-    if (grain === undefined) return; // Not cached. Sorry.
+    var record = this._idmap[id];
+    if (record === undefined) return; // Not cached. Sorry.
     
     // As <key> was found in the cache, register it as being requested recently
-    if (grain === this.tail) {
+    if (record === this.tail) {
         // Already the most recenlty used entry, so no need to update the list
-        return grain;
+        return record;
     }
     
     // HEAD--------------TAIL
     //   <.older   .newer>
     //  <--- add direction --
     //   A  B  C  <D>  E
-    if (grain._newer) {
-        if ( grain === this.head ) this.head = grain._newer;
-        grain._newer._older = grain._older; // C <-- E.
+    if (record._newer) {
+        if ( record === this.head ) this.head = record._newer;
+        record._newer._older = record._older; // C <-- E.
     }
     
-    if (grain._older) grain._older._newer = grain._newer; // C. --> E
-    grain._newer = undefined; // D --x
-    grain._older = this.tail; // D. --> E
+    if (record._older) record._older._newer = record._newer; // C. --> E
+    record._newer = undefined; // D --x
+    record._older = this.tail; // D. --> E
     
-    if (this.tail) this.tail._newer = grain; // E. <-- D
-    this.tail = grain;
+    if (this.tail) this.tail._newer = record; // E. <-- D
+    this.tail = record;
     
-    return grain;
+    return record;
 
 };
 
-Slab.prototype.editGrain = function(grain,vals){
-    if(!grain instanceof grain_cls) throw "invalid grain";
+Slab.prototype.editRecord = function(record,vals){
+    if(!record instanceof record_cls) throw "invalid record";
     var diff = {}, val;
     
     Object.keys(vals).forEach(function(key){
         val = vals[key];
         if( key.charAt(0) == '$' ){
-            if( val instanceof Grain ){
+            if( val instanceof Record ){
                 val = val.id;
             }else{
-                // TODO validate grain id
+                // TODO validate record id
             }
         }
         
-        if(grain.v[key] != val){
+        if(record.v[key] != val){
             diff[key] = val;
-            grain.v[key] = val; // apply to local grain
+            record.v[key] = val; // apply to local record
         }
     });
     
     
     /* TODO IMPLEMENT MVCC - NBD */
     
-    this.mesh.replicateGrainEdit(grain,diff);
+    this.mesh.replicateRecordEdit(record,diff);
 }
 
-Slab.prototype.receiveGrainReplication = function( grain_id, diff ){
-    var grain = this._idmap[grain_id];
-    if( grain ){
+Slab.prototype.receiveRecordReplication = function( record_id, diff ){
+    var record = this._idmap[record_id];
+    if( record ){
         Object.keys(diff).forEach(function(key){
-            grain.v[key] = diff[key];
+            record.v[key] = diff[key];
         });
-        console.log('Slab', this.id, 'receiveGrainReplication', grain.id, diff );
+        console.log('Slab', this.id, 'receiveRecordReplication', record.id, diff );
     }
 }
 
-Slab.prototype.dumpGrainIds = function(){
+Slab.prototype.dumpRecordIds = function(){
     var ids = [];
-    var grain = this.tail;
-    while(grain){
-        ids.push(grain.id);
-        grain = grain._older;
+    var record = this.tail;
+    while(record){
+        ids.push(record.id);
+        record = record._older;
     }
     return ids;
 }

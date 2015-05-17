@@ -12,20 +12,20 @@ var slab3 = new slab_cls({node: "A", mesh: mesh });
 
 var i = 10,g;
 while(i--){
-    g = slab1.newGrain({ some_string: "meow", $parent: g });
+    g = slab1.newRecord({ some_string: "meow", $parent: g });
 }
-//slab1.evictGrain( g );
+//slab1.evictRecord( g );
 
-console.log( 'Slab 1 size', slab1.size, slab1.dumpGrainIds().join(',') );
-console.log( 'Slab 2 size', slab2.size, slab2.dumpGrainIds().join(',') );
-console.log( 'Slab 3 size', slab3.size, slab3.dumpGrainIds().join(',') );
+console.log( 'Slab 1 size', slab1.size, slab1.dumpRecordIds().join(',') );
+console.log( 'Slab 2 size', slab2.size, slab2.dumpRecordIds().join(',') );
+console.log( 'Slab 3 size', slab3.size, slab3.dumpRecordIds().join(',') );
 
-console.log('A01-4 before:', slab2.getGrain('A01-4').v);
+console.log('A01-4 before:', slab2.getRecord('A01-4').v);
 
-testgrain1 = slab1.getGrain('A01-4');
-testgrain2 = slab1.getGrain('A01-5');
+testrecord1 = slab1.getRecord('A01-4');
+testrecord2 = slab1.getRecord('A01-5');
 
-slab1.editGrain(testgrain1,{ "some_string": "woof"  });
-slab1.editGrain(testgrain2,{ "some_string": "quack" });
+slab1.editRecord(testrecord1,{ "some_string": "woof"  });
+slab1.editRecord(testrecord2,{ "some_string": "quack" });
 
-console.log('A01-4 after:', slab2.getGrain('A01-4').v);
+console.log('A01-4 after:', slab2.getRecord('A01-4').v);

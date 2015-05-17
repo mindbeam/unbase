@@ -6,7 +6,7 @@
  * 
 */
 
-var grain_cls = require('./grain');
+var record_cls = require('./record');
 
 function Mesh() {
     /* Only local slabs are supported as peers at this time */
@@ -49,59 +49,59 @@ Mesh.prototype.getAcceptingPeers = function( exclude_slab_id, number ) {
  *   peer = your slab
 */
 
-Mesh.prototype.pushGrainToPeer = function( slab, peer, grain ) {
+Mesh.prototype.pushRecordToPeer = function( slab, peer, record ) {
     
-    console.log('Pushing grain', grain.id, 'from slab', slab.id, 'to peer', peer.id);
+    console.log('Pushing record', record.id, 'from slab', slab.id, 'to peer', peer.id);
     
     /* JSON clone to ensure wire safety */
-    // console.log( grain.packetize );
-    var serialized = JSON.stringify( grain.packetize() );
+    // console.log( record.packetize );
+    var serialized = JSON.stringify( record.packetize() );
     
     var cloned_packet = JSON.parse( serialized );
     
     if( typeof cloned_packet == 'object' ){
-        /* Shouldn't need to filter replicas, as the putGrain will fail if we're trying to perform a duplicate put
+        /* Shouldn't need to filter replicas, as the putRecord will fail if we're trying to perform a duplicate put
          * This probably isn't very robust, but is useful for proof-of-concept stuffs
          * packet.replicas = packet.replicas.filter(function(id){ return id != peer.id });
         */
         
         cloned_packet.replicas.push(slab.id); // origin 
-        var cloned_grain = new grain_cls( cloned_packet.id, cloned_packet.vals, cloned_packet.replicas );
+        var cloned_record = new record_cls( cloned_packet.id, cloned_packet.vals, cloned_packet.replicas );
 
-        peer.putGrain( cloned_grain );
-        grain.registerReplica( peer.id );
+        peer.putRecord( cloned_record );
+        record.registerReplica( peer.id );
       
-        //console.log(slab.id, '(origin) grain  ', grain.packetize());
-        //console.log(peer.id, '(dest)   grain  ',   cloned_grain.packetize());
+        //console.log(slab.id, '(origin) record  ', record.packetize());
+        //console.log(peer.id, '(dest)   record  ',   cloned_record.packetize());
         
         /* 
-         console.log('pushGrain completed for grain id', cloned_grain.id, 'replicas are:', cloned_packet.replicas );
-         console.log('original grain replicas are', grain.r );
+         console.log('pushRecord completed for record id', cloned_record.id, 'replicas are:', cloned_packet.replicas );
+         console.log('original record replicas are', record.r );
         */
     }
 }
 
 /* not super in love with the name of this */
-Mesh.prototype.deregisterSlabGrain = function( slab, grain ) {
+Mesh.prototype.deregisterSlabRecord = function( slab, record ) {
     var me = this;
     
-    grain.getReplicas().forEach(function(id){
+    record.getReplicas().forEach(function(id){
         var peer = me._slabs[id];
         if( peer ){
-            var rv = peer.deregisterGrainPeer( grain.id, slab.id );
-            console.log('deregisterGrainPeer from', slab.id, grain.id, 'to', peer.id, rv ? 'Succeeded' : 'Failed' );
+            var rv = peer.deregisterRecordPeer( record.id, slab.id );
+            console.log('deregisterRecordPeer from', slab.id, record.id, 'to', peer.id, rv ? 'Succeeded' : 'Failed' );
         }
     });
     
 }
 
-Mesh.prototype.replicateGrainEdit = function(grain,diff){
+Mesh.prototype.replicateRecordEdit = function(record,diff){
     var me   = this,
-        reps = grain.getReplicas();
+        reps = record.getReplicas();
     
     reps.forEach(function(id){
         var peer = me._slabs[id];
-        if( peer ) peer.receiveGrainReplication( grain.id, diff);
+        if( peer ) peer.receiveRecordReplication( record.id, diff);
     });
 }
 
