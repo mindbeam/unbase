@@ -1,48 +1,29 @@
 
+var memo_cls = require('./record');
+var peerable_cls = require('./mixin/peerable');
+
 /* Record
+ * A record is a bundle of values representing a discrete thing.
+ * Its present state is determined by the totality of its memos
 */
 
-function Record(id,memos,slab,replicas) {
-  this.id = id;
-  this.v  = vals;
+function Record(slab,vals) {
+    this.id = slab.genChildID();
+    
+    vals = vals || {};
+    var set_memo = new memo_cls(slab,vals);
+    
+    this.registerPeer('self',slab.id,true);
+    
+    slab.putRecord(g);
+    slab.pushRecord( g, cb );
  
-  this.slab = slab;   // A record object only exists within the context of a slab
-  this.memos = memos; // the present state of a record is determined by the sum of it's (relevant) memos
-  // do records even have replicas?? or just memos
+    //this.slab = slab;   // A record object only exists within the context of a slab
+    //this.memos = memos; // the present state of a record is determined by the sum of it's (relevant) memos
+    // do records even have replicas?? or just memos
   
 }
-
-Record.prototype._evicting    = 0;
-Record.prototype.__replica_ct = 1;
-
-/* should we un-set this if an eviction fails? */
-Record.prototype.evicting = function(v) {
-    this._evicting = v ? 1 : 0;
-};
-
-Record.prototype.desiredReplicas = function() {
-   return Math.max(0,(this.__replica_ct - this.r.length) + this._evicting);
-};
-
-Record.prototype.registerReplica   = function( peer_id ) {
-    this.r.push( peer_id );
-}
-Record.prototype.deregisterReplica = function( peer_id ){
-    var found = false;
-    
-    this.r = this.r.filter(function(id){
-        if( id == peer_id ){
-            found = true;
-            return false;
-        }
-        return true;
-    });
-    
-    return found;
-}
-Record.prototype.getReplicas = function(){
-    return this.r;
-}
+peerable_cls.mixin(Record);
 
 Record.prototype.set = function(args){
     /*
@@ -50,8 +31,7 @@ Record.prototype.set = function(args){
     */
     
     var id = this.id + '-' + (this.memo_increment++).toString(36),
-        m  = new memo_cls(id,arguments)
-    
+        m  = new memo_cls(id,args)
 }
 
 Record.prototype.packetize = function(){

@@ -1,5 +1,5 @@
 /**
- * Slab - A storage substrate for records
+ * Slab - A storage substrate for items/memos
  * Very loosely based on Rasmus Andersson's js-lru
  * A doubly linked list-based Least Recently Used (LRU) cache. Will keep most
  * recently used items while discarding least recently used items when its limit
@@ -26,7 +26,7 @@ function Slab(args) {
   // Temporarily assuming nods ids are one character for simplicity
   if(this.id.length != 3) throw "sanity error " + this.id;
   
-  this.record_increment = 0;
+  this.child_increment = 0;
   this._idmap = {};
 
   this.size = 0;
@@ -38,24 +38,24 @@ function Slab(args) {
   
 }
 
-/* Store a record in this slab + manage LRU */
-Slab.prototype.putRecord = function(record) {
-    if( ! record instanceof record_cls ) throw "invalid record";
-    if( this._idmap[record.id] ) throw "attempt to put record twice";
+/* Store a item in this slab + manage LRU */
+Slab.prototype.putItem = function(item) {
+    if( ! item instanceof item_cls ) throw "invalid item";
+    if( this._idmap[item.id] ) throw "attempt to put item twice";
     
-    this._idmap[record.id] = record;
+    this._idmap[item.id] = item;
     
     if (this.tail) {
-        // link previous tail to the new tail record
-        this.tail._newer = record;
-        record._older = this.tail;
+        // link previous tail to the new tail item
+        this.tail._newer = item;
+        item._older = this.tail;
     } else {
         // we're first in -- yay
-        this.head = record;
+        this.head = item;
     }
     
-    // add new entry to the end of the linked list -- it's now the freshest record.
-    this.tail = record;
+    // add new entry to the end of the linked list -- it's now the freshest item.
+    this.tail = item;
     if (this.size === this.limit) {
         this.evictRecords();
     } else {
@@ -63,98 +63,98 @@ Slab.prototype.putRecord = function(record) {
         this.size++;
     }
     
-    console.log( 'Put record', record.id, 'to slab', this.id );
+    console.log( 'Put item', item.id, 'to slab', this.id );
 };
 
 
-Slab.prototype.evictRecords = function() {
-    var record = this.head,
+Slab.prototype.evictItems = function() {
+    var item = this.head,
         ct    = this.size - this.quota
     ;
     
     if(ct <= 0) return;
     
-    /* Evict enough records to get back to the quota */
-    while( record && ct-- ){
-        this.evictRecord( record );
-        record = record._newer;
+    /* Evict enough items to get back to the quota */
+    while( item && ct-- ){
+        this.evictItem( item );
+        item = item._newer;
     }
     
 };
 
-/* Time for this record to go. Lets make sure there are enough copies elsewhere first */
-Slab.prototype.evictRecord = function(record){
+/* Time for this item to go. Lets make sure there are enough copies elsewhere first */
+Slab.prototype.evictItem = function(item){
     var me = this;
-    if( !record instanceof record_cls ) record = this._idmap[ record ];
-    if( !record ) throw 'attempted to evict invalid record';
+    if( !item instanceof item_cls ) item = this._idmap[ item ];
+    if( !item ) throw 'attempted to evict invalid item';
     
-    record.evicting(true);
-    console.log( 'Evicting record', record.id, 'from slab', me.id );
-    this.pushRecord( record, function( success ){
+    item.evicting(true);
+    console.log( 'Evicting item', item.id, 'from slab', me.id );
+    this.pushItem( item, function( success ){
         if( success ){
-            me.killRecord(record);
-            console.log( 'Successfully evicted record', record.id );
+            me.killItem(item);
+            console.log( 'Successfully evicted item', item.id );
         }else{
-            console.log( 'Failed to evict record', record.id );
+            console.log( 'Failed to evict item', item.id );
         }
     });
 }
 
 
-/* Remove record from slab without delay */
-Slab.prototype.killRecord = function(record) {
-    if( !record instanceof record_cls ) record = this._idmap[ record ];
-    if( !record || !this._idmap[record.id] ){
-        console.error('invalid record');
+/* Remove item from slab without delay */
+Slab.prototype.killItem = function(item) {
+    if( !item instanceof item_cls ) item = this._idmap[ item ];
+    if( !item || !this._idmap[item.id] ){
+        console.error('invalid item');
         return;
     }
     
-    delete this._idmap[record.id]; // need to do delete unfortunately
+    delete this._idmap[item.id]; // need to do delete unfortunately
     
-    if (record._newer && record._older) {
+    if (item._newer && item._older) {
         // relink the older entry with the newer entry
-        record._older._newer = record._newer;
-        record._newer._older = record._older;
+        item._older._newer = item._newer;
+        item._newer._older = item._older;
       
-    } else if (record._newer) {
+    } else if (item._newer) {
         
         // remove the link to us
-        record._newer._older = undefined;
+        item._newer._older = undefined;
         // link the newer entry to head
-        this.head = record._newer;
+        this.head = item._newer;
       
-    } else if (record._older) {
+    } else if (item._older) {
         
         // remove the link to us
-        record._older._newer = undefined;
+        item._older._newer = undefined;
         // link the newer entry to head
-        this.tail = record._older;
+        this.tail = item._older;
       
-    } else { // if(record._older === undefined && record._newer === undefined) {
+    } else { // if(item._older === undefined && item._newer === undefined) {
         this.head = this.tail = undefined;
       
     }
     
     this.size--;
-    this.mesh.deregisterSlabRecord(this,record);
+    this.mesh.deregisterSlabItem(this,item);
 };
 
-Slab.prototype.deregisterRecordPeer = function( record_id, peer_id ) {
-    var record = this._idmap[record_id];
+Slab.prototype.deregisterItemPeer = function( item_id, peer_id ) {
+    var item = this._idmap[item_id];
     
-    if( record ){
-        return record.deregisterReplica( peer_id );
+    if( item ){
+        return item.deregisterReplica( peer_id );
     }else{
         return false;
     }
 }
 
 /*
- * pushRecord - Ensure that this record is sufficiently replicated
- * TODO: Ensure that we don't attempt to push to a replica that already has this record
- *       Verify that eviction from one slab ensures proper replica count on other peers before record is killed
+ * pushItem - Ensure that this item is sufficiently replicated
+ * TODO: Ensure that we don't attempt to push to a replica that already has this item
+ *       Verify that eviction from one slab ensures proper replica count on other peers before item is killed
 */
-Slab.prototype.pushRecord = function(g,cb){
+Slab.prototype.pushItem = function(g,cb){
     var me      = this,
         desired = g.desiredReplicas();
         
@@ -167,7 +167,7 @@ Slab.prototype.pushRecord = function(g,cb){
     */
     
     ap.forEach(function(peer){
-        me.mesh.pushRecordToPeer( me, peer, g );
+        me.mesh.pushItemToPeer( me, peer, g );
         desired--;
     });
 
@@ -179,108 +179,101 @@ Slab.prototype.quotaRemaining = function() {
    return this.quota - this.size;
 }
 
+
 /*
- * Create a totally new record and attempt to replicate it to other peers 
- * Record IDs must be globally unique, and consist of:
+ * Create a totally new item and attempt to replicate it to other peers 
+ * Item IDs must be globally unique, and consist of:
  *    eight digit base36 node id ( enumerated by central authority )
  *    two digit base36 slab id   ( enumerated by node )
- *    N digit base36 record id    ( enumerated by slab )
+ *    N digit base36 item id    ( enumerated by slab )
  *
- * Discuss: How to prevent a malicious node/slab from originating a non-authorized record id?
- * Is there any difference between that vs propagating an authorized edit to a pre-existing record id?
+ * Discuss: How to prevent a malicious node/slab from originating a non-authorized item id?
+ * Is there any difference between that vs propagating an authorized edit to a pre-existing item id?
  * 
 */
 
-Slab.prototype.newRecord = function(vals,cb) {
-    var me = this,
-        id = this.id + '-' + (this.record_increment++).toString(36),
-        g = new record_cls(id,vals)
-    ;
-
-    this.putRecord(g);
-    this.pushRecord( g, cb );
-
-    return g;
+Slab.prototype.genChildID = function(vals,cb) {
+    return this.id + '-' + (this.child_increment++).toString(36);
 }
 
-/* getRecord - Retrieve record from this slab by id
+/* getItem - Retrieve item from this slab by id
  * Update LRU cache accordingly
 */
 
-Slab.prototype.getRecord = function(id){
+Slab.prototype.getItem = function(id){
     
     // First, find our cache entry
-    var record = this._idmap[id];
-    if (record === undefined) return; // Not cached. Sorry.
+    var item = this._idmap[id];
+    if (item === undefined) return; // Not cached. Sorry.
     
     // As <key> was found in the cache, register it as being requested recently
-    if (record === this.tail) {
+    if (item === this.tail) {
         // Already the most recenlty used entry, so no need to update the list
-        return record;
+        return item;
     }
     
     // HEAD--------------TAIL
     //   <.older   .newer>
     //  <--- add direction --
     //   A  B  C  <D>  E
-    if (record._newer) {
-        if ( record === this.head ) this.head = record._newer;
-        record._newer._older = record._older; // C <-- E.
+    if (item._newer) {
+        if ( item === this.head ) this.head = item._newer;
+        item._newer._older = item._older; // C <-- E.
     }
     
-    if (record._older) record._older._newer = record._newer; // C. --> E
-    record._newer = undefined; // D --x
-    record._older = this.tail; // D. --> E
+    if (item._older) item._older._newer = item._newer; // C. --> E
+    item._newer = undefined; // D --x
+    item._older = this.tail; // D. --> E
     
-    if (this.tail) this.tail._newer = record; // E. <-- D
-    this.tail = record;
+    if (this.tail) this.tail._newer = item; // E. <-- D
+    this.tail = item;
     
-    return record;
+    return item;
 
 };
 
-Slab.prototype.editRecord = function(record,vals){
-    if(!record instanceof record_cls) throw "invalid record";
+Slab.prototype.editItem = function(item,vals){
+    if(!item instanceof item_cls) throw "invalid item";
     var diff = {}, val;
     
     Object.keys(vals).forEach(function(key){
         val = vals[key];
         if( key.charAt(0) == '$' ){
-            if( val instanceof Record ){
+            if( val instanceof Item ){
                 val = val.id;
             }else{
-                // TODO validate record id
+                // TODO validate item id
             }
         }
         
-        if(record.v[key] != val){
+        if(item.v[key] != val){
             diff[key] = val;
-            record.v[key] = val; // apply to local record
+            item.v[key] = val; // apply to local item
         }
     });
     
     
     /* TODO IMPLEMENT MVCC - NBD */
     
-    this.mesh.replicateRecordEdit(record,diff);
+    this.mesh.replicateItemEdit(item,diff);
 }
 
-Slab.prototype.receiveRecordReplication = function( record_id, diff ){
-    var record = this._idmap[record_id];
-    if( record ){
+Slab.prototype.receiveItemReplication = function( item_id, diff ){
+    var item = this._idmap[item_id];
+    if( item ){
         Object.keys(diff).forEach(function(key){
-            record.v[key] = diff[key];
+            item.v[key] = diff[key];
         });
-        console.log('Slab', this.id, 'receiveRecordReplication', record.id, diff );
+        console.log('Slab', this.id, 'receiveItemReplication', item.id, diff );
     }
 }
 
-Slab.prototype.dumpRecordIds = function(){
+Slab.prototype.dumpItemIds = function(){
     var ids = [];
-    var record = this.tail;
-    while(record){
-        ids.push(record.id);
-        record = record._older;
+    var item = this.tail;
+    while(item){
+        ids.push(item.id);
+        item = item._older;
     }
     return ids;
 }
