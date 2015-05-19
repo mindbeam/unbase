@@ -25,7 +25,7 @@ Mesh.prototype.registerSlab = function( slab ) {
  * Optimize to avoid looping over all known peers every time.
 */
 
-Mesh.prototype.getAcceptingPeers = function( exclude_slab_id, number ) {
+Mesh.prototype.getAcceptingSlabs = function( exclude_slab_id, number ) {
     number = (typeof number == 'number' && number > 0 ) ? number : 1;
     var slabs = this._slabs,
         slab,
@@ -49,60 +49,40 @@ Mesh.prototype.getAcceptingPeers = function( exclude_slab_id, number ) {
  *   peer = your slab
 */
 
-Mesh.prototype.pushRecordToPeer = function( slab, peer, record ) {
+Mesh.prototype.pushItemToSlab = function( from_slab, to_slab, item ) {
     
-    console.log('Pushing record', record.id, 'from slab', slab.id, 'to peer', peer.id);
+    console.log('Pushing item', item.id, 'from slab', from_slab.id, 'to slab', to_slab.id);
     
-    /* JSON clone to ensure wire safety */
-    // console.log( record.packetize );
-    var serialized = JSON.stringify( record.packetize() );
     
-    var cloned_packet = JSON.parse( serialized );
+    /* Shouldn't need to filter replicas, as the putRecord will fail if we're trying to perform a duplicate put
+     * This probably isn't very robust, but is useful for proof-of-concept stuffs
+     * packet.replicas = packet.replicas.filter(function(id){ return id != to_slab.id });
+    */
     
-    if( typeof cloned_packet == 'object' ){
-        /* Shouldn't need to filter replicas, as the putRecord will fail if we're trying to perform a duplicate put
-         * This probably isn't very robust, but is useful for proof-of-concept stuffs
-         * packet.replicas = packet.replicas.filter(function(id){ return id != peer.id });
-        */
-        
-        cloned_packet.replicas.push(slab.id); // origin 
-        var cloned_record = new record_cls( cloned_packet.id, cloned_packet.vals, cloned_packet.replicas );
+    var serialized = item.serialize();
+    
+    var cloned_record = new record_cls.deserialize( to_slab, serialized );
 
-        peer.putRecord( cloned_record );
-        record.registerReplica( peer.id );
-      
-        //console.log(slab.id, '(origin) record  ', record.packetize());
-        //console.log(peer.id, '(dest)   record  ',   cloned_record.packetize());
-        
-        /* 
-         console.log('pushRecord completed for record id', cloned_record.id, 'replicas are:', cloned_packet.replicas );
-         console.log('original record replicas are', record.r );
-        */
-    }
+    console.log(from_slab.id, '(origin) record  ', item.id);
+    console.log(to_slab.id, '(dest)   record  ' );
+    
+    /* 
+     console.log('pushRecord completed for record id', cloned_record.id, 'replicas are:', cloned_packet.replicas );
+     console.log('original record replicas are', record.r );
+    */
 }
 
-/* not super in love with the name of this */
-Mesh.prototype.deregisterSlabRecord = function( slab, record ) {
+Mesh.prototype.sendPeeringChange = function( peeringchange ) {
     var me = this;
     
-    record.getReplicas().forEach(function(id){
-        var peer = me._slabs[id];
-        if( peer ){
-            var rv = peer.deregisterRecordPeer( record.id, slab.id );
-            console.log('deregisterRecordPeer from', slab.id, record.id, 'to', peer.id, rv ? 'Succeeded' : 'Failed' );
+    Object.keys(peeringchange).forEach(function(id){
+        var slab = me._slabs[id];
+        if( slab ){
+            var rv = slab.receivePeeringChange( peeringchange[ id ] );
+            // console.log('deregisterRecordPeer from', slab.id, record.id, 'to', peer.id, rv ? 'Succeeded' : 'Failed' );
         }
     });
     
-}
-
-Mesh.prototype.replicateRecordEdit = function(record,diff){
-    var me   = this,
-        reps = record.getReplicas();
-    
-    reps.forEach(function(id){
-        var peer = me._slabs[id];
-        if( peer ) peer.receiveRecordReplication( record.id, diff);
-    });
 }
 
 // export the class

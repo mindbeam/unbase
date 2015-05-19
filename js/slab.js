@@ -7,40 +7,41 @@
  * 
  */
 
-var record_cls = require('./record');
 
 var slab_increment = 0;
 
 function Slab(args) {
 
-  if(slab_increment > 1296)                 throw "cannot create more than 1296 slabs";
-  if(typeof args != 'object')               throw "must provide args";
-  if(!args.node || !args.node.length == 8)  throw "must provide 8 digit node id";
-  if(!args.mesh)                            throw "must provide mesh object";
-
-  // encode and zerofill the slab id
-  this.id = args.node + ( "00" + (++slab_increment).toString(36)).substr(-2,2);
-  console.log('Initialized Slab', this.id);
-  //if(this.id.length != 10) throw "sanity error " + this.id;
+    if(slab_increment > 1296)                 throw "cannot create more than 1296 slabs";
+    if(typeof args != 'object')               throw "must provide args";
+    if(!args.node || !args.node.length == 8)  throw "must provide 8 digit node id";
+    if(!args.mesh)                            throw "must provide mesh object";
   
-  // Temporarily assuming nods ids are one character for simplicity
-  if(this.id.length != 3) throw "sanity error " + this.id;
+    // encode and zerofill the slab id
+    this.id = args.node + ( "00" + (++slab_increment).toString(36)).substr(-2,2);
+    console.log('Initialized Slab', this.id);
+    //if(this.id.length != 10) throw "sanity error " + this.id;
+    
+    // Temporarily assuming nods ids are one character for simplicity
+    if(this.id.length != 3) throw "sanity error " + this.id;
+    
+    this.child_increment = 0;
+    this._idmap = {};
   
-  this.child_increment = 0;
-  this._idmap = {};
-
-  this.size = 0;
-  this.quota = args.quota || 5;
-  this.limit = args.limit || 10;
+    this.size = 0;
+    this.quota = args.quota || 5;
+    this.limit = args.limit || 10;
+    
+    this.mesh = args.mesh;
+    this.mesh.registerSlab( this );
   
-  this.mesh = args.mesh;
-  this.mesh.registerSlab( this );
+  
   
 }
 
 /* Store a item in this slab + manage LRU */
-Slab.prototype.putItem = function(item) {
-    if( ! item instanceof item_cls ) throw "invalid item";
+Slab.prototype.putItem = function(item,cb) {
+    //if( ! item instanceof item_cls ) throw "invalid item";
     if( this._idmap[item.id] ) throw "attempt to put item twice";
     
     this._idmap[item.id] = item;
@@ -64,6 +65,8 @@ Slab.prototype.putItem = function(item) {
     }
     
     console.log( 'Put item', item.id, 'to slab', this.id );
+    
+    this.pushItem( item, cb );
 };
 
 
@@ -85,7 +88,7 @@ Slab.prototype.evictItems = function() {
 /* Time for this item to go. Lets make sure there are enough copies elsewhere first */
 Slab.prototype.evictItem = function(item){
     var me = this;
-    if( !item instanceof item_cls ) item = this._idmap[ item ];
+    if( typeof item == 'string' ) item = this._idmap[ item ];
     if( !item ) throw 'attempted to evict invalid item';
     
     item.evicting(true);
@@ -103,7 +106,7 @@ Slab.prototype.evictItem = function(item){
 
 /* Remove item from slab without delay */
 Slab.prototype.killItem = function(item) {
-    if( !item instanceof item_cls ) item = this._idmap[ item ];
+    if( typeof item == 'string' ) item = this._idmap[ item ];
     if( !item || !this._idmap[item.id] ){
         console.error('invalid item');
         return;
@@ -152,22 +155,22 @@ Slab.prototype.deregisterItemPeer = function( item_id, peer_id ) {
 /*
  * pushItem - Ensure that this item is sufficiently replicated
  * TODO: Ensure that we don't attempt to push to a replica that already has this item
- *       Verify that eviction from one slab ensures proper replica count on other peers before item is killed
+ *       Verify that eviction from one slab ensures proper replica count on other slabs before item is killed
 */
-Slab.prototype.pushItem = function(g,cb){
+Slab.prototype.pushItem = function(item,cb){
     var me      = this,
-        desired = g.desiredReplicas();
+        desired = item.desiredReplicas();
         
     if (desired <= 0) return;
-    var ap     = this.mesh.getAcceptingPeers( this.id, desired );
+    var ap     = this.mesh.getAcceptingSlabs( this.id, desired );
 
     /* TODO:
      * Update to be async
      * Handle the possibility of push failure
     */
     
-    ap.forEach(function(peer){
-        me.mesh.pushItemToPeer( me, peer, g );
+    ap.forEach(function(slab){
+        me.mesh.pushItemToSlab( me, slab, item );
         desired--;
     });
 
@@ -181,7 +184,7 @@ Slab.prototype.quotaRemaining = function() {
 
 
 /*
- * Create a totally new item and attempt to replicate it to other peers 
+ * Create a totally new item and attempt to replicate it to other slabs 
  * Item IDs must be globally unique, and consist of:
  *    eight digit base36 node id ( enumerated by central authority )
  *    two digit base36 slab id   ( enumerated by node )

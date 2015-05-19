@@ -19,15 +19,9 @@
  */
 function Peerable() {}
 
-Peerable.prototype.registerPeer = function(ref, peer, isReplica) {    
-    var list;
-    
-    if(isReplica){
-        list = this.r[ref] = this.r[ref] || [];
-    }else{
-        list = this.l[ref] = this.l[ref] || [];
-    }
-    
+
+Peerable.prototype.registerPeer = function(ref, peer) {    
+    var list = this.p[ref] = this.p[ref] || [];
     list.push(peer);
     
 };
@@ -36,14 +30,7 @@ Peerable.prototype.deregisterPeer = function(ref, peer) {
     var list,
         found = false;
 
-    this.r[ref] = (this.r[ref] || []).filter(function(id){
-        if( id == peer ){
-            found = true;
-            return false;
-        }
-        return true;
-    });
-    this.l[ref] = (this.l[ref] || []).filter(function(id){
+    this.p[ref] = (this.p[ref] || []).filter(function(id){
         if( id == peer ){
             found = true;
             return false;
@@ -52,39 +39,65 @@ Peerable.prototype.deregisterPeer = function(ref, peer) {
     });
     
     return found;
-}
+};
 
-Record.prototype.getPeers = function(ref,isReplica){
-    
-    if (typeof isReplica == 'undefined'){
-        return [].concat( this.r[ref] || [], this.l[ref] || [] );
-    }else if( isReplica ){
-        return this.r[ref];
-    }else{
-        return this.l[ref];
-    }
-    
-}
+Peerable.prototype.getPeers = function(name){
+    return [];
+   // return (this.p[name] || []);
+};
 
-/*
-    Record.prototype._evicting    = 0;
-    Record.prototype.__replica_ct = 1;
+Peerable.prototype.getPeering = function(){
+    var me      = this,
+        p       = me.p
+        peering = {};
     
-    // should we un-set this if an eviction fails?
-    Record.prototype.evicting = function(v) {
-        this._evicting = v ? 1 : 0;
-    };
+    Object.getOwnPropertyNames(p).forEach(function (name) {
+        peering[name] = [me.slab.id].concat(p[name]);
+    });
     
-    Record.prototype.desiredReplicas = function() {
-       return Math.max(0,(this.__replica_ct - this.r.length) + this._evicting);
-    };
-*/
+    return peering;
+};
+
+
+Peerable.prototype.initPeering = function(){
+    this.p = { self: [] };
+}
+Peerable.prototype.setPeering = function(peering){
+    peering = peering || {};
+
+    var me = this,
+        p  = this.p = { self: [] }
+    ;
+    
+    Object.getOwnPropertyNames(peering).forEach(function (name) {
+        p[name] = peering[name].filter(function(slab_id){
+            return slab_id != me.slab.id;
+        });
+    });
+};
+
+
+// TODO:
+Peerable.prototype.destroyPeering = function(){
+    var c;
+    
+    var notofy_slabs = {};
+    Object.getOwnPropertyNames(this.p).forEach(function (name) {
+        this.p[name].forEach(function(slab_id){
+            c = slabs[ slab_id ] = slabs[ slab_id ] || {};
+            c[name] = 0;
+        });
+    });
+    
+    var peeringchange = { id: this.id, slab: this.slab.id, notify_slabs: notify_slabs };
+    this.slab.mesh.sendPeeringChange( peeringchange );
+}
 
 Peerable.prototype.isPeerable = true;
 
 // mixin - augment the target object with the Peerable functions
 Peerable.mixin = function(destObject){
-    ['registerPeer','deregisterPeer','getPeers','isPeerable'].forEach(function(property) {
+    ['registerPeer','deregisterPeer','getPeers','initPeering','getPeering','setPeering','isPeerable'].forEach(function(property) {
         destObject.prototype[property] = Peerable.prototype[property];
     });
 };

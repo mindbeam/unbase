@@ -1,5 +1,5 @@
 
-var memo_cls = require('./record');
+//var memo_cls = require('./record');
 var peerable_cls = require('./mixin/peerable');
 
 /* Record
@@ -7,16 +7,14 @@ var peerable_cls = require('./mixin/peerable');
  * Its present state is determined by the totality of its memos
 */
 
-function Record(slab,vals) {
-    this.id = slab.genChildID();
+function Record(id, peering, slab) {
+    this.id = id;
+    this.slab = slab;
     
-    vals = vals || {};
-    var set_memo = new memo_cls(slab,vals);
+    //this.initPeering();
     
-    this.registerPeer('self',slab.id,true);
-    
-    slab.putRecord(g);
-    slab.pushRecord( g, cb );
+    this.setPeering( peering );
+    slab.putItem(this);
  
     //this.slab = slab;   // A record object only exists within the context of a slab
     //this.memos = memos; // the present state of a record is determined by the sum of it's (relevant) memos
@@ -34,12 +32,12 @@ Record.prototype.set = function(args){
         m  = new memo_cls(id,args)
 }
 
-Record.prototype.packetize = function(){
+Record.prototype.serialize = function(){
     var vals = this.v,
         val
     ;
     
-    Object.keys(vals).forEach(function(key){
+  /*  Object.keys(vals).forEach(function(key){
         if( key.charAt(0) == '$' ){
             val = vals[key];
             if( val instanceof Record ) vals[key] = val.id;
@@ -47,8 +45,44 @@ Record.prototype.packetize = function(){
             // TBD: how to convey locations of said record id
         }
     });
-    return { id: this.id, vals: this.v, replicas: this.r };
+    
+    var rep =
+    */
+
+    return JSON.stringify({
+        id: this.id,
+        p:  this.getPeering(),
+    });
 }
 
+Record.prototype._evicting    = 0;
+Record.prototype.__replica_ct = 1;
+
+// should we un-set this if an eviction fails?
+Record.prototype.evicting = function(v) {
+    this._evicting = v ? 1 : 0;
+};
+
+Record.prototype.desiredReplicas = function() {
+   return Math.max(0,(this.__replica_ct - this.getPeers(true).length) + this._evicting);
+};
+    
 // export the class
-module.exports = Record;
+module.exports.createRecord = function(slab,vals){
+    var id = slab.genChildID();
+    
+    var record = new Record(id,null,slab,vals);
+    
+    return record;
+    //vals = vals || {};
+    //var set_memo = new memo_cls(slab,vals);
+}
+
+module.exports.deserialize = function(slab, serialized){
+    var packet = JSON.parse( serialized );
+    if(typeof packet != 'object') return null;
+        
+    var record = new Record(packet.id,packet.p,slab);
+  
+    return record;
+}
