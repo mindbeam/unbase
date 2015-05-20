@@ -9,21 +9,38 @@
  *
  * The reference "self" is reserved for other copies of the local Peerable object itself.
  * Other references, such as "relationship1", "relationship2", are used to track other related objects.
+ *
+ * a "peering" always pertains to an object ID
+ * Members of a peering are not limited to copies of the referenced object itself
+ *
  * 
  * There are two types of peers: replica, and observer
  * 
  * A replica is an actual copy of the object in question.
  * An observer contains no object data, but knows where the replicas are.
  * Both types participate in the peering, such that all peers are kept up to date with registrations and deregistrations.
- * 
+ *
+ * Slab A:
+ *   Item 1 [self]           - Peers: B
+ *    \___  [foo ]->Item 2   - Peers: B, C
+ *    
+ * Slab B:
+ *   Item 1 [self]          - Peers: A
+ *    \___  [foo ]->Item 2  - Peers: A, C
+ *   Item 2 [self]          - Peers: A, C
+ *
+ * Slab C:
+ *   Item 2 [self]          - Peers: A,B
+ *   
  */
 function Peerable() {}
 
 
-Peerable.prototype.registerPeer = function(ref, peer) {    
-    var list = this.p[ref] = this.p[ref] || [];
-    list.push(peer);
+Peerable.prototype.registerPeer = function(id, slab_id) {
+    if(id == this.id) id = 'self';
     
+    var list = this.p[id] = this.p[id] || [];
+    if(list.indexOf(slab_id) == -1) list.push(slab_id);
 };
 
 Peerable.prototype.deregisterPeer = function(ref, peer) {
@@ -51,6 +68,7 @@ Peerable.prototype.getPeering = function(){
         p       = me.p
         peering = {};
     
+    // return the peers we know about, plus self
     Object.getOwnPropertyNames(p).forEach(function (name) {
         peering[name] = [me.slab.id].concat(p[name]);
     });
@@ -58,10 +76,11 @@ Peerable.prototype.getPeering = function(){
     return peering;
 };
 
-
+// not sure if initPeering is needed
 Peerable.prototype.initPeering = function(){
     this.p = { self: [] };
 }
+
 Peerable.prototype.setPeering = function(peering){
     peering = peering || {};
 
