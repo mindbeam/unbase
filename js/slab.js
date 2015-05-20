@@ -35,8 +35,93 @@ function Slab(args) {
     this.mesh = args.mesh;
     this.mesh.registerSlab( this );
   
-  
-  
+    this.local_peerings = {};
+    this.ref_peerings   = {};
+    
+}
+
+Slab.prototype.registerItemPeering = function(item, ref_item_id, remote_slab_id){
+    var changes = {};
+    
+    // Need to know what items are referencing what, so we can de-peer from those items if all references are removed
+    // can't just ask the item for its references, because changes would fail to trigger the necessary de-peering
+    // need to detect when the reference changes, so we can de-peer the old reference, or reduce the reference count at least.
+    var refs = this.local_peerings[item.id] = this.local_peerings[item.id] || [];
+    if(refs.indexOf(ref_item_id) != -1) refs.push(ref_item_id);
+    
+    // lookup table so that remotes can be updated
+    // includes explicit list of local items so we can remove them, and determine when the
+    // reference count hits zero, so we know when it's appropriate to de-peer
+    var r   = this.ref_peerings[ref_item_id] = this.ref_peerings[ref_item_id] || { items: [], remotes: {} };
+    
+    if( r.items.indexOf(item.id) == -1 ) ref.items.push(item.id); // increase the count
+    
+    if( (remote_slab_id != this.id) && !r.remotes[remote_slab_id] ){
+        var flag = this._idmap[item.id] ? 2 : 1; // 2 means we have it, 1 means peering only
+        r.remotes[remote_slab_id] = flag;
+        
+        var change = changes[remote_slab_id] = changes[remote_slab_id] || {};
+        change[item.id] = flag;
+    }
+    
+    // can only get one change at a time for now, given the above. This is designed to possibly bundle up peering change info
+    this.mesh.sendPeeringChanges(this.id,changes);
+}
+
+Slab.prototype.receivePeeringChange = function(sending_slab_id,change){
+    
+    Object.keys(change).forEach(function(item_id){
+        var flag = change[item_id];
+        
+        if( this.ref_peerings[item_id] ){
+            if( flag ){
+                this.ref_peerings[item_id].remotes[sending_slab_id] = flag;
+            }else{
+                delete this.ref_peerings[item_id].remotes[sending_slab_id];
+            }
+        }
+    });
+}
+
+Slab.prototype.deregisterItemPeering = function(item){
+    var changes = {};
+    
+    var refs = this.local_peerings[item.id] || [];
+    
+    refs.forEach(function(ref_item_id){
+        var r   = this.ref_peerings[ref_item_id];
+        r.items = r.items.filter(function(id){ return id != item.id });
+        if(r.items.length == 0){
+            r.remotes.forEach(function(remote_slab_id){
+                var change = changes[remote_slab_id] = changes[remote_slab_id] || {};
+                change[item.id] = 0; // we no have
+            });
+            delete this.ref_peerings[ref_item_id];
+        }
+    });
+    
+    delete this.local_peerings[item.id];
+    this.mesh.sendPeeringChanges(this.id,changes);
+}
+
+
+Slab.prototype.getPeers = function(item_id,has_item){
+    var r   = this.ref_peerings[ref_item_id];
+    if(!r) return null;
+    
+    var remotes = [];
+    
+    if(has_item){
+        Object.keys(r.remotes).forEach(function(remote_slab_id){
+            if(r.remotes[remote_slab_id] == 2 ) remotes.push(remote_slab_id)
+        });
+    }else{
+        Object.keys(r.remotes).forEach(function(remote_slab_id){
+            if(r.remotes[remote_slab_id]) remotes.push(remote_slab_id)
+        });
+    }
+    
+    return remotes;
 }
 
 /* Store a item in this slab + manage LRU */
@@ -63,6 +148,9 @@ Slab.prototype.putItem = function(item,cb) {
         // increase the size counter
         this.size++;
     }
+    
+    // TODO: handle initial object peering setup more intelligently than a self reference
+    slab.registerItemPeering( item, item.id, slab.id );
     
     console.log( 'Put item', item.id, 'to slab', this.id );
     
@@ -139,7 +227,8 @@ Slab.prototype.killItem = function(item) {
     }
     
     this.size--;
-    this.mesh.deregisterSlabItem(this,item);
+    this.deregisterPeering(item.id);
+    //this.mesh.deregisterSlabItem(this,item);
 };
 
 Slab.prototype.deregisterItemPeer = function( item_id, peer_id ) {

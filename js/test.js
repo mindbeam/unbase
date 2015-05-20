@@ -13,10 +13,12 @@ var slab2 = new slab_cls({node: "A", mesh: mesh });
 
 //var i = 10,g;
 //while(i--){
-   var rec = record_cls.createRecord(slab1, { });
+   var rec1 = record_cls.createRecord(slab1, { });
+   var rec2 = record_cls.createRecord(slab1, { $parent: rec1 });
+   
 //}
 
-//slab1.evictItem( g );
+slab1.evictItem( rec1 );
 
 console.log( 'Slab 1 size', slab1.size, slab1.dumpItemIds().join(',') );
 console.log( 'Slab 2 size', slab2.size, slab2.dumpItemIds().join(',') );

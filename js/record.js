@@ -1,19 +1,40 @@
 
 //var memo_cls = require('./record');
-var peerable_cls = require('./mixin/peerable');
 
 /* Record
  * A record is a bundle of values representing a discrete thing.
  * Its present state is determined by the totality of its memos
 */
 
-function Record(id, peering, slab) {
+function Record(id, peering, slab, vals) {
     this.id = id;
     this.slab = slab;
     
     //this.initPeering();
+    //this.setPeering( peering );
     
-    this.setPeering( peering );
+    // Temporary hack - doing the value init here out of convenience
+    // because edit propagation doesn't work yet. relying in the initial pushItemToSlab for preliminary testing
+    vals = vals || {};
+    var val;
+    Object.keys(vals).forEach(function(key){
+        if( key.charAt(0) == '$' ){
+            val = vals[key];
+            if( val instanceof Record ){
+                vals[key] = val.id;
+                slab.registerItemPeering( this, val.id, slab.id );
+            }else{
+                throw "need a slab id AND a record id";
+            }
+            // else, should already be a valid record id
+            // TBD: how to convey locations of said record id
+            
+        }
+        
+    });
+    
+    
+    
     slab.putItem(this);
  
     //this.slab = slab;   // A record object only exists within the context of a slab
@@ -21,7 +42,6 @@ function Record(id, peering, slab) {
     // do records even have replicas?? or just memos
   
 }
-peerable_cls.mixin(Record);
 
 Record.prototype.set = function(args){
     /*
@@ -51,7 +71,7 @@ Record.prototype.serialize = function(){
 
     return JSON.stringify({
         id: this.id,
-        p:  this.getPeering(),
+        //p:  this.getPeering(),
     });
 }
 
@@ -64,7 +84,7 @@ Record.prototype.evicting = function(v) {
 };
 
 Record.prototype.desiredReplicas = function() {
-   return Math.max(0,(this.__replica_ct - this.getPeers(true).length) + this._evicting);
+   return Math.max(0,(this.__replica_ct - this.slab.getPeers(this.id,true).length) + this._evicting);
 };
     
 // export the class

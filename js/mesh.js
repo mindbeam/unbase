@@ -43,12 +43,6 @@ Mesh.prototype.getAcceptingSlabs = function( exclude_slab_id, number ) {
 }
 
 
-/*
- * Working terminology:
- *   slab = my slab
- *   peer = your slab
-*/
-
 Mesh.prototype.pushItemToSlab = function( from_slab, to_slab, item ) {
     
     console.log('Pushing item', item.id, 'from slab', from_slab.id, 'to slab', to_slab.id);
@@ -60,9 +54,9 @@ Mesh.prototype.pushItemToSlab = function( from_slab, to_slab, item ) {
     */
     
     var serialized = item.serialize();
-    
     var cloned_record = new record_cls.deserialize( to_slab, serialized );
-
+    item.registerPeer('self',to_slab);
+    
     console.log(from_slab.id, '(origin) record  ', item.id);
     console.log(to_slab.id, '(dest)   record  ' );
     
@@ -72,13 +66,13 @@ Mesh.prototype.pushItemToSlab = function( from_slab, to_slab, item ) {
     */
 }
 
-Mesh.prototype.sendPeeringChange = function( peeringchange ) {
+Mesh.prototype.sendPeeringChanges = function( sending_slab_id, peeringchanges ) {
     var me = this;
     
-    Object.keys(peeringchange).forEach(function(id){
-        var slab = me._slabs[id];
+    Object.keys(peeringchanges).forEach(function(receiving_slab_id){
+        var slab = me._slabs[receiving_slab_id];
         if( slab ){
-            var rv = slab.receivePeeringChange( peeringchange[ id ] );
+            var rv = slab.receivePeeringChange( sending_slab_id, peeringchanges[ receiving_slab_id ] );
             // console.log('deregisterRecordPeer from', slab.id, record.id, 'to', peer.id, rv ? 'Succeeded' : 'Failed' );
         }
     });

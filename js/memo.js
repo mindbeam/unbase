@@ -1,5 +1,4 @@
 
-var peerable_cls = require('./mixin/peerable');
 
 /* Memo
  * A memo is an immutable message.
@@ -18,7 +17,6 @@ function Memo(slab,vals) {
     */
     
 }
-peerable_cls.mixin(Memo);
 
 
 Memo.prototype.packetize = function(){
