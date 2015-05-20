@@ -71,7 +71,7 @@ Record.prototype.serialize = function(){
 
     return JSON.stringify({
         id: this.id,
-        //p:  this.getPeering(),
+        p:  this.slab.getPeeringsForItem(this)
     });
 }
 
@@ -101,8 +101,12 @@ module.exports.createRecord = function(slab,vals){
 module.exports.deserialize = function(slab, serialized){
     var packet = JSON.parse( serialized );
     if(typeof packet != 'object') return null;
-        
+
+    console.log(packet);
+
     var record = new Record(packet.id,packet.p,slab);
-  
+    
+    // this is weird. I think this should be based on the payload of the item, rather than the peering hints
+    //slab.setItemPeering(record, packet.p);
     return record;
 }

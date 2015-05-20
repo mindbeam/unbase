@@ -14,7 +14,10 @@ var slab2 = new slab_cls({node: "A", mesh: mesh });
 //var i = 10,g;
 //while(i--){
    var rec1 = record_cls.createRecord(slab1, { });
-   var rec2 = record_cls.createRecord(slab1, { $parent: rec1 });
+   //console.log( slab1 );
+   console.log( slab1.getPeers(rec1.id) );
+   
+   //var rec2 = record_cls.createRecord(slab1, { $parent: rec1 });
    
 //}
 

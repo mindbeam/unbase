@@ -52,7 +52,12 @@ Mesh.prototype.pushItemToSlab = function( from_slab, to_slab, item ) {
      * This probably isn't very robust, but is useful for proof-of-concept stuffs
      * packet.replicas = packet.replicas.filter(function(id){ return id != to_slab.id });
     */
-    
+
+    // peering handoff is being handled via serialize/deserialize for the time being.
+    // This seems weird, on account of the possibility for duplicates across multiple items being pushed
+    // think about:
+    // including only ref info in the serialized object
+    // with subsequent peering hints, which would then be applied to the registered refs
     var serialized = item.serialize();
     var cloned_record = new record_cls.deserialize( to_slab, serialized );
     item.registerPeer('self',to_slab);
@@ -73,7 +78,6 @@ Mesh.prototype.sendPeeringChanges = function( sending_slab_id, peeringchanges ) 
         var slab = me._slabs[receiving_slab_id];
         if( slab ){
             var rv = slab.receivePeeringChange( sending_slab_id, peeringchanges[ receiving_slab_id ] );
-            // console.log('deregisterRecordPeer from', slab.id, record.id, 'to', peer.id, rv ? 'Succeeded' : 'Failed' );
         }
     });
     

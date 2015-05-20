@@ -47,14 +47,14 @@ Slab.prototype.registerItemPeering = function(item, ref_item_id, remote_slab_id)
     // can't just ask the item for its references, because changes would fail to trigger the necessary de-peering
     // need to detect when the reference changes, so we can de-peer the old reference, or reduce the reference count at least.
     var refs = this.local_peerings[item.id] = this.local_peerings[item.id] || [];
-    if(refs.indexOf(ref_item_id) != -1) refs.push(ref_item_id);
+    if(refs.indexOf(ref_item_id) == -1) refs.push(ref_item_id);
     
     // lookup table so that remotes can be updated
     // includes explicit list of local items so we can remove them, and determine when the
     // reference count hits zero, so we know when it's appropriate to de-peer
     var r   = this.ref_peerings[ref_item_id] = this.ref_peerings[ref_item_id] || { items: [], remotes: {} };
     
-    if( r.items.indexOf(item.id) == -1 ) ref.items.push(item.id); // increase the count
+    if( r.items.indexOf(item.id) == -1 ) r.items.push(item.id); // increase the count
     
     if( (remote_slab_id != this.id) && !r.remotes[remote_slab_id] ){
         var flag = this._idmap[item.id] ? 2 : 1; // 2 means we have it, 1 means peering only
@@ -104,9 +104,21 @@ Slab.prototype.deregisterItemPeering = function(item){
     this.mesh.sendPeeringChanges(this.id,changes);
 }
 
+Slab.prototype.getPeeringsForItem = function(item){
+    var me      = this,
+        peering = {};
+    
+    var refs = this.local_peerings[item.id] || [];
+    
+    refs.forEach(function(ref_item_id){
+        peering[ ref_item_id ] = me.ref_peerings[ref_item_id];
+    });
+    
+    return peering;
+}
 
 Slab.prototype.getPeers = function(item_id,has_item){
-    var r   = this.ref_peerings[ref_item_id];
+    var r   = this.ref_peerings[item_id];
     if(!r) return null;
     
     var remotes = [];
@@ -150,7 +162,7 @@ Slab.prototype.putItem = function(item,cb) {
     }
     
     // TODO: handle initial object peering setup more intelligently than a self reference
-    slab.registerItemPeering( item, item.id, slab.id );
+    this.registerItemPeering( item, item.id, this.id );
     
     console.log( 'Put item', item.id, 'to slab', this.id );
     
@@ -227,19 +239,8 @@ Slab.prototype.killItem = function(item) {
     }
     
     this.size--;
-    this.deregisterPeering(item.id);
-    //this.mesh.deregisterSlabItem(this,item);
+    this.deregisterItemPeering(item);
 };
-
-Slab.prototype.deregisterItemPeer = function( item_id, peer_id ) {
-    var item = this._idmap[item_id];
-    
-    if( item ){
-        return item.deregisterReplica( peer_id );
-    }else{
-        return false;
-    }
-}
 
 /*
  * pushItem - Ensure that this item is sufficiently replicated
@@ -257,10 +258,13 @@ Slab.prototype.pushItem = function(item,cb){
      * Update to be async
      * Handle the possibility of push failure
     */
-    
+    var peers = this.getPeers(item.id,true);
+    console.log(this.id,'peers',peers);
     ap.forEach(function(slab){
-        me.mesh.pushItemToSlab( me, slab, item );
-        desired--;
+        if( peers.indexOf(slab) == -1 ){
+            me.mesh.pushItemToSlab( me, slab, item );
+            desired--;
+        }
     });
 
     if( desired > 0 ) console.error( "unable to achieve required replica count" );
