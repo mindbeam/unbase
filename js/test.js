@@ -15,16 +15,21 @@ var slab2 = new slab_cls({node: "A", mesh: mesh });
 //while(i--){
    var rec1 = record_cls.createRecord(slab1, { });
    //console.log( slab1 );
-   console.log( slab1.getPeers(rec1.id) );
    
-   //var rec2 = record_cls.createRecord(slab1, { $parent: rec1 });
+   console.log( rec1.id, slab1.getPeeringsForItem(rec1) );
+   console.log( rec1.id, slab2.getPeeringsForItem(rec1) );
    
+   var rec2 = record_cls.createRecord(slab1, { $parent: rec1 });
+   
+   
+   console.log( rec2.id, slab1.getPeeringsForItem(rec2) );
+   console.log( rec2.id, slab2.getPeeringsForItem(rec2) );
 //}
 
-slab1.evictItem( rec1 );
+//slab1.evictItem( rec1 );
 
-console.log( 'Slab 1 size', slab1.size, slab1.dumpItemIds().join(',') );
-console.log( 'Slab 2 size', slab2.size, slab2.dumpItemIds().join(',') );
+//console.log( 'Slab 1 size', slab1.size, slab1);//.dumpItemIds().join(',') );
+//console.log( 'Slab 2 size', slab2.size, slab2);//.dumpItemIds().join(',') );
 //console.log( 'Slab 3 size', slab3.size, slab3.dumpItemIds().join(',') );
 
 //testrecord1 = slab1.getItem('A01-4');

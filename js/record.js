@@ -6,12 +6,12 @@
  * Its present state is determined by the totality of its memos
 */
 
-function Record(id, peering, slab, vals) {
-    this.id = id;
-    this.slab = slab;
+function Record(id, peerings, slab, vals) {
+    var me = this;
     
-    //this.initPeering();
-    //this.setPeering( peering );
+    me.id = id;
+    me.slab = slab;
+    peerings = peerings ? JSON.parse(JSON.stringify(peerings)) : {};
     
     // Temporary hack - doing the value init here out of convenience
     // because edit propagation doesn't work yet. relying in the initial pushItemToSlab for preliminary testing
@@ -22,7 +22,8 @@ function Record(id, peering, slab, vals) {
             val = vals[key];
             if( val instanceof Record ){
                 vals[key] = val.id;
-                slab.registerItemPeering( this, val.id, slab.id );
+                peerings[val.id] = {};
+                peerings[val.id][slab.id] = 2; // cheating with just assuming the peer_type here
             }else{
                 throw "need a slab id AND a record id";
             }
@@ -33,7 +34,9 @@ function Record(id, peering, slab, vals) {
         
     });
     
-    
+    if( Object.keys(peerings).length  ){
+        slab.registerItemPeerings(this,peerings);
+    }
     
     slab.putItem(this);
  
@@ -71,7 +74,7 @@ Record.prototype.serialize = function(){
 
     return JSON.stringify({
         id: this.id,
-        p:  this.slab.getPeeringsForItem(this)
+        p:  this.slab.getPeeringsForItem(this,true)
     });
 }
 
@@ -91,8 +94,8 @@ Record.prototype.desiredReplicas = function() {
 module.exports.createRecord = function(slab,vals){
     var id = slab.genChildID();
     
+    console.log('record.createRecord', id);
     var record = new Record(id,null,slab,vals);
-    
     return record;
     //vals = vals || {};
     //var set_memo = new memo_cls(slab,vals);
@@ -102,7 +105,8 @@ module.exports.deserialize = function(slab, serialized){
     var packet = JSON.parse( serialized );
     if(typeof packet != 'object') return null;
 
-    console.log(packet);
+    console.log('record.deserialize', packet.id);
+    //console.log(packet);
 
     var record = new Record(packet.id,packet.p,slab);
     

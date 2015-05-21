@@ -45,7 +45,7 @@ Mesh.prototype.getAcceptingSlabs = function( exclude_slab_id, number ) {
 
 Mesh.prototype.pushItemToSlab = function( from_slab, to_slab, item ) {
     
-    console.log('Pushing item', item.id, 'from slab', from_slab.id, 'to slab', to_slab.id);
+    console.log('mesh.pushItemToSlab', item.id, 'from slab', from_slab.id, 'to slab', to_slab.id);
     
     
     /* Shouldn't need to filter replicas, as the putRecord will fail if we're trying to perform a duplicate put
@@ -59,11 +59,11 @@ Mesh.prototype.pushItemToSlab = function( from_slab, to_slab, item ) {
     // including only ref info in the serialized object
     // with subsequent peering hints, which would then be applied to the registered refs
     var serialized = item.serialize();
+    console.log(serialized);
     var cloned_record = new record_cls.deserialize( to_slab, serialized );
-    item.registerPeer('self',to_slab);
     
-    console.log(from_slab.id, '(origin) record  ', item.id);
-    console.log(to_slab.id, '(dest)   record  ' );
+    //console.log(from_slab.id, '(origin) record  ', item.id);
+    //console.log(to_slab.id, '(dest)   record  ' );
     
     /* 
      console.log('pushRecord completed for record id', cloned_record.id, 'replicas are:', cloned_packet.replicas );
@@ -74,6 +74,7 @@ Mesh.prototype.pushItemToSlab = function( from_slab, to_slab, item ) {
 Mesh.prototype.sendPeeringChanges = function( sending_slab_id, peeringchanges ) {
     var me = this;
     
+        console.log('mesh.sendPeeringChanges', sending_slab_id, peeringchanges );
     Object.keys(peeringchanges).forEach(function(receiving_slab_id){
         var slab = me._slabs[receiving_slab_id];
         if( slab ){

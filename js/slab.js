@@ -40,44 +40,61 @@ function Slab(args) {
     
 }
 
-Slab.prototype.registerItemPeering = function(item, ref_item_id, remote_slab_id){
-    var changes = {};
+Slab.prototype.registerItemPeering = function(item, ref_item_id, remote_slab_id, peer_flag, skip ){
+    console.log('slab.registerItemPeering', item.id, ref_item_id, remote_slab_id, peer_flag, skip );
+    var peerings = {};
+    peerings[ref_item_id] = {};
+    peerings[ref_item_id][remote_slab_id] = peer_flag;
+    this.registerItemPeerings(item, peerings, skip);
     
+}
+Slab.prototype.registerItemPeerings = function(item, peerings, skip ){
+    var me      = this,
+        changes = {};
+        console.log('slab[' + me.id + '].registerItemPeerings', item.id, peerings, skip);
+
     // Need to know what items are referencing what, so we can de-peer from those items if all references are removed
-    // can't just ask the item for its references, because changes would fail to trigger the necessary de-peering
+    // probably can't just ask the item for its references, because changes would fail to trigger the necessary de-peering
     // need to detect when the reference changes, so we can de-peer the old reference, or reduce the reference count at least.
-    var refs = this.local_peerings[item.id] = this.local_peerings[item.id] || [];
-    if(refs.indexOf(ref_item_id) == -1) refs.push(ref_item_id);
-    
-    // lookup table so that remotes can be updated
-    // includes explicit list of local items so we can remove them, and determine when the
-    // reference count hits zero, so we know when it's appropriate to de-peer
-    var r   = this.ref_peerings[ref_item_id] = this.ref_peerings[ref_item_id] || { items: [], remotes: {} };
-    
-    if( r.items.indexOf(item.id) == -1 ) r.items.push(item.id); // increase the count
-    
-    if( (remote_slab_id != this.id) && !r.remotes[remote_slab_id] ){
-        var flag = this._idmap[item.id] ? 2 : 1; // 2 means we have it, 1 means peering only
-        r.remotes[remote_slab_id] = flag;
+    var refs = me.local_peerings[item.id] = me.local_peerings[item.id] || [];
+    Object.keys(peerings).forEach(function(ref_item_id){
         
-        var change = changes[remote_slab_id] = changes[remote_slab_id] || {};
-        change[item.id] = flag;
-    }
+        if(refs.indexOf(ref_item_id) == -1) refs.push(ref_item_id);
+        
+        // lookup table so that remotes can be updated
+        // includes explicit list of local items so we can remove them, and determine when the
+        // reference count hits zero, so we know when it's appropriate to de-peer
+        var r   = me.ref_peerings[ref_item_id] = me.ref_peerings[ref_item_id] || { items: [], remotes: {} };
+        if( r.items.indexOf(item.id) == -1 ) r.items.push(item.id); // increase the count
+        
+        Object.keys(peerings[ref_item_id]).forEach(function(remote_slab_id){
+            peer_flag = peerings[ref_item_id][remote_slab_id];
+            
+            if( (remote_slab_id != me.id) && !r.remotes[remote_slab_id] ){
+                r.remotes[remote_slab_id] = peer_flag; // 2 means we actually have it, 1 means peering only
+                
+                var change = changes[remote_slab_id] = changes[remote_slab_id] || {};
+                change[item.id] = peer_flag;
+            }
+        });
+    });
     
-    // can only get one change at a time for now, given the above. This is designed to possibly bundle up peering change info
-    this.mesh.sendPeeringChanges(this.id,changes);
+    if(!skip ){
+        if( Object.keys(changes).length ) me.mesh.sendPeeringChanges(me.id,changes);
+    }
 }
 
 Slab.prototype.receivePeeringChange = function(sending_slab_id,change){
-    
+    var me = this;
+    console.log('slab[' + me.id + '].receivePeeringChange', sending_slab_id, change );
     Object.keys(change).forEach(function(item_id){
         var flag = change[item_id];
         
-        if( this.ref_peerings[item_id] ){
+        if( me.ref_peerings[item_id] ){
             if( flag ){
-                this.ref_peerings[item_id].remotes[sending_slab_id] = flag;
+                me.ref_peerings[item_id].remotes[sending_slab_id] = flag;
             }else{
-                delete this.ref_peerings[item_id].remotes[sending_slab_id];
+                delete me.ref_peerings[item_id].remotes[sending_slab_id];
             }
         }
     });
@@ -104,17 +121,24 @@ Slab.prototype.deregisterItemPeering = function(item){
     this.mesh.sendPeeringChanges(this.id,changes);
 }
 
-Slab.prototype.getPeeringsForItem = function(item){
+Slab.prototype.getPeeringsForItem = function(item, include_self){
     var me      = this,
-        peering = {};
+        peerings = {};
     
     var refs = this.local_peerings[item.id] || [];
     
     refs.forEach(function(ref_item_id){
-        peering[ ref_item_id ] = me.ref_peerings[ref_item_id];
+        var remotes = me.ref_peerings[ref_item_id].remotes;
+        var peering = {};
+        Object.keys(remotes).forEach(function(key) {
+            peering[key] = remotes[key];
+        });
+        if(include_self) peering[ me.id ] = 2;
+        
+        peerings[ ref_item_id ] = peering;
     });
     
-    return peering;
+    return peerings;
 }
 
 Slab.prototype.getPeers = function(item_id,has_item){
@@ -141,6 +165,8 @@ Slab.prototype.putItem = function(item,cb) {
     //if( ! item instanceof item_cls ) throw "invalid item";
     if( this._idmap[item.id] ) throw "attempt to put item twice";
     
+    console.log( 'slab[' + this.id + '].putItem', item.id, 'to slab', this.id );
+    
     this._idmap[item.id] = item;
     
     if (this.tail) {
@@ -162,9 +188,8 @@ Slab.prototype.putItem = function(item,cb) {
     }
     
     // TODO: handle initial object peering setup more intelligently than a self reference
-    this.registerItemPeering( item, item.id, this.id );
-    
-    console.log( 'Put item', item.id, 'to slab', this.id );
+    // For the time being, this is necessary, otherwise peering updates from other nodes will fall on deaf ears
+    this.registerItemPeering( item, item.id, this.id, 2 );
     
     this.pushItem( item, cb );
 };
@@ -250,7 +275,8 @@ Slab.prototype.killItem = function(item) {
 Slab.prototype.pushItem = function(item,cb){
     var me      = this,
         desired = item.desiredReplicas();
-        
+    
+    console.log('slab[' + me.id + '].pushItem',item.id);
     if (desired <= 0) return;
     var ap     = this.mesh.getAcceptingSlabs( this.id, desired );
 
@@ -259,7 +285,8 @@ Slab.prototype.pushItem = function(item,cb){
      * Handle the possibility of push failure
     */
     var peers = this.getPeers(item.id,true);
-    console.log(this.id,'peers',peers);
+    //console.log(this.id,'peers',peers);
+    
     ap.forEach(function(slab){
         if( peers.indexOf(slab) == -1 ){
             me.mesh.pushItemToSlab( me, slab, item );
@@ -328,6 +355,9 @@ Slab.prototype.getItem = function(id){
 
 };
 
+/*
+ * Edits to be handled directly via the record object
+ * 
 Slab.prototype.editItem = function(item,vals){
     if(!item instanceof item_cls) throw "invalid item";
     var diff = {}, val;
@@ -348,9 +378,6 @@ Slab.prototype.editItem = function(item,vals){
         }
     });
     
-    
-    /* TODO IMPLEMENT MVCC - NBD */
-    
     this.mesh.replicateItemEdit(item,diff);
 }
 
@@ -363,6 +390,7 @@ Slab.prototype.receiveItemReplication = function( item_id, diff ){
         console.log('Slab', this.id, 'receiveItemReplication', item.id, diff );
     }
 }
+*/
 
 Slab.prototype.dumpItemIds = function(){
     var ids = [];
