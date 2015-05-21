@@ -101,24 +101,29 @@ Slab.prototype.receivePeeringChange = function(sending_slab_id,change){
 }
 
 Slab.prototype.deregisterItemPeering = function(item){
-    var changes = {};
+    var me      = this,
+        changes = {};
     
-    var refs = this.local_peerings[item.id] || [];
+    console.log('slab[' + me.id + '].deregisterItemPeering', item.id );
+    var refs = me.local_peerings[item.id] || [];
     
     refs.forEach(function(ref_item_id){
-        var r   = this.ref_peerings[ref_item_id];
+        var r   = me.ref_peerings[ref_item_id];
         r.items = r.items.filter(function(id){ return id != item.id });
+        console.log('meow',ref_item_id, r);
+        // TODO this isn't right
+        
         if(r.items.length == 0){
-            r.remotes.forEach(function(remote_slab_id){
+            Object.keys(r.remotes).forEach(function(remote_slab_id){
                 var change = changes[remote_slab_id] = changes[remote_slab_id] || {};
                 change[item.id] = 0; // we no have
             });
-            delete this.ref_peerings[ref_item_id];
+            delete me.ref_peerings[ref_item_id];
         }
     });
     
-    delete this.local_peerings[item.id];
-    this.mesh.sendPeeringChanges(this.id,changes);
+    delete me.local_peerings[item.id];
+    me.mesh.sendPeeringChanges(me.id,changes);
 }
 
 Slab.prototype.getPeeringsForItem = function(item, include_self){

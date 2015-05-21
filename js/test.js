@@ -9,7 +9,7 @@ var mesh       = new (require('./mesh'))();
 // Temporarily allowing node id to be one character for ease of reading
 var slab1 = new slab_cls({node: "A", mesh: mesh });
 var slab2 = new slab_cls({node: "A", mesh: mesh });
-//var slab3 = new slab_cls({node: "A", mesh: mesh });
+var slab3 = new slab_cls({node: "A", mesh: mesh });
 
 //var i = 10,g;
 //while(i--){
@@ -26,7 +26,9 @@ var slab2 = new slab_cls({node: "A", mesh: mesh });
    console.log( rec2.id, slab2.getPeeringsForItem(rec2) );
 //}
 
-//slab1.evictItem( rec1 );
+slab1.killItem( rec1 );
+
+   console.log( rec1.id, slab2.getPeeringsForItem(rec1) );
 
 //console.log( 'Slab 1 size', slab1.size, slab1);//.dumpItemIds().join(',') );
 //console.log( 'Slab 2 size', slab2.size, slab2);//.dumpItemIds().join(',') );
