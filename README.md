@@ -52,15 +52,16 @@ Here, the same principle applies, it's just a bit more spread out.
 * Efficient push notifications for all changes to all interested parties
 * Drastically reduce latency by moving data close to where you need it [closer to the processor][what_is_distance]
 * Allow continued operation during a network partition
- * Cheat CAP theorem limitations by *selectively* loosening consistency guarantees (with informed consent)
- * Treat consistency violations as inevitable, and allow them to be systematically resolved
+ * Avoid CAP theorem limitations by abandoning linearizability in favor of [causal consistency](http://sns.cs.princeton.edu/projects/cops-and-eiger/)
+ * Treat conflicts as inevitable, and allow them to be resolved systematically
 * Destroy the distinction between client and server. They are considered identical **except** for policy, capability, and resources.
  * Access control enforcement at every stage of replication
  * Push business logic to initiators when possible, otherwise delegate to nearest capable node
 * Support for complex data types to limit unnecessary entity-attribute-value structures
 * Virtualized objects, accessible from any node, complete with synchronous, asynchronous business logic enforcement
+* Utilize [mesh netowrking](https://github.com/telehash/telehash.org/tree/master/v3) to allow ALL system participants ("clients" and "servers") to communicate directly, and around damage or network interruption
 
 ## Design Non-Goals:
 
-* Serializability - [Fundimentally incompatible](https://groups.google.com/forum/#!msg/cloud-computing/nn7Sw5T0eSE/NxOTUwD_0ykJ) with distributed systems.
+* Linearizability - [Fundimentally incompatible](https://groups.google.com/forum/#!msg/cloud-computing/nn7Sw5T0eSE/NxOTUwD_0ykJ) with the physical laws of the universe (unless you're very patient)
 * SQL support     - SQL might be added at a later date, but only as a means of introspection / administration. It
