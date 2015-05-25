@@ -59,7 +59,7 @@ Here, the same principle applies, it's just a bit more spread out.
  * Push business logic to initiators when possible, otherwise delegate to nearest capable node
 * Support for complex data types to limit unnecessary entity-attribute-value structures
 * Virtualized objects, accessible from any node, complete with synchronous, asynchronous business logic enforcement
-* Utilize [mesh netowrking](https://github.com/telehash/telehash.org/tree/master/v3) to allow ALL system participants ("clients" and "servers") to communicate directly, and around damage or network interruption
+* Utilize [mesh networking](https://github.com/telehash/telehash.org/tree/master/v3) to allow ALL system participants ("clients" and "servers") to communicate directly, and around damage or network interruption
 
 ## Design Non-Goals:
 
