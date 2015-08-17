@@ -1,5 +1,17 @@
 
-//var memo_cls = require('./record');
+
+module.exports.createRecord = function(slab,vals){
+    var id = slab.genChildID();
+    
+    console.log('record.createRecord', id);
+    
+    // create the record. No peerings yet
+    var record = new Record( id,null,slab,vals );
+    
+    return record;
+    //vals = vals || {};
+    //var set_memo = new memo_cls(slab,vals);
+}
 
 /* Record
  * A record is a bundle of values representing a discrete thing.
@@ -35,10 +47,12 @@ function Record(id, peerings, slab, vals) {
     });
     
     if( Object.keys(peerings).length  ){
-        slab.registerItemPeerings(this,peerings);
+        slab.updateItemPeerings(this,peerings);
     }
     
-    slab.putItem(this);
+    slab.putItem(this,function(status){
+        // gets called with the result of checkItemReplicationFactor
+    });
  
     //this.slab = slab;   // A record object only exists within the context of a slab
     //this.memos = memos; // the present state of a record is determined by the sum of it's (relevant) memos
@@ -87,25 +101,14 @@ Record.prototype.evicting = function(v) {
 };
 
 Record.prototype.desiredReplicas = function() {
-   return Math.max(0,(this.__replica_ct - this.slab.getPeers(this.id,true).length) + this._evicting);
+   return Math.max(0,(this.__replica_ct - this.slab.getItemPeers(this.id,true).length) + this._evicting);
 };
-    
-// export the class
-module.exports.createRecord = function(slab,vals){
-    var id = slab.genChildID();
-    
-    console.log('record.createRecord', id);
-    var record = new Record(id,null,slab,vals);
-    return record;
-    //vals = vals || {};
-    //var set_memo = new memo_cls(slab,vals);
-}
 
 module.exports.deserialize = function(slab, serialized){
     var packet = JSON.parse( serialized );
     if(typeof packet != 'object') return null;
 
-    console.log('record.deserialize', packet.id);
+    console.log('record.deserialized item', packet.id, 'into slab', slab.id );
     //console.log(packet);
 
     var record = new Record(packet.id,packet.p,slab);

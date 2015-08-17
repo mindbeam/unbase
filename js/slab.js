@@ -1,12 +1,16 @@
 /**
  * Slab - A storage substrate for items/memos
- * Very loosely based on Rasmus Andersson's js-lru
+ *
+ * Purpose:
+ *    Stores memos
+ *    Manages memo peering
+ *
+ * The storage portion is very loosely based on Rasmus Andersson's js-lru
  * A doubly linked list-based Least Recently Used (LRU) cache. Will keep most
- * recently used items while discarding least recently used items when its limit
+ * recently used items while evicting least recently used items when its limit
  * is reached.
  * 
  */
-
 
 var slab_increment = 0;
 
@@ -14,16 +18,21 @@ function Slab(args) {
 
     if(slab_increment > 1296)                 throw "cannot create more than 1296 slabs";
     if(typeof args != 'object')               throw "must provide args";
-    if(!args.node || !args.node.length == 8)  throw "must provide 8 digit node id";
+    
+    //if(!args.node || !args.node.length == 8)  throw "must provide 8 digit node id";
+    if(!args.id)                              throw "must provide slab id";
     if(!args.mesh)                            throw "must provide mesh object";
   
     // encode and zerofill the slab id
-    this.id = args.node + ( "00" + (++slab_increment).toString(36)).substr(-2,2);
+    //this.id = args.node + ( "00" + (++slab_increment).toString(36)).substr(-2,2);
+    this.id = args.id;
+    
     console.log('Initialized Slab', this.id);
     //if(this.id.length != 10) throw "sanity error " + this.id;
     
-    // Temporarily assuming nods ids are one character for simplicity
-    if(this.id.length != 3) throw "sanity error " + this.id;
+    // Temporarily assuming node ids are one character for simplicity
+    //if(this.id.length != 3) throw "sanity error " + this.id;
+    if(this.id.length != 1) throw "sanity error " + this.id;
     
     this.child_increment = 0;
     this._idmap = {};
@@ -34,29 +43,63 @@ function Slab(args) {
     
     this.mesh = args.mesh;
     this.mesh.registerSlab( this );
-  
+    
     this.local_peerings = {};
     this.ref_peerings   = {};
     
 }
 
-Slab.prototype.registerItemPeering = function(item, ref_item_id, remote_slab_id, peer_flag, skip ){
-    console.log('slab.registerItemPeering', item.id, ref_item_id, remote_slab_id, peer_flag, skip );
+
+/*
+ * convenience method for registering a peering between an item, and a referenced item.
+ */
+
+Slab.prototype.registerItemPeering = function(item, ref_item_id, remote_slab_id, peer_state, silent ){
+    
+    silent = silent || false;
+    console.log('slab[' + this.id + '].registerItemPeering', "Item:", item.id, "Ref Item:", ref_item_id, "Remote Slab:", remote_slab_id, "Peering State:", peer_state, "Silent:", silent );
+    
     var peerings = {};
     peerings[ref_item_id] = {};
-    peerings[ref_item_id][remote_slab_id] = peer_flag;
-    this.registerItemPeerings(item, peerings, skip);
+    peerings[ref_item_id][remote_slab_id] = peer_state;
+    
+    this.updateItemPeerings(item, peerings, silent);
     
 }
-Slab.prototype.registerItemPeerings = function(item, peerings, skip ){
+
+/*
+ * updateItemPeerings - method for updating peering data for a given item
+ * 
+ * item     - the item object
+ * peerings - struct of peerings which we are updating { ref_item_id : { remote_slab_id: peer_state }, .. }
+ * silent   - boolean fflag to indicate that we should abstain from notifying the mesh
+ *
+ * Peering Definition:
+ *     A "peering" is a loose collection of items which are interested in each other's contact information.
+ *     Participants in a peering may or may not even have a copy of the item in question.
+ *
+ * Peering states:
+ *     0 - Non participatory
+ *     1 - Participatory, but does not have a copy of the referenced item
+ *     2 - Participatory, AND has a copy of the referenced item
+ *
+ * By default, an instance of an item peers with other instances of same, across slabs in which it is resident.
+ * Upon (final) eviction of an item from a slab, an update containing a negative peering state is pushed to other participants in the peering. 
+ * 
+ */
+Slab.prototype.updateItemPeerings = function( item, peerings, silent ){
     var me      = this,
-        changes = {};
-        console.log('slab[' + me.id + '].registerItemPeerings', item.id, peerings, skip);
+        changes = {},
+        peer_state
+    ;
+    
+    console.log('slab[' + me.id + '].updateItemPeerings', item.id, peerings, silent);
 
     // Need to know what items are referencing what, so we can de-peer from those items if all references are removed
     // probably can't just ask the item for its references, because changes would fail to trigger the necessary de-peering
     // need to detect when the reference changes, so we can de-peer the old reference, or reduce the reference count at least.
     var refs = me.local_peerings[item.id] = me.local_peerings[item.id] || [];
+    
     Object.keys(peerings).forEach(function(ref_item_id){
         
         if(refs.indexOf(ref_item_id) == -1) refs.push(ref_item_id);
@@ -68,31 +111,35 @@ Slab.prototype.registerItemPeerings = function(item, peerings, skip ){
         if( r.items.indexOf(item.id) == -1 ) r.items.push(item.id); // increase the count
         
         Object.keys(peerings[ref_item_id]).forEach(function(remote_slab_id){
-            peer_flag = peerings[ref_item_id][remote_slab_id];
+            peer_state = peerings[ref_item_id][remote_slab_id];
             
             if( (remote_slab_id != me.id) && !r.remotes[remote_slab_id] ){
-                r.remotes[remote_slab_id] = peer_flag; // 2 means we actually have it, 1 means peering only
+                r.remotes[remote_slab_id] = peer_state; // 2 means we actually have it, 1 means peering only
                 
                 var change = changes[remote_slab_id] = changes[remote_slab_id] || {};
-                change[item.id] = peer_flag;
+                change[item.id] = peer_state;
             }
         });
     });
     
-    if(!skip ){
+    if(!silent ){
         if( Object.keys(changes).length ) me.mesh.sendPeeringChanges(me.id,changes);
     }
 }
 
 Slab.prototype.receivePeeringChange = function(sending_slab_id,change){
-    var me = this;
+    var me         = this,
+        peer_state
+    ;
+    
     console.log('slab[' + me.id + '].receivePeeringChange', sending_slab_id, change );
+    
     Object.keys(change).forEach(function(item_id){
-        var flag = change[item_id];
+        peer_state = change[item_id];
         
         if( me.ref_peerings[item_id] ){
-            if( flag ){
-                me.ref_peerings[item_id].remotes[sending_slab_id] = flag;
+            if( peer_state ){
+                me.ref_peerings[item_id].remotes[sending_slab_id] = peer_state;
             }else{
                 delete me.ref_peerings[item_id].remotes[sending_slab_id];
             }
@@ -100,17 +147,17 @@ Slab.prototype.receivePeeringChange = function(sending_slab_id,change){
     });
 }
 
-Slab.prototype.deregisterItemPeering = function(item){
+Slab.prototype.deregisterPeeringForItem = function(item){
     var me      = this,
         changes = {};
     
-    console.log('slab[' + me.id + '].deregisterItemPeering', item.id );
+    console.log('slab[' + me.id + '].deregisterPeeringForItem', item.id );
     var refs = me.local_peerings[item.id] || [];
     
     refs.forEach(function(ref_item_id){
         var r   = me.ref_peerings[ref_item_id];
         r.items = r.items.filter(function(id){ return id != item.id });
-        console.log('meow',ref_item_id, r);
+        // console.log('meow',ref_item_id, r);
         // TODO this isn't right
         
         if(r.items.length == 0){
@@ -124,6 +171,7 @@ Slab.prototype.deregisterItemPeering = function(item){
     
     delete me.local_peerings[item.id];
     me.mesh.sendPeeringChanges(me.id,changes);
+    
 }
 
 Slab.prototype.getPeeringsForItem = function(item, include_self){
@@ -138,6 +186,7 @@ Slab.prototype.getPeeringsForItem = function(item, include_self){
         Object.keys(remotes).forEach(function(key) {
             peering[key] = remotes[key];
         });
+        
         if(include_self) peering[ me.id ] = 2;
         
         peerings[ ref_item_id ] = peering;
@@ -146,7 +195,12 @@ Slab.prototype.getPeeringsForItem = function(item, include_self){
     return peerings;
 }
 
-Slab.prototype.getPeers = function(item_id,has_item){
+/*
+ * Look up the current peering participants for a given item id
+ * 
+ */
+
+Slab.prototype.getItemPeers = function(item_id,has_item){
     var r   = this.ref_peerings[item_id];
     if(!r) return null;
     
@@ -165,12 +219,12 @@ Slab.prototype.getPeers = function(item_id,has_item){
     return remotes;
 }
 
-/* Store a item in this slab + manage LRU */
+/* Store a item in this slab, manage LRU */
 Slab.prototype.putItem = function(item,cb) {
     //if( ! item instanceof item_cls ) throw "invalid item";
     if( this._idmap[item.id] ) throw "attempt to put item twice";
     
-    console.log( 'slab[' + this.id + '].putItem', item.id, 'to slab', this.id );
+    console.log( 'slab[' + this.id + '].putItem', item.id );
     
     this._idmap[item.id] = item;
     
@@ -186,17 +240,20 @@ Slab.prototype.putItem = function(item,cb) {
     // add new entry to the end of the linked list -- it's now the freshest item.
     this.tail = item;
     if (this.size === this.limit) {
-        this.evictRecords();
+        this.evictItems();
     } else {
         // increase the size counter
         this.size++;
     }
     
-    // TODO: handle initial object peering setup more intelligently than a self reference
-    // For the time being, this is necessary, otherwise peering updates from other nodes will fall on deaf ears
+    /*
+     * TODO: handle initial object peering setup more intelligently than a self reference
+     * For the time being, this is necessary, otherwise peering updates from other nodes will fall on deaf ears
+    */
     this.registerItemPeering( item, item.id, this.id, 2 );
     
-    this.pushItem( item, cb );
+    this.checkItemReplicationFactor( item, cb );
+    
 };
 
 
@@ -223,7 +280,8 @@ Slab.prototype.evictItem = function(item){
     
     item.evicting(true);
     console.log( 'Evicting item', item.id, 'from slab', me.id );
-    this.pushItem( item, function( success ){
+    
+    this.checkItemReplicationFactor( item, function( success ){
         if( success ){
             me.killItem(item);
             console.log( 'Successfully evicted item', item.id );
@@ -269,42 +327,74 @@ Slab.prototype.killItem = function(item) {
     }
     
     this.size--;
-    this.deregisterItemPeering(item);
+    this.deregisterPeeringForItem(item);
 };
 
 /*
- * pushItem - Ensure that this item is sufficiently replicated
+ * checkItemReplicationFactor - Ensure that this item is sufficiently replicated
  * TODO: Ensure that we don't attempt to push to a replica that already has this item
  *       Verify that eviction from one slab ensures proper replica count on other slabs before item is killed
 */
-Slab.prototype.pushItem = function(item,cb){
+Slab.prototype.checkItemReplicationFactor = function(item,cb){
     var me      = this,
         desired = item.desiredReplicas();
     
-    console.log('slab[' + me.id + '].pushItem',item.id);
+    console.log('slab[' + me.id + '].checkItemReplicationFactor',item.id);
     if (desired <= 0) return;
-    var ap     = this.mesh.getAcceptingSlabs( this.id, desired );
+    
+    var slabs     = this.mesh.getAcceptingSlabs( this.id, desired );
 
-    /* TODO:
-     * Update to be async
-     * Handle the possibility of push failure
+    /*
+     * TODO:
+     * Update to be async. Handle the possibility of push failure
+     * 
     */
-    var peers = this.getPeers(item.id,true);
+    var peers = this.getItemPeers(item.id,true);
     //console.log(this.id,'peers',peers);
     
-    ap.forEach(function(slab){
+    var pending = 0;
+    
+    slabs.forEach(function(slab){
         if( peers.indexOf(slab) == -1 ){
-            me.mesh.pushItemToSlab( me, slab, item );
-            desired--;
+            
+            pending++;
+            me.mesh.pushItemToSlab( me, slab, item, function( success ){
+                pending--;
+                
+                if(success){
+                    desired--;
+                }
+                
+                /*
+                 * TODO:
+                 * Stop assuming pushItemToSlab has a setTimeout or some delay.
+                 * Will short circuit prematurely if this callback gets called synchronously
+                 */
+                
+                if( pending <= 0 ){
+                    cb( desired <= 0 );
+                    
+                    if( desired > 0 ) console.error( "unable to achieve required replica count" );
+                    
+                    /*
+                     * TODO:
+                     * Add insufficiently replicated items to a remediation list, and set a timer to retry them
+                    */
+                }
+                
+            });
         }
     });
-
-    if( desired > 0 ) console.error( "unable to achieve required replica count" );
-    if(cb) cb( desired <= 0 );
+    
+    
 };
 
 Slab.prototype.quotaRemaining = function() {
    return this.quota - this.size;
+}
+
+Slab.prototype.limitRemaining = function() {
+   return this.limit - this.size;
 }
 
 
@@ -321,7 +411,7 @@ Slab.prototype.quotaRemaining = function() {
 */
 
 Slab.prototype.genChildID = function(vals,cb) {
-    return this.id + '-' + (this.child_increment++).toString(36);
+    return this.id + (this.child_increment++).toString(36);
 }
 
 /* getItem - Retrieve item from this slab by id
@@ -359,43 +449,6 @@ Slab.prototype.getItem = function(id){
     return item;
 
 };
-
-/*
- * Edits to be handled directly via the record object
- * 
-Slab.prototype.editItem = function(item,vals){
-    if(!item instanceof item_cls) throw "invalid item";
-    var diff = {}, val;
-    
-    Object.keys(vals).forEach(function(key){
-        val = vals[key];
-        if( key.charAt(0) == '$' ){
-            if( val instanceof Item ){
-                val = val.id;
-            }else{
-                // TODO validate item id
-            }
-        }
-        
-        if(item.v[key] != val){
-            diff[key] = val;
-            item.v[key] = val; // apply to local item
-        }
-    });
-    
-    this.mesh.replicateItemEdit(item,diff);
-}
-
-Slab.prototype.receiveItemReplication = function( item_id, diff ){
-    var item = this._idmap[item_id];
-    if( item ){
-        Object.keys(diff).forEach(function(key){
-            item.v[key] = diff[key];
-        });
-        console.log('Slab', this.id, 'receiveItemReplication', item.id, diff );
-    }
-}
-*/
 
 Slab.prototype.dumpItemIds = function(){
     var ids = [];
