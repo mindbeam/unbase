@@ -1,119 +1,141 @@
 
-
-module.exports.createRecord = function(slab,vals){
-    var id = slab.genChildID();
-    
-    console.log('record.createRecord', id);
-    
-    // create the record. No peerings yet
-    var record = new Record( id,null,slab,vals );
-    
-    return record;
-    //vals = vals || {};
-    //var set_memo = new memo_cls(slab,vals);
-}
-
 /* Record
- * A record is a bundle of values representing a discrete thing.
- * Its present state is determined by the totality of its memos
+ *
+ * A record is a container for a series of memos on a discrete topic/subject
+ * Its present state is determined by the totality of its memos,
+ * using keyframe memos as an optimization, such that record state
+ * may be projected without traversing the full memo history
+ *
+ * Records do not have any concept of peering. Only memos have peering
 */
 
-function Record(id, peerings, slab, vals) {
-    var me = this;
-    
-    me.id = id;
-    me.slab = slab;
-    peerings = peerings ? JSON.parse(JSON.stringify(peerings)) : {};
-    
-    // Temporary hack - doing the value init here out of convenience
-    // because edit propagation doesn't work yet. relying in the initial pushItemToSlab for preliminary testing
-    vals = vals || {};
-    var val;
-    Object.keys(vals).forEach(function(key){
-        if( key.charAt(0) == '$' ){
-            val = vals[key];
-            if( val instanceof Record ){
-                vals[key] = val.id;
-                peerings[val.id] = {};
-                peerings[val.id][slab.id] = 2; // cheating with just assuming the peer_type here
-            }else{
-                throw "need a slab id AND a record id";
-            }
-            // else, should already be a valid record id
-            // TBD: how to convey locations of said record id
-            
-        }
-        
-    });
-    
-    if( Object.keys(peerings).length  ){
-        slab.updateItemPeerings(this,peerings);
-    }
-    
-    slab.putItem(this,function(status){
-        // gets called with the result of checkItemReplicationFactor
-    });
- 
-    //this.slab = slab;   // A record object only exists within the context of a slab
-    //this.memos = memos; // the present state of a record is determined by the sum of it's (relevant) memos
-    // do records even have replicas?? or just memos
-  
+var memo_cls = require('./memo');
+
+function Record(slab,id, memos) {
+    this.id = id;
+    this.slab = slab;
+    this.memos_by_id = {};
+    this.memos_by_parent = {};
+
+    this.addMemos(memos);
+
 }
 
-Record.prototype.set = function(args){
+module.exports.reconstitute = function(slab,id,memos){
+    return new Record( slab, id, memos );
+}
+
+module.exports.create = function(slab,vals){
+
+    var id = 'R.' + slab.genChildID();
+    console.log('record.create', id);
+
+    var firstmemo = memo_cls.create( slab, id, null, vals );
+    var record = new Record( slab, id, [firstmemo] );
+
+    slab.addRecord(record);
+
+    return record;
+}
+
+Record.prototype.addMemos = function(memos){
+    var me = this;
+
+    memos.forEach(function(memo){
+        memo.parents.forEach(function(parent){
+            me.memos_by_parent[parent] = memo.id;
+        });
+        me.memos_by_id[memo.id] = memo;
+    });
+}
+
+Record.prototype.set = function(vals){
     /*
      * Update values of this record. Presently schemaless. should have a schema in the future
     */
-    
-    var id = this.id + '-' + (this.memo_increment++).toString(36),
-        m  = new memo_cls(id,args)
+
+    var memo = new memo_cls.create( this.slab,this.id, this.getHeadMemoIDs(), vals );
+    this.addMemos([memo]);
+
 }
 
-Record.prototype.serialize = function(){
-    var vals = this.v,
-        val
-    ;
-    
-  /*  Object.keys(vals).forEach(function(key){
-        if( key.charAt(0) == '$' ){
-            val = vals[key];
-            if( val instanceof Record ) vals[key] = val.id;
-            // else, should already be a valid record id
-            // TBD: how to convey locations of said record id
-        }
-    });
-    
-    var rep =
-    */
+var memosort = function(a,b){
+    // TODO - implement sorting by beacon-offset-millisecond LWW or node id as required to achieve desired determinism
 
-    return JSON.stringify({
-        id: this.id,
-        p:  this.slab.getPeeringsForItem(this,true)
-    });
+    if ( a.id < b.id )
+        return -1;
+    if ( a.id > b.id )
+        return 1;
+
+    return 0;
 }
 
-Record.prototype._evicting    = 0;
-Record.prototype.__replica_ct = 1;
+// TODO - convert into a callback
+Record.prototype.get = function(field){
+    var me = this;
+    var value = undefined;
 
-// should we un-set this if an eviction fails?
-Record.prototype.evicting = function(v) {
-    this._evicting = v ? 1 : 0;
+    var done = false;
+    var memos = this.getHeadMemos();
+
+    while(!done){
+        var nextmemos = [];
+        memos.sort(memosort).forEach(function(memo){
+            if (typeof memo.v[field] !== 'undefined'){
+                value = memo.v[field];
+                done = true;
+            }else{
+                memo.parents.forEach(function(pid){ nextmemos.push(me.memos_by_id[pid]) });
+            }
+        });
+        console.log('nextmemos',nextmemos, done);
+        if(!nextmemos.length) done = true;
+
+        // TODO - Look up memos from slab
+        if(!done) memos = nextmemos;
+    }
+
+    return value;
+}
+
+Record.prototype.getHeadMemos = function(){
+    // The head of a record consists of all Memo IDs which are not parents of any other memos
+    var me = this;
+
+    var head = [];
+    var parentmap = me.memos_by_parent;
+    Object.getOwnPropertyNames(me.memos_by_id).forEach(function(id){
+        var memo = me.memos_by_id[ id ];
+        if(!parentmap[ memo.id ]) head.push( memo );
+    });
+
+    return head;
+};
+Record.prototype.getHeadMemoIDs = function(){
+    return this.getHeadMemos().map(function(memo){ return memo.id });
+}
+
+
+Record.prototype.getMemoIDs = function(){
+    return Object.keys(this.memos_by_id);
 };
 
-Record.prototype.desiredReplicas = function() {
-   return Math.max(0,(this.__replica_ct - this.slab.getItemPeers(this.id,true).length) + this._evicting);
-};
 
-module.exports.deserialize = function(slab, serialized){
-    var packet = JSON.parse( serialized );
-    if(typeof packet != 'object') return null;
+// The memo is getting removed from the Slab. Clean up our reference to it here
+// somewhat less necessary now, as record objects are short-lived, but still not a bad idea in case there
+// are a lot of memos attached to this record
+Record.prototype.killMemo = function(memo){
+    var me = this;
+    if(!me.memos_by_parent[memo.id]) return; // refuse to kill head memos so the record is still viable
 
-    console.log('record.deserialized item', packet.id, 'into slab', slab.id );
-    //console.log(packet);
+    // remove the reference from memos_by_id
+    delete this.memos_by_id[ memo.id ];
 
-    var record = new Record(packet.id,packet.p,slab);
-    
-    // this is weird. I think this should be based on the payload of the item, rather than the peering hints
-    //slab.setItemPeering(record, packet.p);
-    return record;
+    // remove the reference from memos_by_parent
+    memo.parents.forEach(function(parentID){
+        var ref = me.memos_by_parent[parentID];
+        var index = ref.indexOf(memo);
+
+        ref.splice(index, 1);
+    })
 }

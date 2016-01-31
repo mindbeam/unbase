@@ -1,20 +1,30 @@
 
 First pass, node.js proof of concept implementation
 
-Phase 1 ( Trust everyone )
-[ ] Transport channels ( model on telehash interface )
-[ ] Peering with trusted slabs
-[ ] Compose memos into records
-[ ] Very Basic CRDT - Deterministic winner
-[ ] Transfer rendered records with memo head
+Phase 1 (proof of concept)
+
+[X] Compose memos into records
+[X] Properly determine which memos are the head of a record
+[X] Reconstitute records from memos
+[X] Edit propagation to other slabs
+[ ] Async memo retrieval for non-head memos
+[ ] Test script cleanup
 [ ] Indexing implementation
+[ ] Causal barriers
+[ ] Deterministic/Idempotent computed memos ( memo id as hash of precursors, peering with independently created replicas )
+
+Phase 2 ( Trust everyone )
+[ ] Peering with trusted slabs
+[~] Very Basic CRDT - Deterministic winner
+[ ] Transfer rendered records with memo head
 [ ] Distributed queue implementation
 [ ] Distributed content filter implementation
-[ ] Transfering related records
+[ ] Transferring related records
 [ ] Responsibility pressure - Exponential
 [ ] Memory pressure - Exponential
-[ ] CPU pressure - Exponential 
+[ ] CPU pressure - Exponential
 [ ] TTL - Linear
+[ ] Transport channels ( model on telehash interface )
 
 Notes:
 A queue is just a table with a priority/rough sequence, and garbage collection
@@ -22,7 +32,7 @@ A matching tree is just an index tree that's a bit of a busybody.
 A subscription is just two memos: one to start it, and one to stop it.
 
 
-Phase 2 ( Policy / Crypto )
+Phase 3 ( Policy / Crypto )
 [ ] Basic policy authority ( eventually should support policy delegation, independent policy authorities; per tlns? )
 [ ] Memo signatures
 [ ] Memo validation
@@ -40,4 +50,3 @@ Future phases:
 Schema management
 Service discovery
 Triggers
-
