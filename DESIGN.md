@@ -96,6 +96,10 @@ Question: Is each of the fields in the edit object necessarily a CRDT?
 
 One or more actions are initiated within the context of a transaction ID, a non-sequential generated ID which is guaranteed to be unique.
 
+
+*Below remains a work in progress. Please disregard:*
+
+
 Note: bold indicates peering reference
 
 Each transaction ID in the below table is in the format of: Node ID.Transaction Counter
