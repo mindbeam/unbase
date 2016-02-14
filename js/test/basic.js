@@ -1,7 +1,7 @@
 
-var slab_cls   = require('./slab');
-var record_cls = require('./record');
-var mesh_cls   = require('./mesh');
+var slab_cls   = require('../lib/slab');
+var record_cls = require('../lib/record');
+var mesh_cls   = require('../lib/mesh');
 
 var mesh       = new mesh_cls({ network_latency_ms: 1000 });
 
