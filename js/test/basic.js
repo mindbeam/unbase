@@ -3,38 +3,22 @@ var slab_cls   = require('../lib/slab');
 var record_cls = require('../lib/record');
 var mesh_cls   = require('../lib/mesh');
 
-var mesh       = new mesh_cls({ network_latency_ms: 1000 });
+var mesh       = new mesh_cls({ min_network_latency_ms: 10, randomize_network_latency: true });
 
 var slab1 = new slab_cls({ id: "A", mesh: mesh });
 var slab2 = new slab_cls({ id: "B", mesh: mesh });
 var slab3 = new slab_cls({ id: "C", mesh: mesh });
 
+mesh.
 
 
 var rec1 = record_cls.create(slab1, { animal_sound: 'moo' });
 
 console.log( 'The value is', rec1.get('animal_sound'), rec1.getHeadMemoIDs(), rec1.getMemoIDs() );
-/*
-console.log("\n\nInitial peering states:");
-console.log( 'slab[' + slab1.id + '] peering state for item[' + rec1.id + ']', slab1.getPeeringsForMemo(rec1.m[0]) );
-console.log( 'slab[' + slab2.id + '] peering state for item[' + rec1.id + ']', slab2.getPeeringsForMemo(rec1.m[0]) );
-console.log( 'slab[' + slab3.id + '] peering state for item[' + rec1.id + ']', slab3.getPeeringsForMemo(rec1.m[0]) );
-
-setTimeout(function(){
-
-    console.log("\n\nPeering states after 1.1s:");
-    console.log( 'slab[' + slab1.id + '] peering state for item[' + rec1.id + ']', slab1.getPeeringsForMemo(rec1.m[0]) );
-    console.log( 'slab[' + slab2.id + '] peering state for item[' + rec1.id + ']', slab2.getPeeringsForMemo(rec1.m[0]) );
-    console.log( 'slab[' + slab3.id + '] peering state for item[' + rec1.id + ']', slab3.getPeeringsForMemo(rec1.m[0]) );
-
-},1100);
-*/
-
 rec1.set({ animal_sound: "woof" });
 
 
 setTimeout(function(){
-  //  console.log( slab1,slab2 );
 
 slab2.getRecord(rec1.id,function(rec1b){
     if (rec1b){

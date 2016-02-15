@@ -31,7 +31,7 @@ function Slab(args) {
     //this.id = args.node + ( "00" + (++slab_increment).toString(36)).substr(-2,2);
     this.id = args.id;
 
-    console.log('Initialized Slab', this.id);
+    // console.log('Initialized Slab', this.id);
     //if(this.id.length != 10) throw "sanity error " + this.id;
 
     // Temporarily assuming node ids are one character for simplicity
@@ -63,7 +63,7 @@ function Slab(args) {
 Slab.prototype.registerMemoPeering = function(memo, ref_memo_id, remote_slab_id, peer_state, silent ){
 
     silent = silent || false;
-    console.log('slab[' + this.id + '].registerMemoPeering', "Memo:", memo.id, "Ref Memo:", ref_memo_id, "Remote Slab:", remote_slab_id, "Peering State:", peer_state, "Silent:", silent );
+    // console.log('slab[' + this.id + '].registerMemoPeering', "Memo:", memo.id, "Ref Memo:", ref_memo_id, "Remote Slab:", remote_slab_id, "Peering State:", peer_state, "Silent:", silent );
 
     var peerings = {};
     peerings[ref_memo_id] = {};
@@ -99,7 +99,7 @@ Slab.prototype.updateMemoPeerings = function( memo, peerings, silent ){
         peer_state
     ;
 
-    console.log('slab[' + me.id + '].updateMemoPeerings', memo.id, peerings, silent);
+    // console.log('slab[' + me.id + '].updateMemoPeerings', memo.id, peerings, silent);
 
     // Need to know what memos are referencing what, so we can de-peer from those memos if all references are removed
     // probably can't just ask the memo for its references, because changes would fail to trigger the necessary de-peering
@@ -138,7 +138,7 @@ Slab.prototype.receivePeeringChange = function(sending_slab_id,change){
         peer_state
     ;
 
-    console.log('slab[' + me.id + '].receivePeeringChange', sending_slab_id, change );
+    //console.log('slab[' + me.id + '].receivePeeringChange', sending_slab_id, change );
 
     Object.keys(change).forEach(function(memo_id){
         peer_state = change[memo_id];
@@ -157,7 +157,7 @@ Slab.prototype.deregisterPeeringForMemo = function(memo){
     var me      = this,
         changes = {};
 
-    console.log('slab[' + me.id + '].deregisterPeeringForMemo', memo.id );
+    // console.log('slab[' + me.id + '].deregisterPeeringForMemo', memo.id );
     var refs = me.local_peerings[memo.id] || [];
 
     refs.forEach(function(ref_memo_id){
@@ -226,18 +226,21 @@ Slab.prototype.getMemoPeers = function(memo_id,has_memo){
 }
 
 /* Store a memo in this slab, manage LRU */
-Slab.prototype.putMemo = function(memo,cb) {
+Slab.prototype.putMemo = function(memo) {
     //if( ! memo instanceof memo_cls ) throw "invalid memo";
-    if( this._idmap[memo.id] ) throw "attempt to put memo twice";
+    if( this._idmap[memo.id] ){
+        //if( me.paranoid ){
+        throw "attempt to put memo twice";
+    }
 
-    console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid );
+    // console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid );
 
     this._idmap[memo.id] = memo;
     var mbr = this._memos_by_record[memo.rid] = this._memos_by_record[memo.rid] || [];
     mbr.push(memo);
 
     var ex_record = this._records_by_id[ memo.rid ];
-    console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid, ex_record, Object.getOwnPropertyNames(this._records_by_id) );
+    // console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid, ex_record, Object.getOwnPropertyNames(this._records_by_id) );
     if(ex_record) ex_record.addMemos([memo]);
 
     if (this.tail) {
@@ -264,7 +267,7 @@ Slab.prototype.putMemo = function(memo,cb) {
     */
     this.registerMemoPeering( memo, memo.id, this.id, 2 );
 
-    this.checkMemoReplicationFactor( memo, cb );
+    this.checkMemoReplicationFactor( memo ).catch((err) => console.error(err) );
 
 };
 
@@ -291,14 +294,14 @@ Slab.prototype.evictMemo = function(memo){
     if( !memo ) throw 'attempted to evict invalid memo';
 
     memo.evicting(true);
-    console.log( 'Evicting memo', memo.id, 'from slab', me.id );
+    // console.log( 'Evicting memo', memo.id, 'from slab', me.id );
 
-    this.checkMemoReplicationFactor( memo, function( success ){
+    this.checkMemoReplicationFactor( memo ).then(( success ) => {
         if( success ){
             me.killMemo(memo);
-            console.log( 'Successfully evicted memo', memo.id );
+            // console.log( 'Successfully evicted memo', memo.id );
         }else{
-            console.log( 'Failed to evict memo', memo.id );
+            // console.log( 'Failed to evict memo', memo.id );
         }
     });
 }
@@ -360,57 +363,34 @@ Slab.prototype.killMemo = function(memo) {
  * TODO: Ensure that we don't attempt to push to a replica that already has this memo
  *       Verify that eviction from one slab ensures proper replica count on other slabs before memo is killed
 */
-Slab.prototype.checkMemoReplicationFactor = function(memo,cb){
+Slab.prototype.checkMemoReplicationFactor = function(memo){
     var me      = this,
         desired = memo.desiredReplicas();
 
-    console.log('slab[' + me.id + '].checkMemoReplicationFactor',memo.id);
-    if (desired <= 0) return;
+    console.log('slab[' + me.id + '].checkMemoReplicationFactor',memo.id, 'desiredReplicas:', desired);
 
-    var slabs     = this.mesh.getAcceptingSlabs( this.id, desired );
+    return new Promise((success,reject) => {
 
-    /*
-     * TODO:
-     * Update to be async. Handle the possibility of push failure
-     *
-    */
-    var peers = this.getMemoPeers(memo.id,true);
-    //console.log(this.id,'peers',peers);
+        if (desired <= 0)  success();
 
-    var pending = 0;
+        var slab_ids = this.mesh.getAcceptingSlabIDs( this.id, desired );
 
-    slabs.forEach(function(slab){
-        if( peers.indexOf(slab) == -1 ){
+        /*
+         * TODO:
+         * Update to be async. Handle the possibility of push failure
+         * Should pushMemoToSlab be able to fail? or should we notice some other way?
+         * how do we know when we're confident that a transaction is persisted?
+        */
+        var peers = this.getMemoPeers(memo.id,true);
 
-            pending++;
-            me.mesh.pushMemoToSlab( me, slab, memo, function( success ){
-                pending--;
+        slab_ids.forEach(function(to_slab_id){
+            if( peers.indexOf(to_slab_id) == -1 ){
+                me.mesh.pushMemoToSlab( me.id, to_slab_id, memo );
+            }
+        });
 
-                if(success){
-                    desired--;
-                }
-
-                /*
-                 * TODO:
-                 * Stop assuming pushMemoToSlab has a setTimeout or some delay.
-                 * Will short circuit prematurely if this callback gets called synchronously
-                 */
-
-                if( pending <= 0 ){
-                    cb( desired <= 0 );
-
-                    if( desired > 0 ) console.error( "unable to achieve required replica count" );
-
-                    /*
-                     * TODO:
-                     * Add insufficiently replicated memos to a remediation list, and set a timer to retry them
-                    */
-                }
-
-            });
-        }
-    });
-
+        success(true);
+    })
 
 };
 
@@ -435,7 +415,7 @@ Slab.prototype.limitRemaining = function() {
  *
 */
 
-Slab.prototype.genChildID = function(vals,cb) {
+Slab.prototype.genChildID = function(vals) {
     return this.id + (this.child_increment++).toString(36);
 }
 
@@ -475,20 +455,23 @@ Slab.prototype.getMemo = function(id){
 
 };
 
-Slab.prototype.getRecord = function(rid, cb){
+Slab.prototype.getRecord = function(rid){
     var me = this;
     var memos = me._memos_by_record[ rid ];
 
-    if (typeof memos === 'undefined' || !memos.length){
-        cb(null);
-        return;
-    }
-    // TODO - perform an index lookup
+    return new Promise((resolve, reject) => {
+        if (typeof memos === 'undefined' || !memos.length){
+            resolve(null);
+            return;
+        }
+        // TODO - perform an index lookup
 
-    var record = record_cls.reconstitute( me, rid, memos );
-    me._records_by_id[ rid ] = record;
-    cb( record );
-    return;
+        var record = record_cls.reconstitute( me, rid, memos );
+        me._records_by_id[ rid ] = record;
+
+        resolve( record );
+        return;
+    });
 }
 
 Slab.prototype.addRecord = function(record){

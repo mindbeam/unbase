@@ -38,9 +38,7 @@ function Memo(slab,memo_id,record_id,peerings,parents,vals) {
             slab.updateMemoPeerings(this,peerings);
         }
 
-        slab.putMemo(this,function(status){
-            // gets called with the result of checkMemoReplicationFactor
-        });
+        slab.putMemo(this);
 
 }
 
@@ -53,7 +51,7 @@ module.exports.create = function(slab,record_id,parents,vals){
 };
 
 Memo.prototype._evicting    = 0;
-Memo.prototype.__replica_ct = 1;
+Memo.prototype.__replica_ct = 2;
 
 // should we un-set this if an eviction fails?
 Memo.prototype.evicting = function(v) {
@@ -88,7 +86,7 @@ Memo.prototype.packetize = function(){
 module.exports.depacketize = function(slab, packet){
     if(typeof packet != 'object') return null;
 
-    console.log('memo.depacketize', packet.id, 'into slab', slab.id );
+    // console.log('memo.depacketize', packet.id, 'into slab', slab.id );
     //console.log(packet);
 
     var memo_id   = packet.id;

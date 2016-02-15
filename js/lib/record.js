@@ -28,7 +28,7 @@ module.exports.reconstitute = function(slab,id,memos){
 module.exports.create = function(slab,vals){
 
     var id = 'R.' + slab.genChildID();
-    console.log('record.create', id);
+    // console.log('record.create', id);
 
     var firstmemo = memo_cls.create( slab, id, null, vals );
     var record = new Record( slab, id, [firstmemo] );
@@ -36,6 +36,7 @@ module.exports.create = function(slab,vals){
     slab.addRecord(record);
 
     return record;
+
 }
 
 Record.prototype.addMemos = function(memos){
@@ -57,6 +58,8 @@ Record.prototype.set = function(vals){
     var memo = new memo_cls.create( this.slab,this.id, this.getHeadMemoIDs(), vals );
     this.addMemos([memo]);
 
+
+    // TODO - return promise which is fulfilled on transaction commit
 }
 
 var memosort = function(a,b){
@@ -88,7 +91,7 @@ Record.prototype.get = function(field){
                 memo.parents.forEach(function(pid){ nextmemos.push(me.memos_by_id[pid]) });
             }
         });
-        console.log('nextmemos',nextmemos, done);
+        // console.log('nextmemos',nextmemos, done);
         if(!nextmemos.length) done = true;
 
         // TODO - Look up memos from slab

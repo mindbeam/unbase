@@ -1,8 +1,10 @@
 {
   "name": "pandaemon",
   "version": "0.0.1",
-  "dependencies": {
-       "telehash": "telehash/telehash-js#5666d44baa1b"
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "*",
+    "should": "^8.2.2"
   },
   "description": "A framework for geo-distributed applications",
   "main": "index.js",
@@ -11,11 +13,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dnorman/pandaemon"
+    "url": "https://github.com/dnorman/unbase"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dnorman/pandaemon/issues"
+    "url": "https://github.com/dnorman/unbase/issues"
   }
 }
