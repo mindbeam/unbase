@@ -24,7 +24,7 @@ describe('basic eventual consistency', function() {
     });
 
     var recA1;
-    it('create new record', () => {
+    it('should create new record', () => {
         recA1 = record_cls.create(slabA, { animal_sound: 'moo' });
         should(recA1).be.ok();
     });
