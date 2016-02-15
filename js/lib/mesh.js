@@ -13,7 +13,8 @@ function Mesh(params) {
     /* Only local slabs are supported as peers at this time */
     this._slabs = [];
     this.network_latency_ms = params.network_latency_ms || 100;
-    this.disconnected       = params.disconnected       || false;
+    this.test_mode          = params.test_mode          || false;
+    this.debug              = params.debug              || 0;
     this._messages = [];
 }
 
@@ -73,7 +74,7 @@ Mesh.prototype.pushMemoToSlab = function( from_slab_id, to_slab_id, memo ) {
     // including only ref info in the serialized object
     // with subsequent peering hints, which would then be applied to the registered refs
 
-    console.log('mesh.pushMemoToSlab', memo.id, 'from slab', from_slab_id, 'to slab', to_slab_id);
+    //console.log('mesh.pushMemoToSlab', memo.id, 'from slab', from_slab_id, 'to slab', to_slab_id);
     this.queueMessage( 'memo', from_slab_id, to_slab_id, memo.packetize() );
 };
 Mesh.prototype.sendPeeringChanges = function( sending_slab_id, peeringchanges ) {
@@ -89,7 +90,7 @@ Mesh.prototype.sendPeeringChanges = function( sending_slab_id, peeringchanges ) 
 Mesh.prototype.queueMessage = function(type, from_slab_id, to_slab_id, data){
     message = [type,from_slab_id,to_slab_id,JSON.stringify(data)];
 
-    if(this.disconnected){
+    if(this.test_mode){
         this._messages.push(message);
     }else{
         setTimeout(() => {
@@ -102,6 +103,8 @@ Mesh.prototype.deliverAllQueuedMessages = function(){
     this._messages.length = 0; // clear the send queue first
 
     messages.forEach((message) => this.receiveMessage(message));
+
+    if(this.debug > 0) console.log('Messages processed:', messages.length, 'New messages queued during cycle:',this._messages.length);
 }
 
 Mesh.prototype.receiveMessage = function(message){

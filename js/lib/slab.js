@@ -230,7 +230,7 @@ Slab.prototype.putMemo = function(memo) {
     //if( ! memo instanceof memo_cls ) throw "invalid memo";
 
 
-    console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid );
+    //console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid );
     if( this._idmap[memo.id] ) return;
 
     this._idmap[memo.id] = memo;
@@ -365,7 +365,7 @@ Slab.prototype.checkMemoReplicationFactor = function(memo){
     var me      = this,
         desired = memo.desiredReplicas();
 
-    console.log('slab[' + me.id + '].checkMemoReplicationFactor',memo.id, 'desiredReplicas:', desired);
+    //console.log('slab[' + me.id + '].checkMemoReplicationFactor',memo.id, 'desiredReplicas:', desired);
 
     return new Promise((success,reject) => {
 

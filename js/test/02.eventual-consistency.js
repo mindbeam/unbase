@@ -6,9 +6,9 @@ var mesh_cls   = require('../lib/mesh');
 //var assert = require('chai').assert;
 var should = require('should');
 
-describe('eventual-consistency', function() {
+describe('basic eventual consistency', function() {
 
-    var mesh       = new mesh_cls({ disconnected: 1 });
+    var mesh       = new mesh_cls({ test_mode: 1, debug: 0 });
 
     it('mesh should be an object', () => {
         // assert.typeOf(mesh, 'object','mesh is an object');
@@ -23,7 +23,11 @@ describe('eventual-consistency', function() {
         mesh.knownSlabCount().should.be.exactly(3);
     });
 
-    var recA1 = record_cls.create(slabA, { animal_sound: 'moo' });
+    var recA1;
+    it('create new record', () => {
+        recA1 = record_cls.create(slabA, { animal_sound: 'moo' });
+        should(recA1).be.ok();
+    });
 
     it('new record should be internally consistent', () => {
         recA1.get('animal_sound').should.equal('moo');
@@ -33,7 +37,7 @@ describe('eventual-consistency', function() {
         slabB.getRecord( recA1.id ).then( ( recB1 ) => should(recB1).not.be.ok() );
     });
 
-    it('fast forward time a bit', () => mesh.deliverAllQueuedMessages() );
+    it('time moves forward', () => mesh.deliverAllQueuedMessages() );
 
     it('new record should now be available on slab B', () => {
         return slabB.getRecord( recA1.id ).then( ( recB1 ) => {
@@ -56,25 +60,24 @@ describe('eventual-consistency', function() {
     it('Change the value on slab C', () => {
         return slabC.getRecord( recA1.id ).then( ( recC1 ) => {
             should(recC1).be.ok();
-            recC1.set('animal_sound','woof');
+            recC1.set({'animal_sound': 'woof'});
         });
     });
 
     it('value should be unchanged on slab A', () => {
-        return slabA.getRecord( recA1.id ).then( ( recA1 ) => {
-            should(recA1).be.ok();
+        //return slabA.getRecord( recA1.id ).then( ( recA1 ) => {
+            //should(recA1).be.ok();
             recA1.get('animal_sound').should.be.exactly('moo');
-        });
+        //});
     });
 
     it('time moves forward', () => mesh.deliverAllQueuedMessages() );
 
     it('NOW the value should be changed on slab A', () => {
-        //return slabA.getRecord( recA1.id ).then( ( recA1 ) => {
-            should(recA1).be.ok();
-            console.log('A1 MemoIDs:',recA1.getMemoIDs());
-            recA1.get('animal_sound').should.be.exactly('woof');
-        //});
+        recA1.get('animal_sound').should.be.exactly('woof');
     });
+
+    it('time moves forward', () => mesh.deliverAllQueuedMessages() );
+    it('time moves forward', () => mesh.deliverAllQueuedMessages() );
 
 });
