@@ -32,7 +32,7 @@ Mesh.prototype.knownSlabCount = function(){
  * Optimize to avoid looping over all known peers every time.
 */
 
-Mesh.prototype.getAcceptingSlabIDs = function( exclude_slab_id, number ) {
+Mesh.prototype.getAcceptingSlabIDs = function( exclude_slab_ids, number ) {
     number = (typeof number == 'number' && number > 0 ) ? number : 1;
     var slabs = this._slabs,
         slab,
@@ -50,7 +50,7 @@ Mesh.prototype.getAcceptingSlabIDs = function( exclude_slab_id, number ) {
     Object.keys(slabs).forEach(function(id){
 
         slab = slabs[id];
-        if( exclude_slab_id == slab.id ) return;
+        if( exclude_slab_ids.indexOf(slab.id) > -1 ) return;
         if( (slab.quotaRemaining() > 0) && number-- > 0 ) out.push(slab.id);
 
     });

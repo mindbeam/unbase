@@ -29,13 +29,8 @@ describe('eventual-consistency', function() {
         recA1.get('animal_sound').should.equal('moo');
     });
 
-    it('new record should not yet have conveyed to slab B', (done) => {
-        slabB.getRecord( recA1.id ).then( function ( recB1 ) {
-            // shouldn't have made its way to slabB yet
-            should(recB1).not.be.ok();
-            done();
-        }).catch((err) => console.error(err) );
-
+    it('new record should not yet have conveyed to slab B', () => {
+        slabB.getRecord( recA1.id ).then( ( recB1 ) => should(recB1).not.be.ok() );
     });
 
     it('fast forward time a bit', () => mesh.deliverAllQueuedMessages() );
@@ -47,11 +42,39 @@ describe('eventual-consistency', function() {
         });
     });
 
+    it('time moves forward', () => mesh.deliverAllQueuedMessages() );
+
     it('new record should now be available on slab C', () => {
         return slabC.getRecord( recA1.id ).then( ( recC1 ) => {
             should(recC1).be.ok();
             recC1.get('animal_sound').should.be.exactly('moo');
         });
+    });
+
+    it('time moves forward', () => mesh.deliverAllQueuedMessages() );
+
+    it('Change the value on slab C', () => {
+        return slabC.getRecord( recA1.id ).then( ( recC1 ) => {
+            should(recC1).be.ok();
+            recC1.set('animal_sound','woof');
+        });
+    });
+
+    it('value should be unchanged on slab A', () => {
+        return slabA.getRecord( recA1.id ).then( ( recA1 ) => {
+            should(recA1).be.ok();
+            recA1.get('animal_sound').should.be.exactly('moo');
+        });
+    });
+
+    it('time moves forward', () => mesh.deliverAllQueuedMessages() );
+
+    it('NOW the value should be changed on slab A', () => {
+        //return slabA.getRecord( recA1.id ).then( ( recA1 ) => {
+            should(recA1).be.ok();
+            console.log('A1 MemoIDs:',recA1.getMemoIDs());
+            recA1.get('animal_sound').should.be.exactly('woof');
+        //});
     });
 
 });

@@ -48,6 +48,7 @@ Record.prototype.addMemos = function(memos){
         });
         me.memos_by_id[memo.id] = memo;
     });
+
 }
 
 Record.prototype.set = function(vals){

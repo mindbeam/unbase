@@ -228,19 +228,17 @@ Slab.prototype.getMemoPeers = function(memo_id,has_memo){
 /* Store a memo in this slab, manage LRU */
 Slab.prototype.putMemo = function(memo) {
     //if( ! memo instanceof memo_cls ) throw "invalid memo";
-    if( this._idmap[memo.id] ){
-        //if( me.paranoid ){
-        throw "attempt to put memo twice";
-    }
 
-    // console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid );
+
+    console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid );
+    if( this._idmap[memo.id] ) return;
 
     this._idmap[memo.id] = memo;
     var mbr = this._memos_by_record[memo.rid] = this._memos_by_record[memo.rid] || [];
     mbr.push(memo);
 
     var ex_record = this._records_by_id[ memo.rid ];
-    // console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid, ex_record, Object.getOwnPropertyNames(this._records_by_id) );
+    //console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid, ex_record, Object.getOwnPropertyNames(this._records_by_id) );
     if(ex_record) ex_record.addMemos([memo]);
 
     if (this.tail) {
@@ -373,7 +371,8 @@ Slab.prototype.checkMemoReplicationFactor = function(memo){
 
         if (desired <= 0)  success();
 
-        var slab_ids = this.mesh.getAcceptingSlabIDs( this.id, desired );
+        var peers = this.getMemoPeers(memo.id,true);
+        var slab_ids = this.mesh.getAcceptingSlabIDs( peers.concat(this.id), desired );
 
         /*
          * TODO:
@@ -381,12 +380,11 @@ Slab.prototype.checkMemoReplicationFactor = function(memo){
          * Should pushMemoToSlab be able to fail? or should we notice some other way?
          * how do we know when we're confident that a transaction is persisted?
         */
-        var peers = this.getMemoPeers(memo.id,true);
 
         slab_ids.forEach(function(to_slab_id){
-            if( peers.indexOf(to_slab_id) == -1 ){
+            //if( peers.indexOf(to_slab_id) == -1 ){
                 me.mesh.pushMemoToSlab( me.id, to_slab_id, memo );
-            }
+            //}
         });
 
         success(true);
