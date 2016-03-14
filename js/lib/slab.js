@@ -13,8 +13,7 @@
  *
  */
 
-
-var record_cls = require('./record');
+var context_cls = require('./context');
 
 var slab_increment = 0;
 
@@ -39,8 +38,10 @@ function Slab(args) {
     if(this.id.length != 1) throw "sanity error " + this.id;
 
     this.child_increment = 0;
-    this._idmap = {};
-    this._memos_by_record = {};
+    this._memos_by_id = {};
+    this._memo_ids_by_parent = {};
+    this._memo_ids_by_record = {};
+
     this._records_by_id   = {};
 
     this.size = 0;
@@ -55,6 +56,9 @@ function Slab(args) {
 
 }
 
+Slab.prototype.createContext = function () {
+    return context_cls.create(this,[]);
+};
 
 /*
  * convenience method for registering a peering between an memo, and a referenced memo.
@@ -231,15 +235,17 @@ Slab.prototype.putMemo = function(memo) {
 
 
     //console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid );
-    if( this._idmap[memo.id] ) return;
+    if( this._memos_by_id[memo.id] ) return;
 
-    this._idmap[memo.id] = memo;
-    var mbr = this._memos_by_record[memo.rid] = this._memos_by_record[memo.rid] || [];
-    mbr.push(memo);
+    this._memos_by_id[memo.id] = memo;
+    var mbr = this._memo_ids_by_record[memo.rid] = this._memo_ids_by_record[memo.rid] || [];
+    mbr.push(memo.id);
 
-    var ex_record = this._records_by_id[ memo.rid ];
-    //console.log( 'slab[' + this.id + '].putMemo', memo.id, memo.rid, ex_record, Object.getOwnPropertyNames(this._records_by_id) );
-    if(ex_record) ex_record.addMemos([memo]);
+    memo.parents.forEach((parent_id) => {
+        this._memo_ids_by_parent[parent_id] = memo.id;
+    });
+
+    (this._records_by_id[ memo.rid ] || []).forEach( (r) => r.addedMemos([memo]) );
 
     if (this.tail) {
         // link previous tail to the new tail memo
@@ -288,7 +294,7 @@ Slab.prototype.evictMemos = function() {
 /* Time for this memo to go. Lets make sure there are enough copies elsewhere first */
 Slab.prototype.evictMemo = function(memo){
     var me = this;
-    if( typeof memo == 'string' ) memo = this._idmap[ memo ];
+    if( typeof memo == 'string' ) memo = this._memos_by_id[ memo ];
     if( !memo ) throw 'attempted to evict invalid memo';
 
     memo.evicting(true);
@@ -307,13 +313,33 @@ Slab.prototype.evictMemo = function(memo){
 
 /* Remove memo from slab without delay */
 Slab.prototype.killMemo = function(memo) {
-    if( typeof memo == 'string' ) memo = this._idmap[ memo ];
-    if( !memo || !this._idmap[memo.id] ){
+    if( typeof memo == 'string' ) memo = this._memos_by_id[ memo ];
+    if( !memo || !this._memos_by_id[memo.id] ){
         console.error('invalid memo');
         return;
     }
 
-    delete this._idmap[memo.id]; // need to do delete unfortunately
+    if( this._records_by_id[ memo.rid ] ){
+        // abort if this is a head memo for a subscribed record
+        // head memos are those which have no resident children
+        if( !this._memo_ids_by_parent[memo.id] ) return; // abort
+    }
+
+
+    delete this._memos_by_id[memo.id];
+
+    var mbr = this._memo_ids_by_record[memo.rid];
+    var index = mbr.indexOf(memo.id);
+    mbr.splice(index, 1);
+
+    memo.parents.forEach((parent_id) => {
+        var ref = this._memo_ids_by_parent[parent_id];
+        var index = ref.indexOf(memo);
+
+        ref.splice(index, 1);
+    });
+
+    this.deregisterPeeringForMemo(memo);
 
     if (memo._newer && memo._older) {
         // relink the older entry with the newer entry
@@ -339,21 +365,8 @@ Slab.prototype.killMemo = function(memo) {
 
     }
 
-    // Tell the record to remove its reference to the memo
-    // Should the slab manage the record/memo lookup?
-
-    // TODO - find a way to tell if Records are still being used
-    // TODO - don't purge head memos from the slab for records which are still being used
-
-    var record = me._records_by_id[ memo.rid ];
-    if(record) record.killMemo( memo );
-
-    var mbr = this._memos_by_record[memo.rid];
-    var index = mbr.indexOf(memo);
-    mbr.splice(index, 1);
-
     this.size--;
-    this.deregisterPeeringForMemo(memo);
+
 };
 
 /*
@@ -424,7 +437,7 @@ Slab.prototype.genChildID = function(vals) {
 Slab.prototype.getMemo = function(id){
 
     // First, find our cache entry
-    var memo = this._idmap[id];
+    var memo = this._memos_by_id[id];
     if (memo === undefined) return; // Not cached. Sorry.
 
     // As <key> was found in the cache, register it as being requested recently
@@ -453,27 +466,32 @@ Slab.prototype.getMemo = function(id){
 
 };
 
-Slab.prototype.getRecord = function(rid){
-    var me = this;
-    var memos = me._memos_by_record[ rid ];
+Slab.prototype.hasMemosForRecord = function(record_id){
+    var memos = this._memo_ids_by_record[record_id];
+    return ((memos && memos.length) ? true : false);
+};
 
-    return new Promise((resolve, reject) => {
-        if (typeof memos === 'undefined' || !memos.length){
-            resolve(null);
-            return;
-        }
-        // TODO - perform an index lookup
+Slab.prototype.getHeadMemosForRecord = function(record_id){
+    // The head of a record consists of all Memo IDs which are not parents of any other memos
 
-        var record = record_cls.reconstitute( me, rid, memos );
-        me._records_by_id[ rid ] = record;
-
-        resolve( record );
-        return;
+    var head = [];
+    (this._memo_ids_by_record[record_id] || []).forEach((id) => {
+        var memo = this.getMemo( id );
+        if(!this._memo_ids_by_parent[ memo.id ]) head.push( memo );
     });
+
+    return head;
+};
+
+Slab.prototype.getHeadMemoIDsForRecord = function(record_id){
+    return this.getHeadMemosForRecord(record_id).map(function(memo){ return memo.id });
 }
 
-Slab.prototype.addRecord = function(record){
-    this._records_by_id[record.id] = record;
+Slab.prototype.subscribeRecord = function(record){
+    var records = this._records_by_id[record.id] = this._records_by_id[record.id] || [];
+    //console.log('subscribeRecord', this.id, record.id, records.indexOf(record) );
+    
+    if(records.indexOf(record) == -1) records.push(record);
 }
 
 Slab.prototype.dumpMemoIds = function(){
@@ -484,6 +502,16 @@ Slab.prototype.dumpMemoIds = function(){
         memo = memo._older;
     }
     return ids;
+}
+Slab.prototype.dumpMemos = function(){
+    var memos = [];
+
+    var memo = this.tail;
+    while(memo){
+        memos.push(memo);
+        memo = memo._older;
+    }
+    return memos;
 }
 
 module.exports = Slab;

@@ -7,6 +7,10 @@ Phase 1 (proof of concept)
 [X] Properly determine which memos are the head of a record
 [X] Reconstitute records from memos
 [X] Edit propagation to other slabs
+[X] Update record to apply to context
+[X] Add precursor / memo context recording
+[ ] Sort out memo parentage vs precursors ( is parentage just a filtered version of precursors? or a separate field)
+[ ] Implement record.get() with promises, not synchronous
 [ ] Async memo retrieval for non-head memos
 [ ] Test script cleanup
 [ ] Indexing implementation

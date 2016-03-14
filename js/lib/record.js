@@ -11,44 +11,42 @@
 
 var memo_cls = require('./memo');
 
-function Record(slab,id, memos) {
+function Record(context,id) {
     this.id = id;
-    this.slab = slab;
+    this.slab = context.slab;
+    this.context = context;
     this.memos_by_id = {};
     this.memos_by_parent = {};
 
-    this.addMemos(memos);
+    this.slab.subscribeRecord(this);
 
 }
 
-module.exports.reconstitute = function(slab,id,memos){
-    return new Record( slab, id, memos );
+module.exports.reconstitute = function(context,id,memos){
+    return new Record( context, id );
 }
 
-module.exports.create = function(slab,vals){
+module.exports.create = function(context,vals){
 
-    var id = 'R.' + slab.genChildID();
-    // console.log('record.create', id);
+    var id = 'R.' + context.slab.genChildID();
 
-    var firstmemo = memo_cls.create( slab, id, null, vals );
-    var record = new Record( slab, id, [firstmemo] );
-
-    slab.addRecord(record);
+    var record = new Record( context, id );
+    var firstmemo = memo_cls.create( context.slab, id, null, context.getPresentContext(), vals );
 
     return record;
 
 }
+// addMemos gets called after relevant are added to the slab
+Record.prototype.addedMemos = function(memos){
+    //console.log('Record[' + this.id + ' slab' + this.slab.id + '].addedMemos',this.slab.id, this.id, memos.map((memo) => memo.id));
 
-Record.prototype.addMemos = function(memos){
+    // TODO: notice when memos show up and trigger behaviors
+}
+
+// FYI, The memo is getting removed from the Slab.
+Record.prototype.killMemos = function(memos){
     var me = this;
-
-    memos.forEach(function(memo){
-        memo.parents.forEach(function(parent){
-            me.memos_by_parent[parent] = memo.id;
-        });
-        me.memos_by_id[memo.id] = memo;
-    });
-
+    // nothing for now
 }
 
 Record.prototype.set = function(vals){
@@ -56,10 +54,8 @@ Record.prototype.set = function(vals){
      * Update values of this record. Presently schemaless. should have a schema in the future
     */
 
-    var memo = new memo_cls.create( this.slab,this.id, this.getHeadMemoIDs(), vals );
-    this.addMemos([memo]);
-
-
+    var memo = new memo_cls.create( this.slab,this.id, this.getHeadMemoIDs(), this.context.getPresentContext(), vals );
+    this.context.addMemos([memo]);
     // TODO - return promise which is fulfilled on transaction commit
 }
 
@@ -74,17 +70,25 @@ var memosort = function(a,b){
     return 0;
 }
 
-// TODO - convert into a callback
+
 Record.prototype.get = function(field){
+    // TODO: implement promises for get
+    return this.getFreshOrNull(field);
+}
+
+Record.prototype.getFreshOrNull = function(field){
     var me = this;
     var value = undefined;
 
     var done = false;
-    var memos = this.getHeadMemos();
+    var memos = this.slab.getHeadMemosForRecord(this.id);
+
+    this.context.addMemos(memos);
 
     while(!done){
         var nextmemos = [];
         memos.sort(memosort).forEach(function(memo){
+            if(!memo.v) console.log(memo);
             if (typeof memo.v[field] !== 'undefined'){
                 value = memo.v[field];
                 done = true;
@@ -102,44 +106,11 @@ Record.prototype.get = function(field){
     return value;
 }
 
-Record.prototype.getHeadMemos = function(){
-    // The head of a record consists of all Memo IDs which are not parents of any other memos
-    var me = this;
-
-    var head = [];
-    var parentmap = me.memos_by_parent;
-    Object.getOwnPropertyNames(me.memos_by_id).forEach(function(id){
-        var memo = me.memos_by_id[ id ];
-        if(!parentmap[ memo.id ]) head.push( memo );
-    });
-
-    return head;
-};
 Record.prototype.getHeadMemoIDs = function(){
-    return this.getHeadMemos().map(function(memo){ return memo.id });
+    return this.slab.getHeadMemoIDsForRecord( this.id );
 }
 
 
 Record.prototype.getMemoIDs = function(){
     return Object.keys(this.memos_by_id);
 };
-
-
-// The memo is getting removed from the Slab. Clean up our reference to it here
-// somewhat less necessary now, as record objects are short-lived, but still not a bad idea in case there
-// are a lot of memos attached to this record
-Record.prototype.killMemo = function(memo){
-    var me = this;
-    if(!me.memos_by_parent[memo.id]) return; // refuse to kill head memos so the record is still viable
-
-    // remove the reference from memos_by_id
-    delete this.memos_by_id[ memo.id ];
-
-    // remove the reference from memos_by_parent
-    memo.parents.forEach(function(parentID){
-        var ref = me.memos_by_parent[parentID];
-        var index = ref.indexOf(memo);
-
-        ref.splice(index, 1);
-    })
-}

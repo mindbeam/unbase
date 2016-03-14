@@ -15,9 +15,9 @@ describe('basic eventual consistency', function() {
         mesh.should.be.instanceof(Object);
     });
 
-    var slabA = new slab_cls({ id: "A", mesh: mesh });
-    var slabB = new slab_cls({ id: "B", mesh: mesh });
-    var slabC = new slab_cls({ id: "C", mesh: mesh });
+    var contextA = new slab_cls({ id: "A", mesh: mesh }).createContext();
+    var contextB = new slab_cls({ id: "B", mesh: mesh }).createContext();
+    var contextC = new slab_cls({ id: "C", mesh: mesh }).createContext();
 
     it('should be correctly configured', () => {
         mesh.knownSlabCount().should.be.exactly(3);
@@ -25,7 +25,7 @@ describe('basic eventual consistency', function() {
 
     var recA1;
     it('should create new record', () => {
-        recA1 = record_cls.create(slabA, { animal_sound: 'moo' });
+        recA1 = record_cls.create(contextA, { animal_sound: 'moo' });
         should(recA1).be.ok();
     });
 
@@ -34,13 +34,13 @@ describe('basic eventual consistency', function() {
     });
 
     it('new record should not yet have conveyed to slab B', () => {
-        slabB.getRecord( recA1.id ).then( ( recB1 ) => should(recB1).not.be.ok() );
+        contextB.getRecord( recA1.id ).then( ( recB1 ) => should(recB1).not.be.ok() );
     });
 
     it('time moves forward', () => mesh.deliverAllQueuedMessages() );
 
     it('new record should now be available on slab B', () => {
-        return slabB.getRecord( recA1.id ).then( ( recB1 ) => {
+        return contextB.getRecord( recA1.id ).then( ( recB1 ) => {
             should(recB1).be.ok();
             recB1.get('animal_sound').should.be.exactly('moo');
         });
@@ -49,7 +49,7 @@ describe('basic eventual consistency', function() {
     it('time moves forward', () => mesh.deliverAllQueuedMessages() );
 
     it('new record should now be available on slab C', () => {
-        return slabC.getRecord( recA1.id ).then( ( recC1 ) => {
+        return contextC.getRecord( recA1.id ).then( ( recC1 ) => {
             should(recC1).be.ok();
             recC1.get('animal_sound').should.be.exactly('moo');
         });
@@ -58,14 +58,14 @@ describe('basic eventual consistency', function() {
     it('time moves forward', () => mesh.deliverAllQueuedMessages() );
 
     it('Change the value on slab C', () => {
-        return slabC.getRecord( recA1.id ).then( ( recC1 ) => {
+        return contextC.getRecord( recA1.id ).then( ( recC1 ) => {
             should(recC1).be.ok();
             recC1.set({'animal_sound': 'woof'});
         });
     });
 
     it('value should be unchanged on slab A', () => {
-        //return slabA.getRecord( recA1.id ).then( ( recA1 ) => {
+        //return contextA.getRecord( recA1.id ).then( ( recA1 ) => {
             //should(recA1).be.ok();
             recA1.get('animal_sound').should.be.exactly('moo');
         //});
@@ -80,4 +80,8 @@ describe('basic eventual consistency', function() {
     it('time moves forward', () => mesh.deliverAllQueuedMessages() );
     it('time moves forward', () => mesh.deliverAllQueuedMessages() );
 
+    //it('observe', () =>{
+        //.log('contextC', contextC.getPresentContext());
+        //console.log('slabC',contextC.slab.dumpMemos().map((m) => [m.id, m.getPrecursors(),m.parents]) );
+    //});
 });
