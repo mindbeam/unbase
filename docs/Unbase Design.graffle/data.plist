@@ -34,7 +34,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2016-07-04 01:14:23 +0000</string>
+	<string>2016-07-04 08:06:34 +0000</string>
 	<key>Modifier</key>
 	<string>Daniel Norman</string>
 	<key>NotesVisible</key>
@@ -3216,6 +3216,152 @@ Locate records by ID
 			<key>GraphicsList</key>
 			<array>
 				<dict>
+					<key>Bounds</key>
+					<string>{{427.22818620337051, 221.16651060284261}, {171.01634216308594, 84}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Vertical</string>
+					<key>Flow</key>
+					<string>Resize</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Color</key>
+						<dict>
+							<key>b</key>
+							<string>0.5</string>
+							<key>g</key>
+							<string>0.5</string>
+							<key>r</key>
+							<string>0.5</string>
+						</dict>
+						<key>Font</key>
+						<string>Helvetica</string>
+						<key>Size</key>
+						<real>7</real>
+					</dict>
+					<key>ID</key>
+					<integer>339</integer>
+					<key>Layer</key>
+					<integer>0</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Align</key>
+						<integer>0</integer>
+						<key>Pad</key>
+						<integer>0</integer>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red128\green128\blue128;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f0\fs12 \cf2 TODO:\
+1. review how index node memos are to be selectively acknowledged in order to keep traffic manageable.( Maybe merge lazily only on the basis of context swaps? )\
+2. show how keyframes are generated\
+3. show how projection works\
+\
+Q: how do i serialize a causal context for api users?\
+A: broadcast memo hunt OR memo index \
+\
+Q: how do I determine when to share causal context?\
+}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{600.5665617603745, 64.133446096409841}, {122.93543675435785, 24}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Vertical</string>
+					<key>Flow</key>
+					<string>Resize</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Color</key>
+						<dict>
+							<key>b</key>
+							<string>1</string>
+							<key>g</key>
+							<string>0.176471</string>
+							<key>r</key>
+							<string>0</string>
+						</dict>
+						<key>Font</key>
+						<string>Helvetica-Bold</string>
+						<key>Size</key>
+						<real>8</real>
+					</dict>
+					<key>ID</key>
+					<integer>338</integer>
+					<key>Layer</key>
+					<integer>0</integer>
+					<key>Magnets</key>
+					<array>
+						<string>{1, 0}</string>
+						<string>{-1, 0}</string>
+					</array>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Align</key>
+						<integer>0</integer>
+						<key>Pad</key>
+						<integer>3</integer>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red0\green45\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f0\b\fs14 \cf2 Create new parent index memos linking to child index memos from the causal context.}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+				</dict>
+				<dict>
 					<key>Class</key>
 					<string>LineGraphic</string>
 					<key>ControlPoints</key>
@@ -3243,7 +3389,7 @@ Locate records by ID
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{607.73624389993495, 164.32214927275413}</string>
+						<string>{600.5665617603745, 187.32214927275413}</string>
 						<string>{548.99503687970684, 144.3892873052466}</string>
 					</array>
 					<key>Style</key>
@@ -3279,7 +3425,7 @@ Locate records by ID
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{607.73624389993495, 144.32214927275413}, {112.64891378912512, 40}}</string>
+					<string>{{600.5665617603745, 171.32214927275413}, {122.93543675435785, 32}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -3967,14 +4113,14 @@ Locate records by ID
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red64\green64\blue64;}
+{\colortbl;\red255\green255\blue255;\red64\green64\blue64;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading40\pardirnatural
 
 \f0\b\fs16 \cf0 X1.2 
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0 \cf3 Update Index node X1 to link to new head of Index Node X2 (X2.2)}</string>
+\b0 \cf2 Update Index node X1 to link to new head of Index Node X2 (X2.2)}</string>
 						<key>VerticalPad</key>
 						<integer>2</integer>
 					</dict>
@@ -4052,14 +4198,14 @@ Locate records by ID
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red64\green64\blue64;}
+{\colortbl;\red255\green255\blue255;\red64\green64\blue64;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading40\pardirnatural
 
 \f0\b\fs16 \cf0 X2.2 
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0 \cf3 Update Index node X2 to link to new head of Index Node X3 (X3.2)}</string>
+\b0 \cf2 Update Index node X2 to link to new head of Index Node X3 (X3.2)}</string>
 						<key>VerticalPad</key>
 						<integer>2</integer>
 					</dict>
@@ -4137,14 +4283,14 @@ Locate records by ID
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red64\green64\blue64;}
+{\colortbl;\red255\green255\blue255;\red64\green64\blue64;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading40\pardirnatural
 
 \f0\b\fs16 \cf0 X1.2 
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0 \cf3 Update Index node X1 to link to new head of Index Node X2 (X2.2)}</string>
+\b0 \cf2 Update Index node X1 to link to new head of Index Node X2 (X2.2)}</string>
 						<key>VerticalPad</key>
 						<integer>2</integer>
 					</dict>
@@ -4153,7 +4299,7 @@ Locate records by ID
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{608.2091922357032, 105.9865754852907}, {108, 30.763591766357422}}</string>
+					<string>{{608.2091922357032, 132.9865754852907}, {108, 30.763591766357422}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -4222,14 +4368,14 @@ Locate records by ID
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red64\green64\blue64;}
+{\colortbl;\red255\green255\blue255;\red64\green64\blue64;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading40\pardirnatural
 
 \f0\b\fs16 \cf0 X1.2 
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0 \cf3 Update Index node X1 to link to new head of Index Node X2 (X2.2)}</string>
+\b0 \cf2 Update Root Index node X1 to link to new head of Index Node X2 (X2.2)}</string>
 						<key>VerticalPad</key>
 						<integer>2</integer>
 					</dict>
@@ -4238,7 +4384,7 @@ Locate records by ID
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{608.20915455858744, 67.651005628908962}, {108, 30.763591766357422}}</string>
+					<string>{{608.20915455858744, 94.651005628908962}, {108, 30.763591766357422}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -4307,14 +4453,14 @@ Locate records by ID
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red64\green64\blue64;}
+{\colortbl;\red255\green255\blue255;\red64\green64\blue64;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading40\pardirnatural
 
 \f0\b\fs16 \cf0 X2.2 
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0 \cf3 Update Index node X2 to link to new head of Index Node X3 (X3.2)}</string>
+\b0 \cf2 Update Index node X2 to link to new head of Index Node X3 (X3.2)}</string>
 						<key>VerticalPad</key>
 						<integer>2</integer>
 					</dict>
@@ -4323,7 +4469,7 @@ Locate records by ID
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{591.38254087271264, 30.147042637233916}, {141.65324401855469, 206.356689453125}}</string>
+					<string>{{591.38254087271264, 30.147042637233909}, {141.65324401855469, 177.51124572753906}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -4406,11 +4552,13 @@ Locate records by ID
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red128\green128\blue128;}
+{\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red128\green128\blue128;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs14 \cf2 Compaction \
-Initiated when context grows too large. May happen mid transaction.}</string>
+\f0\b\fs16 \cf2 Compaction \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\b0\fs14 \cf3 When context grows too large. May happen mid-transaction.}</string>
 						<key>VerticalPad</key>
 						<integer>3</integer>
 					</dict>
@@ -4957,7 +5105,7 @@ or pushed by a peer slab for durability assurance}</string>
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0\fs14 \cf0 Begin Transaction T1}</string>
+\b0\fs14 \cf0 Commit Transaction T1}</string>
 						<key>VerticalPad</key>
 						<integer>1</integer>
 					</dict>
@@ -5374,14 +5522,14 @@ or pushed by a peer slab for durability assurance}</string>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red64\green64\blue64;}
+{\colortbl;\red255\green255\blue255;\red64\green64\blue64;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading40\pardirnatural
 
 \f0\b\fs16 \cf0 X3.2 
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0 \cf3 Update Index node X3 to point to new head of Record R1 (R1.2)}</string>
+\b0 \cf2 Update Index node X3 to point to new head of Record R1 (R1.2)}</string>
 						<key>VerticalPad</key>
 						<integer>2</integer>
 					</dict>
@@ -5639,14 +5787,14 @@ or pushed by a peer slab for durability assurance}</string>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red64\green64\blue64;}
+{\colortbl;\red255\green255\blue255;\red64\green64\blue64;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading40\pardirnatural
 
 \f0\b\fs16 \cf0 X3.2 
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0 \cf3 Update Index node X3 to point to new head of Record R1 (R1.2)}</string>
+\b0 \cf2 Update Index node X3 to point to new head of Record R1 (R1.2)}</string>
 						<key>VerticalPad</key>
 						<integer>2</integer>
 					</dict>
@@ -5753,7 +5901,7 @@ or pushed by a peer slab for durability assurance}</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{427.22817771847281, 30.147042301061134}, {135.53370666503906, 228.309326171875}}</string>
+					<string>{{427.22817771847281, 30.147042301061134}, {135.53370666503906, 177.51124572753906}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -5839,11 +5987,11 @@ or pushed by a peer slab for durability assurance}</string>
 {\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red128\green128\blue128;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs16 \cf2 Causal Context for Slab 1
-\fs14 \
+\f0\b\fs16 \cf2 Causal Context for Slab 1
+\fs14 \cf2 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\fs12 \cf3 (contains references to objects in the slab)}</string>
+\b0\fs12 \cf3 (contains references to objects in the slab)}</string>
 						<key>VerticalPad</key>
 						<integer>3</integer>
 					</dict>
@@ -6319,14 +6467,14 @@ or pushed by a peer slab for durability assurance}</string>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red64\green64\blue64;\red64\green64\blue64;}
+{\colortbl;\red255\green255\blue255;\red64\green64\blue64;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading40\pardirnatural
 
 \f0\b\fs16 \cf0 X3.2 
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0 \cf3 Update Index node X3 to include ref to new head of Record R1 (R1.2)}</string>
+\b0 \cf2 Update Index node X3 to include ref to new head of Record R1 (R1.2)}</string>
 						<key>VerticalPad</key>
 						<integer>2</integer>
 					</dict>
@@ -7052,7 +7200,7 @@ or pushed by a peer slab for durability assurance}</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{101.56375396929674, 528.16004994834066}, {293, 8}}</string>
+					<string>{{102.12865457222907, 528.16004994834066}, {374, 16}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -7103,6 +7251,8 @@ or pushed by a peer slab for durability assurance}</string>
 					</dict>
 					<key>Text</key>
 					<dict>
+						<key>Align</key>
+						<integer>0</integer>
 						<key>Pad</key>
 						<integer>0</integer>
 						<key>RTFD</key>
@@ -7110,44 +7260,53 @@ or pushed by a peer slab for durability assurance}</string>
 						BAtzdHJlYW10eXBlZIHoA4QBQISE
 						hBJOU0F0dHJpYnV0ZWRTdHJpbmcA
 						hIQITlNPYmplY3QAhZKEhIQITlNT
-						dHJpbmcBlIQBK15Bc3N1bWVzIGZp
-						eGVkIDMtdGllciBub24tYmFsYW5j
+						dHJpbmcBlIQBK4HgAEFzc3VtZXMg
+						Zml4ZWQgMy10aWVyIHVuYmFsYW5j
 						ZWQgaW5kZXggdHJlZSB3aXRoIDEw
-						MjQgc2xvdHMgZWFjaCAoMTAyNF4z
-						ID0gMSBCaWxsaW9uIHJlY29yZHMp
-						hoQCaUkBXpKEhIQMTlNEaWN0aW9u
-						YXJ5AJSEAWkDkoSWlgdOU0NvbG9y
-						hpKEhIQHTlNDb2xvcgCUhAFjA4QC
-						ZmYAg32pmj6GkoSWlhBOU1BhcmFn
-						cmFwaFN0eWxlhpKEhIQXTlNNdXRh
-						YmxlUGFyYWdyYXBoU3R5bGUAhIQQ
-						TlNQYXJhZ3JhcGhTdHlsZQCUhARD
-						Q0BTAgCEhIQHTlNBcnJheQCUmQyS
-						hISECU5TVGV4dFRhYgCUhAJDZgAc
-						hpKEo6IAOIaShKOiAFSGkoSjogBw
-						hpKEo6IAgYwAhpKEo6IAgagAhpKE
-						o6IAgcQAhpKEo6IAgeAAhpKEo6IA
-						gfwAhpKEo6IAgRgBhpKEo6IAgTQB
-						hpKEo6IAgVABhoaBAAiEBFsxZl2D
-						zcxMPYaShJaWBk5TRm9udIaShISE
-						Bk5TRm9udB6UmRyEBVsyOGNdBgAA
-						ABQAAAD//kgAZQBsAHYAZQB0AGkA
-						YwBhAIQBZgebAJsBmwCbAIaGhg==
+						MjQgcGVyIHNsb3RzIGVhY2ggbm9k
+						ZSAoMTAyNF4zID0gMSBCaWxsaW9u
+						IHJlY29yZHMpCldvdWxkIGxpa2Vs
+						eSBiZSBhIDQtdGllciBzeXN0ZW0u
+						IEJhbGFuY2VkLXRyZWUgaW5kZXhp
+						bmcgd29yayBtYXkgYmUgcG9zc2li
+						bGUsIGJ1dCBpcyBub3QgcHJlc2Vu
+						dGx5IGluY2x1ZGVkIGluIHRoaXMg
+						ZGVzaWduhoQCaUkBgeAAkoSEhAxO
+						U0RpY3Rpb25hcnkAlIQBaQOShJaW
+						B05TQ29sb3KGkoSEhAdOU0NvbG9y
+						AJSEAWMDhAJmZgCDfamaPoaShJaW
+						EE5TUGFyYWdyYXBoU3R5bGWGkoSE
+						hBdOU011dGFibGVQYXJhZ3JhcGhT
+						dHlsZQCEhBBOU1BhcmFncmFwaFN0
+						eWxlAJSEBENDQFMAAISEhA5OU011
+						dGFibGVBcnJheQCEhAdOU0FycmF5
+						AJSZDJKEhIQJTlNUZXh0VGFiAJSE
+						AkNmAByGkoSkowA4hpKEpKMAVIaS
+						hKSjAHCGkoSkowCBjACGkoSkowCB
+						qACGkoSkowCBxACGkoSkowCB4ACG
+						koSkowCB/ACGkoSkowCBGAGGkoSk
+						owCBNAGGkoSkowCBUAGGhoEACIQE
+						WzFmXYPNzEw9hpKElpYGTlNGb250
+						hpKEhIQGTlNGb250HpSZHIQFWzI4
+						Y10GAAAAFAAAAP/+SABlAGwAdgBl
+						AHQAaQBjAGEAhAFmB5sAmwGbAJsA
+						hoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
 {\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs14 \cf2 Assumes fixed 3-tier non-balanced index tree with 1024 slots each (1024^3 = 1 Billion records)}</string>
+\f0\fs14 \cf2 Assumes fixed 3-tier unbalanced index tree with 1024 per slots each node (1024^3 = 1 Billion records)\
+Would likely be a 4-tier system. Balanced-tree indexing work may be possible, but is not presently included in this design}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 						<key>alpha</key>
 						<array>
 							<array>
 								<integer>0</integer>
-								<integer>94</integer>
+								<integer>224</integer>
 								<real>0.30207434296607971</real>
 							</array>
 						</array>
@@ -7240,7 +7399,7 @@ or pushed by a peer slab for durability assurance}</string>
 
 \f0\fs16 \cf0 X3 - Leaf Node for Index 1}</string>
 						<key>VerticalPad</key>
-						<integer>7</integer>
+						<integer>2</integer>
 					</dict>
 					<key>TextPlacement</key>
 					<integer>0</integer>
@@ -7330,7 +7489,7 @@ or pushed by a peer slab for durability assurance}</string>
 
 \f0\fs16 \cf0 X2 - Node for Index 1}</string>
 						<key>VerticalPad</key>
-						<integer>7</integer>
+						<integer>2</integer>
 					</dict>
 					<key>TextPlacement</key>
 					<integer>0</integer>
@@ -7420,7 +7579,7 @@ or pushed by a peer slab for durability assurance}</string>
 
 \f0\fs16 \cf0 X1 - Root Node for Index 1}</string>
 						<key>VerticalPad</key>
-						<integer>7</integer>
+						<integer>2</integer>
 					</dict>
 					<key>TextPlacement</key>
 					<integer>0</integer>
@@ -7516,7 +7675,7 @@ or pushed by a peer slab for durability assurance}</string>
 \fs12 \cf2 (New Memo)\cf0 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\b0\fs14 Record1 \'96 Set Color=Blue}</string>
+\b0\fs14 \cf0 Record1 \'96 Set Color=Blue}</string>
 						<key>VerticalPad</key>
 						<integer>1</integer>
 					</dict>
@@ -7620,7 +7779,7 @@ or pushed by a peer slab for durability assurance}</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{192.48781828721957, 3.989077089093314}, {557.19000244140625, 442.1873779296875}}</string>
+					<string>{{188.62993855566256, 4.4026490956019213}, {557.19000244140625, 442.1873779296875}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -14504,8 +14663,6 @@ Range: A-K}</string>
 		</array>
 		<key>FitInWindow</key>
 		<true/>
-		<key>Frame</key>
-		<string>{{1878, -42}, {890, 696}}</string>
 		<key>ListView</key>
 		<true/>
 		<key>OutlineWidth</key>
@@ -14518,10 +14675,8 @@ Range: A-K}</string>
 		<true/>
 		<key>SidebarWidth</key>
 		<integer>120</integer>
-		<key>VisibleRegion</key>
-		<string>{{0, 0}, {755, 554}}</string>
 		<key>Zoom</key>
-		<real>1</real>
+		<real>1.3628158569335938</real>
 		<key>ZoomValues</key>
 		<array>
 			<array>
