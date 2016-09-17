@@ -12,7 +12,7 @@ and present orthodoxy about what constitutes a "database". It seeks to blur the 
 When you're looking to scale, there are a couple ways to achieve this:
 
 ### Build a bunker
-Big iron, a large diesel generator, maybe some thick concrete walls, some guards; and a moat perhaps, and an RDBMS
+Big iron, a large diesel generator, maybe some thick concrete walls, some guards, a moat perhaps, and an RDBMS.
 But you still have to do business in Beijing, Sydney, Seattle, Buenos Aires, and Kansas City... what about latency? Ok, five bunkers then. (Hmm, sounds expensive)
 
 Classical relational databases are inherently poor when it comes to decentralization.
@@ -29,7 +29,7 @@ They play nice with existing software stacks, offer a familiar SQL interface, so
    
 
 ### Spread out
-Guerilla warefare style. Go forth into homes, and into businesses. Bring the data to the people. Get up close and personal.
+Guerilla warfare style. Go forth into homes, and into businesses. Bring the data to the people. Get up close and personal.
 
 Centralization has too many shortcomings to ignore.
 Distributed systems, carefully implemented, are the key to achieving higher speed, scalability, and fault tolerance.
@@ -63,5 +63,5 @@ Here, the same principle applies, it's just a bit more spread out.
 
 ## Design Non-Goals:
 
-* Linearizability - [Fundimentally incompatible](https://groups.google.com/forum/#!msg/cloud-computing/nn7Sw5T0eSE/NxOTUwD_0ykJ) with the physical laws of the universe (unless you're very patient)
+* Linearizability - [Fundamentally incompatible](https://groups.google.com/forum/#!msg/cloud-computing/nn7Sw5T0eSE/NxOTUwD_0ykJ) with the physical laws of the universe (unless you're very patient)
 * SQL support     - SQL might be added at a later date, but only as a means of introspection / administration. It
