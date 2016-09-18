@@ -1,67 +1,32 @@
+<img src="https://travis-ci.org/dnorman/unbase.svg?branch=master">
 
 # What is Unbase?
 
-Unbase is a concept for a database+application framework that is fundamentally reactive, fault tolerant, and decentralized.
-It seeks to address some very specific shortcomings in traditional database+application paradigms.
-Unbase is presently under active design.
+Unbase is a concept for a distributed database/application framework that is fundamentally reactive, fault tolerant, and decentralized. It seeks to address some very specific shortcomings in traditional paradigms.
 
-## Why
-The Unbase concept is an attempt to create a truly distributed architecture that transcends device, geography, programming language,
-and present orthodoxy about what constitutes a "database". It seeks to blur the lines between application/database, and client/server.
+Unbase is an attempt to create a distributed architecture that transcends device, geography, programming language, and present orthodoxy about what constitutes a "database". It seeks to blur the lines between application/database, and client/server.
 
-When you're looking to scale, there are a couple ways to achieve this:
+We argue that for many use cases, data should not be assigned to any specific storage location (as is the case in "sharded" systems) but rather, it should live where it originates, and where it's desired. Data should not be "based"[1] and thus the name: Unbase
 
-### Build a bunker
-Big iron, a large diesel generator, maybe some thick concrete walls, some guards; and a moat perhaps, and an RDBMS
-But you still have to do business in Beijing, Sydney, Seattle, Buenos Aires, and Kansas City... what about latency? Ok, five bunkers then. (Hmm, sounds expensive)
-
-Classical relational databases are inherently poor when it comes to decentralization.
-Multi-master has never been a byword for simplicity, nor will it magically solve all your operational problems.
-
-Some [modern](http://www.nuodb.com/) [databases](http://www.clustrix.com/) are trying to solve this, but they are largely closed-source offerings trying to gain
-market-share by pretending to be an old big-iron database, but just a bit more scalable. They may be successful in this endeavor, but the solution they offer is far from holistic.
-They play nice with existing software stacks, offer a familiar SQL interface, solve a few problems, and they leave lots more unresolved.
-
-* You must connect to them - Even if it's a process on the same machine, you must still copy the data into your process over the loopback.
-* Your process has to poll for updates - they're not pushed to you.
-* They lack integral queuing and push notifications. If another party wants to hear about updates, you must propagate these changes twice - Once for DB replication, and again via an out-of-band message queue.
- * Parallel replication streams race each other toward event consumers, who lack the practical ability to synchronize them
-   
-
-### Spread out
-Guerilla warefare style. Go forth into homes, and into businesses. Bring the data to the people. Get up close and personal.
-
-Centralization has too many shortcomings to ignore.
-Distributed systems, carefully implemented, are the key to achieving higher speed, scalability, and fault tolerance.
-We need a better answer to service the demands of modern software. Humans can do this, why can't software?
-We need to build in delegation, compromise, and regionality from the start.
-
-This is what Unbase seeks to achieve.
-
-## How
-
-With Unbase, there is effectively no distinction between application and database.
-The application is *inside* the database. The database simply happens to lack a single "Base"
-
-In the abstract, this is actually a very old idea. Stored procedures have been around for quite some time, and databases used
-to be more like application servers. A user would call a stored procedure, and business logic happens.
-Here, the same principle applies, it's just a bit more spread out.
+*Unbase is presently under active development.*
 
 ## Design Goals:
 
-* Efficient push notifications for all changes to all interested parties
-* Drastically reduce latency by moving data close to where you need it [closer to the processor][what_is_distance]
-* Allow continued operation during a network partition
- * Avoid CAP theorem limitations by abandoning linearizability in favor of [causal consistency](http://sns.cs.princeton.edu/projects/cops-and-eiger/)
- * Treat conflicts as inevitable, and allow them to be resolved systematically
-* Destroy the distinction between client and server. They are considered identical **except** for policy, capability, and resources.
- * Access control enforcement at every stage of replication
- * Push business logic to initiators when possible, otherwise delegate to nearest capable node
-* Support for complex data types to limit unnecessary entity-attribute-value structures
-* Virtualized objects, accessible from any node, complete with synchronous, asynchronous business logic enforcement
-* Utilize [mesh networking](https://github.com/telehash/telehash.org/tree/master/v3) to allow ALL system participants ("clients" and "servers") to communicate directly, and around damage or network interruption
+* Zero-coordination / Zero waiting
+* Drastically reduce operational latency by focusing on data locality (planet/continent/city/building/main memory/processor core)
+* Provide tunable durability guarantees
+* Reduce human planning and monetary cost through behavior-driven design
+* Employ peer-to-peer networking to ensure continued operation during network partitions[2]
+* Provide a robust type system, avoiding workarounds[3] commonly employed by RDBMS
+* Common, minimalist library for client and server[4] applications
+* Distributed content-filtered pubsub for efficient push notifications
+* Provide a facility for the registration and execution of triggers to allow for reactive, but loose couplings
 
-## Design Non-Goals:
+## Consistency Model
 
-* Linearizability - [Fundimentally incompatible](https://groups.google.com/forum/#!msg/cloud-computing/nn7Sw5T0eSE/NxOTUwD_0ykJ) with the physical laws of the universe (unless you're very patient)
-* SQL support     - SQL might be added at a later date, but only as a means of introspection / administration. It
+Unbase seeks to implement a specific causal consistency model which we are calling "Infectious Knowledge".
+See [Consistency Model](CONSISTENCY_MODEL.md) for more details
+
+[1] When data is "based" in a specific place (IE: consistent hashing) which is determined by anything other than the set of parties who are interested in its existence (originator/consumer) it is substantially more likely that a system will be compelled to wait for its retrieval. See [light cones](https://en.wikipedia.org/wiki/Light_cone)
+[2] Using the term "partition" for conversational understanding. Partitions are not actually a thing.
+[3] entity-attribute-value, serializations stored as text, etc
