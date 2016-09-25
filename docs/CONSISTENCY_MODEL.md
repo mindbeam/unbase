@@ -18,7 +18,7 @@ These data structures are elegant, and efficient. Unbase intends to extend this 
 
 In immutable data structures, when an given node is edited, values are "edited" by originating one or more new nodes, and recreating all parent nodes up to the root node. This provides a compact context against which all subsequent queries will experience a consistent worldview.
 
-<img src="immutable_ds_1.png">
+<img src="immutable_ds_1.png" syle="width: 455px">
 Fig 1.
 
 

@@ -34,7 +34,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2016-09-25 22:51:42 +0000</string>
+	<string>2016-09-25 23:19:55 +0000</string>
 	<key>Modifier</key>
 	<string>Daniel Norman</string>
 	<key>NotesVisible</key>
@@ -10647,7 +10647,7 @@ to reference E, F
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{107.5, 71}, {435, 258.5}}</string>
+					<string>{{107.50032043457031, 82.499916076660156}, {432, 252}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -10777,7 +10777,7 @@ to reference E, F
 				</dict>
 				<dict>
 					<key>Lock</key>
-					<string>YES</string>
+					<string>NO</string>
 					<key>Name</key>
 					<string>Baseline</string>
 					<key>Print</key>
