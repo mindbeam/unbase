@@ -1,5 +1,5 @@
 
-= Unbase Consistency Model
+# Unbase Consistency Model
 
 Unbase seeks to implement a Causal consistency model, which we are calling "Infectious Knowledge"
 This may be similar to "Potential Causal Consistency"
@@ -8,33 +8,35 @@ The "Infectious Knowledge" Consistency model seeks to implement the strongest co
 
 This means no shared state, no linearizability, no quorums (except for those you choose to implement as an overlay).
 
-== Synopsis
+## Synopsis
 
 In functional programming, it's very common to employ immutable data structures.
 These data structures are elegant, and efficient. Unbase intends to extend this immutable data-structure into a distributed system which may encompass thousands, or even millions of Unbase instances, while offering strong causal consistency guarantees.
 
 
-== Immutable data
+## Immutable data
 
 In immutable data structures, when an given node is edited, values are "edited" by originating one or more new nodes, and recreating all parent nodes up to the root node. This provides a compact context against which all subsequent queries will experience a consistent worldview.
 
-<img src="immutable_ds_1.png" syle="width: 455px">
+<img src="immutable_ds_1.png" syle="max-width: 910px"><br>
 Fig 1.
 
+<img src="immutable_ds_2.png" syle="max-width: 910px"><br>
+Fig 2.
 
-=== Probability-based merging
+## Probability-based merging
 
 The downside of immutable data structure approach is that multiple editors in the system would cause a bunch of new intermediate and root nodes to be created. This wold eventually stabilize for a given set of e=ve
 
-== Sparse vector clock (Beacons)
+## Sparse vector clock (Beacons)
 
 TODO: Similar to interval tree clocks --
 Assume you had a vector clock of unlimited width, and comparing vector clock readings is cheap.
 Employ a distributed index tree as a way to locate
 
-== Indexes
+## Indexes
 
-== Causal Context
+## Causal Context
 
 
 
@@ -48,5 +50,5 @@ Employ a distributed index tree as a way to locate
 * Utilize [mesh networking](https://github.com/telehash/telehash.org/tree/master/v3) to allow ALL system participants ("clients" and "servers") to communicate directly, and around damage or network interruption
 
 
-= Notes
+# Notes
 No quorum logic shall be utilized. Provided the requisite data is available and sufficiently fresh according to its present causal context, a node, or cluster of nodes may continue functioning in the partitioned area without limitation, except as necessary to enforce durability guarantees; wherein the application logic may choose to whether to wait to reach the desired probability of durability or not.
