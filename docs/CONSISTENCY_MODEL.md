@@ -16,11 +16,11 @@ These data structures are elegant, and efficient. Unbase intends to extend this 
 
 == Immutable data
 
-In immutable data structures, when an given node is edited, a clone of that node is created with the respective change. A new parent node is created referencing the new node, as well as any other nodes which haven't changed during the operation. Continuing all the way to the "root" node. This yields a new root node which may be used to query the revised data structure.
+In immutable data structures, when an given node is edited, values are "edited" by originating one or more new nodes, and recreating all parent nodes up to the root node. This provides a compact context against which all subsequent queries will experience a consistent worldview.
 
-[ Immutable DS illustration 1 here ]
+<img src="immutable_ds_1.png">
+Fig 1.
 
-TODO: Merging concurrent updates
 
 === Probability-based merging
 
