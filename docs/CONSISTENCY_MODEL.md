@@ -25,7 +25,7 @@ Fig 1. Immutable data-structure baseline
 Fig 2. Immutable data-structure edit
 
 TODO<br>
-Fig 3. Distributed immutable data-structure
+Fig 3. Naive implementation of a distributed immutable data-structure
 
 TODO<br>
 Fig 4. Avoiding Write Amplification through probability-based merging
