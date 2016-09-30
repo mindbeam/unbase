@@ -34,7 +34,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2016-09-26 05:37:45 +0000</string>
+	<string>2016-09-30 03:47:04 +0000</string>
 	<key>Modifier</key>
 	<string>Daniel Norman</string>
 	<key>NotesVisible</key>
@@ -3185,7 +3185,7 @@ Locate records by ID
 					<key>Font</key>
 					<string>Helvetica</string>
 					<key>Size</key>
-					<real>8</real>
+					<real>4</real>
 				</dict>
 				<key>ID</key>
 				<integer>2</integer>
@@ -8033,7 +8033,7 @@ Would likely be a 4-tier system. Balanced-tree indexing work may be possible, bu
 		</dict>
 		<dict>
 			<key>ActiveLayerIndex</key>
-			<integer>0</integer>
+			<integer>6</integer>
 			<key>AutoAdjust</key>
 			<true/>
 			<key>BackgroundGraphic</key>
@@ -8726,14 +8726,12 @@ When concurrent operations are observed, merge them into a new composite operati
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -9127,11 +9125,9 @@ When concurrent operations are observed, merge them into a new composite operati
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -9393,14 +9389,12 @@ When concurrent operations are observed, merge them into a new composite operati
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -9794,11 +9788,9 @@ When concurrent operations are observed, merge them into a new composite operati
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -10033,14 +10025,12 @@ When concurrent operations are observed, merge them into a new composite operati
 						hISEBk5TRm9udB6UmRyEBVsyOGNd
 						BgAAABQAAAD//kgAZQBsAHYAZQB0
 						AGkAYwBhAIQBZgmbAJsBmwCbAIaG
-						lwICkoSYmQSSn5KEoaACAISkmQyS
-						pZKnkqiSqZKqkquSrJKtkq6Sr5Kw
-						krGGgQAIpIPNzEw9hpKZkpqShJaW
-						DU5TU3VwZXJTY3JpcHSGkoSEhAhO
-						U051bWJlcgCEhAdOU1ZhbHVlAJSE
-						ASqEhAFxq/+GkrKShLSZHKYGAAAA
-						FAAAAP/+SABlAGwAdgBlAHQAaQBj
-						AGEApwabAJsBmwCbAIaGhg==
+						lwICkoSYmQSSn5KgkpmSmpKElpYN
+						TlNTdXBlclNjcmlwdIaShISECE5T
+						TnVtYmVyAISEB05TVmFsdWUAlIQB
+						KoSEAXGr/4aSspKEtJkcpgYAAAAU
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQCnBpsAmwGbAJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -10330,11 +10320,9 @@ When concurrent operations are observed, merge them into a new composite operati
 						lwICkoSYmQOShJaWDU5TU3VwZXJT
 						Y3JpcHSGkoSEhAhOU051bWJlcgCE
 						hAdOU1ZhbHVlAJSEASqEhAFxq/+G
-						kp+ShKGgAgCEpJkMkqWSp5KokqmS
-						qpKrkqySrZKukq+SsJKxhoEACKSD
-						zcxMPYaSspKEtJkcpgYAAAAUAAAA
-						//5IAGUAbAB2AGUAdABpAGMAYQCn
-						BpsAmwGbAJsAhoaG
+						kp+SoJKykoS0mRymBgAAABQAAAD/
+						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
+						mwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -10686,14 +10674,12 @@ When concurrent operations are observed, merge them into a new composite operati
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -10983,11 +10969,9 @@ When concurrent operations are observed, merge them into a new composite operati
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -12034,14 +12018,12 @@ As more concurrent operations are observed, the causal context grows too large, 
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -12331,11 +12313,9 @@ As more concurrent operations are observed, the causal context grows too large, 
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -12462,14 +12442,12 @@ As more concurrent operations are observed, the causal context grows too large, 
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -12917,11 +12895,9 @@ As more concurrent operations are observed, the causal context grows too large, 
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -14138,14 +14114,12 @@ As more concurrent operations are observed, the causal context grows too large, 
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -14539,11 +14513,9 @@ As more concurrent operations are observed, the causal context grows too large, 
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -14860,14 +14832,12 @@ As more concurrent operations are observed, the causal context grows too large, 
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -15261,11 +15231,9 @@ As more concurrent operations are observed, the causal context grows too large, 
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -15617,14 +15585,12 @@ As more concurrent operations are observed, the causal context grows too large, 
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -15914,11 +15880,9 @@ As more concurrent operations are observed, the causal context grows too large, 
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -17010,14 +16974,12 @@ As more concurrent operations are observed, the causal context grows too large, 
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -17307,11 +17269,9 @@ As more concurrent operations are observed, the causal context grows too large, 
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -17548,14 +17508,12 @@ As more concurrent operations are observed, the causal context grows too large, 
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -18060,11 +18018,9 @@ As more concurrent operations are observed, the causal context grows too large, 
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -18961,8 +18917,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{324, 120.35079156426355}</string>
-						<string>{303.54867553710938, 115.8929300236131}</string>
+						<string>{324, 120.34449335216877}</string>
+						<string>{303.54867553710938, 115.88477847656745}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -19479,14 +19435,12 @@ As more operations are }</string>
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -19776,11 +19730,9 @@ As more operations are }</string>
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -20021,14 +19973,12 @@ As more operations are }</string>
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -20518,11 +20468,9 @@ As more operations are }</string>
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -21433,8 +21381,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{324, 120.36969859089018}</string>
-						<string>{303.54867553710938, 115.91740070111987}</string>
+						<string>{324, 120.35079156426355}</string>
+						<string>{303.54867553710938, 115.8929300236131}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -22020,14 +21968,12 @@ When performing a query,
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -22317,11 +22263,9 @@ When performing a query,
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -22562,14 +22506,12 @@ When performing a query,
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkoShoAIAhKSZDJKl
-						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
-						sYaBAAikg83MTD2GkpmSmpKElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGr/4aSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -23059,11 +23001,9 @@ When performing a query,
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KEoaACAISkmQySpZKnkqiSqZKq
-						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
-						zEw9hpKykoS0mRymBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
-						mwCbAZsAmwCGhoY=
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -24403,8 +24343,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{403.97029757957301, 197.01218605041504}</string>
-						<string>{397.44134069346711, 180}</string>
+						<string>{403.97308511663329, 197.01218605041504}</string>
+						<string>{397.44864462091709, 180}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24459,8 +24399,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{421.97517460851321, 244.0061225891113}</string>
-						<string>{411.99470025715584, 218.01218605041504}</string>
+						<string>{421.98271958458281, 244.0061225891113}</string>
+						<string>{412.02092367409568, 218.01218605041504}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24515,8 +24455,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{434.14202954064655, 291.00004577636719}</string>
-						<string>{428.28804594135789, 265.00612258911133}</string>
+						<string>{434.15910210610815, 291.00004577636719}</string>
+						<string>{428.34738355017367, 265.00612258911133}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -25176,35 +25116,38 @@ created to reference B, C
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKwkocm9vdCkKQTGG
 						hAJpSQEGkoSEhAxOU0RpY3Rpb25h
-						cnkAlIQBaQSShJaWDk5TT3JpZ2lu
-						YWxGb250hpKEhIQGTlNGb250HpSZ
-						HIQFWzI4Y10GAAAAFAAAAP/+SABl
-						AGwAdgBlAHQAaQBjAGEAhAFmBoQB
-						YwCdAZ0AnQCGkoSWlhBOU1BhcmFn
-						cmFwaFN0eWxlhpKEhIQXTlNNdXRh
-						YmxlUGFyYWdyYXBoU3R5bGUAhIQQ
-						TlNQYXJhZ3JhcGhTdHlsZQCUhARD
-						Q0BTAgCEhIQHTlNBcnJheQCUmQyS
-						hISECU5TVGV4dFRhYgCUhAJDZgAc
-						hpKEo6MAOIaShKOjAFSGkoSjowBw
-						hpKEo6MAgYwAhpKEo6MAgagAhpKE
-						o6MAgcQAhpKEo6MAgeAAhpKEo6MA
-						gfwAhpKEo6MAgRgBhpKEo6MAgTQB
-						hpKEo6MAgVABhoaBAAiEBFsxZl2D
-						zcxMPYaShJaWBk5TRm9udIaSmpKE
-						lpYHTlNDb2xvcoaShISEB05TQ29s
-						b3IAlJ0EhAJmZgCDE9rNPoaGlwIB
-						koSYmQOSsJKxkpySnZKvkoSbmRyb
-						BgAAABQAAAD//kgAZQBsAHYAZQB0
-						AGkAYwBhAJwJnQCdAZ0AnQCGhpcD
-						AZKEmJkDkrCShLKdBoQDQEBAhJaW
-						BlN5c3RlbYaElpYJdGV4dENvbG9y
-						hoSynQOmAAGGhpKckoSeoAIAoIGA
-						CIQEWzJmXYPNzEw/g83MTD2Gkq+S
-						tIaXBAGShJiZBJKvkpqSnJK6koSW
-						lg1OU1N1cGVyU2NyaXB0hpKEhIQI
-						TlNOdW1iZXIAhIQHTlNWYWx1ZQCU
-						hAEqhIQBcaz/hpKZkpqGhg==
+						cnkAlIQBaQOShJaWB05TQ29sb3KG
+						koSEhAdOU0NvbG9yAJSEAWMDhAJm
+						ZgCDE9rNPoaShJaWEE5TUGFyYWdy
+						YXBoU3R5bGWGkoSEhBdOU011dGFi
+						bGVQYXJhZ3JhcGhTdHlsZQCEhBBO
+						U1BhcmFncmFwaFN0eWxlAJSEBEND
+						QFMCAISEhAdOU0FycmF5AJSZDJKE
+						hIQJTlNUZXh0VGFiAJSEAkNmAByG
+						koSjogA4hpKEo6IAVIaShKOiAHCG
+						koSjogCBjACGkoSjogCBqACGkoSj
+						ogCBxACGkoSjogCB4ACGkoSjogCB
+						/ACGkoSjogCBGAGGkoSjogCBNAGG
+						koSjogCBUAGGhoEACIQEWzFmXYPN
+						zEw9hpKElpYGTlNGb250hpKEhIQG
+						TlNGb250HpSZHIQFWzI4Y10GAAAA
+						FAAAAP/+SABlAGwAdgBlAHQAaQBj
+						AGEAhAFmBpsAmwGbAJsAhoaXAgGS
+						hJiZA5KZkoSbmwOcAIMT2s0+hpKc
+						koSenwIAhKGZDJKikqSSpZKmkqeS
+						qJKpkqqSq5Kskq2SroaBAAijg83M
+						TD2Gkq+ShLGZHKUGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApgmb
+						AJsBmwCbAIaGlwMBkoSYmQOSmZKE
+						m5sGhANAQECElpYGU3lzdGVthoSW
+						lgl0ZXh0Q29sb3KGhJubA5wAAYaG
+						kpyShJ6fAgCEoZkMkqKSpJKlkqaS
+						p5KokqmSqpKrkqySrZKuhoGACIQE
+						WzJmXYPNzEw/g83MTD2Gkq+StoaX
+						BAGShJiZA5KElpYNTlNTdXBlclNj
+						cmlwdIaShISECE5TTnVtYmVyAISE
+						B05TVmFsdWUAlIQBKoSEAXGs/4aS
+						nJK8kq+SsIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -25213,7 +25156,7 @@ created to reference B, C
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
 
 \f0\fs12 \cf2 (root)
-\fs18 \
+\fs18 \cf2 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl192\slmult1\pardirnatural\qc
 \cf3 A
 \fs12 \cf0 \sub 1}</string>
@@ -25351,15 +25294,12 @@ created to reference B, C
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKykoS0mRymBgAAABQA
-						AAD//kgAZQBsAHYAZQB0AGkAYwBh
-						AKcGmwCbAZsAmwCGkp+ShKGgAgCE
-						pJkMkqWSp5KokqmSqpKrkqySrZKu
-						kq+SsJKxhoEACKSDzcxMPYaShJaW
-						DU5TU3VwZXJTY3JpcHSGkoSEhAhO
-						U051bWJlcgCEhAdOU1ZhbHVlAJSE
-						ASqEhAFxq/+GkoSWlg5OU09yaWdp
-						bmFsRm9udIaStoaG
+						AgGShJiZA5KElpYNTlNTdXBlclNj
+						cmlwdIaShISECE5TTnVtYmVyAISE
+						B05TVmFsdWUAlIQBKoSEAXGr/4aS
+						n5KgkrKShLSZHKYGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApwab
+						AJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -25486,13 +25426,12 @@ created to reference B, C
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBZKElpYNTlNTdXBlclNj
-						cmlwdIaShISECE5TTnVtYmVyAISE
-						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						spKEtJkcpgYAAAAUAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQCnBpsAmwGb
-						AJsAhpKElpYOTlNPcmlnaW5hbEZv
-						bnSGkruSn5KgkpmSmoaG
+						AgGShJiZBJKfkqCSmZKakoSWlg1O
+						U1N1cGVyU2NyaXB0hpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBcav/hpKykoS0mRymBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -26669,13 +26608,6 @@ created to reference B, C
 				<dict>
 					<key>Class</key>
 					<string>LineGraphic</string>
-					<key>Head</key>
-					<dict>
-						<key>ID</key>
-						<integer>0</integer>
-						<key>Info</key>
-						<integer>3</integer>
-					</dict>
 					<key>ID</key>
 					<integer>163</integer>
 					<key>Layer</key>
@@ -26826,6 +26758,56 @@ created to reference B, C
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{72.5, 176}, {22, 14}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>YES</string>
+					<key>Flow</key>
+					<string>Resize</string>
+					<key>ID</key>
+					<integer>510</integer>
+					<key>Layer</key>
+					<integer>6</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Pad</key>
+						<integer>0</integer>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+
+\f0\fs24 \cf0 Bob}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+					<key>Wrap</key>
+					<string>NO</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
@@ -27161,7 +27143,7 @@ created to reference B, C
 					<key>Print</key>
 					<string>YES</string>
 					<key>View</key>
-					<string>YES</string>
+					<string>NO</string>
 				</dict>
 				<dict>
 					<key>Lock</key>
@@ -27191,7 +27173,7 @@ created to reference B, C
 					<key>Print</key>
 					<string>YES</string>
 					<key>View</key>
-					<string>NO</string>
+					<string>YES</string>
 				</dict>
 				<dict>
 					<key>Lock</key>
@@ -28325,11 +28307,9 @@ to reference E, F
 						mwCGhpcCAZKEmJkDkoSWlg1OU1N1
 						cGVyU2NyaXB0hpKEhIQITlNOdW1i
 						ZXIAhIQHTlNWYWx1ZQCUhAEqhIQB
-						cav/hpKfkoShoAIAhKSZDJKlkqeS
-						qJKpkqqSq5Kskq2SrpKvkrCSsYaB
-						AAikg83MTD2GkrKShLSZHKYGAAAA
-						FAAAAP/+SABlAGwAdgBlAHQAaQBj
-						AGEApwabAJsBmwCbAIaGhg==
+						cav/hpKfkqCSspKEtJkcpgYAAAAU
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQCnBpsAmwGbAJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -28456,14 +28436,12 @@ to reference E, F
 						bnSGkoSEhAZOU0ZvbnQelJkchAVb
 						MjhjXQYAAAAUAAAA//5IAGUAbAB2
 						AGUAdABpAGMAYQCEAWYJmwCbAZsA
-						mwCGhpcCAZKEmJkEkp+ShKGgAgCE
-						pJkMkqWSp5KokqmSqpKrkqySrZKu
-						kq+SsJKxhoEACKSDzcxMPYaSmZKa
-						koSWlg1OU1N1cGVyU2NyaXB0hpKE
-						hIQITlNOdW1iZXIAhIQHTlNWYWx1
-						ZQCUhAEqhIQBcav/hpKykoS0mRym
-						BgAAABQAAAD//kgAZQBsAHYAZQB0
-						AGkAYwBhAKcGmwCbAZsAmwCGhoY=
+						mwCGhpcCAZKEmJkEkp+SoJKZkpqS
+						hJaWDU5TU3VwZXJTY3JpcHSGkoSE
+						hAhOU051bWJlcgCEhAdOU1ZhbHVl
+						AJSEASqEhAFxq/+GkrKShLSZHKYG
+						AAAAFAAAAP/+SABlAGwAdgBlAHQA
+						aQBjAGEApwabAJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -28662,8 +28640,8 @@ to reference E, F
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{263.94854583456129, 157.8119620230506}</string>
-						<string>{230.0563206355626, 196.04476853745368}</string>
+						<string>{263.94854582397028, 157.81196202277161}</string>
+						<string>{230.0563205847067, 196.04476853495569}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -30107,8 +30085,9 @@ Read B
 \f1 \uc0\u8829  \{Y.2\}
 \f0 \
 How do I know I need to wait for B.2?\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f2\fs14 \
+\f2\fs14 \cf0 \
 Expand B.1 -&gt; \{ B.1, X.1, Y.1, Z.1 \}
 \f0\fs18 \
 
@@ -30124,8 +30103,9 @@ So how do I determine this?\
 \
 Do I need to fully expand Y.2 to search for B.1?\
 What if my context was X.2?\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs18 \
+\f0\fs18 \cf0 \
 Scan for \{?\} 
 \f3 \uc0\u8826 
 \f0  \{B.1\}\
@@ -33155,8 +33135,9 @@ Read B
 \f1 \uc0\u8829  \{Y.2\}
 \f0 \
 How do I know I need to wait for B.2?\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f2\fs14 \
+\f2\fs14 \cf0 \
 Got B.1:\
 Expand B.1 -&gt; \{ B.1, X.1, Y.1, Z.1 \}
 \f0\fs18 \
@@ -33174,8 +33155,9 @@ So how do I determine this?\
 \
 Do I need to fully expand Y.2 to search for B.1?\
 What if my context was X.2?\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs18 \
+\f0\fs18 \cf0 \
 Scan for \{?\} 
 \f3 \uc0\u8826 
 \f0  \{B.1\}\
@@ -36730,7 +36712,7 @@ Range: A-K}</string>
 			</dict>
 		</array>
 		<key>Frame</key>
-		<string>{{1696, -253}, {1471, 974}}</string>
+		<string>{{1603, -328}, {1580, 1024}}</string>
 		<key>ListView</key>
 		<true/>
 		<key>OutlineWidth</key>
@@ -36744,7 +36726,7 @@ Range: A-K}</string>
 		<key>SidebarWidth</key>
 		<integer>220</integer>
 		<key>VisibleRegion</key>
-		<string>{{0, 0.5}, {611, 408.5}}</string>
+		<string>{{0, 0.5}, {665.5, 433.5}}</string>
 		<key>Zoom</key>
 		<real>2</real>
 		<key>ZoomValues</key>

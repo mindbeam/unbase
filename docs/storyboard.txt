@@ -1,0 +1,54 @@
+
+Lead off with:
+____________________
+State IS ephemeral!
+Edits are for keeps ( actually policy AND probability-based retention )
+
+
+****Takedown page - why everything sucks.****
+ * CAP
+ * Eventual Consistency
+...
+
+Big problem common to most of these? All of you data has to have a home.
+When data has a home, chances are we have to travel there.
+
+***** the UNBASE Saga ****
+
+Explain that we're talking about a simplified model in the form of a kv store.
+
+** Consistency Model:
+
+(Start with Alice)
+Immutable data
+Immutable data edit
+causal reference ( applied to above )
+surprise, this is not state, these are operations ( introduce Memos )
+non-concurrent projection of state ( what is it, lets go through an exercise )
+concurrency ( introduce Bob )
+concurrent projection
+infectious knowledge and then projection
+
+
+*** Ok, great, now how the fuck do we make that actually work?
+Why do we care? What have we gained?
+
+Now, some problems. No free lunch
+context expansion
+write amplification
+sparse vector clocks
+
+
+*** implementation clarification ( What did we win? )
+
+Introduce: Model or Subject or Topic ( this is a design goal )
+Why do I need a consistency model for my index.
+To make the system scalable I need to be able to spread my data around without a priori planning ( also a design goal )
+BUUTTT I also need to be able to find it!
+
+
+( my data doesn't actually exist anywhere, by my edits are all over the place! )
+
+
+
+probablistic beacon pings
