@@ -1,4 +1,6 @@
-<img src="https://travis-ci.org/dnorman/unbase.svg?branch=master">
+[![Build Status](https://travis-ci.org/unbase/unbase.svg?branch=master)](https://travis-ci.org/unbase/unbase)
+[![Gitter](https://badges.gitter.im/unbase/unbase.svg)](https://gitter.im/unbase/unbase?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 
 # What is Unbase?
 
