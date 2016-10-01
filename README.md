@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/unbase/unbase.svg?branch=master)](https://travis-ci.org/unbase/unbase)
-[![Gitter](https://badges.gitter.im/unbase/unbase.svg)](https://gitter.im/unbase/unbase?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Gitter](https://badges.gitter.im/unbase/Lobby.svg)](https://gitter.im/unbase/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
 # What is Unbase?
