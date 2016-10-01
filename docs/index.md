@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Unbase - What are you waiting for?"
+title: "Home"
 ---
 
 # What is Unbase?

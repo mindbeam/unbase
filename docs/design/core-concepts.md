@@ -2,7 +2,7 @@
 layout: page
 title: "Core Concepts"
 category: design
-seq: 2
+seq: 3
 ---
 
 # Unbase Consistency Model

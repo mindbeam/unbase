@@ -11,7 +11,7 @@ We believe that for many use cases, data (or computation thereof) should _not_ b
 *Unbase is presently under active development.*
 
 ## Summary of Design Goals:
-See [Design Goals](docs/DESIGN_GOALS.md) for more details
+See [Design Goals](http://unba.se/design/goals) for more details
 
 * Provide the strongest consistency guarantees possible with zero coordination/waiting
 * Drastically reduce operational latency by focusing on data locality (planet/city/memory-bus/processor-core)
@@ -26,7 +26,7 @@ See [Design Goals](docs/DESIGN_GOALS.md) for more details
 ## Consistency Model
 
 Unbase seeks to implement a specific causal consistency model which we are calling "Infectious Knowledge".
-See [Consistency Model](docs/CONSISTENCY_MODEL.md) for more details
+See [Consistency Model](http://unba.se/design/consistency-model) for more details
 
 <a name="footnote1">1</a>: When data storage locality is determined by an algorithm which fails to consider the points in space where the data is originated or observed, the requester must wait longer for its retrieval. See [light cones](https://en.wikipedia.org/wiki/Light_cone)<br>
 <a name="footnote2">2</a>: Using the term "partition" for conversational understanding. Partitions are not actually a thing.<br>
