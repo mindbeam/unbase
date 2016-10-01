@@ -5,19 +5,10 @@ category: design
 seq: 3
 ---
 
-# Unbase Consistency Model
-
-Unbase seeks to implement a Causal consistency model, which we are calling "Infectious Knowledge"
-This may be similar to "Potential Causal Consistency"
-
-The "Infectious Knowledge" Consistency model seeks to implement the strongest consistency guarantees which are possible without coordination under presently understood physical laws, and which is feasible on modern computing hardware.
-
-This means no shared state, no linearizability, no quorums (except for those you choose to implement as an overlay).
-
 ## Synopsis
 
 In functional programming, it's very common to employ immutable data structures.
-These data structures are elegant, and efficient. Unbase intends to extend this immutable data-structure into a distributed system which may encompass thousands, or even millions of Unbase instances, while offering strong causal consistency guarantees.
+These data structures are elegant, and efficient. Unbase intends to extend this immutable data-structure into a distributed system which may encompass thousands, or even millions of Unbase instances, while offering strong causal consistency guarantees. See [Consistency Model](consistency-model) for details.
 
 
 ## Immutable data
