@@ -1,3 +1,9 @@
+---
+layout: page
+title: "Core Concepts"
+category: design
+seq: 2
+---
 
 # Unbase Consistency Model
 
@@ -18,10 +24,10 @@ These data structures are elegant, and efficient. Unbase intends to extend this 
 
 In immutable data structures, when an given node is edited, values are "edited" by originating one or more new nodes, and recreating all parent nodes up to the root node. This provides a compact context against which all subsequent queries will experience a consistent worldview.
 
-<img src="immutable_ds_1.png" syle="max-width: 910px"><br>
+<img src="media/immutable_ds_1.png" style="max-width: 100%"><br>
 Fig 1. Immutable data-structure baseline
 
-<img src="immutable_ds_2.png" syle="max-width: 910px"><br>
+<img src="media/immutable_ds_2.png" style="max-width: 100%"><br>
 Fig 2. Immutable data-structure edit
 
 TODO<br>

@@ -1,0 +1,18 @@
+<ul class="nav nav-list">
+    <li class="nav-header"><a href="{{ site.baseurl }}/" style="padding-left: 0px">Home</a></li>
+    
+    {% for section in site.sections %}
+        {% assign section_name = section[0] %}
+        {% assign section_label = section[1] %}
+
+        <li class="nav-header">{{ section_label }}</li>
+        {% assign sorted_pages = site.pages | sort:"seq" %}
+        {% for page in sorted_pages %}
+            {% if page.category == section_name %}
+            <li data-order="{{ page.order }}"><a href="{{ site.baseurl }}{{ page.url }}">{{ page.title }}</a></li>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+<!-- List additional links. It is recommended to add a divider
+    e.g. <li class="divider"></li> first to break up the content. -->
+</ul>
