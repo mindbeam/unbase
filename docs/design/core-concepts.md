@@ -5,13 +5,27 @@ category: design
 seq: 3
 ---
 
-## Synopsis
+#### Synopsis
 
-In functional programming, it's very common to employ immutable data structures.
-These data structures are elegant, and efficient. Unbase intends to extend this immutable data-structure into a distributed system which may encompass thousands, or even millions of Unbase instances, while offering strong causal consistency guarantees. See [Consistency Model](consistency-model) for details.
+A key concept in the design ideology of Unbase is the belief that **State is ephemeral.**
+We believe that state may be observed or projected, but *only events* may be stored or transported.
 
+This may seem like splitting hairs, but this distinction allows us to reason about data in a way which confers interesting benefits.
+Chief among them is that when resolving a conflict, we don't have to reconcile multiple states. We may instead reconcile *intentions.*
+With careful optimization, we may also approximate the causal reality of the physical universe with reasonable efficiency.
 
-## Immutable data
+Many modern database systems delegate authority to "shards", each purporting to be the referee and arbiter of state for some subset of the data in the system.
+These systems seek to create walled gardens of correctness, while conveniently ignoring the consistency model of the overall system; inclusive of services, clients, etc. We argue that a traditional database client is simply a partial replica of the database with a poor consistency model.
+
+In functional programming, it's very common to employ immutable data structures. These data structures are simple, elegant, and efficient, but seldom used in highly concurrent systems – for reasons we'll get into below.
+
+Unbase seeks to expand the system model to encompass those nodes formerly considered to be "clients" as first-class participants in storage and computation, limited only by capacity and policy. An Unbase system may accommodate many thousands, or even millions of instances, while offering a first-principle-physics approach to latency reduction, and strong causal consistency guarantees. See [Consistency Model](consistency-model) for details.
+
+----
+
+Without further ado, lets jump in:
+
+#### Immutable data
 
 In immutable data structures, when an given node is edited, values are "edited" by originating one or more new nodes, and recreating all parent nodes up to the root node. This provides a compact context against which all subsequent queries will experience a consistent worldview.
 
@@ -28,19 +42,19 @@ TODO<br>
 Fig 4. Avoiding Write Amplification through probability-based merging
 
 
-## Probability-based merging
+#### Probability-based merging
 
 The downside of immutable data structure approach is that multiple editors in the system would cause a bunch of new intermediate and root nodes to be created. This wold eventually stabilize for a given set of e=ve
 
-## Sparse vector clock (Beacons)
+#### Sparse vector clock (Beacons)
 
 TODO: Similar to interval tree clocks --
 Assume you had a vector clock of unlimited width, and comparing vector clock readings is cheap.
 Employ a distributed index tree as a way to locate
 
-## Indexes
+#### Indexes
 
-## Causal Context
+#### Causal Context
 
 
 

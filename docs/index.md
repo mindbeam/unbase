@@ -1,9 +1,7 @@
 ---
-layout: default
-title: "Home"
+layout: page
+title: "What is Unbase?"
 ---
-
-# What is Unbase?
 
 Unbase is a concept for a distributed database/application framework that is fundamentally reactive, fault tolerant, and decentralized. It seeks to address some very specific shortcomings in traditional paradigms; to create a distributed architecture that transcends device, geography, programming language, and present orthodoxy about what constitutes a "database". It seeks to blur the lines between application/database, and client/server.
 
