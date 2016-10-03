@@ -30,7 +30,7 @@ concurrent projection
 infectious knowledge and then projection
 
 
-*** Ok, great, now how the fuck do we make that actually work?
+*** Ok, great, now how do we make that actually work?
 Why do we care? What have we gained?
 
 Now, some problems. No free lunch
@@ -48,7 +48,4 @@ BUUTTT I also need to be able to find it!
 
 
 ( my data doesn't actually exist anywhere, by my edits are all over the place! )
-
-
-
 probablistic beacon pings

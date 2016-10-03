@@ -23,23 +23,60 @@ Unbase seeks to expand the system model to encompass those nodes formerly consid
 
 ----
 
-Without further ado, lets jump in:
+Without further ado, lets jump in!
 
-#### Immutable data
+<br>
+<br>
 
-In immutable data structures, when an given node is edited, values are "edited" by originating one or more new nodes, and recreating all parent nodes up to the root node. This provides a compact context against which all subsequent queries will experience a consistent worldview.
-
+#### Alice has an immutable data structure
 <img src="media/immutable_ds_1.png" style="width: 910px; max-width: 100%"><br>
-Fig 1. Immutable data-structure baseline
+**Fig 1. Basic persistent data-structure**
+<br><br>
 
+----
+
+With immutable data structures, when an given value is "edited" it's *not* done by mutation, but rather by originating one or more new nodes, and recreating all parent nodes up to the root node. This provides a compact context against which all subsequent queries will experience a consistent worldview.
+
+Alice decides to make an edit. She keeps her root node in a basket, which we're calling the *Query Context.* By carrying around this Query context Alice can have a consistent view of her data. Once the new nodes are created, she swaps out the old root node for the new one in her Query context:
 <img src="media/immutable_ds_2.png" style="width: 910px; max-width: 100%"><br>
-Fig 2. Immutable data-structure edit
+**Fig 2. Immutable edits**
+<br>
 
-TODO<br>
-Fig 3. Naive implementation of a distributed immutable data-structure
+----
 
-TODO<br>
-Fig 4. Avoiding Write Amplification through probability-based merging
+Ok, so this is all super straight forward Persistent Datastructures stuff, but here's where things start to get interesting.
+You might have thought Alice was writing out the whole record for F. Surprise! She's not. Instead of writing out the whole record, she records **F<sub>1</sub>** as an operation which is applied to, and is causally descendant of **F**. In Unbase, these are called "Memos", and everything is made of them.
+
+IMAGE HERE
+
+**FIG 3. Ok, so we're not talking about state.**
+<br>
+
+----
+
+TODO: REMAINING STORY LINE:
+
+* non-concurrent projection of state ( what is it, lets go through an exercise )
+* concurrency ( introduce Bob )
+* concurrent projection
+* infectious knowledge and then projection
+* Ok, great, now how do we make that actually work?
+* Why do we care? What have we gained?
+* Now, some problems. No free lunch
+* context expansion
+* write amplification
+* sparse vector clocks
+* implementation clarification ( What did we win? )
+* Introduce: Model or Subject or Topic ( this is a design goal )
+* Why do I need a consistency model for my index.
+* To make the system scalable I need to be able to spread my data around without a priori planning ( also a design goal )
+* But I also need to be able to find it!
+* my data doesn't actually exist anywhere, by my edits are all over the place!
+* probablistic merging and beacon pings
+
+<br><br><br><br>
+
+#### Here be dragons, using the stuff after this as a parts-bin for the above storyline
 
 
 #### Probability-based merging
@@ -55,9 +92,6 @@ Employ a distributed index tree as a way to locate
 #### Indexes
 
 #### Causal Context
-
-
-
 * Allow continued operation during a network partition
  * Avoid CAP theorem limitations by abandoning linearizability in favor of [causal consistency](http://sns.cs.princeton.edu/projects/cops-and-eiger/)
  * Treat conflicts as inevitable, and allow them to be resolved systematically
