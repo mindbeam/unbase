@@ -17,7 +17,7 @@ So why does this happen? Why do you get [rubberbanding](http://www.urbandictiona
 **Because the universe sucks.**
 
 The universe we occupy is super lame. There's no faster-than-light travel; not for spaceships, and not even for data.
-It's kind of weird and lonely when you think about it. We're each on our own little islands, isolated in our respective existences by dozens of nanoseconds, and that's assuming we're in the same room! Hell, consciousness is separated from even your own feet by at least 4 or 5 nanoseconds.
+It's kind of weird and lonely when you think about it. We're each on our own little islands, isolated in our respective existences by dozens of nanoseconds, and that's assuming we're in the same room! Heck, your consciousness is separated from even your own feet by at least 4 or 5 nanoseconds.
 
 When we're in a virtual world like Guild Wars 2, we still have to contend with the fact that it's an overlay to the physical universe. No matter how hard we try, we can never fully participate in virtual worlds that are misaligned in space from our physical world. (It's a Pretty sweet argument for AR > VR though)
 
