@@ -2,14 +2,14 @@
 layout: page
 title: "Design Goals"
 category: design
-seq: 1
+seq: 3
 ---
 
 The objective of Unbase is to create a unified data/application framework, which achieves all of the following goals. Unbase could be loosely conceptualized as a sort of P2P Distributed Object Database (minus the "base")
 
 * Minimize latency
 
-  Give users a [perceptibly-instant](http://www.nngroup.com/articles/response-times-3-important-limits/){:target="_blank"} experience whenever possible.
+  Give users a [perceptibly-instant](http://www.nngroup.com/articles/response-times-3-important-limits/){:target="reference"} experience whenever possible.
 
 * Scalability
 
@@ -49,4 +49,3 @@ The objective of Unbase is to create a unified data/application framework, which
 * Integral audit trail
 
   Given the mechanics of distributed data replication, significant efficiency can be gained by extending the system to handle audit trails natively, rather than storing audit trails in standard tablespace.
-

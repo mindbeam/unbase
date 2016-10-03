@@ -2,7 +2,7 @@
 layout: page
 title: "Core Concepts"
 category: design
-seq: 3
+seq: 4
 ---
 
 #### Synopsis
