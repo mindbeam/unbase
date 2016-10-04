@@ -5,7 +5,7 @@ category: design
 seq: 1
 ---
 
-#### From the spatial-overlay-as-a-service department
+*From the spatial-overlay-as-a-service department*  
 
 It's late on a Friday night. You're into your third hour of Guild Wars 2 and your european buddy hits you up – They want you to join their EU server. You then proceed to spend the next hour cursing the lag, and getting a lot of [rubberbanding](http://www.urbandictionary.com/define.php?term=rubberbanding){:target="define"} before you decide to call it a night.
 
@@ -14,16 +14,45 @@ Why does this happen? Why do you get strange behavior from the EU server when yo
 <br>
 
 #### Let's face facts:
-As it turns out, the universe we occupy is a little lacking in the sci-fi-physics department. There's no faster-than-light travel; not for spaceships, and not even for data. Worse yet, It's not simply a matter of the galactic postal service being slow – _Existence itself_ (read "information") has a maximum speed.
+As it turns out, the universe we occupy is a little lacking in terms of cool sci-fi-physics. There's no faster-than-light travel; not for spaceships, and not even for data. Worse yet, It's not simply a matter of the galactic postal service being slow – _Existence itself_ (read "information") has an excruciatingly inconvenient upper limit to how fast it can travel.
+
+<br>
+
+#### Space exists
+
+It doesn't matter if we're talking about interstellar distances, nanometers on silicon, or anywhere in between; Information can only propagate through space so fast. Information is therefore *local*, both in terms of it's origin, and it's effects. Don't hold your breath, physicists are not optimistic about FTL transportation of information through entanglement either.
+
+#### ...and simultaneity Doesn't
+
+There's no such thing as simultaneity, at least not in the way most people think about it. Whether we're talking about wall clocks, atomic clocks, laser light pulses, simultaneity can only ever be a *comparative* property from the point of view of a single observer. There is no gods-eye view, no plane of simultaneity surrounding the earth.
+
+<br>
+
+### Digging in a bit
+
+<br>
+
+#### Why is coordination a problem?
+
+When we decide that a system will use a single arbiter of truth (via linearizability usually) we're saying that either: We want to pretend that faster-than-light travel exists, OR that the user of the system is willing to wait for the round-trip journey to the arbiter.
+
+The sales pitch: "Want high availability? No problem! Paxos and RAFT have you covered!""
+Except no. Any system capable of consensus is by definition a linearizable system, and thus have major limitations, and many undesirable failure modes.
+
+Put concisely, an up to date list can only exist at a single point in space. Sure, that point can move around, but everybody else has to travel to it. This is what consensus algorithms like Paxos and RAFT do: they essentially juggle the end of the list to make sure no one node can (in theory) take you offline, at the cost of making everybody else wait for the latency of a quorum of the nodes. Consensus algorithms work sort of ok in a single dataceter environment where you have a "reliable" network, but have a network glitch and you're in the hurtlocker very fast. Uncool. Consensus across dataceters? P2P networks? forget about it.
+
+<br>
+
+#### Eventual consistency to the rescue?
 
 
-#### Space Exists
+#### Sharding is just another word for patience
 
-It doesn't matter if we're talking about interstellar distances, micrometers on silicon, or anywhere in between; Information can only propagate through space so fast. Information is therefore *local*, both in terms of it's origin, and it's effects. Don't hold your breath, physicists are not optimistic about FTL transportation of information through entanglement either.
+A priori sharding is a no-no.
 
-#### And Simultaneity Doesn't
+#### Distributed ≠ Decentralized
 
-There's no such thing as simultaneity, at least not in the way most people think about it. Whether we're talking about wall clocks, atomic clocks, or laser light pulses, simultaneity can only ever be a *comparative* property from the point of view of a single observer. There is no gods-eye view, no plane of simultaneity surrounding the earth.
+
 
 #### When in Rome
 
