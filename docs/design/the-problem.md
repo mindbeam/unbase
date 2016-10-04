@@ -21,7 +21,7 @@ As it turns out, the universe we occupy is a little lacking in the sci-fi-physic
 
 It doesn't matter if we're talking about interstellar distances, micrometers on silicon, or anywhere in between; Information can only propagate through space so fast. Information is therefore *local*, both in terms of it's origin, and it's effects. Don't hold your breath, physicists are not optimistic about FTL transportation of information through entanglement either.
 
-#### Simultineity doesn't
+#### And Simultaneity Doesn't
 
 There's no such thing as simultaneity, at least not in the way most people think about it. Whether we're talking about wall clocks, atomic clocks, or laser light pulses, simultaneity can only ever be a *comparative* property from the point of view of a single observer. There is no gods-eye view, no plane of simultaneity surrounding the earth.
 
