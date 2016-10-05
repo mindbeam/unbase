@@ -60,7 +60,7 @@ Instead of putting them all in the one place, what if store management chose to 
 Your new store directory could utilize consistent hashing, and the stock person would simply put each pair of socks in each of the determinisically designated places in the store.
 That would work, but you might still have to walk 20 miles or more to get them! Admittedly this is an improvement over 1,000 miles, but still a pretty rough walk for some cat socks.
 
-What if instead of using deterministic slot assignment, we simply dropped the the socks off close to wherever they were arrived, and let people move them around the store as they saw fit? Chances are the store employees putting them away will at least consider buying a pair (how could they not?) Later, as shoppers browse, they might pick up a pair. Some will change their minds and put the article down. Chances are, enough shoppers will shuffle them around the store over time that they will become optimally placed for some of the other cat-fanciers. In our case, the socks are infinitely copyable immutable data, and we never actually leave the store)
+What if instead of using deterministic slot assignment, we simply dropped the the socks off close to wherever they were arrived, and let people move them around the store as they saw fit? Chances are the store employees putting them away will at least consider buying a pair (how could they not?) Later, as shoppers browse, they might pick up a pair. Some will change their minds and put the article down. Chances are, enough shoppers will shuffle them around the store over time that they will become optimally placed for some of the other cat-fanciers. In our case, the socks are infinitely copyable immutable data, and we never actually leave the store.
 
 <br>
 
