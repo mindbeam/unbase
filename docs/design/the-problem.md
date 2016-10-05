@@ -43,14 +43,6 @@ Put concisely, an up to date list can only exist at a single point in space. Sur
 
 <br>
 
-#### Eventual consistency to the rescue?
-
-Ok, so coordination is bad right? [Gilbert and Lynch](http://dl.acm.org/citation.cfm?id=564601){:target="cap"} define "consistency" as linearizability, and prove (quite factually) that interacting with an up-to-date list requires traveling in space. Being subject to alligators, backhoes, network storms, etc – traveling can at times be [quite perilous.](http://queue.acm.org/detail.cfm?id=2655736){:target="reliable"} Unfortunately, in the course of their proofs, Gilbert and Lynch managed to [throw out the baby with the bathwater.](https://arxiv.org/abs/1509.05393){:target="kleppman"}
-
-Reeling in horror from the seemingly profound impact of the CAP theorems, so too did database designers proceed to throw the consistency baby with the coordination bathwater for the next decade after that. Wisely seeking out Shared-Nothing systems, but then naively causing their users to implement their own ad-hoc, poorly researched, poorly implemented consistency models as an overlay.
-
-<br>
-
 #### Sharding is just another word for patience
 
 A priori sharding works great for department stores. Looking for that fresh pair of cat-themed socks? You can go look at the directory, and generally find the right area without too much fuss. Now, imagine the department store was *really* large and spread out. You're in kitchen appliances now, and the sock department is 1,000 miles away. You're going to be walking for a while. How committed are you to getting those cat socks again?
@@ -64,10 +56,11 @@ What if instead of using deterministic slot assignment, we simply dropped the th
 
 <br>
 
-#### When in Rome
+#### Eventual consistency to the rescue?
 
-The physical reality around us doesn't have centralized arbiters of truth, It's decentralized.
-When I set down my glass on the table, it doesn't have to coordinate with a datacenter in Ashburn to avoid spontaneously jumping to the opposite side of the table. It has local, *causal*, **coordination free** consistency. So too, should our systems. This consistency model is totally consistent with our perspective as humans, because it's the same consistency model we were born into.
+Ok, so coordination is bad right? [Gilbert and Lynch](http://dl.acm.org/citation.cfm?id=564601){:target="cap"} define "consistency" as linearizability, and prove (quite factually) that interacting with an up-to-date list requires traveling in space. Being subject to alligators, backhoes, network storms, etc – traveling can at times be [quite perilous.](http://queue.acm.org/detail.cfm?id=2655736){:target="reliable"} Unfortunately, in the course of their proofs, Gilbert and Lynch managed to [throw out the baby with the bathwater.](https://arxiv.org/abs/1509.05393){:target="kleppman"}
+
+Reeling in horror from the seemingly profound impact of the CAP theorems, so too did database designers proceed to throw the consistency baby with the coordination bathwater for the next decade after that. Wisely seeking out Shared-Nothing systems, but then naively causing their users to implement their own ad-hoc, poorly researched, poorly implemented consistency models as an overlay.
 
 <br>
 
@@ -82,4 +75,15 @@ Example of the consistency models that you might not be thinking about:
 * RDBMS client / In-process pool of TCP connections (ad hoc)
 * Caching system for your service (ad-hoc, possibly wallclock-based)
 * Connection between the user's client app and your service, including TCP/haproxy load balancer (ad-hoc, eventual consistency)
-* Caching in your end client application (ad-hoc, possibly wallclock. difficult to reason about)
+* Caching in your end client application (ad-hoc, possibly wallclock)
+
+As a developer, getting your head around just one consistency model is often hard enough, but several? Forget about it. Is it any wonder why our applications are so flakey/quirky these days? Try using Evernote on mobile. (We dare you) Ever used Slack while getting on an elevator? Or pressed the checkout button on a shopping cart page twice? Modern software is overrun with examples of multiple ad-hoc, poorly conceptualized consistency models causing problems in everyday life.
+
+(Some wonderful folks are working on applying CRDTs to try to solve these problems. While this is a good start, we do not believe that approach goes quite far enough.)
+
+<br>
+
+#### When in Rome
+
+The physical reality around us doesn't have centralized arbiters of truth, It's decentralized.
+When I set down my glass on the table, it doesn't have to coordinate with a datacenter in Ashburn to avoid spontaneously jumping to the opposite side of the table. It has local, *causal*, **coordination free** consistency. So too, should our systems. This consistency model is totally consistent with our perspective as humans, because it's the same consistency model we were born into.
