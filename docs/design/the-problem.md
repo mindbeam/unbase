@@ -39,12 +39,15 @@ When we decide that a system will use a single arbiter of truth (via linearizabi
 The sales pitch: "Want high availability? No problem! Paxos and RAFT have you covered!""
 Except no. Any system capable of consensus is by definition a linearizable system, and thus have major limitations, and many undesirable failure modes.
 
-Put concisely, an up to date list can only exist at a single point in space. Sure, that point can move around, but everybody else has to travel to it. This is what consensus algorithms like Paxos and RAFT do: they essentially juggle the end of the list to make sure no one node can (in theory) take you offline, at the cost of making everybody else wait for the latency of a quorum of the nodes. Consensus algorithms work sort of ok in a single dataceter environment where you have a "reliable" network, but have a network glitch and you're in the hurtlocker very fast. Uncool. Consensus across dataceters? P2P networks? forget about it.
+Put concisely, an up to date list can only exist at a single point in space. Sure, that point can move around, but everybody else has to travel to it. This is what consensus algorithms like Paxos and RAFT do: they essentially juggle the end of the list to make sure no one node can (in theory) take you offline, at the cost of making everybody else wait for the latency of a quorum of the nodes. Consensus algorithms work sort of ok in a single dataceter environment where you have a "reliable" network, but have a network glitch and you're in the hurt-locker very fast. Uncool. Consensus across dataceters? P2P networks? forget about it.
 
 <br>
 
 #### Eventual consistency to the rescue?
 
+Ok, so coordination is bad right? [Gilbert and Lynch](http://dl.acm.org/citation.cfm?id=564601){:target="cap"} define "consistency" as linearizability, and prove (quite factually) that interacting with an up-to-date list requires traveling in space. Being subject to alligators, backhoes, network storms, etc; traveling can at times be [quite perilous.](http://queue.acm.org/detail.cfm?id=2655736){:target="reliable"} Unfortunately, in the course of their proofs, Gilbert and Lynch managed to [throw out the baby with the bathwater.](https://arxiv.org/abs/1509.05393){:target="kleppman"}
+
+Reeling in horror from the seemingly profound impact of the CAP theorems, so too did database designers proceed to throw the baby out with the bathwater for the next decade after that. Wisely seeking out Shared-Nothing systems, but then proceeding to throw strong consistency models out the window.
 
 #### Sharding is just another word for patience
 
