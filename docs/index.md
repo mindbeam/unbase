@@ -25,7 +25,7 @@ See [Design Goals](design/goals) for more details
 ## Consistency Model
 
 Unbase seeks to implement a specific causal consistency model which we are calling "Infectious Knowledge".
-See [Consistency Model](docs/CONSISTENCY_MODEL.md) for more details
+See [Consistency Model](design/consistency-model) for more details
 
 <a name="footnote1">1</a>: When data storage locality is determined by an algorithm which fails to consider the points in space where the data is originated or observed, the requester must wait longer for its retrieval. See [light cones](https://en.wikipedia.org/wiki/Light_cone)<br>
 <a name="footnote2">2</a>: Using the term "partition" for conversational understanding. Partitions are not actually a thing.<br>

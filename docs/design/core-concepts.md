@@ -7,23 +7,23 @@ seq: 4
 
 #### Synopsis
 
-A key concept in the design ideology of Unbase is the belief that **State is ephemeral.**
-We believe that state may be observed or projected, but *only events* may be stored or transported.
+A key concept in the design ideology of Unbase is the earnest belief that **State is fundamentally ephemeral.**
+We believe that state may be observed or projected, and *only events* may be stored or transported. We believe this to be true both metaphorically, and literally from a physics standpoint.
 
-This may seem like splitting hairs, but this distinction allows us to reason about data in a way which confers interesting benefits.
-Chief among them is that when resolving a conflict, we don't have to reconcile multiple states. We may instead reconcile *intentions.*
+This may seem silly at first blush, or overly philosophical, but this interpretation allows us to reason about data in a way which confers interesting benefits.
+Chief among them is that when resolving a conflict, we don't have to reconcile multiple states. We may instead reconcile *happenings* or *intentions.*
 With careful optimization, we may also approximate the causal reality of the physical universe with reasonable efficiency.
 
 Many modern database systems delegate authority to "shards", each purporting to be the referee and arbiter of state for some subset of the data in the system.
-These systems seek to create walled gardens of correctness, while conveniently ignoring the consistency model of the overall system; inclusive of services, clients, etc. We argue that a traditional database client is simply a partial replica of the database with a poor consistency model.
+These systems seek to create walled gardens of correctness, while conveniently ignoring the consistency model of the overall system; inclusive of services, clients, etc. We argue that a query result-set, as executed by a traditional RDBMS client is simply a partial replica of the database with a poor consistency model.
 
 In functional programming, it's very common to employ immutable data structures. These data structures are simple, elegant, and efficient, but seldom used in highly concurrent systems – for reasons we'll get into below.
 
-Unbase seeks to expand the system model to encompass those nodes formerly considered to be "clients" as first-class participants in storage and computation, limited only by capacity and policy. An Unbase system may accommodate many thousands, or even millions of instances, while offering a first-principle-physics approach to latency reduction, and strong causal consistency guarantees. See [Consistency Model](consistency-model) for details.
+Unbase seeks to expand the system model to encompass those nodes formerly considered to be "clients" as first-class participants in storage and computation, limited only by capacity and policy. An Unbase system may accommodate many thousands, or even millions of instances, while offering a first-principle-physics approach to latency reduction at every scale, and strong causal consistency guarantees. See [Consistency Model](consistency-model) for details.
 
 ----
 
-Without further ado, lets jump in!
+So lets jump in!
 
 <br>
 <br>
@@ -44,7 +44,7 @@ Alice decides to make an edit. She keeps her root node in a basket, which we're 
 
 ----
 
-Ok, so this is all super straight forward Persistent Datastructures stuff, but here's where things start to get interesting.
+Ok, so this is all super straight forward Persistent Data-structures stuff, but here's where things start to get interesting.
 You might have thought Alice was writing out the whole record for F. Surprise! She's not. Instead of writing out the whole record, she records **F<sub>1</sub>** as an operation which is applied to, and is causally descendant of **F**. In Unbase, these are called "Memos", and everything is made of them.
 
 IMAGE HERE
@@ -76,6 +76,8 @@ TODO: REMAINING STORY LINE:
 
 <br><br><br><br>
 
+<!--
+
 #### Here be dragons, using the stuff after this as a parts-bin for the above storyline
 
 
@@ -104,3 +106,5 @@ Employ a distributed index tree as a way to locate
 
 # Notes
 No quorum logic shall be utilized. Provided the requisite data is available and sufficiently fresh according to its present causal context, a node, or cluster of nodes may continue functioning in the partitioned area without limitation, except as necessary to enforce durability guarantees; wherein the application logic may choose to whether to wait to reach the desired probability of durability or not.
+
+-->
