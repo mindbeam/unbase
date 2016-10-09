@@ -31,34 +31,42 @@ So lets jump in!
 #### Alice has an immutable data structure
 
 <img src="media/immutable_ds_1.png" style="width: 755px; height:441px; max-width: 100%"><br>
-**Fig 1. Basic persistent data-structure**
+**Fig 1. Basic persistent data structure**
 <br><br>
 
 ----
 
 With immutable data structures, when an given value is "edited" it's *not* done by mutation, but rather by originating one or more new nodes, and recreating all parent nodes up to the root node. This provides a compact context against which all subsequent queries will experience a consistent worldview.
 
-Alice decides to make an edit. She keeps her root node in a basket, which we're calling the *Query Context.* By carrying around this Query context Alice can have a consistent view of her data. Once the new nodes are created, she swaps out the old root node for the new one in her Query context:
+Now, Alice decides to make an edit. She keeps her root node in a basket of sorts, which we're calling the *Query Context.* By carrying around this Query context Alice can have a consistent view of her data and ensure that no stale data is observed. Once the new nodes are created, she swaps out the old root node for the new one in her Query context:
 
 <img src="media/immutable_ds_2.png" style="width: 755px; height:441px; max-width: 100%"><br>
-**Fig 2. Immutable edits**
+**Fig 2. Basic Immutable Edit**
 <br>
 
 ----
 
-Ok, so this is all super straight forward Persistent Data-structures stuff, but here's where things start to get interesting.
-You might have thought Alice was writing out the whole record for F. Surprise! She's not. Instead of writing out the whole record, she records **F<sub>1</sub>** as an operation which is applied to, and is causally descendant of **F**. In Unbase, these are called "Memos", and everything is made of them.
+Ok, so this is all super straightforward [persistent data structures](https://en.wikipedia.org/wiki/Persistent_data_structure){:target="define"} stuff right? But here's where things start to get interesting:
 
-IMAGE HERE
+You might have thought Alice was writing out the whole record for **F** as **F<sub>1</sub>** but that's not what's happening in our case. Instead of writing out the whole record, she emits **F<sub>1</sub>**, which is an operation to be applied to, and is causally descendant of **F**. In Unbase, these are called "Memos", and *everything* is made of them.
 
-**FIG 3. Ok, so we're not talking about state.**
+<img src="media/memos_1.png" style="width: 755px; height:441px; max-width: 100%"><br>
+**FIG 3. Ok, so we're emitting Memos, not "Nodes".**
 <br>
 
 ----
+
+As an exercise, lets ask Alice to perform a query of key 11:
+
+<img src="media/memos_2.png" style="width: 755px; height:441px; max-width: 100%"><br>
+**FIG 4. State is merely an ephemeral projection based on a point of view (query context in our case).**
+<br>
+
+----
+
 
 TODO: REMAINING STORY LINE:
 
-* non-concurrent projection of state ( what is it, lets go through an exercise )
 * concurrency ( introduce Bob )
 * concurrent projection
 * infectious knowledge and then projection
