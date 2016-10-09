@@ -34,7 +34,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2016-09-30 03:47:04 +0000</string>
+	<string>2016-10-09 01:36:12 +0000</string>
 	<key>Modifier</key>
 	<string>Daniel Norman</string>
 	<key>NotesVisible</key>
@@ -8072,7 +8072,7 @@ Would likely be a 4-tier system. Balanced-tree indexing work may be possible, bu
 			<array>
 				<dict>
 					<key>Bounds</key>
-					<string>{{392.5, 308.50018882751465}, {81, 20}}</string>
+					<string>{{348.375, 227.11298942565918}, {81, 20}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -8148,8 +8148,8 @@ Would likely be a 4-tier system. Balanced-tree indexing work may be possible, bu
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.94156432414775, 286.91896055579451}</string>
-						<string>{90.379029274368136, 291.83964736100876}</string>
+						<string>{378.81656432414769, 205.5317611539391}</string>
+						<string>{46.254029274368129, 210.45244795915329}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8211,8 +8211,8 @@ Would likely be a 4-tier system. Balanced-tree indexing work may be possible, bu
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.94156432414775, 286.91896055579451}</string>
-						<string>{144.37902927436815, 291.83964736100876}</string>
+						<string>{378.81656432414769, 205.5317611539391}</string>
+						<string>{100.25402927436814, 210.45244795915329}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8274,8 +8274,8 @@ Would likely be a 4-tier system. Balanced-tree indexing work may be possible, bu
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.94156432414775, 286.91896055579451}</string>
-						<string>{198.37902927436815, 291.83964736100876}</string>
+						<string>{378.81656432414769, 205.5317611539391}</string>
+						<string>{154.25402927436815, 210.45244795915332}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8337,8 +8337,8 @@ Would likely be a 4-tier system. Balanced-tree indexing work may be possible, bu
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.94156432414775, 286.91896055579451}</string>
-						<string>{306.32865144287138, 291.83964736100882}</string>
+						<string>{378.81656432414769, 205.5317611539391}</string>
+						<string>{262.20365144287132, 210.45244795915329}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8381,7 +8381,7 @@ Would likely be a 4-tier system. Balanced-tree indexing work may be possible, bu
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{334, 100.5}, {117.5, 60}}</string>
+					<string>{{289.875, 19.112800598144531}, {117.5, 60}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -8456,8 +8456,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.50669097900402, 165}</string>
-						<string>{422.21186182782986, 203.47576803709362}</string>
+						<string>{216.38169097900402, 83.612800598144531}</string>
+						<string>{378.08686182782986, 122.08856863523813}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8494,8 +8494,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{101.41432350587461, 208.51219222227033}</string>
-						<string>{114.59910992202833, 208.51217473824067}</string>
+						<string>{57.289323505874613, 127.12499282041487}</string>
+						<string>{70.474109922028333, 127.12497533638522}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8539,8 +8539,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{101.37901466798398, 244.49637814108434}</string>
-						<string>{114.56380108413771, 244.49636065705468}</string>
+						<string>{57.254014667983988, 163.10917873922887}</string>
+						<string>{70.438801084137708, 163.10916125519921}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8584,8 +8584,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{101.65760963868712, 281.99828358236851}</string>
-						<string>{114.84239605484083, 281.99826609833883}</string>
+						<string>{57.532609638687113, 200.61108418051302}</string>
+						<string>{70.717396054840833, 200.61106669648336}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8617,7 +8617,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{60.842406258620827, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{16.717406258620827, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -8763,8 +8763,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{81.006716713943092, 219.51219422546447}</string>
-						<string>{80.971408686977526, 233.49636914427859}</string>
+						<string>{36.881716713943092, 138.124994823609}</string>
+						<string>{36.846408686977519, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8815,8 +8815,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{80.971407876052467, 255.4963801442785}</string>
-						<string>{81.250003657680651, 270.99827458556274}</string>
+						<string>{36.846407876052467, 174.10918074242301}</string>
+						<string>{37.125003657680644, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -8853,7 +8853,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{60.599120125808327, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{16.474120125808327, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -9009,7 +9009,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{60.563811287917702, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{16.438811287917702, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -9157,8 +9157,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{155.41432350587462, 208.51219222227033}</string>
-						<string>{168.59910992202833, 208.51217473824067}</string>
+						<string>{111.28932350587461, 127.12499282041487}</string>
+						<string>{124.47410992202833, 127.12497533638522}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -9200,8 +9200,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{155.37901466798399, 244.49637814108434}</string>
-						<string>{168.56380108413771, 244.49636065705468}</string>
+						<string>{111.25401466798398, 163.10917873922887}</string>
+						<string>{124.43880108413771, 163.10916125519921}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -9247,8 +9247,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{155.65760963868712, 281.99828358236851}</string>
-						<string>{168.84239605484083, 281.99826609833883}</string>
+						<string>{111.53260963868711, 200.61108418051302}</string>
+						<string>{124.71739605484083, 200.61106669648336}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -9280,7 +9280,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{114.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{70.717406258620827, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -9426,8 +9426,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{135.00671671394309, 219.51219422546447}</string>
-						<string>{134.97140868697753, 233.49636914427859}</string>
+						<string>{90.881716713943092, 138.124994823609}</string>
+						<string>{90.846408686977526, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -9478,8 +9478,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{134.97140787605247, 255.4963801442785}</string>
-						<string>{135.25000365768065, 270.99827458556274}</string>
+						<string>{90.846407876052467, 174.10918074242301}</string>
+						<string>{91.125003657680651, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -9516,7 +9516,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{114.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{70.474120125808327, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -9672,7 +9672,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{114.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{70.438811287917702, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -9827,8 +9827,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.94156432414775, 286.91896055579451}</string>
-						<string>{360.32865144287132, 291.83964736100876}</string>
+						<string>{378.81656432414769, 205.5317611539391}</string>
+						<string>{316.20365144287138, 210.45244795915332}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -9883,8 +9883,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{440.95633888244629, 219.51219422546447}</string>
-						<string>{440.92103085548069, 233.49636914427859}</string>
+						<string>{396.83133888244629, 138.124994823609}</string>
+						<string>{396.79603085548069, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -9916,7 +9916,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{420.79202842712402, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{376.66702842712402, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -10048,7 +10048,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{420.54874229431152, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{376.42374229431152, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -10204,7 +10204,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{420.5134334564209, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{376.3884334564209, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -10354,8 +10354,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{330.54873209053159, 208.51217473824067}</string>
-						<string>{317.36394567437776, 208.51219222227033}</string>
+						<string>{286.42373209053159, 127.12497533638522}</string>
+						<string>{273.23894567437776, 127.12499282041487}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -10401,8 +10401,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{330.0134232670502, 244.49637814108434}</string>
-						<string>{317.32863683648714, 244.49637814108434}</string>
+						<string>{285.8884232670502, 163.10917873922887}</string>
+						<string>{273.20363683648714, 163.10917873922887}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -10444,8 +10444,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{330.79201822334409, 281.99826609833883}</string>
-						<string>{317.60723180719026, 281.99828358236851}</string>
+						<string>{286.66701822334409, 200.61106669648336}</string>
+						<string>{273.48223180719026, 200.61108418051302}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -10489,8 +10489,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{350.92103004455566, 255.4963801442785}</string>
-						<string>{351.19962582618382, 270.99827458556274}</string>
+						<string>{306.79603004455566, 174.10918074242301}</string>
+						<string>{307.07462582618382, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -10532,8 +10532,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{350.95633888244629, 219.51219422546447}</string>
-						<string>{350.92103085548069, 233.49636914427859}</string>
+						<string>{306.83133888244629, 138.124994823609}</string>
+						<string>{306.79603085548069, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -10565,7 +10565,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{330.79202842712402, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{286.66702842712402, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -10697,7 +10697,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{330.54874229431152, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{286.42374229431152, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -10853,7 +10853,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{330.5134334564209, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{286.3884334564209, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -11003,8 +11003,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{209.41432350587462, 208.51219222227033}</string>
-						<string>{222.59910992202833, 208.51217473824067}</string>
+						<string>{165.28932350587462, 127.12499282041487}</string>
+						<string>{178.47410992202833, 127.12497533638522}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11046,8 +11046,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{276.54873209053159, 208.51217473824067}</string>
-						<string>{263.41432350587456, 208.51219222227033}</string>
+						<string>{232.42373209053153, 127.12497533638522}</string>
+						<string>{219.28932350587462, 127.12499282041487}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11091,8 +11091,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{276.01342326656243, 244.49637814108434}</string>
-						<string>{263.37901466798394, 244.49637814108434}</string>
+						<string>{231.88842326656243, 163.10917873922887}</string>
+						<string>{219.25401466798399, 163.10917873922887}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11136,8 +11136,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{209.37901466798399, 244.49637814108434}</string>
-						<string>{222.56380108413771, 244.49636065705468}</string>
+						<string>{165.25401466798399, 163.10917873922887}</string>
+						<string>{178.43880108413771, 163.10916125519921}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11183,8 +11183,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{209.65760963868712, 281.99828358236851}</string>
-						<string>{222.84239605484083, 281.99826609833883}</string>
+						<string>{165.53260963868712, 200.61108418051302}</string>
+						<string>{178.71739605484083, 200.61106669648336}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11230,8 +11230,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{276.79201822334409, 281.99826609833883}</string>
-						<string>{263.65760963868706, 281.99828358236851}</string>
+						<string>{232.66701822334403, 200.61106669648336}</string>
+						<string>{219.53260963868712, 200.61108418051302}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11275,8 +11275,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{243.00671671394309, 219.51219422546447}</string>
-						<string>{242.97140868697753, 233.49636914427859}</string>
+						<string>{198.88171671394309, 138.124994823609}</string>
+						<string>{198.84640868697753, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11320,8 +11320,8 @@ When concurrent operations are observed, merge them into a new composite operati
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{242.97140787605247, 255.4963801442785}</string>
-						<string>{243.25000365768065, 270.99827458556274}</string>
+						<string>{198.84640787605247, 174.10918074242301}</string>
+						<string>{199.12500365768065, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11353,7 +11353,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{222.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{178.71740625862083, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -11478,7 +11478,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{222.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{178.47412012580833, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -11629,7 +11629,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{222.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{178.4388112879177, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -11758,7 +11758,7 @@ When concurrent operations are observed, merge them into a new composite operati
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{66, 100.5}, {131.5, 50}}</string>
+					<string>{{21.875, 19.112800598144531}, {131.5, 50}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -11833,8 +11833,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{296.92103004455566, 255.4963801442785}</string>
-						<string>{297.19962582618382, 270.99827458556274}</string>
+						<string>{252.79603004455566, 174.10918074242301}</string>
+						<string>{253.07462582618385, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11876,8 +11876,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{296.95633888244629, 219.51219422546447}</string>
-						<string>{296.92103085548069, 233.49636914427859}</string>
+						<string>{252.83133888244629, 138.124994823609}</string>
+						<string>{252.79603085548072, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11909,7 +11909,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{276.79202842712402, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{232.66702842712402, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -12041,7 +12041,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{276.54874229431152, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{232.42374229431152, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -12197,7 +12197,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{276.5134334564209, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{232.3884334564209, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -12333,7 +12333,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{168.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{124.71740625862083, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -12465,7 +12465,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{276.513427734375, 106}, {22, 11}}</string>
+					<string>{{232.388427734375, 24.612800598144531}, {22, 11}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -12533,8 +12533,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{189.00671671394309, 219.51219422546447}</string>
-						<string>{188.97140868697753, 233.49636914427859}</string>
+						<string>{144.88171671394309, 138.124994823609}</string>
+						<string>{144.84640868697753, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -12585,8 +12585,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{188.97140787605247, 255.4963801442785}</string>
-						<string>{189.25000365768065, 270.99827458556274}</string>
+						<string>{144.84640787605247, 174.10918074242301}</string>
+						<string>{145.12500365768065, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -12623,7 +12623,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{168.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{124.47412012580833, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -12779,7 +12779,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{168.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{124.4388112879177, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -12934,8 +12934,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.66296935344457, 249.41705511451042}</string>
-						<string>{90.100434303665025, 254.33774191972464}</string>
+						<string>{378.53796935344462, 168.02985571265492}</string>
+						<string>{45.975434303665033, 172.95054251786917}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -12997,8 +12997,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.66296935344457, 249.41705511451042}</string>
-						<string>{144.10043430366503, 254.33774191972464}</string>
+						<string>{378.53796935344462, 168.02985571265492}</string>
+						<string>{99.975434303665025, 172.95054251786917}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13060,8 +13060,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.66296935344457, 249.41705511451042}</string>
-						<string>{198.10043430366503, 254.33774191972464}</string>
+						<string>{378.53796935344462, 168.02985571265492}</string>
+						<string>{153.97543430366503, 172.95054251786917}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13116,8 +13116,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.66296935344457, 249.41705511451042}</string>
-						<string>{304.9496221685032, 255.49637038346975}</string>
+						<string>{378.53796935344462, 168.02985571265492}</string>
+						<string>{260.8246221685032, 174.10917098161428}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13172,8 +13172,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.66296935344457, 249.41705511451042}</string>
-						<string>{358.9496221685032, 255.4963703834697}</string>
+						<string>{378.53796935344462, 168.02985571265492}</string>
+						<string>{314.8246221685032, 174.10917098161423}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13228,8 +13228,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{440.92103004455566, 255.4963801442785}</string>
-						<string>{441.19962582618382, 270.99827458556274}</string>
+						<string>{396.79603004455566, 174.10918074242301}</string>
+						<string>{397.07462582618382, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13278,8 +13278,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.69827819133525, 213.43286919569638}</string>
-						<string>{90.135743141555636, 218.3535560009106}</string>
+						<string>{378.57327819133519, 132.04566979384094}</string>
+						<string>{46.010743141555629, 136.96635659905513}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13341,8 +13341,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.69827819133525, 213.43286919569638}</string>
-						<string>{144.13574314155565, 218.35355600091063}</string>
+						<string>{378.57327819133519, 132.04566979384094}</string>
+						<string>{100.01074314155564, 136.96635659905513}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13402,8 +13402,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.69827819133525, 213.43286919569638}</string>
-						<string>{198.13574314155562, 218.3535560009106}</string>
+						<string>{378.57327819133519, 132.04566979384094}</string>
+						<string>{154.01074314155562, 136.96635659905513}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13463,8 +13463,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.69827819133525, 213.43286919569638}</string>
-						<string>{306.08536531005888, 218.35355600091063}</string>
+						<string>{378.57327819133519, 132.04566979384094}</string>
+						<string>{261.96036531005882, 136.96635659905513}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13524,8 +13524,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{422.69827819133525, 213.43286919569638}</string>
-						<string>{360.08536531005888, 218.35355600091063}</string>
+						<string>{378.57327819133519, 132.04566979384094}</string>
+						<string>{315.96036531005882, 136.96635659905513}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13566,7 +13566,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{330.75, 111.50000286102295}, {117.5, 20}}</string>
+					<string>{{286.625, 30.11280345916748}, {117.5, 20}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -13637,8 +13637,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.50669097900402, 165}</string>
-						<string>{90.626262297410264, 198.57388120854287}</string>
+						<string>{216.38169097900405, 83.612800598144531}</string>
+						<string>{46.5012622974102, 117.18668180668739}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13682,8 +13682,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.50669097900402, 165}</string>
-						<string>{144.61604840807271, 198.53185220542466}</string>
+						<string>{216.38169097900405, 83.612800598144531}</string>
+						<string>{100.49104840807266, 117.1446528035692}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13727,8 +13727,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.50669097900402, 165}</string>
-						<string>{332.69828221729398, 203.59150582071112}</string>
+						<string>{216.38169097900405, 83.612800598144531}</string>
+						<string>{288.57328221729398, 122.20430641885565}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13760,7 +13760,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{338.45634460449219, 301}, {24.999984741210938, 16}}</string>
+					<string>{{294.33134460449219, 219.61280059814453}, {24.999984741210938, 16}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -13827,8 +13827,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{101.41432350587461, 208.51219222227033}</string>
-						<string>{114.59910992202833, 208.51217473824067}</string>
+						<string>{57.289323505874613, 127.12499282041487}</string>
+						<string>{70.474109922028333, 127.12497533638522}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13872,8 +13872,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{101.37901466798398, 244.49637814108434}</string>
-						<string>{114.56380108413771, 244.49636065705468}</string>
+						<string>{57.254014667983988, 163.10917873922887}</string>
+						<string>{70.438801084137708, 163.10916125519921}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13917,8 +13917,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{101.65760963868712, 281.99828358236851}</string>
-						<string>{114.84239605484083, 281.99826609833883}</string>
+						<string>{57.532609638687113, 200.61108418051302}</string>
+						<string>{70.717396054840833, 200.61106669648336}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -13950,7 +13950,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{69, 300.99658203125}, {24.999984741210938, 16}}</string>
+					<string>{{24.875, 219.60938262939453}, {24.999984741210938, 16}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -14005,7 +14005,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{60.842406258620827, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{16.717406258620827, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -14151,8 +14151,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{81.006716713943092, 219.51219422546447}</string>
-						<string>{80.971408686977526, 233.49636914427859}</string>
+						<string>{36.881716713943092, 138.124994823609}</string>
+						<string>{36.846408686977519, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -14203,8 +14203,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{80.971407876052467, 255.4963801442785}</string>
-						<string>{81.250003657680651, 270.99827458556274}</string>
+						<string>{36.846407876052467, 174.10918074242301}</string>
+						<string>{37.125003657680644, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -14241,7 +14241,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{60.599120125808327, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{16.474120125808327, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -14397,7 +14397,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{60.563811287917702, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{16.438811287917702, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -14545,8 +14545,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{155.41432350587462, 208.51219222227033}</string>
-						<string>{168.59910992202833, 208.51217473824067}</string>
+						<string>{111.28932350587461, 127.12499282041487}</string>
+						<string>{124.47410992202833, 127.12497533638522}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -14588,8 +14588,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{155.37901466798399, 244.49637814108434}</string>
-						<string>{168.56380108413771, 244.49636065705468}</string>
+						<string>{111.25401466798398, 163.10917873922887}</string>
+						<string>{124.43880108413771, 163.10916125519921}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -14635,8 +14635,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{155.65760963868712, 281.99828358236851}</string>
-						<string>{168.84239605484083, 281.99826609833883}</string>
+						<string>{111.53260963868711, 200.61108418051302}</string>
+						<string>{124.71739605484083, 200.61106669648336}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -14668,7 +14668,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{122.5, 300.99658203125}, {24.999984741210938, 16}}</string>
+					<string>{{78.375, 219.60938262939453}, {24.999984741210938, 16}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -14723,7 +14723,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{114.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{70.717406258620827, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -14869,8 +14869,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{135.00671671394309, 219.51219422546447}</string>
-						<string>{134.97140868697753, 233.49636914427859}</string>
+						<string>{90.881716713943092, 138.124994823609}</string>
+						<string>{90.846408686977526, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -14921,8 +14921,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{134.97140787605247, 255.4963801442785}</string>
-						<string>{135.25000365768065, 270.99827458556274}</string>
+						<string>{90.846407876052467, 174.10918074242301}</string>
+						<string>{91.125003657680651, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -14959,7 +14959,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{114.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{70.474120125808327, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -15115,7 +15115,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{114.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{70.438811287917702, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -15265,8 +15265,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{330.54873209053159, 208.51217473824067}</string>
-						<string>{317.36394567437776, 208.51219222227033}</string>
+						<string>{286.42373209053159, 127.12497533638522}</string>
+						<string>{273.23894567437776, 127.12499282041487}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -15312,8 +15312,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{330.0134232670502, 244.49637814108434}</string>
-						<string>{317.32863683648714, 244.49637814108434}</string>
+						<string>{285.8884232670502, 163.10917873922887}</string>
+						<string>{273.20363683648714, 163.10917873922887}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -15355,8 +15355,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{330.79201822334409, 281.99826609833883}</string>
-						<string>{317.60723180719026, 281.99828358236851}</string>
+						<string>{286.66701822334409, 200.61106669648336}</string>
+						<string>{273.48223180719026, 200.61108418051302}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -15400,8 +15400,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{350.92103004455566, 255.4963801442785}</string>
-						<string>{351.19962582618382, 270.99827458556274}</string>
+						<string>{306.79603004455566, 174.10918074242301}</string>
+						<string>{307.07462582618382, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -15443,8 +15443,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{350.95633888244629, 219.51219422546447}</string>
-						<string>{350.92103085548069, 233.49636914427859}</string>
+						<string>{306.83133888244629, 138.124994823609}</string>
+						<string>{306.79603085548069, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -15476,7 +15476,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{330.79202842712402, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{286.66702842712402, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -15608,7 +15608,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{330.54874229431152, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{286.42374229431152, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -15764,7 +15764,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{330.5134334564209, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{286.3884334564209, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -15914,8 +15914,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{209.41432350587462, 208.51219222227033}</string>
-						<string>{222.59910992202833, 208.51217473824067}</string>
+						<string>{165.28932350587462, 127.12499282041487}</string>
+						<string>{178.47410992202833, 127.12497533638522}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -15957,8 +15957,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{276.54873209053159, 208.51217473824067}</string>
-						<string>{263.41432350587456, 208.51219222227033}</string>
+						<string>{232.42373209053153, 127.12497533638522}</string>
+						<string>{219.28932350587462, 127.12499282041487}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16002,8 +16002,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{276.01342326656243, 244.49637814108434}</string>
-						<string>{263.37901466798394, 244.49637814108434}</string>
+						<string>{231.88842326656243, 163.10917873922887}</string>
+						<string>{219.25401466798399, 163.10917873922887}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16047,8 +16047,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{209.37901466798399, 244.49637814108434}</string>
-						<string>{222.56380108413771, 244.49636065705468}</string>
+						<string>{165.25401466798399, 163.10917873922887}</string>
+						<string>{178.43880108413771, 163.10916125519921}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16094,8 +16094,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{209.65760963868712, 281.99828358236851}</string>
-						<string>{222.84239605484083, 281.99826609833883}</string>
+						<string>{165.53260963868712, 200.61108418051302}</string>
+						<string>{178.71739605484083, 200.61106669648336}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16141,8 +16141,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{276.79201822334409, 281.99826609833883}</string>
-						<string>{263.65760963868706, 281.99828358236851}</string>
+						<string>{232.66701822334403, 200.61106669648336}</string>
+						<string>{219.53260963868712, 200.61108418051302}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16186,8 +16186,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{243.00671671394309, 219.51219422546447}</string>
-						<string>{242.97140868697753, 233.49636914427859}</string>
+						<string>{198.88171671394309, 138.124994823609}</string>
+						<string>{198.84640868697753, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16231,8 +16231,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{242.97140787605247, 255.4963801442785}</string>
-						<string>{243.25000365768065, 270.99827458556274}</string>
+						<string>{198.84640787605247, 174.10918074242301}</string>
+						<string>{199.12500365768065, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16264,7 +16264,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{222.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{178.71740625862083, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -16389,7 +16389,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{222.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{178.47412012580833, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -16540,7 +16540,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{222.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{178.4388112879177, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -16669,7 +16669,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{66, 100.5}, {117.5, 80}}</string>
+					<string>{{21.875, 19.112800598144531}, {117.5, 80}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -16742,8 +16742,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{296.92103004455566, 255.4963801442785}</string>
-						<string>{297.19962582618382, 270.99827458556274}</string>
+						<string>{252.79603004455566, 174.10918074242301}</string>
+						<string>{253.07462582618385, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16785,8 +16785,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{296.95633888244629, 219.51219422546447}</string>
-						<string>{296.92103085548069, 233.49636914427859}</string>
+						<string>{252.83133888244629, 138.124994823609}</string>
+						<string>{252.79603085548072, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16832,8 +16832,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.50669097900402, 165}</string>
-						<string>{287.82730995200467, 198.67082212479312}</string>
+						<string>{216.38169097900405, 83.612800598144531}</string>
+						<string>{243.70230995200467, 117.28362272293764}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -16865,7 +16865,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{276.79202842712402, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{232.66702842712402, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -16997,7 +16997,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{276.54874229431152, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{232.42374229431152, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -17153,7 +17153,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{276.5134334564209, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{232.3884334564209, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -17289,7 +17289,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{284.50001525878906, 300.99658203125}, {24.999984741210938, 16}}</string>
+					<string>{{240.37501525878906, 219.60938262939453}, {24.999984741210938, 16}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -17344,7 +17344,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{176.5, 300.99658203125}, {24.999984741210938, 16}}</string>
+					<string>{{132.375, 219.60938262939453}, {24.999984741210938, 16}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -17399,7 +17399,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{168.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{124.71740625862083, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -17531,7 +17531,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{214.54867553710938, 116}, {91, 11}}</string>
+					<string>{{170.42367553710938, 34.612800598144531}, {91, 11}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -17609,8 +17609,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.50669097900402, 165}</string>
-						<string>{198.13574591706819, 198.67082315066213}</string>
+						<string>{216.38169097900405, 83.612800598144531}</string>
+						<string>{154.01074591706819, 117.28362374880666}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -17656,8 +17656,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{189.00671671394309, 219.51219422546447}</string>
-						<string>{188.97140868697753, 233.49636914427859}</string>
+						<string>{144.88171671394309, 138.124994823609}</string>
+						<string>{144.84640868697753, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -17708,8 +17708,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{188.97140787605247, 255.4963801442785}</string>
-						<string>{189.25000365768065, 270.99827458556274}</string>
+						<string>{144.84640787605247, 174.10918074242301}</string>
+						<string>{145.12500365768065, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -17746,7 +17746,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{168.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{124.47412012580833, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -17902,7 +17902,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{168.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{124.4388112879177, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -18052,8 +18052,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{218.41432350587462, 208.51219222227033}</string>
-						<string>{240.59910992202833, 208.51217473824067}</string>
+						<string>{174.28932350587462, 127.12499282041487}</string>
+						<string>{196.47410992202833, 127.12497533638522}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18095,8 +18095,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{303.54873209053159, 208.51217473824067}</string>
-						<string>{281.41432350587456, 208.51219222227033}</string>
+						<string>{259.42373209053159, 127.12497533638522}</string>
+						<string>{237.28932350587462, 127.12499282041487}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18140,8 +18140,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{303.01342326089468, 244.49637814108434}</string>
-						<string>{281.37901466798394, 244.49637814108434}</string>
+						<string>{258.88842326089468, 163.10917873922887}</string>
+						<string>{237.25401466798399, 163.10917873922887}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18185,8 +18185,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{218.37901466798399, 244.49637814108434}</string>
-						<string>{240.56380108413771, 244.49636065705468}</string>
+						<string>{174.25401466798399, 163.10917873922887}</string>
+						<string>{196.43880108413771, 163.10916125519921}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18232,8 +18232,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{218.65760963868712, 281.99828358236851}</string>
-						<string>{240.84239605484083, 281.99826609833883}</string>
+						<string>{174.53260963868712, 200.61108418051302}</string>
+						<string>{196.71739605484083, 200.61106669648336}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18279,8 +18279,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{303.79201822334409, 281.99826609833883}</string>
-						<string>{281.65760963868706, 281.99828358236851}</string>
+						<string>{259.66701822334409, 200.61106669648336}</string>
+						<string>{237.53260963868712, 200.61108418051302}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18324,8 +18324,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{261.00671671394309, 219.51219422546447}</string>
-						<string>{260.9714086869775, 233.49636914427859}</string>
+						<string>{216.88171671394309, 138.124994823609}</string>
+						<string>{216.84640868697753, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18369,8 +18369,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.97140787605247, 255.4963801442785}</string>
-						<string>{261.25000365768062, 270.99827458556274}</string>
+						<string>{216.84640787605247, 174.10918074242301}</string>
+						<string>{217.12500365768065, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18402,7 +18402,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{240.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{196.71740625862083, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -18527,7 +18527,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{240.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{196.47412012580833, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -18678,7 +18678,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{240.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{196.4388112879177, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -18814,8 +18814,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{137.41345088410691, 199.5}</string>
-						<string>{236.5033397666584, 165}</string>
+						<string>{93.288450884106894, 118.11280059814453}</string>
+						<string>{192.3783397666584, 83.612800598144531}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18863,8 +18863,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{383.18802876781501, 199.5}</string>
-						<string>{284.5100278842408, 165}</string>
+						<string>{339.06302876781501, 118.11280059814453}</string>
+						<string>{240.3850278842408, 83.612800598144531}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18917,8 +18917,8 @@ As more concurrent operations are observed, the causal context grows too large, 
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{324, 120.34449335216877}</string>
-						<string>{303.54867553710938, 115.88477847656745}</string>
+						<string>{279.875, 38.95414793880753}</string>
+						<string>{259.42367553710938, 34.493507306341904}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -18959,7 +18959,7 @@ As more concurrent operations are observed, the causal context grows too large, 
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{324, 100.5}, {139, 70}}</string>
+					<string>{{279.875, 19.112800598144531}, {139, 70}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -19021,7 +19021,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{354, 199.5}, {107, 17}}</string>
+					<string>{{309.875, 118.11280059814453}, {107, 17}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -19079,7 +19079,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{59.5, 199.5}, {107, 17}}</string>
+					<string>{{15.375, 118.11280059814453}, {107, 17}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -19137,7 +19137,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{66, 100.5}, {117.5, 60}}</string>
+					<string>{{21.875, 19.112800598144531}, {117.5, 60}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -19210,8 +19210,8 @@ As more operations are }</string>
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{323.92103004455566, 255.4963801442785}</string>
-						<string>{324.19962582618382, 270.99827458556274}</string>
+						<string>{279.79603004455566, 174.10918074242301}</string>
+						<string>{280.07462582618382, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -19253,8 +19253,8 @@ As more operations are }</string>
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{323.95633888244629, 219.51219422546447}</string>
-						<string>{323.92103085548069, 233.49636914427859}</string>
+						<string>{279.83133888244629, 138.124994823609}</string>
+						<string>{279.79603085548069, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -19300,8 +19300,8 @@ As more operations are }</string>
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.50669097900402, 165}</string>
-						<string>{314.82730995200467, 198.67082212479312}</string>
+						<string>{216.38169097900402, 83.612800598144531}</string>
+						<string>{270.70230995200467, 117.28362272293762}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -19326,7 +19326,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{303.79202842712402, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{259.66702842712402, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -19458,7 +19458,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{303.54874229431152, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{259.42374229431152, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -19614,7 +19614,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{303.5134334564209, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{259.3884334564209, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -19750,7 +19750,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{354.00000762939453, 277.998291015625}, {79.5, 8}}</string>
+					<string>{{309.87500762939453, 196.61109161376953}, {79.5, 8}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -19807,7 +19807,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{104, 277.998291015625}, {64.5, 8}}</string>
+					<string>{{59.875, 196.61109161376953}, {64.5, 8}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -19864,7 +19864,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{177.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{133.71740625862083, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -19996,7 +19996,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{272.54867553710938, 107}, {31, 11}}</string>
+					<string>{{228.42367553710938, 25.612800598144531}, {31, 11}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -20066,8 +20066,8 @@ As more operations are }</string>
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.5, 165}</string>
-						<string>{207.55861048050622, 198.4040116271641}</string>
+						<string>{216.375, 83.612800598144531}</string>
+						<string>{163.43361048050619, 117.01681222530866}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20106,8 +20106,8 @@ As more operations are }</string>
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{198.00671671394309, 219.51219422546447}</string>
-						<string>{197.97140868697753, 233.49636914427859}</string>
+						<string>{153.88171671394309, 138.124994823609}</string>
+						<string>{153.84640868697753, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20158,8 +20158,8 @@ As more operations are }</string>
 					<integer>2</integer>
 					<key>Points</key>
 					<array>
-						<string>{197.97140787605247, 255.4963801442785}</string>
-						<string>{198.25000365768065, 270.99827458556274}</string>
+						<string>{153.84640787605247, 174.10918074242301}</string>
+						<string>{154.12500365768065, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20196,7 +20196,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{177.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{133.47412012580833, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -20352,7 +20352,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{177.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{133.4388112879177, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -20502,8 +20502,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{218.41432350587462, 208.51219222227033}</string>
-						<string>{240.59910992202833, 208.51217473824067}</string>
+						<string>{174.28932350587462, 127.12499282041487}</string>
+						<string>{196.47410992202833, 127.12497533638522}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20545,8 +20545,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{303.54873209053159, 208.51217473824067}</string>
-						<string>{281.41432350587456, 208.51219222227033}</string>
+						<string>{259.42373209053159, 127.12497533638522}</string>
+						<string>{237.28932350587462, 127.12499282041487}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20590,8 +20590,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{303.01342326089468, 244.49637814108434}</string>
-						<string>{281.37901466798394, 244.49637814108434}</string>
+						<string>{258.88842326089468, 163.10917873922887}</string>
+						<string>{237.25401466798399, 163.10917873922887}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20635,8 +20635,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{218.37901466798399, 244.49637814108434}</string>
-						<string>{240.56380108413771, 244.49636065705468}</string>
+						<string>{174.25401466798399, 163.10917873922887}</string>
+						<string>{196.43880108413771, 163.10916125519921}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20682,8 +20682,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{218.65760963868712, 281.99828358236851}</string>
-						<string>{240.84239605484083, 281.99826609833883}</string>
+						<string>{174.53260963868712, 200.61108418051302}</string>
+						<string>{196.71739605484083, 200.61106669648336}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20729,8 +20729,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{303.79201822334409, 281.99826609833883}</string>
-						<string>{281.65760963868706, 281.99828358236851}</string>
+						<string>{259.66701822334409, 200.61106669648336}</string>
+						<string>{237.53260963868712, 200.61108418051302}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20774,8 +20774,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{261.00671671394309, 219.51219422546447}</string>
-						<string>{260.9714086869775, 233.49636914427859}</string>
+						<string>{216.88171671394309, 138.124994823609}</string>
+						<string>{216.84640868697753, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20819,8 +20819,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.97140787605247, 255.4963801442785}</string>
-						<string>{261.25000365768062, 270.99827458556274}</string>
+						<string>{216.84640787605247, 174.10918074242301}</string>
+						<string>{217.12500365768065, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -20852,7 +20852,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{240.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{196.71740625862083, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -20977,7 +20977,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{240.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{196.47412012580833, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -21128,7 +21128,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{240.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{196.4388112879177, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -21271,8 +21271,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{137.41345088410691, 199.5}</string>
-						<string>{236.5033397666584, 165}</string>
+						<string>{93.288450884106879, 118.11280059814453}</string>
+						<string>{192.14224068005603, 83.695002915450956}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -21327,8 +21327,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{383.18802876781501, 199.5}</string>
-						<string>{284.5100278842408, 165}</string>
+						<string>{339.06302876781507, 118.11280059814453}</string>
+						<string>{240.62102028054412, 83.695308731665278}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -21381,8 +21381,8 @@ As more operations are }</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{324, 120.35079156426355}</string>
-						<string>{303.54867553710938, 115.8929300236131}</string>
+						<string>{279.875, 38.95414793880753}</string>
+						<string>{259.42367553710938, 34.493507306341904}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -21423,7 +21423,7 @@ As more operations are }</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{324, 100.5}, {139, 70}}</string>
+					<string>{{279.875, 19.112800598144531}, {139, 70}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -21485,7 +21485,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{66, 112}, {107, 10}}</string>
+					<string>{{21.875, 30.612800598144531}, {107, 10}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -21551,7 +21551,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{354, 199.5}, {107, 17}}</string>
+					<string>{{309.875, 118.11280059814453}, {107, 17}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -21609,7 +21609,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{59.5, 199.5}, {107, 17}}</string>
+					<string>{{15.375, 118.11280059814453}, {107, 17}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -21667,7 +21667,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{66, 100.5}, {117.5, 10}}</string>
+					<string>{{21.875, 19.112800598144531}, {117.5, 10}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -21736,8 +21736,8 @@ When performing a query,
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{323.92103004455566, 255.4963801442785}</string>
-						<string>{324.19962582618382, 270.99827458556274}</string>
+						<string>{279.79603004455566, 174.10918074242301}</string>
+						<string>{280.07462582618382, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -21779,8 +21779,8 @@ When performing a query,
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{323.95633888244629, 219.51219422546447}</string>
-						<string>{323.92103085548069, 233.49636914427859}</string>
+						<string>{279.83133888244629, 138.124994823609}</string>
+						<string>{279.79603085548069, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -21826,8 +21826,8 @@ When performing a query,
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.50669097900402, 165}</string>
-						<string>{314.82730995200467, 198.67082212479312}</string>
+						<string>{216.38169097900405, 83.612800598144531}</string>
+						<string>{270.70230995200467, 117.28362272293762}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -21859,7 +21859,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{303.79202842712402, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{259.66702842712402, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -21991,7 +21991,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{303.54874229431152, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{259.42374229431152, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -22147,7 +22147,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{303.5134334564209, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{259.3884334564209, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -22283,7 +22283,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{354.00000762939453, 277.998291015625}, {79.5, 8}}</string>
+					<string>{{309.87500762939453, 196.61109161376953}, {79.5, 8}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -22340,7 +22340,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{104, 277.998291015625}, {64.5, 8}}</string>
+					<string>{{59.875, 196.61109161376953}, {64.5, 8}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -22397,7 +22397,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{177.84240625862083, 270.99828008556267}, {40.815193176269531, 22}}</string>
+					<string>{{133.71740625862083, 189.6110806837072}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -22529,7 +22529,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{272.54867553710938, 107}, {31, 11}}</string>
+					<string>{{228.42367553710938, 25.612800598144531}, {31, 11}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -22599,8 +22599,8 @@ When performing a query,
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{260.5, 165}</string>
-						<string>{207.55861048050622, 198.4040116271641}</string>
+						<string>{216.375, 83.612800598144531}</string>
+						<string>{163.43361048050619, 117.01681222530866}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -22639,8 +22639,8 @@ When performing a query,
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{198.00671671394309, 219.51219422546447}</string>
-						<string>{197.97140868697753, 233.49636914427859}</string>
+						<string>{153.88171671394309, 138.124994823609}</string>
+						<string>{153.84640868697753, 152.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -22691,8 +22691,8 @@ When performing a query,
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{197.97140787605247, 255.4963801442785}</string>
-						<string>{198.25000365768065, 270.99827458556274}</string>
+						<string>{153.84640787605247, 174.10918074242301}</string>
+						<string>{154.12500365768065, 189.61107518370727}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -22729,7 +22729,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{177.59912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{133.47412012580833, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -22885,7 +22885,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{177.5638112879177, 233.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{133.4388112879177, 152.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -23035,8 +23035,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{255.60042621883443, 265.41421346496674}</string>
-						<string>{274.43610941436498, 291.48055579360107}</string>
+						<string>{211.4754262188344, 184.02701406311127}</string>
+						<string>{230.31110941436501, 210.0933563917456}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -23089,8 +23089,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{237.34236971754777, 265.41421152961868}</string>
-						<string>{218.50669178992902, 291.48055579360107}</string>
+						<string>{193.2173697175478, 184.02701212776319}</string>
+						<string>{174.38169178992902, 210.0933563917456}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -23143,8 +23143,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{172.41295209311204, 265.41421152961868}</string>
-						<string>{153.57727416549312, 291.48055579360107}</string>
+						<string>{128.28795209311207, 184.02701212776319}</string>
+						<string>{109.45227416549312, 210.0933563917456}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -23197,8 +23197,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{209.54735313165429, 220.87058540042457}</string>
-						<string>{181.5419829777112, 244.57284068952072}</string>
+						<string>{165.42235313165429, 139.4833859985691}</string>
+						<string>{137.4169829777112, 163.18564128766525}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -23258,8 +23258,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{227.80540950626607, 220.87058733577268}</string>
-						<string>{246.47140060214693, 244.57284068952072}</string>
+						<string>{183.68040950626605, 139.48338793391719}</string>
+						<string>{202.34640060214693, 163.18564128766525}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -23300,7 +23300,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{133.1696767664333, 291.480561293601}, {40.815193176269531, 22}}</string>
+					<string>{{89.044676766433298, 210.09336189174553}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -23423,7 +23423,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{198.0990943908692, 291.480561293601}, {40.815193176269531, 22}}</string>
+					<string>{{153.9740943908692, 210.09336189174553}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -23546,7 +23546,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{254.02851201530518, 291.480561293601}, {40.815193176269531, 22}}</string>
+					<string>{{209.90351201530518, 210.09336189174553}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -23669,7 +23669,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{161.13438557865138, 244.57284618952065}, {40.815193176269531, 22}}</string>
+					<string>{{117.00938557865138, 163.18564678766518}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -23792,7 +23792,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{226.0638032030871, 244.57284618952065}, {40.815193176269531, 22}}</string>
+					<string>{{181.9388032030871, 163.18564678766518}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -23915,7 +23915,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{198.26878669544459, 200.02922006032657}, {40.815192893092686, 22}}</string>
+					<string>{{154.14378669544459, 118.6420206584711}, {40.815192893092686, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -24064,7 +24064,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{66, 100.5}, {113, 10}}</string>
+					<string>{{21.875, 19.112800598144531}, {113, 10}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -24114,7 +24114,7 @@ When performing a query,
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs16 \cf0 Basic immutable data "edit"}</string>
+\f0\fs16 \cf0 Basic immutable "edit"}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -24133,8 +24133,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{264.9846259496166, 158.75537339881993}</string>
-						<string>{281.37768778350147, 198.67082212479312}</string>
+						<string>{220.85962594961663, 77.368173996964458}</string>
+						<string>{237.25268778350147, 117.28362272293764}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24185,8 +24185,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{299.75636050377568, 260.61994255658993}</string>
-						<string>{227.63572018212909, 292.63919571879859}</string>
+						<string>{255.63136050377571, 179.23274315473455}</string>
+						<string>{183.51072018212906, 211.25199631694315}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24237,8 +24237,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{271.78376716566265, 213.61693021651445}</string>
-						<string>{190.67101136991124, 245.73148061471827}</string>
+						<string>{227.65876716566265, 132.22973081465898}</string>
+						<string>{146.54601136991124, 164.3442812128628}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24287,8 +24287,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{390.30609901664189, 149.00000000000003}</string>
-						<string>{388.95059196236213, 131.5}</string>
+						<string>{346.18109901664189, 67.612800598144531}</string>
+						<string>{344.82559196236213, 50.112800598144531}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24343,8 +24343,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{403.97308511663329, 197.01218605041504}</string>
-						<string>{397.44864462091709, 180}</string>
+						<string>{361.73841295262918, 115.62498664855957}</string>
+						<string>{354.22617662036095, 98.612800598144531}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24399,8 +24399,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{421.98271958458281, 244.0061225891113}</string>
-						<string>{412.02092367409568, 218.01218605041504}</string>
+						<string>{376.86384940783108, 162.61892318725586}</string>
+						<string>{369.39284157117299, 136.62498664855957}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24455,8 +24455,8 @@ When performing a query,
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{434.15910210610815, 291.00004577636719}</string>
-						<string>{428.34738355017367, 265.00612258911133}</string>
+						<string>{383.78053892874885, 209.61284637451172}</string>
+						<string>{381.07107826041135, 183.61892318725586}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24499,7 +24499,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{274.54867553710938, 107}, {19, 11}}</string>
+					<string>{{207.92367553710938, 39.612800598144531}, {19, 11}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -24553,7 +24553,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{318, 100.5}, {139.5, 31}}</string>
+					<string>{{273.875, 19.112800598144531}, {139.5, 31}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -24612,7 +24612,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{343.5, 149}, {96.013381958007983, 31}}</string>
+					<string>{{299.375, 67.612800598144531}, {96.013381958007983, 31}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -24622,9 +24622,9 @@ When performing a query,
 					<key>FontInfo</key>
 					<dict>
 						<key>Font</key>
-						<string>Helvetica</string>
+						<string>Helvetica-Light</string>
 						<key>Size</key>
-						<real>12</real>
+						<real>8</real>
 					</dict>
 					<key>ID</key>
 					<integer>52</integer>
@@ -24670,7 +24670,7 @@ When performing a query,
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{361.5, 197.01218605041504}, {93, 21}}</string>
+					<string>{{317.375, 115.62498664855957}, {98, 21}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -24680,9 +24680,9 @@ When performing a query,
 					<key>FontInfo</key>
 					<dict>
 						<key>Font</key>
-						<string>Helvetica</string>
+						<string>Helvetica-Light</string>
 						<key>Size</key>
-						<real>12</real>
+						<real>8</real>
 					</dict>
 					<key>ID</key>
 					<integer>51</integer>
@@ -24721,8 +24721,9 @@ When performing a query,
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
 \f0\fs16 \cf0 3. New parent node is\
-created to reference B, C
-\fs10 \sub 1}</string>
+created to reference \{B, C
+\fs10 \sub 1
+\fs16 \nosupersub \}}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -24731,7 +24732,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{378, 244.00612258911133}, {96.013381958007983, 21}}</string>
+					<string>{{329.87500000000017, 162.61892318725586}, {100.01338195800781, 21}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -24741,9 +24742,9 @@ created to reference B, C
 					<key>FontInfo</key>
 					<dict>
 						<key>Font</key>
-						<string>Helvetica</string>
+						<string>Helvetica-Light</string>
 						<key>Size</key>
-						<real>12</real>
+						<real>8</real>
 					</dict>
 					<key>ID</key>
 					<integer>50</integer>
@@ -24781,8 +24782,9 @@ created to reference B, C
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs16 \cf0 2. New parent node is created to reference E, F
-\fs10 \sub 1}</string>
+\f0\fs16 \cf0 2. New parent node is created to reference \{E, F
+\fs10 \sub 1
+\fs16 \nosupersub \}}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -24803,8 +24805,8 @@ created to reference B, C
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{299.63574314155562, 218.3535560009106}</string>
-						<string>{318.4714086869775, 244.49636914427859}</string>
+						<string>{255.51074314155562, 136.96635659905513}</string>
+						<string>{274.3464086869775, 163.10916974242312}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24857,8 +24859,8 @@ created to reference B, C
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{327.60043430366505, 265.33774191972464}</string>
-						<string>{346.44824442412647, 292.63919469292961}</string>
+						<string>{283.475434303665, 183.95054251786914}</string>
+						<string>{302.32324442412647, 211.25199529107414}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24914,8 +24916,8 @@ created to reference B, C
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{373.83533143308858, 297.55987800793429}</string>
-						<string>{338.87901466798394, 255.49637814108434}</string>
+						<string>{329.71033143308864, 216.17267860607882}</string>
+						<string>{294.75401466798394, 174.10917873922887}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -24979,8 +24981,8 @@ created to reference B, C
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{336.72946595457302, 250.57569135861181}</string>
-						<string>{310.91432350587456, 208.51219222227033}</string>
+						<string>{292.60446595457302, 169.18849195675634}</string>
+						<string>{266.78932350587456, 127.12499282041487}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -25025,7 +25027,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{270.09912012580833, 197.51218872546451}, {40.815193176269531, 22}}</string>
+					<string>{{225.97412012580833, 116.12498932360904}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -25181,7 +25183,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{298.0638112879177, 244.49637464427852}, {40.815193176269531, 22}}</string>
+					<string>{{253.9388112879177, 163.10917524242305}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -25317,7 +25319,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{335.16967676643333, 291.480561293601}, {40.815193176269531, 22}}</string>
+					<string>{{291.04467676643333, 210.09336189174553}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -25449,7 +25451,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{388.5, 291.00004577636719}, {96.013381958007983, 21}}</string>
+					<string>{{344.375, 209.61284637451172}, {81, 21}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -25459,7 +25461,7 @@ created to reference B, C
 					<key>FontInfo</key>
 					<dict>
 						<key>Font</key>
-						<string>Helvetica</string>
+						<string>Helvetica-Bold</string>
 						<key>Size</key>
 						<real>12</real>
 					</dict>
@@ -25499,7 +25501,7 @@ created to reference B, C
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs16 \cf0 1. Party X edits node F originating F
+\f0\b\fs16 \cf0 1. Alice edits node F originating F
 \fs10 \sub 1}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -25521,8 +25523,8 @@ created to reference B, C
 					<integer>5</integer>
 					<key>Points</key>
 					<array>
-						<string>{255.60042621883443, 265.41421346496674}</string>
-						<string>{274.43610941436498, 291.48055579360107}</string>
+						<string>{211.4754262188344, 184.02701406311127}</string>
+						<string>{230.31110941436501, 210.0933563917456}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -25575,8 +25577,8 @@ created to reference B, C
 					<integer>5</integer>
 					<key>Points</key>
 					<array>
-						<string>{237.34236971754777, 265.41421152961868}</string>
-						<string>{218.50669178992902, 291.48055579360107}</string>
+						<string>{193.2173697175478, 184.02701212776319}</string>
+						<string>{174.38169178992902, 210.0933563917456}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -25629,8 +25631,8 @@ created to reference B, C
 					<integer>5</integer>
 					<key>Points</key>
 					<array>
-						<string>{172.41295209311204, 265.41421152961868}</string>
-						<string>{153.57727416549312, 291.48055579360107}</string>
+						<string>{128.28795209311207, 184.02701212776319}</string>
+						<string>{109.45227416549312, 210.0933563917456}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -25683,8 +25685,8 @@ created to reference B, C
 					<integer>5</integer>
 					<key>Points</key>
 					<array>
-						<string>{209.54735313165429, 220.87058540042457}</string>
-						<string>{181.5419829777112, 244.57284068952072}</string>
+						<string>{165.42235313165429, 139.4833859985691}</string>
+						<string>{137.4169829777112, 163.18564128766525}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -25744,8 +25746,8 @@ created to reference B, C
 					<integer>5</integer>
 					<key>Points</key>
 					<array>
-						<string>{227.80540950626607, 220.87058733577268}</string>
-						<string>{246.47140060214693, 244.57284068952072}</string>
+						<string>{183.68040950626605, 139.48338793391719}</string>
+						<string>{202.34640060214693, 163.18564128766525}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -25786,7 +25788,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{133.1696767664333, 291.480561293601}, {40.815193176269531, 22}}</string>
+					<string>{{89.044676766433298, 210.09336189174553}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -25909,7 +25911,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{198.0990943908692, 291.480561293601}, {40.815193176269531, 22}}</string>
+					<string>{{153.9740943908692, 210.09336189174553}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -26032,7 +26034,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{254.02851201530518, 291.480561293601}, {40.815193176269531, 22}}</string>
+					<string>{{209.90351201530518, 210.09336189174553}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -26155,7 +26157,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{161.13438557865138, 244.57284618952065}, {40.815193176269531, 22}}</string>
+					<string>{{117.00938557865138, 163.18564678766518}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -26278,7 +26280,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{226.0638032030871, 244.57284618952065}, {40.815193176269531, 22}}</string>
+					<string>{{181.9388032030871, 163.18564678766518}, {40.815193176269531, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -26401,7 +26403,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{198.26878669544459, 200.02922006032657}, {40.815192893092686, 22}}</string>
+					<string>{{154.14378669544459, 118.6420206584711}, {40.815192893092686, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -26550,7 +26552,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{66, 100.5}, {113, 10}}</string>
+					<string>{{21.875, 19.112800598144531}, {113, 10}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -26614,8 +26616,8 @@ created to reference B, C
 					<integer>5</integer>
 					<key>Points</key>
 					<array>
-						<string>{254.68425852070229, 157.55112367321405}</string>
-						<string>{228.06763203555937, 200.76213055494753}</string>
+						<string>{210.55925852070231, 76.163924271358567}</string>
+						<string>{183.94263203555937, 119.37493115309206}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -26652,7 +26654,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{274.54867553710938, 107}, {15, 10}}</string>
+					<string>{{208.92367553710938, 40.112800598144531}, {15, 10}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -26704,7 +26706,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{318, 100.5}, {139.5, 30}}</string>
+					<string>{{273.875, 19.112800598144531}, {139.5, 30}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -26761,57 +26763,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{72.5, 176}, {22, 14}}</string>
-					<key>Class</key>
-					<string>ShapedGraphic</string>
-					<key>FitText</key>
-					<string>YES</string>
-					<key>Flow</key>
-					<string>Resize</string>
-					<key>ID</key>
-					<integer>510</integer>
-					<key>Layer</key>
-					<integer>6</integer>
-					<key>Shape</key>
-					<string>Rectangle</string>
-					<key>Style</key>
-					<dict>
-						<key>fill</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>shadow</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>stroke</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-					</dict>
-					<key>Text</key>
-					<dict>
-						<key>Pad</key>
-						<integer>0</integer>
-						<key>Text</key>
-						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
-\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
-
-\f0\fs24 \cf0 Bob}</string>
-						<key>VerticalPad</key>
-						<integer>0</integer>
-					</dict>
-					<key>Wrap</key>
-					<string>NO</string>
-				</dict>
-				<dict>
-					<key>Bounds</key>
-					<string>{{242.841796875, 137}, {35.45130920410179, 22}}</string>
+					<string>{{198.716796875, 55.612800598144531}, {35.45130920410179, 22}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -26870,7 +26822,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{212.50000000000006, 100}, {96.013381958007983, 65}}</string>
+					<string>{{168.37500000000006, 18.612800598144531}, {96.013381958007983, 65}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -26974,8 +26926,6 @@ created to reference B, C
 					</dict>
 					<key>Text</key>
 					<dict>
-						<key>Align</key>
-						<integer>0</integer>
 						<key>Pad</key>
 						<integer>3</integer>
 						<key>RTFD</key>
@@ -26983,41 +26933,41 @@ created to reference B, C
 						BAtzdHJlYW10eXBlZIHoA4QBQISE
 						hBJOU0F0dHJpYnV0ZWRTdHJpbmcA
 						hIQITlNPYmplY3QAhZKEhIQITlNT
-						dHJpbmcBlIQBKw5RdWVyeSBDb250
-						ZXh0OoaEAmlJAQ6ShISEDE5TRGlj
-						dGlvbmFyeQCUhAFpA5KElpYHTlND
-						b2xvcoaShISEB05TQ29sb3IAlIQB
-						YwOEAmZmAIOiZCQ/hpKElpYQTlNQ
-						YXJhZ3JhcGhTdHlsZYaShISEF05T
-						TXV0YWJsZVBhcmFncmFwaFN0eWxl
-						AISEEE5TUGFyYWdyYXBoU3R5bGUA
-						lIQEQ0NAUwAAhISEB05TQXJyYXkA
-						lJkMkoSEhAlOU1RleHRUYWIAlIQC
-						Q2YAHIaShKOiADiGkoSjogBUhpKE
-						o6IAcIaShKOiAIGMAIaShKOiAIGo
-						AIaShKOiAIHEAIaShKOiAIHgAIaS
-						hKOiAIH8AIaShKOiAIEYAYaShKOi
-						AIE0AYaShKOiAIFQAYaGgQAIhARb
-						MWZdg83MTD2GkoSWlgZOU0ZvbnSG
-						koSEhAZOU0ZvbnQelJkchAVbMjhj
-						XQYAAAAUAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQCEAWYImwCbAZsAmwCG
-						hoY=
+						dHJpbmcBlIQBKxVBbGljZSdzIFF1
+						ZXJ5IENvbnRleHSGhAJpSQEVkoSE
+						hAxOU0RpY3Rpb25hcnkAlIQBaQOS
+						hJaWB05TQ29sb3KGkoSEhAdOU0Nv
+						bG9yAJSEAWMDhAJmZgCDomQkP4aS
+						hJaWEE5TUGFyYWdyYXBoU3R5bGWG
+						koSEhBdOU011dGFibGVQYXJhZ3Jh
+						cGhTdHlsZQCEhBBOU1BhcmFncmFw
+						aFN0eWxlAJSEBENDQFMCAISEhAdO
+						U0FycmF5AJSZDJKEhIQJTlNUZXh0
+						VGFiAJSEAkNmAByGkoSjogA4hpKE
+						o6IAVIaShKOiAHCGkoSjogCBjACG
+						koSjogCBqACGkoSjogCBxACGkoSj
+						ogCB4ACGkoSjogCB/ACGkoSjogCB
+						GAGGkoSjogCBNAGGkoSjogCBUAGG
+						hoEACIQEWzFmXYPNzEw9hpKElpYG
+						TlNGb250hpKEhIQGTlNGb250HpSZ
+						HIQFWzI4Y10GAAAAFAAAAP/+SABl
+						AGwAdgBlAHQAaQBjAGEAhAFmCJsA
+						mwGbAJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
 {\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
 
-\f0\fs16 \cf2 Query Context:}</string>
+\f0\fs16 \cf2 Alice's Query Context}</string>
 						<key>VerticalPad</key>
 						<integer>7</integer>
 						<key>alpha</key>
 						<array>
 							<array>
 								<integer>0</integer>
-								<integer>14</integer>
+								<integer>21</integer>
 								<real>0.64216053485870361</real>
 							</array>
 						</array>
@@ -27027,7 +26977,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{45.25, 82.512199401855469}, {432, 252}}</string>
+					<string>{{1.1253600120544434, 1.1253600120544434}, {432, 252}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -27069,31 +27019,18 @@ created to reference B, C
 					<dict>
 						<key>fill</key>
 						<dict>
-							<key>Color</key>
-							<dict>
-								<key>a</key>
-								<string>0.2</string>
-								<key>b</key>
-								<string>1</string>
-								<key>g</key>
-								<string>1</string>
-								<key>r</key>
-								<string>1</string>
-							</dict>
 							<key>FillType</key>
 							<integer>2</integer>
 							<key>GradientAngle</key>
 							<real>90</real>
 							<key>GradientColor</key>
 							<dict>
-								<key>a</key>
-								<string>0.2</string>
 								<key>b</key>
 								<string>1</string>
 								<key>g</key>
-								<string>0.645058</string>
+								<string>0.92549</string>
 								<key>r</key>
-								<string>0.343042</string>
+								<string>0.85098</string>
 							</dict>
 						</dict>
 						<key>shadow</key>
@@ -27137,7 +27074,7 @@ created to reference B, C
 			<array>
 				<dict>
 					<key>Lock</key>
-					<string>NO</string>
+					<string>YES</string>
 					<key>Name</key>
 					<string>Solution 1</string>
 					<key>Print</key>
@@ -27157,7 +27094,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Lock</key>
-					<string>NO</string>
+					<string>YES</string>
 					<key>Name</key>
 					<string>unknown</string>
 					<key>Print</key>
@@ -27173,17 +27110,17 @@ created to reference B, C
 					<key>Print</key>
 					<string>YES</string>
 					<key>View</key>
-					<string>YES</string>
+					<string>NO</string>
 				</dict>
 				<dict>
 					<key>Lock</key>
-					<string>YES</string>
+					<string>NO</string>
 					<key>Name</key>
 					<string>Slide 2</string>
 					<key>Print</key>
 					<string>YES</string>
 					<key>View</key>
-					<string>NO</string>
+					<string>YES</string>
 				</dict>
 				<dict>
 					<key>Lock</key>
@@ -27197,9 +27134,9 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Lock</key>
-					<string>NO</string>
+					<string>YES</string>
 					<key>Name</key>
-					<string>Query Context</string>
+					<string>Alice Query Context</string>
 					<key>Print</key>
 					<string>YES</string>
 					<key>View</key>
@@ -27207,7 +27144,7 @@ created to reference B, C
 				</dict>
 				<dict>
 					<key>Lock</key>
-					<string>NO</string>
+					<string>YES</string>
 					<key>Name</key>
 					<string>Baseline</string>
 					<key>Print</key>
@@ -28640,8 +28577,8 @@ to reference E, F
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{263.94854582397028, 157.81196202277161}</string>
-						<string>{230.0563205847067, 196.04476853495569}</string>
+						<string>{263.94854582394925, 157.81196202277107}</string>
+						<string>{230.05632058460387, 196.04476853495299}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -36712,13 +36649,13 @@ Range: A-K}</string>
 			</dict>
 		</array>
 		<key>Frame</key>
-		<string>{{1603, -328}, {1580, 1024}}</string>
+		<string>{{1571, -165}, {1580, 905}}</string>
 		<key>ListView</key>
 		<true/>
 		<key>OutlineWidth</key>
 		<integer>142</integer>
 		<key>RightSidebar</key>
-		<false/>
+		<true/>
 		<key>ShowRuler</key>
 		<true/>
 		<key>Sidebar</key>
@@ -36726,7 +36663,7 @@ Range: A-K}</string>
 		<key>SidebarWidth</key>
 		<integer>220</integer>
 		<key>VisibleRegion</key>
-		<string>{{0, 0.5}, {665.5, 433.5}}</string>
+		<string>{{0, 0}, {594, 374}}</string>
 		<key>Zoom</key>
 		<real>2</real>
 		<key>ZoomValues</key>
@@ -36759,7 +36696,7 @@ Range: A-K}</string>
 			<array>
 				<string>Immutable Data structure</string>
 				<real>2</real>
-				<real>8</real>
+				<real>1</real>
 			</array>
 			<array>
 				<string>Immutable Data structure 2</string>

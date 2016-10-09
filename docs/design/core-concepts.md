@@ -29,7 +29,8 @@ So lets jump in!
 <br>
 
 #### Alice has an immutable data structure
-<img src="media/immutable_ds_1.png" style="width: 910px; max-width: 100%"><br>
+
+<img src="media/immutable_ds_1.png" style="width: 755px; height:441px; max-width: 100%"><br>
 **Fig 1. Basic persistent data-structure**
 <br><br>
 
@@ -38,7 +39,8 @@ So lets jump in!
 With immutable data structures, when an given value is "edited" it's *not* done by mutation, but rather by originating one or more new nodes, and recreating all parent nodes up to the root node. This provides a compact context against which all subsequent queries will experience a consistent worldview.
 
 Alice decides to make an edit. She keeps her root node in a basket, which we're calling the *Query Context.* By carrying around this Query context Alice can have a consistent view of her data. Once the new nodes are created, she swaps out the old root node for the new one in her Query context:
-<img src="media/immutable_ds_2.png" style="width: 910px; max-width: 100%"><br>
+
+<img src="media/immutable_ds_2.png" style="width: 755px; height:441px; max-width: 100%"><br>
 **Fig 2. Immutable edits**
 <br>
 
