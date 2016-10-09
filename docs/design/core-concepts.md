@@ -28,7 +28,7 @@ So lets jump in!
 <br>
 <br>
 
-#### Alice has an immutable data structure
+### Alice has an immutable data structure
 
 <img src="media/immutable_ds_1.png" style="width: 755px; height:441px; max-width: 100%"><br>
 **Fig 1. Basic persistent data structure**
@@ -51,7 +51,7 @@ Ok, so this is all super straightforward [persistent data structures](https://en
 You might have thought Alice was writing out the whole record for **F** as **F<sub>1</sub>** but that's not what's happening in our case. Instead of writing out the whole record, she emits **F<sub>1</sub>**, which is an operation to be applied to, and is causally descendant of **F**. In Unbase, these are called "Memos", and *everything* is made of them.
 
 <img src="media/memos_1.png" style="width: 755px; height:441px; max-width: 100%"><br>
-**FIG 3. Ok, so we're emitting Memos, not "Nodes".**
+**FIG 3. Ok, so we're emitting immutable Memos, not really editing "Nodes".**
 <br>
 
 ----
@@ -64,18 +64,59 @@ As an exercise, lets ask Alice to perform a query of key 11:
 
 ----
 
+<br>
 
-TODO: REMAINING STORY LINE:
+### Concurrency - Bob enters the arena
 
-* concurrency ( introduce Bob )
-* concurrent projection
-* infectious knowledge and then projection
+When others wish to edit key 11, they can go right ahead and emit Memos to that effect. We don't want to wait for coordination. Unbase assumes that all resources are non-exclusive, and conflicts are to be resolved by their datatypes. (Data types and conflict resolution are discussed a bit later)
+
+<img src="media/concurrent_1.png" style="width: 755px; height:441px; max-width: 100%"><br>
+**FIG 5. Concurrency is introduced.**
+<br>
+
+----
+
+When Alice and Bob bump into each other, if they're interested in having a conversation, they may exchange contexts.
+When they each try to query the value of key 11 now, they must ensure that each node is projected while considering all memos in their query context.
+For instance, Alice projects Node A slot 1 as:
+
+**A<sub>1</sub> • A<sub>2</sub> • A<sub>0</sub> = 1:[C<sub>1</sub>, C<sub>2</sub>, C<sub>0</sub>]**  
+<span style="color:#999; font-size: .7em">( slot 0 is omitted for simplicity )</span>
+
+Continuing in this manner, and assuming their contexts are the same, they will each arrive at the same value for key 11.
+
+<img src="media/concurrent_2.png" style="width: 755px; height:441px; max-width: 100%"><br>
+**FIG 6. Projection is performed with using all memos referenced by our context.**
+<br>
+
+In the event that Alice had additional memos added to her context by a third party after the discussion with Bob, her projections would at least be mindful of Bob's context, even if the projected state differed from Bob's.
+
+#### Consistency Model
+
+Once context is exchanged, there is no un-ringing that bell. ALL of that party's subsequent state projections must consider the accumulated context information up to that point. This consistency-model which Unbase implements is referred to as **Infectious Knowledge**. All agents in the system, including clients, web browsers or otherwise, will be empowered by the Unbase system to exercise this manner of "causal fencing". The mechanism may be selectively relaxed when desired, but in all cases, the querying party has the option to project a state which is deterministic on the basis of their starting query context.
+
+<br>
+
+
+### What's the point? What have we gained?
+
+TODO: Discuss briefly why we like consistency, and dislike coordination.
+
+<br>
+
+### OK, so there are a few problems yet
+
+Alright, so there's no free lunch exactly. In setting up the above scenario, we have accumulated a few problems that we have to solve.
+
+TODO:
 * Ok, great, now how do we make that actually work?
-* Why do we care? What have we gained?
-* Now, some problems. No free lunch
 * context expansion
 * write amplification
 * sparse vector clocks
+
+
+### Some of the finer points
+
 * implementation clarification ( What did we win? )
 * Introduce: Model or Subject or Topic ( this is a design goal )
 * Why do I need a consistency model for my index.
