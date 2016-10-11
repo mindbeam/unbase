@@ -93,18 +93,22 @@ In the event that Alice had additional memos added to her context by a third par
 
 #### Consistency Model
 
-Once context is exchanged, there is no un-ringing that bell. ALL of that party's subsequent state projections must consider the accumulated context information up to that point. This consistency-model which Unbase implements is referred to as **Infectious Knowledge**. All agents in the system, including clients, web browsers or otherwise, will be empowered by the Unbase system to exercise this manner of "causal fencing". The mechanism may be selectively relaxed when desired, but in all cases, the querying party has the option to project a state which is deterministic on the basis of their starting query context.
+Once context is exchanged, there is no un-ringing that bell – ALL of that party's subsequent state projections must consider the accumulated context information up to that point. This [consistency-model](https://en.wikipedia.org/wiki/Consistency_model){:target="define"} which Unbase implements is referred to as **[Infectious Knowledge](consistency-model)**. All agents in the system, including clients, web browsers or otherwise, will be empowered by the Unbase system to exercise this manner of "causal fencing". The mechanism may be selectively relaxed when desired, but in all cases, the querying party has the option to project a state which is deterministic on the basis of their starting query context.
 
 <br>
 
 
 ### What's the point? What have we gained?
 
-TODO: Discuss briefly why we like consistency, and dislike coordination.
+Now we have a rudimentary, coordination-free system which is capable of providing deterministic state projections for a given query context.
+A handy benefit of this approach is that the lower-bound latency for state projection of a received context can approach the latency of the sending light-cone itself. This is as good as it gets folks, at least with presently-known physics anyway.
+
+Yes, this lower-bound is a property which we share with many eventual-consistency databases too, *except* that we also get strong consistency in the bargain.
+For a given query context, we get to know at query time if our data is stale or not. Sure, we may have to wait under some circumstances, but we will at least know that the data we're waiting for is probably in our receiving light-cone.
 
 <br>
 
-### OK, so there are a few problems yet
+### OK, so there are a few challenges...
 
 Alright, so there's no free lunch exactly. In setting up the above scenario, we have accumulated a few problems that we have to solve.
 
