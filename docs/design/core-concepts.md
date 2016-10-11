@@ -30,7 +30,7 @@ So lets jump in!
 
 ### Alice has an immutable data structure
 
-<img src="media/immutable_ds_1.png" style="width: 755px; height:441px; max-width: 100%"><br>
+<img src="media/immutable_ds_1.png" style="width: 755px; max-width: 100%"><br>
 **Fig 1. Basic persistent data structure**
 <br><br>
 
@@ -40,7 +40,7 @@ With immutable data structures, when an given value is "edited" it's *not* done 
 
 Now, Alice decides to make an edit. She keeps her root node in a basket of sorts, which we're calling the *Query Context.* By carrying around this Query context Alice can have a consistent view of her data and ensure that no stale data is observed. Once the new nodes are created, she swaps out the old root node for the new one in her Query context:
 
-<img src="media/immutable_ds_2.png" style="width: 755px; height:441px; max-width: 100%"><br>
+<img src="media/immutable_ds_2.png" style="width: 755px; max-width: 100%"><br>
 **Fig 2. Basic Immutable Edit**
 <br>
 
@@ -50,7 +50,7 @@ Ok, so this is all super straightforward [persistent data structures](https://en
 
 You might have thought Alice was writing out the whole record for **F** as **F<sub>1</sub>** but that's not what's happening in our case. Instead of writing out the whole record, she emits **F<sub>1</sub>**, which is an operation to be applied to, and is causally descendant of **F**. In Unbase, these are called "Memos", and *everything* is made of them.
 
-<img src="media/memos_1.png" style="width: 755px; height:441px; max-width: 100%"><br>
+<img src="media/memos_1.png" style="width: 755px; max-width: 100%"><br>
 **FIG 3. Ok, so we're emitting immutable Memos, not really editing "Nodes".**
 <br>
 
@@ -58,7 +58,7 @@ You might have thought Alice was writing out the whole record for **F** as **F<s
 
 As an exercise, lets ask Alice to perform a query of key 11:
 
-<img src="media/memos_2.png" style="width: 755px; height:441px; max-width: 100%"><br>
+<img src="media/memos_2.png" style="width: 755px; max-width: 100%"><br>
 **FIG 4. State is merely an ephemeral projection based on a point of view (query context in our case).**
 <br>
 
@@ -70,7 +70,7 @@ As an exercise, lets ask Alice to perform a query of key 11:
 
 When others wish to edit key 11, they can go right ahead and emit Memos to that effect. We don't want to wait for coordination. Unbase assumes that all resources are non-exclusive, and conflicts are to be resolved by their datatypes. (Data types and conflict resolution are discussed a bit later)
 
-<img src="media/concurrent_1.png" style="width: 755px; height:441px; max-width: 100%"><br>
+<img src="media/concurrent_1.png" style="width: 755px; max-width: 100%"><br>
 **FIG 5. Concurrency is introduced.**
 <br>
 
@@ -85,7 +85,7 @@ For instance, Alice projects Node A slot 1 as:
 
 Continuing in this manner, and assuming their contexts are the same, they will each arrive at the same value for key 11.
 
-<img src="media/concurrent_2.png" style="width: 755px; height:441px; max-width: 100%"><br>
+<img src="media/concurrent_2.png" style="width: 755px; max-width: 100%"><br>
 **FIG 6. Projection is performed with using all memos referenced by our context.**
 <br>
 
