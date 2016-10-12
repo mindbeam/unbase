@@ -15,7 +15,7 @@ See [Design Goals](design/goals) for more details
 * Provide the strongest consistency guarantees possible with zero coordination/waiting
 * Drastically reduce operational latency by focusing on data locality (planet/city/memory-bus/processor-core)
 * Peer-to-peer networking to ensure continued operation during network partitions<sup>[2](#footnote2)</sup>
-* A robust type system <sup>[3](#footnote3)</sup> commonly employed by RDBMS
+* A robust type system <sup>[3](#footnote3)</sup>
 * Tunable durability guarantees
 * Reduced costs associated with hosting infrastructure, and the planning thereof.
 * Common, minimalist library for client and server<sup>[4](#footnote4)</sup> applications
@@ -29,5 +29,5 @@ See [Consistency Model](design/consistency-model) for more details
 
 <a name="footnote1">1</a>: When data storage locality is determined by an algorithm which fails to consider the points in space where the data is originated or observed, the requester must wait longer for its retrieval. See [light cones](https://en.wikipedia.org/wiki/Light_cone)<br>
 <a name="footnote2">2</a>: Using the term "partition" for conversational understanding. Partitions are not actually a thing.<br>
-<a name="footnote3">3</a>: entity-attribute-value, serializations stored as text, etc<br>
+<a name="footnote3">3</a>: A robust system for user-defined datatypes, as well as a robust set of standard CRDTs<br>
 <a name="footnote4">4</a>: We believe there should be no difference in capability between client and server except for capability and policy.

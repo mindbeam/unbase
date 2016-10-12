@@ -66,9 +66,9 @@ As an exercise, lets ask Alice to perform a query of key 11:
 
 <br>
 
-### Concurrency - Bob enters the arena
+### Concurrency - Welcome Bob
 
-When others wish to edit key 11, they can go right ahead and emit Memos to that effect. We don't want to wait for coordination. Unbase assumes that all resources are non-exclusive, and conflicts are to be resolved by their datatypes. (Data types and conflict resolution are discussed a bit later)
+When others wish to edit key 11, they can go right ahead and emit Memos on the basis of what they know already. We don't want to wait for coordination. Unbase assumes that all resources are non-exclusive, and conflicts are to be resolved by their datatypes. (Data types and conflict resolution are discussed a bit later)
 
 <img src="media/concurrent_1.png" style="width: 755px; max-width: 100%"><br>
 **FIG 5. Concurrency is introduced.**
@@ -100,11 +100,14 @@ Once context is exchanged, there is no un-ringing that bell – ALL of that part
 
 ### What's the point? What have we gained?
 
-Now we have a rudimentary, coordination-free system which is capable of providing deterministic state projections for a given query context.
+Now we have a rudimentary coordination-free system which is capable of providing deterministic state projections for a given query context.
 A handy benefit of this approach is that the lower-bound latency for state projection of a received context can approach the latency of the sending light-cone itself. This is as good as it gets folks, at least with presently-known physics anyway.
 
 Yes, this lower-bound is a property which we share with many eventual-consistency databases too, *except* that we also get strong consistency in the bargain.
 For a given query context, we get to know at query time if our data is stale or not. Sure, we may have to wait under some circumstances, but we will at least know that the data we're waiting for is probably in our receiving light-cone.
+
+#### Note on Data Types:
+The above scenarios employ a very basic Last-Write-Wins style approach for simplicity of illustration. Unbase seeks to natively support much more advanced data types than can reasonably be pictured here. See [Data Types](data-types) for more details.
 
 <br>
 
@@ -112,9 +115,20 @@ For a given query context, we get to know at query time if our data is stale or 
 
 Alright, so there's no free lunch exactly. In setting up the above scenario, we have accumulated a few problems that we have to solve.
 
-TODO:
-* Ok, great, now how do we make that actually work?
-* context expansion
+<br>
+
+#### Challenge #1 - Context Expansion
+
+Inserting few Memos in your query context isn't so bad, but what about when we're around for a long time? Or when you invite a few million of your friends to the party? You have a serious context expansion problem.
+
+<img src="media/problem_1.png" style="width: 755px; max-width: 100%"><br>
+**FIG 7. When Query context grows too large, materialize the projection as a series of "key-frame" memos, which supersede their predecessor memos.**
+<br>
+
+You might think to yourself *"hey, this is the same as state! I want my money back!"*
+There's a key difference here though – while the key-frame memos are deterministic based on their precursors, and thus an effective optimization, we're decidedly *not* assuming that these Memos are the last word in state. If new Memos show up which do not descend the key-frame Memos, then we'll throw these key-frames away, and re-project them inclusive of *all* precursors, both old and newly-arrived. That said, it's possible that a precursor could show up from Alpha Centauri (or a long-offline service) and upset a lot of what we thought was stable history. We aim to give system maintainers a choice of if and how to to assimilate this.
+
+
 * write amplification
 * sparse vector clocks
 
