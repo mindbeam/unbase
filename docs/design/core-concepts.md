@@ -111,22 +111,43 @@ The above scenarios employ a very basic Last-Write-Wins style approach for simpl
 
 <br>
 
-### OK, so there are a few challenges...
+### OK, so there are a few problems...
 
 Alright, so there's no free lunch exactly. In setting up the above scenario, we have accumulated a few problems that we have to solve.
 
 <br>
 
-#### Challenge #1 - Context Expansion
+#### Problem #1 - Context Expansion
 
 Inserting few Memos in your query context isn't so bad, but what about when we're around for a long time? Or when you invite a few million of your friends to the party? You have a serious context expansion problem.
 
 <img src="media/problem_1.png" style="width: 755px; max-width: 100%"><br>
 **FIG 7. When Query context grows too large, materialize the projection as a series of "key-frame" memos, which supersede their predecessor memos.**
-<br>
+
+*(TODO: Determine if it's meaningful for the purposes of this document to differentiate between causal compaction and key-frame creation.)*
 
 You might think to yourself *"hey, this is the same as state! I want my money back!"*
 There's a key difference here though – while the key-frame memos are deterministic based on their precursors, and thus an effective optimization, we're decidedly *not* assuming that these Memos are the last word in state. If new Memos show up which do not descend the key-frame Memos, then we'll throw these key-frames away, and re-project them inclusive of *all* precursors, both old and newly-arrived. That said, it's possible that a precursor could show up from Alpha Centauri (or a long-offline service) and upset a lot of what we thought was stable history. We aim to give system maintainers a choice of if and how to to assimilate this.
+
+
+<br>
+
+
+#### Problem #2 – Write Amplification
+
+Now that we have a mechanism to compress our context, we run smack into another problem:
+Write amplification. For every payload-bearing memo we originate (more or less), we have to originate several more in order to work our way to the root node. Then, when our context grows sufficiently to hit our compaction threshold, there's several more memos to generate still. With a small number of writers, this isn't so bad really; but when we're in system with many writers, the overhead of write amplification could easily overwhelm available bandwidth and computational resources.
+
+So how do we solve this?
+
+<img src="media/problem_2.png" style="width: 755px; max-width: 100%"><br>
+**FIG 8. Initially, we skip the creation of parent memos, and simply add new leaf memos to the context.**
+<br>
+
+
+
+#### Challenge #3 – Distributed merging
+
 
 
 * write amplification
