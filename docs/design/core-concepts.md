@@ -8,22 +8,30 @@ seq: 4
 #### Synopsis
 
 A key concept in the design ideology of Unbase is the earnest belief that **State is fundamentally ephemeral.**
-We believe that state may be observed or projected, and *only events* may be stored or transported. We believe this to be true both metaphorically, and literally from a physics standpoint.
+We believe that state may be observed or projected, and *only events* may be stored or transported. We believe this to be true both metaphorically, and literally from a first-principle-physics standpoint.
 
-This may seem silly at first blush, or overly philosophical, but this interpretation allows us to reason about data in a way which confers interesting benefits.
-Chief among them is that when resolving a conflict, we don't have to reconcile multiple states. We may instead reconcile *happenings* or *intentions.*
-With careful optimization, we may also approximate the causal reality of the physical universe with reasonable efficiency.
+This may seem silly at first blush, or perhaps overly philosophical, but this interpretation allows us to reason about data in a way which confers interesting benefits. Chief among them is that when resolving a conflict, we don't have to reconcile multiple states, which would be a lossy proposition. We may instead reconcile *happenings* or *intentions.* With careful optimization, we may also loosely approximate the causal consistency model of the physical universe with reasonable efficiency. The point of this document is to try to explain how that can be done.
 
-Many modern database systems delegate authority to "shards", each purporting to be the referee and arbiter of state for some subset of the data in the system.
-These systems seek to create walled gardens of correctness, while conveniently ignoring the consistency model of the overall system; inclusive of services, clients, etc. We argue that a query result-set, as executed by a traditional RDBMS client is simply a partial replica of the database with a poor consistency model.
+Many modern database systems delegate authority to "shards", each purporting to be the referee and arbiter of state for some subset of the data in the system. These systems seek to create walled gardens of correctness, while conveniently ignoring the consistency model of the overall system; inclusive of services, clients, etc. We argue that a query result-set as provided by a traditional RDBMS is simply a partial replica of the database with a poor consistency model.
 
 In functional programming, it's very common to employ immutable data structures. These data structures are simple, elegant, and efficient, but seldom used in highly concurrent systems – for reasons we'll get into below.
 
 Unbase seeks to expand the system model to encompass those nodes formerly considered to be "clients" as first-class participants in storage and computation, limited only by capacity and policy. An Unbase system may accommodate many thousands, or even millions of instances, while offering a first-principle-physics approach to latency reduction at every scale, and strong causal consistency guarantees. See [Consistency Model](consistency-model) for details.
 
+#### TL;DR:
+
+Unbase employs a distributed DAG of immutable "Memos". This structure is similar to a Merkel tree insofar as each event is identified by the unique hash of its precursors and its content. Notwithstanding a ground-up approach to implementation details, as we see it the key novelties of Unbase are twofold:
+
+1. Sparse vector clocks, AKA "beacons" (similar in principle to interval tree clocks, but with key differences)
+2. A probability-based approach to commutative index merging.
+
+Both of which are key optimizations, necessary to offer the [Infectious Knowledge](consistency-model) consistency model with reasonable efficiency.
+
+Read on for more details.
+
 ----
 
-So lets jump in!
+So, lets start with something easy...
 
 <br>
 <br>
@@ -144,6 +152,7 @@ So how do we solve this?
 **FIG 8. Initially, we skip the creation of parent memos, and simply add new leaf memos to the context.**
 <br>
 
+Hey wait, this just brings us right back to the context expansion problem again.
 
 
 #### Challenge #3 – Distributed merging
