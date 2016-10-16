@@ -38,7 +38,7 @@ So, lets start with something easy...
 
 ### Alice has an immutable data structure
 
-<img src="media/immutable_ds_1.png" style="width: 755px; max-width: 100%"><br>
+<img src="media/immutable_ds_1.png" alt="Basic Immutable Data Structure" style="width: 755px; max-width: 100%"><br>
 **Fig 1. Basic persistent data structure**
 <br><br>
 
@@ -48,7 +48,7 @@ With immutable data structures, when an given value is "edited" it's *not* done 
 
 Now, Alice decides to make an edit. She keeps her root node in a basket of sorts, which we're calling the *Query Context.* By carrying around this Query context Alice can have a consistent view of her data and ensure that no stale data is observed. Once the new nodes are created, she swaps out the old root node for the new one in her Query context:
 
-<img src="media/immutable_ds_2.png" style="width: 755px; max-width: 100%"><br>
+<img src="media/immutable_ds_2.png" alt="Basic Immutable Edit" style="width: 755px; max-width: 100%"><br>
 **Fig 2. Basic Immutable Edit**
 <br>
 
@@ -58,7 +58,7 @@ Ok, so this is all super straightforward [persistent data structures](https://en
 
 You might have thought Alice was writing out the whole record for **F** as **F<sub>1</sub>** but that's not what's happening in our case. Instead of writing out the whole record, she emits **F<sub>1</sub>**, which is an operation to be applied to, and is causally descendant of **F**. In Unbase, these are called "Memos", and *everything* is made of them.
 
-<img src="media/memos_1.png" style="width: 755px; max-width: 100%"><br>
+<img src="media/memos_1.png" alt="Immutable Memos Introduced" style="width: 755px; max-width: 100%"><br>
 **FIG 3. Ok, so we're emitting immutable Memos, not really editing "Nodes".**
 <br>
 

@@ -34,7 +34,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2016-10-14 05:38:32 +0000</string>
+	<string>2016-10-16 22:26:54 +0000</string>
 	<key>Modifier</key>
 	<string>Daniel Norman</string>
 	<key>NotesVisible</key>
@@ -8951,8 +8951,8 @@ Would likely be a 4-tier system. Balanced-tree indexing work may be possible, bu
 					<integer>0</integer>
 					<key>Points</key>
 					<array>
-						<string>{279.875, 38.95414793880753}</string>
-						<string>{259.42367553710938, 34.493507306341904}</string>
+						<string>{279.875, 38.954147938807566}</string>
+						<string>{259.42367553710938, 34.493507306341954}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -9531,12 +9531,14 @@ When performing a query,
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkqCSmZKakoSWlg1O
-						U1N1cGVyU2NyaXB0hpKEhIQITlNO
-						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
-						hIQBcav/hpKykoS0mRymBgAAABQA
-						AAD//kgAZQBsAHYAZQB0AGkAYwBh
-						AKcGmwCbAZsAmwCGhoY=
+						AgGShJiZBJKfkoShoAIAhKSZDJKl
+						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
+						sYaBAAikg83MTD2GkpmSmpKElpYN
+						TlNTdXBlclNjcmlwdIaShISECE5T
+						TnVtYmVyAISEB05TVmFsdWUAlIQB
+						KoSEAXGr/4aSspKEtJkcpgYAAAAU
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQCnBpsAmwGbAJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -9676,7 +9678,9 @@ When performing a query,
 						BAGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGs/4aS
-						nJK8kq+SsIaG
+						nJKEnp8CAIShmQySopKkkqWSppKn
+						kqiSqZKqkquSrJKtkq6GgYAIqIPN
+						zEw/g83MTD2Gkq+SsIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -9826,9 +9830,11 @@ When performing a query,
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KgkrKShLSZHKYGAAAAFAAAAP/+
-						SABlAGwAdgBlAHQAaQBjAGEApwab
-						AJsBmwCbAIaGhg==
+						n5KEoaACAISkmQySpZKnkqiSqZKq
+						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
+						zEw9hpKykoS0mRymBgAAABQAAAD/
+						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
+						mwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -10069,12 +10075,14 @@ When performing a query,
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkqCSmZKakoSWlg1O
-						U1N1cGVyU2NyaXB0hpKEhIQITlNO
-						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
-						hIQBcav/hpKykoS0mRymBgAAABQA
-						AAD//kgAZQBsAHYAZQB0AGkAYwBh
-						AKcGmwCbAZsAmwCGhoY=
+						AgGShJiZBJKfkoShoAIAhKSZDJKl
+						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
+						sYaBAAikg83MTD2GkpmSmpKElpYN
+						TlNTdXBlclNjcmlwdIaShISECE5T
+						TnVtYmVyAISEB05TVmFsdWUAlIQB
+						KoSEAXGr/4aSspKEtJkcpgYAAAAU
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQCnBpsAmwGbAJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -10414,7 +10422,9 @@ When performing a query,
 						BAGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGs/4aS
-						nJK8kq+SsIaG
+						nJKEnp8CAIShmQySopKkkqWSppKn
+						kqiSqZKqkquSrJKtkq6GgYAIqIPN
+						zEw/g83MTD2Gkq+SsIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -10564,9 +10574,11 @@ When performing a query,
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KgkrKShLSZHKYGAAAAFAAAAP/+
-						SABlAGwAdgBlAHQAaQBjAGEApwab
-						AJsBmwCbAIaGhg==
+						n5KEoaACAISkmQySpZKnkqiSqZKq
+						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
+						zEw9hpKykoS0mRymBgAAABQAAAD/
+						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
+						mwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -11463,8 +11475,8 @@ When performing a query,
 					<integer>1</integer>
 					<key>Points</key>
 					<array>
-						<string>{279.875, 38.95414793880753}</string>
-						<string>{259.42367553710938, 34.493507306341904}</string>
+						<string>{279.875, 38.954147938807566}</string>
+						<string>{259.42367553710938, 34.493507306341954}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -11981,12 +11993,14 @@ As more operations are }</string>
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkqCSmZKakoSWlg1O
-						U1N1cGVyU2NyaXB0hpKEhIQITlNO
-						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
-						hIQBcav/hpKykoS0mRymBgAAABQA
-						AAD//kgAZQBsAHYAZQB0AGkAYwBh
-						AKcGmwCbAZsAmwCGhoY=
+						AgGShJiZBJKfkoShoAIAhKSZDJKl
+						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
+						sYaBAAikg83MTD2GkpmSmpKElpYN
+						TlNTdXBlclNjcmlwdIaShISECE5T
+						TnVtYmVyAISEB05TVmFsdWUAlIQB
+						KoSEAXGr/4aSspKEtJkcpgYAAAAU
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQCnBpsAmwGbAJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -12126,7 +12140,9 @@ As more operations are }</string>
 						BAGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGs/4aS
-						nJK8kq+SsIaG
+						nJKEnp8CAIShmQySopKkkqWSppKn
+						kqiSqZKqkquSrJKtkq6GgYAIqIPN
+						zEw/g83MTD2Gkq+SsIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -12276,9 +12292,11 @@ As more operations are }</string>
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KgkrKShLSZHKYGAAAAFAAAAP/+
-						SABlAGwAdgBlAHQAaQBjAGEApwab
-						AJsBmwCbAIaGhg==
+						n5KEoaACAISkmQySpZKnkqiSqZKq
+						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
+						zEw9hpKykoS0mRymBgAAABQAAAD/
+						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
+						mwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -12519,12 +12537,14 @@ As more operations are }</string>
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkqCSmZKakoSWlg1O
-						U1N1cGVyU2NyaXB0hpKEhIQITlNO
-						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
-						hIQBcav/hpKykoS0mRymBgAAABQA
-						AAD//kgAZQBsAHYAZQB0AGkAYwBh
-						AKcGmwCbAZsAmwCGhoY=
+						AgGShJiZBJKfkoShoAIAhKSZDJKl
+						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
+						sYaBAAikg83MTD2GkpmSmpKElpYN
+						TlNTdXBlclNjcmlwdIaShISECE5T
+						TnVtYmVyAISEB05TVmFsdWUAlIQB
+						KoSEAXGr/4aSspKEtJkcpgYAAAAU
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQCnBpsAmwGbAJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -12864,7 +12884,9 @@ As more operations are }</string>
 						BAGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGs/4aS
-						nJK8kq+SsIaG
+						nJKEnp8CAIShmQySopKkkqWSppKn
+						kqiSqZKqkquSrJKtkq6GgYAIqIPN
+						zEw/g83MTD2Gkq+SsIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -13014,9 +13036,11 @@ As more operations are }</string>
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KgkrKShLSZHKYGAAAAFAAAAP/+
-						SABlAGwAdgBlAHQAaQBjAGEApwab
-						AJsBmwCbAIaGhg==
+						n5KEoaACAISkmQySpZKnkqiSqZKq
+						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
+						zEw9hpKykoS0mRymBgAAABQAAAD/
+						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
+						mwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -13104,7 +13128,7 @@ As more operations are }</string>
 		</dict>
 		<dict>
 			<key>ActiveLayerIndex</key>
-			<integer>0</integer>
+			<integer>2</integer>
 			<key>AutoAdjust</key>
 			<true/>
 			<key>BackgroundGraphic</key>
@@ -13548,37 +13572,36 @@ As more operations are }</string>
 						dHJpbmcBlIQBKxVFMAphOkhhbXN0
 						ZXIKYjpGZXJyZXSGhAJpSQEBkoSE
 						hAxOU0RpY3Rpb25hcnkAlIQBaQSS
-						hJaWBk5TS2VyboaShISECE5TTnVt
-						YmVyAISEB05TVmFsdWUAlIQBKoSE
-						AWadAIaShJaWEE5TUGFyYWdyYXBo
-						U3R5bGWGkoSEhBdOU011dGFibGVQ
-						YXJhZ3JhcGhTdHlsZQCEhBBOU1Bh
-						cmFncmFwaFN0eWxlAJSEBENDQFMC
-						AISEhAdOU0FycmF5AJSZDJKEhIQJ
-						TlNUZXh0VGFiAJSEAkNmAByGkoSl
-						owA4hpKEpaMAVIaShKWjAHCGkoSl
-						owCBjACGkoSlowCBqACGkoSlowCB
-						xACGkoSlowCB4ACGkoSlowCB/ACG
-						koSlowCBGAGGkoSlowCBNAGGkoSl
-						owCBUAGGhoEBCIQEWzJmXf+DzcxM
-						PYaShJaWBk5TRm9udIaShISEBk5T
-						Rm9udB6UmSiEBVs0MGNdBgAAACAA
-						AAD//kgAZQBsAHYAZQB0AGkAYwBh
-						AC0ATABpAGcAaAB0AJ0GhAFjAKcB
-						pwCnAIaShJaWB05TQ29sb3KGkoSE
-						hAdOU0NvbG9yAJSnBoQDQEBAhJaW
-						BlN5c3RlbYaElpYJdGV4dENvbG9y
-						hoS2pwOEAmZmAAGGhoaXAgGShJiZ
-						BJKxkoSzmSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AJ0FpwCnAacApwCGkp6S
-						n5KElpYNTlNTdXBlclNjcmlwdIaS
-						hJuchIQBcav/hpKZkoSbnISEAWSs
-						AIaGlwEBlwMSkoSYmQSSnpKEoKAC
-						AISjmQySpJKmkqeSqJKpkqqSq5Ks
-						kq2SrpKvkrCGgQEIpP+DzcxMPYaS
-						tJKEtqcBhARmZmZmAAABAYaSsZKy
-						kpmSv4aG
+						hJaWEE5TUGFyYWdyYXBoU3R5bGWG
+						koSEhBdOU011dGFibGVQYXJhZ3Jh
+						cGhTdHlsZQCEhBBOU1BhcmFncmFw
+						aFN0eWxlAJSEBENDQFMCAISEhAdO
+						U0FycmF5AJSZDJKEhIQJTlNUZXh0
+						VGFiAJSEAkNmAByGkoSgnwA4hpKE
+						oJ8AVIaShKCfAHCGkoSgnwCBjACG
+						koSgnwCBqACGkoSgnwCBxACGkoSg
+						nwCB4ACGkoSgnwCB/ACGkoSgnwCB
+						GAGGkoSgnwCBNAGGkoSgnwCBUAGG
+						hoEBCIQEWzJmXf+DzcxMPYaShJaW
+						B05TQ29sb3KGkoSEhAdOU0NvbG9y
+						AJSEAWMGhANAQECElpYGU3lzdGVt
+						hoSWlgl0ZXh0Q29sb3KGhK6iA4QC
+						ZmYAAYaGkoSWlgZOU0ZvbnSGkoSE
+						hAZOU0ZvbnQelJkohAVbNDBjXQYA
+						AAAgAAAA//5IAGUAbAB2AGUAdABp
+						AGMAYQAtAEwAaQBnAGgAdACEAWYG
+						ogCiAaIAogCGkoSWlgZOU0tlcm6G
+						koSEhAhOU051bWJlcgCEhAdOU1Zh
+						bHVlAJSEASqEhAFkqwCGhpcCAZKE
+						mJkEkpmSmpK1kraShJaWDU5TU3Vw
+						ZXJTY3JpcHSGkoS3qoSEAXGs/4aS
+						spKEtJkopgYAAAAgAAAA//5IAGUA
+						bAB2AGUAdABpAGMAYQAtAEwAaQBn
+						AGgAdACnBaIAogGiAKIAhoaXAQGX
+						AxKShJiZBJKZkoSbnAIAhJ6ZDJKf
+						kqGSopKjkqSSpZKmkqeSqJKpkqqS
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -13588,13 +13611,10 @@ As more operations are }</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 E
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-a:Hamster\
+\cf3 a:Hamster\
 b:Ferret}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -13721,17 +13741,15 @@ b:Ferret}</string>
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -13742,12 +13760,10 @@ b:Ferret}</string>
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 E
 \fs10 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Mouse}</string>
+\f0\b \cf3 \nosupersub b:Mouse}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -13873,18 +13889,16 @@ E
 						/4aSspKEtJkopgYAAAAeAAAA//5I
 						AGUAbAB2AGUAdABpAGMAYQAtAEIA
 						bwBsAGQAAACnBaIAogGiAKIAhpKZ
-						kpqSrJKthpcDAZKEmJkFkruSvJKy
-						koS0mSimBgAAACAAAAD//kgAZQBs
-						AHYAZQB0AGkAYwBhAC0ATABpAGcA
-						aAB0AKcGogCiAaIAogCGkrWShLeq
-						hKenAIaSmZKEm5wCAISemQySn5Kh
-						kqKSo5KkkqWSppKnkqiSqZKqkquG
-						gQEIoP+DzcxMPYaSrJKthpcEA5KE
-						mJkEkpmShJucAgCEnpkMkp+SoZKi
-						kqOSpJKlkqaSp5KokqmSqpKrhoEB
-						CKD/g83MTD2GkqyShK6iAYQEZmZm
-						ZgAAAQGGkrKSs5K1kraGlwUBkoSY
-						mQSSmZKakrWStpK7krySspK+hoY=
+						kpqSrJKthpcDAZKEmJkFkrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhpKZ
+						kpqSrJKthpcEA5KEmJkEkpmShJuc
+						AgCEnpkMkp+SoZKikqOSpJKlkqaS
+						p5KokqmSqpKrhoEBCKD/g83MTD2G
+						krWStpKykrOSrJKErqIBhARmZmZm
+						AAABAYaGlwUBkoSYmQSSmZKakrWS
+						tpK7krySspK+hoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -13895,12 +13909,10 @@ E
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 0:D
+\f0\b \cf3 \nosupersub 0:D
 \fs10 \cf0 \sub 2}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -14027,17 +14039,15 @@ C
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaSmZKakqySrYaXAwGShJiZBZK7
-						krySspKEtJkopgYAAAAgAAAA//5I
-						AGUAbAB2AGUAdABpAGMAYQAtAEwA
-						aQBnAGgAdACnBqIAogGiAKIAhpK1
-						koS3qoSnpwCGkpmShJucAgCEnpkM
-						kp+SoZKikqOSpJKlkqaSp5KokqmS
-						qpKrhoEBCKD/g83MTD2GkqySrYaX
-						BAiShJiZBJKZkoSbnAIAhJ6ZDJKf
-						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpKskoSuogGE
-						BGZmZmYAAAEBhpKykrOStZK2hoY=
+						AIaSmZKakqySrYaXAwGShJiZBZK1
+						kraSu5K8krKShLSZKKYGAAAAIAAA
+						AP/+SABlAGwAdgBlAHQAaQBjAGEA
+						LQBMAGkAZwBoAHQApwaiAKIBogCi
+						AIaSmZKakqySrYaXBAiShJiZBJKZ
+						koSbnAIAhJ6ZDJKfkqGSopKjkqSS
+						pZKmkqeSqJKpkqqSq4aBAQig/4PN
+						zEw9hpK1kraSspKzkqyShK6iAYQE
+						ZmZmZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -14048,12 +14058,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 E
 \fs10 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Gerbil}</string>
+\f0\b \cf3 \nosupersub a:Gerbil}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -14674,19 +14682,19 @@ E
 						Bk5TRm9udB6UmRyEBVsyOGNdBgAA
 						ABQAAAD//kgAZQBsAHYAZQB0AGkA
 						YwBhAIQBZgibAJsBmwCbAIaGlwIB
-						koSYmQOSmZKakpyShJ6fAgCggYAI
-						hARbMmZdgwAAAD+DzcxMPYaSr5Kw
-						hpcDA5KEmJkCkpyShJ6fAgCEoZkM
+						koSYmQOSmZKakpyShJ6fAgCEoZkM
 						kqKSpJKlkqaSp5KokqmSqpKrkqyS
-						rZKuhoEACKODzcxMPYaSr5KwhpcE
-						A5KEmJkDkoSWlg1OU1N1cGVyU2Ny
-						aXB0hpKEhIQITlNOdW1iZXIAhIQH
-						TlNWYWx1ZQCUhAEqhIQBcav/hpKc
-						koSenwIAhKGZDJKikqSSpZKmkqeS
-						qJKpkqqSq5Kskq2SroaBAAijg83M
-						TD2Gkq+ShLGZHKUGAAAAFAAAAP/+
-						SABlAGwAdgBlAHQAaQBjAGEApgab
-						AJsBmwCbAIaGlwMBlwQBlwMChg==
+						rZKuhoGACIQEWzJmXYMAAAA/g83M
+						TD2Gkq+SsIaXAwOShJiZApKckp2S
+						r5KwhpcEA5KEmJkDkoSWlg1OU1N1
+						cGVyU2NyaXB0hpKEhIQITlNOdW1i
+						ZXIAhIQHTlNWYWx1ZQCUhAEqhIQB
+						cav/hpKckoSenwIAhKGZDJKikqSS
+						pZKmkqeSqJKpkqqSq5Kskq2SroaB
+						AAijg83MTD2Gkq+ShLGZHKUGAAAA
+						FAAAAP/+SABlAGwAdgBlAHQAaQBj
+						AGEApgabAJsBmwCbAIaGlwMBlwQB
+						lwMChg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -14919,18 +14927,16 @@ E
 						AgGShJiZApKckoSenwIAhKGZDJKi
 						kqSSpZKmkqeSqJKpkqqSq5Kskq2S
 						roaBgAiEBFsyZl2DAAAAP4PNzEw9
-						hpKvkrCGlwMDkoSYmQKSnJKEnp8C
-						AIShmQySopKkkqWSppKnkqiSqZKq
-						kquSrJKtkq6GgQAIo4PNzEw9hpKv
-						krCGlwQDkoSYmQOShJaWDU5TU3Vw
-						ZXJTY3JpcHSGkoSEhAhOU051bWJl
-						cgCEhAdOU1ZhbHVlAJSEASqEhAFx
-						q/+GkpyShJ6fAgCEoZkMkqKSpJKl
-						kqaSp5KokqmSqpKrkqySrZKuhoEA
-						CKODzcxMPYaSr5KEsZkcpQYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCmBpsAmwGbAJsAhoaXAwGXBAGX
-						AwKG
+						hpKvkrCGlwMDkoSYmQKSnJKdkq+S
+						sIaXBAOShJiZA5KElpYNTlNTdXBl
+						clNjcmlwdIaShISECE5TTnVtYmVy
+						AISEB05TVmFsdWUAlIQBKoSEAXGr
+						/4aSnJKEnp8CAIShmQySopKkkqWS
+						ppKnkqiSqZKqkquSrJKtkq6GgQAI
+						o4PNzEw9hpKvkoSxmRylBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKYGmwCbAZsAmwCGhpcDAZcEAZcD
+						AoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -15143,17 +15149,15 @@ E
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -15164,12 +15168,10 @@ E
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Panda}</string>
+\f0\b \cf3 \nosupersub a:Panda}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -15605,19 +15607,17 @@ Step 1 - Don't be so chatty}</string>
 						ogCiAIaShJaWBk5TS2VyboaShISE
 						CE5TTnVtYmVyAISEB05TVmFsdWUA
 						lIQBKoSEAWSrAIaGlwIBkoSYmQSS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBaIAogGiAKIAhpKZkpqS
-						hJaWDU5TU3VwZXJTY3JpcHSGkoS3
-						qoSEAXGs/4aStZK2hpcBAZcDApKE
+						mZKakrWStpKElpYNTlNTdXBlclNj
+						cmlwdIaShLeqhIQBcaz/hpKykoS0
+						mSimBgAAACAAAAD//kgAZQBsAHYA
+						ZQB0AGkAYwBhAC0ATABpAGcAaAB0
+						AKcFogCiAaIAogCGhpcBAZcDApKE
 						mJkEkpmSmpK1kraSspKzkqyShK6i
 						AYQEZmZmZgAAAQGGhpcEBpKEmJkE
-						kpmShJucAgCEnpkMkp+SoZKikqOS
-						pJKlkqaSp5KokqmSqpKrhoEBCKD9
-						g83MTD2GkqySwJKykoS0mRyEBVsy
-						OGNdBgAAABQAAAD//kgAZQBsAHYA
-						ZQB0AGkAYwBhAKcGogCiAaIAogCG
-						krWShLeqhKenAIaGlwMDlwQDhg==
+						kpmSmpK1kraSspKEtJkchAVbMjhj
+						XQYAAAAUAAAA//5IAGUAbAB2AGUA
+						dABpAGMAYQCnBqIAogGiAKIAhpKs
+						ksCGlwMDlwQDhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -15630,13 +15630,10 @@ F
 \fs10 \cf0 \sub 0
 \fs12 \cf2 \nosupersub \
 \cf3 a:
-\f1 \expnd0\expndtw0\kerning0
-Turtle
-\f0 \expnd0\expndtw0\kerning0
-\
+\f1 Turtle
+\f0 \
 b:
-\f1 \expnd0\expndtw0\kerning0
-Dog}</string>
+\f1 Dog}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -15736,41 +15733,41 @@ Dog}</string>
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKw1DMAowOkUwLCAx
 						OkYwhoQCaUkBAZKEhIQMTlNEaWN0
-						aW9uYXJ5AJSEAWkEkoSWlgZOU0tl
-						cm6GkoSEhAhOU051bWJlcgCEhAdO
-						U1ZhbHVlAJSEASqEhAFmnQCGkoSW
-						lhBOU1BhcmFncmFwaFN0eWxlhpKE
-						hIQXTlNNdXRhYmxlUGFyYWdyYXBo
-						U3R5bGUAhIQQTlNQYXJhZ3JhcGhT
-						dHlsZQCUhARDQ0BTAgCEhIQHTlNB
-						cnJheQCUmQyShISECU5TVGV4dFRh
-						YgCUhAJDZgAchpKEpaMAOIaShKWj
-						AFSGkoSlowBwhpKEpaMAgYwAhpKE
-						paMAgagAhpKEpaMAgcQAhpKEpaMA
-						geAAhpKEpaMAgfwAhpKEpaMAgRgB
-						hpKEpaMAgTQBhpKEpaMAgVABhoaB
-						AQiEBFsyZl3/g83MTD2GkoSWlgZO
-						U0ZvbnSGkoSEhAZOU0ZvbnQelJko
-						hAVbNDBjXQYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACdBoQBYwCnAacApwCGkoSW
-						lgdOU0NvbG9yhpKEhIQHTlNDb2xv
-						cgCUpwaEA0BAQISWlgZTeXN0ZW2G
-						hJaWCXRleHRDb2xvcoaEtqcDhAJm
-						ZgABhoaGlwIBkoSYmQSSsZKEs5ko
-						pgYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BacApwGnAKcAhpKekp+ShJaWDU5T
-						U3VwZXJTY3JpcHSGkoSbnISEAXGr
-						/4aSmZKEm5yEhAFkrACGhpcBAZcD
-						A5KEmJkEkp6ShKCgAgCEo5kMkqSS
-						ppKnkqiSqZKqkquSrJKtkq6Sr5Kw
-						hoEBCKT/g83MTD2GkrSShLanAYQE
-						ZmZmZgAAAQGGkrGSspKZkr+GlwQB
-						koSYmQWSvJK9kpmSv5KxkruSnpKE
-						oKACAISjmQySpJKmkqeSqJKpkqqS
-						q5Kskq2SrpKvkrCGgQEIpP+DzcxM
-						PYaStJLEhpcDBZcEAYY=
+						aW9uYXJ5AJSEAWkEkoSWlhBOU1Bh
+						cmFncmFwaFN0eWxlhpKEhIQXTlNN
+						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
+						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
+						hARDQ0BTAgCEhIQHTlNBcnJheQCU
+						mQyShISECU5TVGV4dFRhYgCUhAJD
+						ZgAchpKEoJ8AOIaShKCfAFSGkoSg
+						nwBwhpKEoJ8AgYwAhpKEoJ8AgagA
+						hpKEoJ8AgcQAhpKEoJ8AgeAAhpKE
+						oJ8AgfwAhpKEoJ8AgRgBhpKEoJ8A
+						gTQBhpKEoJ8AgVABhoaBAQiEBFsy
+						Zl3/g83MTD2GkoSWlgdOU0NvbG9y
+						hpKEhIQHTlNDb2xvcgCUhAFjBoQD
+						QEBAhJaWBlN5c3RlbYaElpYJdGV4
+						dENvbG9yhoSuogOEAmZmAAGGhpKE
+						lpYGTlNGb250hpKEhIQGTlNGb250
+						HpSZKIQFWzQwY10GAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQAhAFmBqIAogGiAKIA
+						hpKElpYGTlNLZXJuhpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBZKsAhoaXAgGShJiZBJKZkpqS
+						tZK2koSWlg1OU1N1cGVyU2NyaXB0
+						hpKEt6qEhAFxrP+GkrKShLSZKKYG
+						AAAAIAAAAP/+SABlAGwAdgBlAHQA
+						aQBjAGEALQBMAGkAZwBoAHQApwWi
+						AKIBogCiAIaGlwEBlwMDkoSYmQSS
+						mZKEm5wCAISemQySn5KhkqKSo5Kk
+						kqWSppKnkqiSqZKqkquGgQEIoP+D
+						zcxMPYaStZK2krKSs5KskoSuogGE
+						BGZmZmYAAAEBhoaXBAGShJiZBZK7
+						krySspK+krWStpKZkoSbnAIAhJ6Z
+						DJKfkqGSopKjkqSSpZKmkqeSqJKp
+						kqqSq4aBAQig/4PNzEw9hpKsksKG
+						lwMFlwQBhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -15780,13 +15777,10 @@ Dog}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:E
+\cf3 0:E
 \fs10 \sub 0
 \fs12 \nosupersub , 1:F
 \fs10 \sub 0}</string>
@@ -15892,13 +15886,10 @@ C
 
 \f0\fs12 \cf0 \expnd0\expndtw0\kerning0
 A
-\fs10 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \sub 0
+\fs12 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-0:B
+\cf2 0:B
 \fs10 \sub 0
 \fs12 \nosupersub , 1:C
 \fs10 \sub 0}</string>
@@ -16027,17 +16018,15 @@ A
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -16048,12 +16037,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Cat}</string>
+\f0\b \cf3 \nosupersub b:Cat}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -17135,19 +17122,19 @@ F
 						Bk5TRm9udB6UmRyEBVsyOGNdBgAA
 						ABQAAAD//kgAZQBsAHYAZQB0AGkA
 						YwBhAIQBZgibAJsBmwCbAIaGlwIB
-						koSYmQOSmZKakpyShJ6fAgCggYAI
-						hARbMmZdgwAAAD+DzcxMPYaSr5Kw
-						hpcDA5KEmJkCkpyShJ6fAgCEoZkM
+						koSYmQOSmZKakpyShJ6fAgCEoZkM
 						kqKSpJKlkqaSp5KokqmSqpKrkqyS
-						rZKuhoEACKODzcxMPYaSr5KwhpcE
-						A5KEmJkDkoSWlg1OU1N1cGVyU2Ny
-						aXB0hpKEhIQITlNOdW1iZXIAhIQH
-						TlNWYWx1ZQCUhAEqhIQBcav/hpKc
-						koSenwIAhKGZDJKikqSSpZKmkqeS
-						qJKpkqqSq5Kskq2SroaBAAijg83M
-						TD2Gkq+ShLGZHKUGAAAAFAAAAP/+
-						SABlAGwAdgBlAHQAaQBjAGEApgab
-						AJsBmwCbAIaGlwMBlwQBlwMChg==
+						rZKuhoGACIQEWzJmXYMAAAA/g83M
+						TD2Gkq+SsIaXAwOShJiZApKckp2S
+						r5KwhpcEA5KEmJkDkoSWlg1OU1N1
+						cGVyU2NyaXB0hpKEhIQITlNOdW1i
+						ZXIAhIQHTlNWYWx1ZQCUhAEqhIQB
+						cav/hpKckoSenwIAhKGZDJKikqSS
+						pZKmkqeSqJKpkqqSq5Kskq2SroaB
+						AAijg83MTD2Gkq+ShLGZHKUGAAAA
+						FAAAAP/+SABlAGwAdgBlAHQAaQBj
+						AGEApgabAJsBmwCbAIaGlwMBlwQB
+						lwMChg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -17380,18 +17367,16 @@ F
 						AgGShJiZApKckoSenwIAhKGZDJKi
 						kqSSpZKmkqeSqJKpkqqSq5Kskq2S
 						roaBgAiEBFsyZl2DAAAAP4PNzEw9
-						hpKvkrCGlwMDkoSYmQKSnJKEnp8C
-						AIShmQySopKkkqWSppKnkqiSqZKq
-						kquSrJKtkq6GgQAIo4PNzEw9hpKv
-						krCGlwQDkoSYmQOShJaWDU5TU3Vw
-						ZXJTY3JpcHSGkoSEhAhOU051bWJl
-						cgCEhAdOU1ZhbHVlAJSEASqEhAFx
-						q/+GkpyShJ6fAgCEoZkMkqKSpJKl
-						kqaSp5KokqmSqpKrkqySrZKuhoEA
-						CKODzcxMPYaSr5KEsZkcpQYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCmBpsAmwGbAJsAhoaXAwGXBAGX
-						AwKG
+						hpKvkrCGlwMDkoSYmQKSnJKdkq+S
+						sIaXBAOShJiZA5KElpYNTlNTdXBl
+						clNjcmlwdIaShISECE5TTnVtYmVy
+						AISEB05TVmFsdWUAlIQBKoSEAXGr
+						/4aSnJKEnp8CAIShmQySopKkkqWS
+						ppKnkqiSqZKqkquSrJKtkq6GgQAI
+						o4PNzEw9hpKvkoSxmRylBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKYGmwCbAZsAmwCGhpcDAZcEAZcD
+						AoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -17604,17 +17589,15 @@ F
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -17625,12 +17608,10 @@ F
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Panda}</string>
+\f0\b \cf3 \nosupersub a:Panda}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -17748,8 +17729,7 @@ F
 
 \f0\fs16 \cf0 Avoiding Write Amplification
 \i \
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
-\cf0 Step 1 - Don't be so chatty}</string>
+Step 1 - Don't be so chatty}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -18067,19 +18047,17 @@ F
 						ogCiAIaShJaWBk5TS2VyboaShISE
 						CE5TTnVtYmVyAISEB05TVmFsdWUA
 						lIQBKoSEAWSrAIaGlwIBkoSYmQSS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBaIAogGiAKIAhpKZkpqS
-						hJaWDU5TU3VwZXJTY3JpcHSGkoS3
-						qoSEAXGs/4aStZK2hpcBAZcDApKE
+						mZKakrWStpKElpYNTlNTdXBlclNj
+						cmlwdIaShLeqhIQBcaz/hpKykoS0
+						mSimBgAAACAAAAD//kgAZQBsAHYA
+						ZQB0AGkAYwBhAC0ATABpAGcAaAB0
+						AKcFogCiAaIAogCGhpcBAZcDApKE
 						mJkEkpmSmpK1kraSspKzkqyShK6i
 						AYQEZmZmZgAAAQGGhpcEBpKEmJkE
-						kpmShJucAgCEnpkMkp+SoZKikqOS
-						pJKlkqaSp5KokqmSqpKrhoEBCKD9
-						g83MTD2GkqySwJKykoS0mRyEBVsy
-						OGNdBgAAABQAAAD//kgAZQBsAHYA
-						ZQB0AGkAYwBhAKcGogCiAaIAogCG
-						krWShLeqhKenAIaGlwMDlwQDhg==
+						kpmSmpK1kraSspKEtJkchAVbMjhj
+						XQYAAAAUAAAA//5IAGUAbAB2AGUA
+						dABpAGMAYQCnBqIAogGiAKIAhpKs
+						ksCGlwMDlwQDhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -18092,13 +18070,10 @@ F
 \fs10 \cf0 \sub 0
 \fs12 \cf2 \nosupersub \
 \cf3 a:
-\f1 \expnd0\expndtw0\kerning0
-Turtle
-\f0 \expnd0\expndtw0\kerning0
-\
+\f1 Turtle
+\f0 \
 b:
-\f1 \expnd0\expndtw0\kerning0
-Dog}</string>
+\f1 Dog}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -18198,41 +18173,41 @@ Dog}</string>
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKw1DMAowOkUwLCAx
 						OkYwhoQCaUkBAZKEhIQMTlNEaWN0
-						aW9uYXJ5AJSEAWkEkoSWlgZOU0tl
-						cm6GkoSEhAhOU051bWJlcgCEhAdO
-						U1ZhbHVlAJSEASqEhAFmnQCGkoSW
-						lhBOU1BhcmFncmFwaFN0eWxlhpKE
-						hIQXTlNNdXRhYmxlUGFyYWdyYXBo
-						U3R5bGUAhIQQTlNQYXJhZ3JhcGhT
-						dHlsZQCUhARDQ0BTAgCEhIQHTlNB
-						cnJheQCUmQyShISECU5TVGV4dFRh
-						YgCUhAJDZgAchpKEpaMAOIaShKWj
-						AFSGkoSlowBwhpKEpaMAgYwAhpKE
-						paMAgagAhpKEpaMAgcQAhpKEpaMA
-						geAAhpKEpaMAgfwAhpKEpaMAgRgB
-						hpKEpaMAgTQBhpKEpaMAgVABhoaB
-						AQiEBFsyZl3/g83MTD2GkoSWlgZO
-						U0ZvbnSGkoSEhAZOU0ZvbnQelJko
-						hAVbNDBjXQYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACdBoQBYwCnAacApwCGkoSW
-						lgdOU0NvbG9yhpKEhIQHTlNDb2xv
-						cgCUpwaEA0BAQISWlgZTeXN0ZW2G
-						hJaWCXRleHRDb2xvcoaEtqcDhAJm
-						ZgABhoaGlwIBkoSYmQSSsZKEs5ko
-						pgYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BacApwGnAKcAhpKekp+ShJaWDU5T
-						U3VwZXJTY3JpcHSGkoSbnISEAXGr
-						/4aSmZKEm5yEhAFkrACGhpcBAZcD
-						A5KEmJkEkp6ShKCgAgCEo5kMkqSS
-						ppKnkqiSqZKqkquSrJKtkq6Sr5Kw
-						hoEBCKT/g83MTD2GkrSShLanAYQE
-						ZmZmZgAAAQGGkrGSspKZkr+GlwQB
-						koSYmQWSvJK9kpmSv5KxkruSnpKE
-						oKACAISjmQySpJKmkqeSqJKpkqqS
-						q5Kskq2SrpKvkrCGgQEIpP+DzcxM
-						PYaStJLEhpcDBZcEAYY=
+						aW9uYXJ5AJSEAWkEkoSWlhBOU1Bh
+						cmFncmFwaFN0eWxlhpKEhIQXTlNN
+						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
+						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
+						hARDQ0BTAgCEhIQHTlNBcnJheQCU
+						mQyShISECU5TVGV4dFRhYgCUhAJD
+						ZgAchpKEoJ8AOIaShKCfAFSGkoSg
+						nwBwhpKEoJ8AgYwAhpKEoJ8AgagA
+						hpKEoJ8AgcQAhpKEoJ8AgeAAhpKE
+						oJ8AgfwAhpKEoJ8AgRgBhpKEoJ8A
+						gTQBhpKEoJ8AgVABhoaBAQiEBFsy
+						Zl3/g83MTD2GkoSWlgdOU0NvbG9y
+						hpKEhIQHTlNDb2xvcgCUhAFjBoQD
+						QEBAhJaWBlN5c3RlbYaElpYJdGV4
+						dENvbG9yhoSuogOEAmZmAAGGhpKE
+						lpYGTlNGb250hpKEhIQGTlNGb250
+						HpSZKIQFWzQwY10GAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQAhAFmBqIAogGiAKIA
+						hpKElpYGTlNLZXJuhpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBZKsAhoaXAgGShJiZBJKZkpqS
+						tZK2koSWlg1OU1N1cGVyU2NyaXB0
+						hpKEt6qEhAFxrP+GkrKShLSZKKYG
+						AAAAIAAAAP/+SABlAGwAdgBlAHQA
+						aQBjAGEALQBMAGkAZwBoAHQApwWi
+						AKIBogCiAIaGlwEBlwMDkoSYmQSS
+						mZKEm5wCAISemQySn5KhkqKSo5Kk
+						kqWSppKnkqiSqZKqkquGgQEIoP+D
+						zcxMPYaStZK2krKSs5KskoSuogGE
+						BGZmZmYAAAEBhoaXBAGShJiZBZK7
+						krySspK+krWStpKZkoSbnAIAhJ6Z
+						DJKfkqGSopKjkqSSpZKmkqeSqJKp
+						kqqSq4aBAQig/4PNzEw9hpKsksKG
+						lwMFlwQBhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -18242,13 +18217,10 @@ Dog}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:E
+\cf3 0:E
 \fs10 \sub 0
 \fs12 \nosupersub , 1:F
 \fs10 \sub 0}</string>
@@ -18354,13 +18326,10 @@ C
 
 \f0\fs12 \cf0 \expnd0\expndtw0\kerning0
 A
-\fs10 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \sub 0
+\fs12 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-0:B
+\cf2 0:B
 \fs10 \sub 0
 \fs12 \nosupersub , 1:C
 \fs10 \sub 0}</string>
@@ -18489,17 +18458,15 @@ A
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -18510,12 +18477,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Cat}</string>
+\f0\b \cf3 \nosupersub b:Cat}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -19406,22 +19371,20 @@ F
 						b250hpKEhIQGTlNGb250HpSZHIQF
 						WzI4Y10GAAAAFAAAAP/+SABlAGwA
 						dgBlAHQAaQBjAGEAhAFmCJsAmwGb
-						AJsAhoaXAgOShJiZA5KZkoSbmwGE
-						BGZmZmYAAACDh8wRPoaSnJKEnp8C
-						AIShmQySopKkkqWSppKnkqiSqZKq
-						kquSrJKtkq6GgQAIo4PNzEw9hpKv
-						krCGlwMBkoSYmQSSr5KEsZkcpQYA
-						AAAUAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQCmBpsAmwGbAJsAhpKckoSe
-						nwIAhKGZDJKikqSSpZKmkqeSqJKp
-						kqqSq5Kskq2SroaBAAijg83MTD2G
-						koSWlg1OU1N1cGVyU2NyaXB0hpKE
-						hIQITlNOdW1iZXIAhIQHTlNWYWx1
-						ZQCUhAEqhIQBcav/hpKZkrOGlwID
-						lwMBlwIDlwMBlwIDlwMBlwIDlwMB
-						lwIDlwMBlwIHlwQDkoSYmQKSnJK0
-						kq+SsIaXBQKShJiZA5K6kruSnJK4
-						kq+St4aXBAKG
+						AJsAhoaXAgOShJiZA5KZkoSbmwOc
+						AIOHzBE+hpKckp2Sr5KwhpcDAZKE
+						mJkEkpyShJ6fAgCEoZkMkqKSpJKl
+						kqaSp5KokqmSqpKrkqySrZKuhoEA
+						CKODzcxMPYaSr5KEsZkcpQYAAAAU
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQCmBpsAmwGbAJsAhpKElpYNTlNT
+						dXBlclNjcmlwdIaShISECE5TTnVt
+						YmVyAISEB05TVmFsdWUAlIQBKoSE
+						AXGq/4aSmZKEm5sDnACDh8wRPoaG
+						lwIDlwMBlwIDlwMBlwIDlwMBlwID
+						lwMBlwIDlwMBlwIHlwQDkoSYmQKS
+						nJKdkq+SsIaXBQKShJiZA5K4krmS
+						nJK1kq+St4aXBAKG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -19430,20 +19393,19 @@ F
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
 
 \f0\fs16 \cf2 Alice's Query Context\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
 \cf3 \{ A
-\fs12 \sub 1
-\fs16 \nosupersub , A
-\fs12 \sub 2
-\fs16 \nosupersub , A
-\fs12 \sub 3
-\fs16 \nosupersub , A
-\fs12 \sub 4
-\fs16 \nosupersub , A
-\fs12 \sub 5
-\fs16 \nosupersub , A
-\fs12 \sub 6
-\fs16 \nosupersub , ...\}\
+\fs12 \cf3 \sub 1
+\fs16 \cf3 \nosupersub , A
+\fs12 \cf3 \sub 2
+\fs16 \cf3 \nosupersub , A
+\fs12 \cf3 \sub 3
+\fs16 \cf3 \nosupersub , A
+\fs12 \cf3 \sub 4
+\fs16 \cf3 \nosupersub , A
+\fs12 \cf3 \sub 5
+\fs16 \cf3 \nosupersub , A
+\fs12 \cf3 \sub 6
+\fs16 \cf3 \nosupersub , ...\}\
 \cf0 \{ A
 \fs12 \sub 10
 \fs16 \nosupersub  \}}</string>
@@ -19651,8 +19613,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -19799,20 +19761,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						kr6StZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykr6StZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -19823,12 +19783,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 6
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F
+\f0\b \cf3 \nosupersub 1:F
 \fs10 \sub 6}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -19956,17 +19914,14 @@ C
 						AAAA//5IAGUAbAB2AGUAdABpAGMA
 						YQAtAEIAbwBsAGQAAACnBaIAogGi
 						AKIAhpKZkpqSrJKthpcDAZKEmJkF
-						kruSvJKykoS0mSimBgAAACAAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAC0A
-						TABpAGcAaAB0AKcGogCiAaIAogCG
-						krWShLeqhKenAIaSmZKEm5wCAISe
-						mQySn5KhkqKSo5KkkqWSppKnkqiS
-						qZKqkquGgQEIoP+DzcxMPYaSrJKt
-						hpcECpKEmJkEkpmShJucAgCEnpkM
-						kp+SoZKikqOSpJKlkqaSp5KokqmS
-						qpKrhoEBCKD/g83MTD2GkqyShK6i
-						AYQEZmZmZgAAAQGGkrKSs5K1kraG
-						hg==
+						krWStpK7krySspKEtJkopgYAAAAg
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQAtAEwAaQBnAGgAdACnBqIAogGi
+						AKIAhpKZkpqSrJKthpcECpKEmJkE
+						kpmShJucAgCEnpkMkp+SoZKikqOS
+						pJKlkqaSp5KokqmSqpKrhoEBCKD/
+						g83MTD2GkrWStpKykrOSrJKErqIB
+						hARmZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -19977,12 +19932,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 6
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Squirrel}</string>
+\f0\b \cf3 \nosupersub a:Squirrel}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -20114,8 +20067,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -20262,20 +20215,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						kr6StZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykr6StZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -20286,12 +20237,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 4
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F
+\f0\b \cf3 \nosupersub 1:F
 \fs10 \sub 4}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -20418,17 +20367,15 @@ C
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -20439,12 +20386,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 4
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Moose}</string>
+\f0\b \cf3 \nosupersub a:Moose}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -20576,8 +20521,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -20724,20 +20669,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						kr6StZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykr6StZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -20748,12 +20691,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 3
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F
+\f0\b \cf3 \nosupersub 1:F
 \fs10 \sub 3}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -20880,17 +20821,15 @@ C
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -20901,12 +20840,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 3
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Llama}</string>
+\f0\b \cf3 \nosupersub b:Llama}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -21038,8 +20975,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -21186,20 +21123,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						kr6StZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykr6StZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -21210,12 +21145,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 5
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F
+\f0\b \cf3 \nosupersub 1:F
 \fs10 \sub 5}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -21342,17 +21275,15 @@ C
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -21363,12 +21294,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 5
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Emu}</string>
+\f0\b \cf3 \nosupersub b:Emu}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -21500,8 +21429,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -21648,20 +21577,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						krOStZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykrOStZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -21672,12 +21599,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F\sub 2}</string>
+\f0\b \cf3 \nosupersub 1:F\sub 2}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -21803,17 +21728,15 @@ C
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -21824,12 +21747,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Panda}</string>
+\f0\b \cf3 \nosupersub a:Panda}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -21951,19 +21872,17 @@ F
 						ogCiAIaShJaWBk5TS2VyboaShISE
 						CE5TTnVtYmVyAISEB05TVmFsdWUA
 						lIQBKoSEAWSrAIaGlwIBkoSYmQSS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBaIAogGiAKIAhpKZkpqS
-						hJaWDU5TU3VwZXJTY3JpcHSGkoS3
-						qoSEAXGs/4aStZK2hpcBAZcDApKE
+						mZKakrWStpKElpYNTlNTdXBlclNj
+						cmlwdIaShLeqhIQBcaz/hpKykoS0
+						mSimBgAAACAAAAD//kgAZQBsAHYA
+						ZQB0AGkAYwBhAC0ATABpAGcAaAB0
+						AKcFogCiAaIAogCGhpcBAZcDApKE
 						mJkEkpmSmpK1kraSspKzkqyShK6i
 						AYQEZmZmZgAAAQGGhpcEBpKEmJkE
-						kpmShJucAgCEnpkMkp+SoZKikqOS
-						pJKlkqaSp5KokqmSqpKrhoEBCKD9
-						g83MTD2GkqySwJKykoS0mRyEBVsy
-						OGNdBgAAABQAAAD//kgAZQBsAHYA
-						ZQB0AGkAYwBhAKcGogCiAaIAogCG
-						krWShLeqhKenAIaGlwMDlwQDhg==
+						kpmSmpK1kraSspKEtJkchAVbMjhj
+						XQYAAAAUAAAA//5IAGUAbAB2AGUA
+						dABpAGMAYQCnBqIAogGiAKIAhpKs
+						ksCGlwMDlwQDhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -21976,13 +21895,10 @@ F
 \fs10 \cf0 \sub 0
 \fs12 \cf2 \nosupersub \
 \cf3 a:
-\f1 \expnd0\expndtw0\kerning0
-Turtle
-\f0 \expnd0\expndtw0\kerning0
-\
+\f1 Turtle
+\f0 \
 b:
-\f1 \expnd0\expndtw0\kerning0
-Dog}</string>
+\f1 Dog}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -22082,41 +21998,41 @@ Dog}</string>
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKw1DMAowOkUwLCAx
 						OkYwhoQCaUkBAZKEhIQMTlNEaWN0
-						aW9uYXJ5AJSEAWkEkoSWlgZOU0tl
-						cm6GkoSEhAhOU051bWJlcgCEhAdO
-						U1ZhbHVlAJSEASqEhAFmnQCGkoSW
-						lhBOU1BhcmFncmFwaFN0eWxlhpKE
-						hIQXTlNNdXRhYmxlUGFyYWdyYXBo
-						U3R5bGUAhIQQTlNQYXJhZ3JhcGhT
-						dHlsZQCUhARDQ0BTAgCEhIQHTlNB
-						cnJheQCUmQyShISECU5TVGV4dFRh
-						YgCUhAJDZgAchpKEpaMAOIaShKWj
-						AFSGkoSlowBwhpKEpaMAgYwAhpKE
-						paMAgagAhpKEpaMAgcQAhpKEpaMA
-						geAAhpKEpaMAgfwAhpKEpaMAgRgB
-						hpKEpaMAgTQBhpKEpaMAgVABhoaB
-						AQiEBFsyZl3/g83MTD2GkoSWlgZO
-						U0ZvbnSGkoSEhAZOU0ZvbnQelJko
-						hAVbNDBjXQYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACdBoQBYwCnAacApwCGkoSW
-						lgdOU0NvbG9yhpKEhIQHTlNDb2xv
-						cgCUpwaEA0BAQISWlgZTeXN0ZW2G
-						hJaWCXRleHRDb2xvcoaEtqcDhAJm
-						ZgABhoaGlwIBkoSYmQSSsZKEs5ko
-						pgYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BacApwGnAKcAhpKekp+ShJaWDU5T
-						U3VwZXJTY3JpcHSGkoSbnISEAXGr
-						/4aSmZKEm5yEhAFkrACGhpcBAZcD
-						A5KEmJkEkp6ShKCgAgCEo5kMkqSS
-						ppKnkqiSqZKqkquSrJKtkq6Sr5Kw
-						hoEBCKT/g83MTD2GkrSShLanAYQE
-						ZmZmZgAAAQGGkrGSspKZkr+GlwQB
-						koSYmQWSvJK9kpmSv5KxkruSnpKE
-						oKACAISjmQySpJKmkqeSqJKpkqqS
-						q5Kskq2SrpKvkrCGgQEIpP+DzcxM
-						PYaStJLEhpcDBZcEAYY=
+						aW9uYXJ5AJSEAWkEkoSWlhBOU1Bh
+						cmFncmFwaFN0eWxlhpKEhIQXTlNN
+						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
+						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
+						hARDQ0BTAgCEhIQHTlNBcnJheQCU
+						mQyShISECU5TVGV4dFRhYgCUhAJD
+						ZgAchpKEoJ8AOIaShKCfAFSGkoSg
+						nwBwhpKEoJ8AgYwAhpKEoJ8AgagA
+						hpKEoJ8AgcQAhpKEoJ8AgeAAhpKE
+						oJ8AgfwAhpKEoJ8AgRgBhpKEoJ8A
+						gTQBhpKEoJ8AgVABhoaBAQiEBFsy
+						Zl3/g83MTD2GkoSWlgdOU0NvbG9y
+						hpKEhIQHTlNDb2xvcgCUhAFjBoQD
+						QEBAhJaWBlN5c3RlbYaElpYJdGV4
+						dENvbG9yhoSuogOEAmZmAAGGhpKE
+						lpYGTlNGb250hpKEhIQGTlNGb250
+						HpSZKIQFWzQwY10GAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQAhAFmBqIAogGiAKIA
+						hpKElpYGTlNLZXJuhpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBZKsAhoaXAgGShJiZBJKZkpqS
+						tZK2koSWlg1OU1N1cGVyU2NyaXB0
+						hpKEt6qEhAFxrP+GkrKShLSZKKYG
+						AAAAIAAAAP/+SABlAGwAdgBlAHQA
+						aQBjAGEALQBMAGkAZwBoAHQApwWi
+						AKIBogCiAIaGlwEBlwMDkoSYmQSS
+						mZKEm5wCAISemQySn5KhkqKSo5Kk
+						kqWSppKnkqiSqZKqkquGgQEIoP+D
+						zcxMPYaStZK2krKSs5KskoSuogGE
+						BGZmZmYAAAEBhoaXBAGShJiZBZK7
+						krySspK+krWStpKZkoSbnAIAhJ6Z
+						DJKfkqGSopKjkqSSpZKmkqeSqJKp
+						kqqSq4aBAQig/4PNzEw9hpKsksKG
+						lwMFlwQBhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -22126,13 +22042,10 @@ Dog}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:E
+\cf3 0:E
 \fs10 \sub 0
 \fs12 \nosupersub , 1:F
 \fs10 \sub 0}</string>
@@ -22238,13 +22151,10 @@ C
 
 \f0\fs12 \cf0 \expnd0\expndtw0\kerning0
 A
-\fs10 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \sub 0
+\fs12 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-0:B
+\cf2 0:B
 \fs10 \sub 0
 \fs12 \nosupersub , 1:C
 \fs10 \sub 0}</string>
@@ -22379,8 +22289,8 @@ A
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -22527,20 +22437,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						krOStZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykrOStZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -22551,12 +22459,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F\sub 1}</string>
+\f0\b \cf3 \nosupersub 1:F\sub 1}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -22682,17 +22588,15 @@ C
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -22703,12 +22607,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Cat}</string>
+\f0\b \cf3 \nosupersub b:Cat}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -23588,11 +23490,9 @@ F
 \f0\b\fs12 \cf0 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 10
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-60\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-\nosupersub a:Squirrel\
+\cf2 \nosupersub a:Squirrel\
 b:Emu}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -23687,13 +23587,10 @@ b:Emu}</string>
 
 \f0\fs12 \cf0 \expnd0\expndtw0\kerning0
 A
-\fs10 \expnd0\expndtw0\kerning0
-\sub 10
-\fs12 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \sub 10
+\fs12 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-0:B
+\cf2 0:B
 \fs10 \sub 0
 \fs12 \nosupersub , 1:C
 \fs10 \sub 10}</string>
@@ -26105,8 +26002,8 @@ C
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -26253,20 +26150,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						kr6StZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykr6StZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -26277,12 +26172,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 6
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F
+\f0\b \cf3 \nosupersub 1:F
 \fs10 \sub 6}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -26410,17 +26303,14 @@ C
 						AAAA//5IAGUAbAB2AGUAdABpAGMA
 						YQAtAEIAbwBsAGQAAACnBaIAogGi
 						AKIAhpKZkpqSrJKthpcDAZKEmJkF
-						kruSvJKykoS0mSimBgAAACAAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAC0A
-						TABpAGcAaAB0AKcGogCiAaIAogCG
-						krWShLeqhKenAIaSmZKEm5wCAISe
-						mQySn5KhkqKSo5KkkqWSppKnkqiS
-						qZKqkquGgQEIoP+DzcxMPYaSrJKt
-						hpcECpKEmJkEkpmShJucAgCEnpkM
-						kp+SoZKikqOSpJKlkqaSp5KokqmS
-						qpKrhoEBCKD/g83MTD2GkqyShK6i
-						AYQEZmZmZgAAAQGGkrKSs5K1kraG
-						hg==
+						krWStpK7krySspKEtJkopgYAAAAg
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQAtAEwAaQBnAGgAdACnBqIAogGi
+						AKIAhpKZkpqSrJKthpcECpKEmJkE
+						kpmShJucAgCEnpkMkp+SoZKikqOS
+						pJKlkqaSp5KokqmSqpKrhoEBCKD/
+						g83MTD2GkrWStpKykrOSrJKErqIB
+						hARmZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -26431,12 +26321,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 6
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Squirrel}</string>
+\f0\b \cf3 \nosupersub a:Squirrel}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -26690,8 +26578,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -26838,19 +26726,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkGkruSvJK1
-						ksOSspK+kqySyJKZksGShJaWDk5T
-						T3JpZ2luYWxGb250hpK+hoY=
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykr6StZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -26861,14 +26748,11 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 4
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F
-\fs10 \expnd0\expndtw0\kerning0
-\sub 4}</string>
+\f0\b \cf3 \nosupersub 1:F
+\fs10 \sub 4}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -26994,17 +26878,15 @@ C
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -27015,12 +26897,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 4
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Moose}</string>
+\f0\b \cf3 \nosupersub a:Moose}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -27274,8 +27154,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -27422,19 +27302,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkGkruSvJK1
-						ksOSspK+kqySyJKZksGShJaWDk5T
-						T3JpZ2luYWxGb250hpK+hoY=
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykr6StZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -27445,14 +27324,11 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 3
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F
-\fs10 \expnd0\expndtw0\kerning0
-\sub 3}</string>
+\f0\b \cf3 \nosupersub 1:F
+\fs10 \sub 3}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -27578,17 +27454,15 @@ C
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -27599,12 +27473,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 3
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Llama}</string>
+\f0\b \cf3 \nosupersub b:Llama}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -27858,8 +27730,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -28006,19 +27878,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkGkruSvJK1
-						ksOSspK+kqySyJKZksGShJaWDk5T
-						T3JpZ2luYWxGb250hpK+hoY=
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykr6StZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -28029,14 +27900,11 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 5
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F
-\fs10 \expnd0\expndtw0\kerning0
-\sub 5}</string>
+\f0\b \cf3 \nosupersub 1:F
+\fs10 \sub 5}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -28162,17 +28030,15 @@ C
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -28183,12 +28049,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 5
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Emu}</string>
+\f0\b \cf3 \nosupersub b:Emu}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -28442,8 +28306,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -28590,20 +28454,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						krOStZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykrOStZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -28614,12 +28476,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F\sub 2}</string>
+\f0\b \cf3 \nosupersub 1:F\sub 2}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -28745,17 +28605,15 @@ C
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -28766,12 +28624,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Panda}</string>
+\f0\b \cf3 \nosupersub a:Panda}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -29026,19 +28882,17 @@ F
 						ogCiAIaShJaWBk5TS2VyboaShISE
 						CE5TTnVtYmVyAISEB05TVmFsdWUA
 						lIQBKoSEAWSrAIaGlwIBkoSYmQSS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBaIAogGiAKIAhpKZkpqS
-						hJaWDU5TU3VwZXJTY3JpcHSGkoS3
-						qoSEAXGs/4aStZK2hpcBAZcDApKE
+						mZKakrWStpKElpYNTlNTdXBlclNj
+						cmlwdIaShLeqhIQBcaz/hpKykoS0
+						mSimBgAAACAAAAD//kgAZQBsAHYA
+						ZQB0AGkAYwBhAC0ATABpAGcAaAB0
+						AKcFogCiAaIAogCGhpcBAZcDApKE
 						mJkEkpmSmpK1kraSspKzkqyShK6i
 						AYQEZmZmZgAAAQGGhpcEBpKEmJkE
-						kpmShJucAgCEnpkMkp+SoZKikqOS
-						pJKlkqaSp5KokqmSqpKrhoEBCKD9
-						g83MTD2GkqySwJKykoS0mRyEBVsy
-						OGNdBgAAABQAAAD//kgAZQBsAHYA
-						ZQB0AGkAYwBhAKcGogCiAaIAogCG
-						krWShLeqhKenAIaGlwMDlwQDhg==
+						kpmSmpK1kraSspKEtJkchAVbMjhj
+						XQYAAAAUAAAA//5IAGUAbAB2AGUA
+						dABpAGMAYQCnBqIAogGiAKIAhpKs
+						ksCGlwMDlwQDhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -29051,13 +28905,10 @@ F
 \fs10 \cf0 \sub 0
 \fs12 \cf2 \nosupersub \
 \cf3 a:
-\f1 \expnd0\expndtw0\kerning0
-Turtle
-\f0 \expnd0\expndtw0\kerning0
-\
+\f1 Turtle
+\f0 \
 b:
-\f1 \expnd0\expndtw0\kerning0
-Dog}</string>
+\f1 Dog}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -29157,41 +29008,41 @@ Dog}</string>
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKw1DMAowOkUwLCAx
 						OkYwhoQCaUkBAZKEhIQMTlNEaWN0
-						aW9uYXJ5AJSEAWkEkoSWlgZOU0tl
-						cm6GkoSEhAhOU051bWJlcgCEhAdO
-						U1ZhbHVlAJSEASqEhAFmnQCGkoSW
-						lhBOU1BhcmFncmFwaFN0eWxlhpKE
-						hIQXTlNNdXRhYmxlUGFyYWdyYXBo
-						U3R5bGUAhIQQTlNQYXJhZ3JhcGhT
-						dHlsZQCUhARDQ0BTAgCEhIQHTlNB
-						cnJheQCUmQyShISECU5TVGV4dFRh
-						YgCUhAJDZgAchpKEpaMAOIaShKWj
-						AFSGkoSlowBwhpKEpaMAgYwAhpKE
-						paMAgagAhpKEpaMAgcQAhpKEpaMA
-						geAAhpKEpaMAgfwAhpKEpaMAgRgB
-						hpKEpaMAgTQBhpKEpaMAgVABhoaB
-						AQiEBFsyZl3/g83MTD2GkoSWlgZO
-						U0ZvbnSGkoSEhAZOU0ZvbnQelJko
-						hAVbNDBjXQYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACdBoQBYwCnAacApwCGkoSW
-						lgdOU0NvbG9yhpKEhIQHTlNDb2xv
-						cgCUpwaEA0BAQISWlgZTeXN0ZW2G
-						hJaWCXRleHRDb2xvcoaEtqcDhAJm
-						ZgABhoaGlwIBkoSYmQSSsZKEs5ko
-						pgYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BacApwGnAKcAhpKekp+ShJaWDU5T
-						U3VwZXJTY3JpcHSGkoSbnISEAXGr
-						/4aSmZKEm5yEhAFkrACGhpcBAZcD
-						A5KEmJkEkp6ShKCgAgCEo5kMkqSS
-						ppKnkqiSqZKqkquSrJKtkq6Sr5Kw
-						hoEBCKT/g83MTD2GkrSShLanAYQE
-						ZmZmZgAAAQGGkrGSspKZkr+GlwQB
-						koSYmQWSvJK9kpmSv5KxkruSnpKE
-						oKACAISjmQySpJKmkqeSqJKpkqqS
-						q5Kskq2SrpKvkrCGgQEIpP+DzcxM
-						PYaStJLEhpcDBZcEAYY=
+						aW9uYXJ5AJSEAWkEkoSWlhBOU1Bh
+						cmFncmFwaFN0eWxlhpKEhIQXTlNN
+						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
+						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
+						hARDQ0BTAgCEhIQHTlNBcnJheQCU
+						mQyShISECU5TVGV4dFRhYgCUhAJD
+						ZgAchpKEoJ8AOIaShKCfAFSGkoSg
+						nwBwhpKEoJ8AgYwAhpKEoJ8AgagA
+						hpKEoJ8AgcQAhpKEoJ8AgeAAhpKE
+						oJ8AgfwAhpKEoJ8AgRgBhpKEoJ8A
+						gTQBhpKEoJ8AgVABhoaBAQiEBFsy
+						Zl3/g83MTD2GkoSWlgdOU0NvbG9y
+						hpKEhIQHTlNDb2xvcgCUhAFjBoQD
+						QEBAhJaWBlN5c3RlbYaElpYJdGV4
+						dENvbG9yhoSuogOEAmZmAAGGhpKE
+						lpYGTlNGb250hpKEhIQGTlNGb250
+						HpSZKIQFWzQwY10GAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQAhAFmBqIAogGiAKIA
+						hpKElpYGTlNLZXJuhpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBZKsAhoaXAgGShJiZBJKZkpqS
+						tZK2koSWlg1OU1N1cGVyU2NyaXB0
+						hpKEt6qEhAFxrP+GkrKShLSZKKYG
+						AAAAIAAAAP/+SABlAGwAdgBlAHQA
+						aQBjAGEALQBMAGkAZwBoAHQApwWi
+						AKIBogCiAIaGlwEBlwMDkoSYmQSS
+						mZKEm5wCAISemQySn5KhkqKSo5Kk
+						kqWSppKnkqiSqZKqkquGgQEIoP+D
+						zcxMPYaStZK2krKSs5KskoSuogGE
+						BGZmZmYAAAEBhoaXBAGShJiZBZK7
+						krySspK+krWStpKZkoSbnAIAhJ6Z
+						DJKfkqGSopKjkqSSpZKmkqeSqJKp
+						kqqSq4aBAQig/4PNzEw9hpKsksKG
+						lwMFlwQBhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -29201,13 +29052,10 @@ Dog}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:E
+\cf3 0:E
 \fs10 \sub 0
 \fs12 \nosupersub , 1:F
 \fs10 \sub 0}</string>
@@ -29313,13 +29161,10 @@ C
 
 \f0\fs12 \cf0 \expnd0\expndtw0\kerning0
 A
-\fs10 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \sub 0
+\fs12 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-0:B
+\cf2 0:B
 \fs10 \sub 0
 \fs12 \nosupersub , 1:C
 \fs10 \sub 0}</string>
@@ -29576,8 +29421,8 @@ A
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -29724,20 +29569,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						krOStZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykrOStZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -29748,12 +29591,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F\sub 1}</string>
+\f0\b \cf3 \nosupersub 1:F\sub 1}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -29879,17 +29720,15 @@ C
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -29900,12 +29739,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Cat}</string>
+\f0\b \cf3 \nosupersub b:Cat}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -30551,17 +30388,18 @@ Context expansion\
 						Bk5TRm9udB6UmRyEBVsyOGNdBgAA
 						ABQAAAD//kgAZQBsAHYAZQB0AGkA
 						YwBhAIQBZgibAJsBmwCbAIaGlwID
-						koSYmQKSnJKEnp8AAKCBAAijg83M
-						TD2Gkq+SsIaXAwGShJiZA5KElpYN
-						TlNTdXBlclNjcmlwdIaShISECE5T
-						TnVtYmVyAISEB05TVmFsdWUAlIQB
-						KoSEAXGq/4aSnJKEnp8AAIShmQyS
-						opKkkqWSppKnkqiSqZKqkquSrJKt
-						kq6GgQAIo4PNzEw9hpKvkoSxmRyl
-						BgAAABQAAAD//kgAZQBsAHYAZQB0
-						AGkAYwBhAKYGmwCbAZsAmwCGhpcC
-						A5cDAZcCA5cDAZcCA5cDAZcCA5cD
-						AZcCA5cDAZcCBoY=
+						koSYmQKSnJKEnp8AAIShmQySopKk
+						kqWSppKnkqiSqZKqkquSrJKtkq6G
+						gQAIo4PNzEw9hpKvkrCGlwMBkoSY
+						mQOShJaWDU5TU3VwZXJTY3JpcHSG
+						koSEhAhOU051bWJlcgCEhAdOU1Zh
+						bHVlAJSEASqEhAFxqv+GkpyShJ6f
+						AACEoZkMkqKSpJKlkqaSp5KokqmS
+						qpKrkqySrZKuhoEACKODzcxMPYaS
+						r5KEsZkcpQYAAAAUAAAA//5IAGUA
+						bAB2AGUAdABpAGMAYQCmBpsAmwGb
+						AJsAhoaXAgOXAwGXAgOXAwGXAgOX
+						AwGXAgOXAwGXAgOXAwGXAgaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -31461,19 +31299,19 @@ Context expansion\
 						Bk5TRm9udB6UmRyEBVsyOGNdBgAA
 						ABQAAAD//kgAZQBsAHYAZQB0AGkA
 						YwBhAIQBZgibAJsBmwCbAIaGlwIB
-						koSYmQOSmZKakpyShJ6fAgCggYAI
-						hARbMmZdgwAAAD+DzcxMPYaSr5Kw
-						hpcDA5KEmJkCkpyShJ6fAgCEoZkM
+						koSYmQOSmZKakpyShJ6fAgCEoZkM
 						kqKSpJKlkqaSp5KokqmSqpKrkqyS
-						rZKuhoEACKODzcxMPYaSr5KwhpcE
-						A5KEmJkDkoSWlg1OU1N1cGVyU2Ny
-						aXB0hpKEhIQITlNOdW1iZXIAhIQH
-						TlNWYWx1ZQCUhAEqhIQBcav/hpKc
-						koSenwIAhKGZDJKikqSSpZKmkqeS
-						qJKpkqqSq5Kskq2SroaBAAijg83M
-						TD2Gkq+ShLGZHKUGAAAAFAAAAP/+
-						SABlAGwAdgBlAHQAaQBjAGEApgab
-						AJsBmwCbAIaGlwMBlwQBlwMChg==
+						rZKuhoGACIQEWzJmXYMAAAA/g83M
+						TD2Gkq+SsIaXAwOShJiZApKckp2S
+						r5KwhpcEA5KEmJkDkoSWlg1OU1N1
+						cGVyU2NyaXB0hpKEhIQITlNOdW1i
+						ZXIAhIQHTlNWYWx1ZQCUhAEqhIQB
+						cav/hpKckoSenwIAhKGZDJKikqSS
+						pZKmkqeSqJKpkqqSq5Kskq2SroaB
+						AAijg83MTD2Gkq+ShLGZHKUGAAAA
+						FAAAAP/+SABlAGwAdgBlAHQAaQBj
+						AGEApgabAJsBmwCbAIaGlwMBlwQB
+						lwMChg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -31708,18 +31546,16 @@ Context expansion\
 						AgGShJiZApKckoSenwIAhKGZDJKi
 						kqSSpZKmkqeSqJKpkqqSq5Kskq2S
 						roaBgAiEBFsyZl2DAAAAP4PNzEw9
-						hpKvkrCGlwMDkoSYmQKSnJKEnp8C
-						AIShmQySopKkkqWSppKnkqiSqZKq
-						kquSrJKtkq6GgQAIo4PNzEw9hpKv
-						krCGlwQDkoSYmQOShJaWDU5TU3Vw
-						ZXJTY3JpcHSGkoSEhAhOU051bWJl
-						cgCEhAdOU1ZhbHVlAJSEASqEhAFx
-						q/+GkpyShJ6fAgCEoZkMkqKSpJKl
-						kqaSp5KokqmSqpKrkqySrZKuhoEA
-						CKODzcxMPYaSr5KEsZkcpQYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCmBpsAmwGbAJsAhoaXAwGXBAGX
-						AwKG
+						hpKvkrCGlwMDkoSYmQKSnJKdkq+S
+						sIaXBAOShJiZA5KElpYNTlNTdXBl
+						clNjcmlwdIaShISECE5TTnVtYmVy
+						AISEB05TVmFsdWUAlIQBKoSEAXGr
+						/4aSnJKEnp8CAIShmQySopKkkqWS
+						ppKnkqiSqZKqkquSrJKtkq6GgQAI
+						o4PNzEw9hpKvkoSxmRylBgAAABQA
+						AAD//kgAZQBsAHYAZQB0AGkAYwBh
+						AKYGmwCbAZsAmwCGhpcDAZcEAZcD
+						AoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -32252,8 +32088,8 @@ Context expansion\
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -32400,20 +32236,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						krOStZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykrOStZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -32424,12 +32258,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F\sub 2}</string>
+\f0\b \cf3 \nosupersub 1:F\sub 2}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -32555,17 +32387,15 @@ C
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -32576,12 +32406,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Panda}</string>
+\f0\b \cf3 \nosupersub a:Panda}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -33147,19 +32975,17 @@ Basic Infectious Knowledge}</string>
 						ogCiAIaShJaWBk5TS2VyboaShISE
 						CE5TTnVtYmVyAISEB05TVmFsdWUA
 						lIQBKoSEAWSrAIaGlwIBkoSYmQSS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBaIAogGiAKIAhpKZkpqS
-						hJaWDU5TU3VwZXJTY3JpcHSGkoS3
-						qoSEAXGs/4aStZK2hpcBAZcDApKE
+						mZKakrWStpKElpYNTlNTdXBlclNj
+						cmlwdIaShLeqhIQBcaz/hpKykoS0
+						mSimBgAAACAAAAD//kgAZQBsAHYA
+						ZQB0AGkAYwBhAC0ATABpAGcAaAB0
+						AKcFogCiAaIAogCGhpcBAZcDApKE
 						mJkEkpmSmpK1kraSspKzkqyShK6i
 						AYQEZmZmZgAAAQGGhpcEBpKEmJkE
-						kpmShJucAgCEnpkMkp+SoZKikqOS
-						pJKlkqaSp5KokqmSqpKrhoEBCKD9
-						g83MTD2GkqySwJKykoS0mRyEBVsy
-						OGNdBgAAABQAAAD//kgAZQBsAHYA
-						ZQB0AGkAYwBhAKcGogCiAaIAogCG
-						krWShLeqhKenAIaGlwMDlwQDhg==
+						kpmSmpK1kraSspKEtJkchAVbMjhj
+						XQYAAAAUAAAA//5IAGUAbAB2AGUA
+						dABpAGMAYQCnBqIAogGiAKIAhpKs
+						ksCGlwMDlwQDhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -33172,13 +32998,10 @@ F
 \fs10 \cf0 \sub 0
 \fs12 \cf2 \nosupersub \
 \cf3 a:
-\f1 \expnd0\expndtw0\kerning0
-Turtle
-\f0 \expnd0\expndtw0\kerning0
-\
+\f1 Turtle
+\f0 \
 b:
-\f1 \expnd0\expndtw0\kerning0
-Dog}</string>
+\f1 Dog}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -33278,41 +33101,41 @@ Dog}</string>
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKw1DMAowOkUwLCAx
 						OkYwhoQCaUkBAZKEhIQMTlNEaWN0
-						aW9uYXJ5AJSEAWkEkoSWlgZOU0tl
-						cm6GkoSEhAhOU051bWJlcgCEhAdO
-						U1ZhbHVlAJSEASqEhAFmnQCGkoSW
-						lhBOU1BhcmFncmFwaFN0eWxlhpKE
-						hIQXTlNNdXRhYmxlUGFyYWdyYXBo
-						U3R5bGUAhIQQTlNQYXJhZ3JhcGhT
-						dHlsZQCUhARDQ0BTAgCEhIQHTlNB
-						cnJheQCUmQyShISECU5TVGV4dFRh
-						YgCUhAJDZgAchpKEpaMAOIaShKWj
-						AFSGkoSlowBwhpKEpaMAgYwAhpKE
-						paMAgagAhpKEpaMAgcQAhpKEpaMA
-						geAAhpKEpaMAgfwAhpKEpaMAgRgB
-						hpKEpaMAgTQBhpKEpaMAgVABhoaB
-						AQiEBFsyZl3/g83MTD2GkoSWlgZO
-						U0ZvbnSGkoSEhAZOU0ZvbnQelJko
-						hAVbNDBjXQYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACdBoQBYwCnAacApwCGkoSW
-						lgdOU0NvbG9yhpKEhIQHTlNDb2xv
-						cgCUpwaEA0BAQISWlgZTeXN0ZW2G
-						hJaWCXRleHRDb2xvcoaEtqcDhAJm
-						ZgABhoaGlwIBkoSYmQSSsZKEs5ko
-						pgYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BacApwGnAKcAhpKekp+ShJaWDU5T
-						U3VwZXJTY3JpcHSGkoSbnISEAXGr
-						/4aSmZKEm5yEhAFkrACGhpcBAZcD
-						A5KEmJkEkp6ShKCgAgCEo5kMkqSS
-						ppKnkqiSqZKqkquSrJKtkq6Sr5Kw
-						hoEBCKT/g83MTD2GkrSShLanAYQE
-						ZmZmZgAAAQGGkrGSspKZkr+GlwQB
-						koSYmQWSvJK9kpmSv5KxkruSnpKE
-						oKACAISjmQySpJKmkqeSqJKpkqqS
-						q5Kskq2SrpKvkrCGgQEIpP+DzcxM
-						PYaStJLEhpcDBZcEAYY=
+						aW9uYXJ5AJSEAWkEkoSWlhBOU1Bh
+						cmFncmFwaFN0eWxlhpKEhIQXTlNN
+						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
+						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
+						hARDQ0BTAgCEhIQHTlNBcnJheQCU
+						mQyShISECU5TVGV4dFRhYgCUhAJD
+						ZgAchpKEoJ8AOIaShKCfAFSGkoSg
+						nwBwhpKEoJ8AgYwAhpKEoJ8AgagA
+						hpKEoJ8AgcQAhpKEoJ8AgeAAhpKE
+						oJ8AgfwAhpKEoJ8AgRgBhpKEoJ8A
+						gTQBhpKEoJ8AgVABhoaBAQiEBFsy
+						Zl3/g83MTD2GkoSWlgdOU0NvbG9y
+						hpKEhIQHTlNDb2xvcgCUhAFjBoQD
+						QEBAhJaWBlN5c3RlbYaElpYJdGV4
+						dENvbG9yhoSuogOEAmZmAAGGhpKE
+						lpYGTlNGb250hpKEhIQGTlNGb250
+						HpSZKIQFWzQwY10GAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQAhAFmBqIAogGiAKIA
+						hpKElpYGTlNLZXJuhpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBZKsAhoaXAgGShJiZBJKZkpqS
+						tZK2koSWlg1OU1N1cGVyU2NyaXB0
+						hpKEt6qEhAFxrP+GkrKShLSZKKYG
+						AAAAIAAAAP/+SABlAGwAdgBlAHQA
+						aQBjAGEALQBMAGkAZwBoAHQApwWi
+						AKIBogCiAIaGlwEBlwMDkoSYmQSS
+						mZKEm5wCAISemQySn5KhkqKSo5Kk
+						kqWSppKnkqiSqZKqkquGgQEIoP+D
+						zcxMPYaStZK2krKSs5KskoSuogGE
+						BGZmZmYAAAEBhoaXBAGShJiZBZK7
+						krySspK+krWStpKZkoSbnAIAhJ6Z
+						DJKfkqGSopKjkqSSpZKmkqeSqJKp
+						kqqSq4aBAQig/4PNzEw9hpKsksKG
+						lwMFlwQBhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -33322,13 +33145,10 @@ Dog}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:E
+\cf3 0:E
 \fs10 \sub 0
 \fs12 \nosupersub , 1:F
 \fs10 \sub 0}</string>
@@ -33434,13 +33254,10 @@ C
 
 \f0\fs12 \cf0 \expnd0\expndtw0\kerning0
 A
-\fs10 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \sub 0
+\fs12 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-0:B
+\cf2 0:B
 \fs10 \sub 0
 \fs12 \nosupersub , 1:C
 \fs10 \sub 0}</string>
@@ -33697,8 +33514,8 @@ A
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -33845,20 +33662,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						krOStZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykrOStZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -33869,12 +33684,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F\sub 1}</string>
+\f0\b \cf3 \nosupersub 1:F\sub 1}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -34000,17 +33813,15 @@ C
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -34021,12 +33832,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Cat}</string>
+\f0\b \cf3 \nosupersub b:Cat}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -34830,19 +34639,18 @@ F
 						b250HpSZHIQFWzI4Y10GAAAAFAAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						hAFmCJsAmwGbAJsAhoaXAgGShJiZ
-						A5KZkpqSnJKEnp8CAKCBgAiEBFsy
-						Zl2DAAAAP4PNzEw9hpKvkrCGlwMD
-						koSYmQKSnJKEnp8CAIShmQySopKk
+						A5KZkpqSnJKEnp8CAIShmQySopKk
 						kqWSppKnkqiSqZKqkquSrJKtkq6G
-						gQAIo4PNzEw9hpKvkrCGlwQBkoSY
-						mQOShJaWDU5TU3VwZXJTY3JpcHSG
-						koSEhAhOU051bWJlcgCEhAdOU1Zh
-						bHVlAJSEASqEhAFxq/+GkpyShJ6f
-						AgCEoZkMkqKSpJKlkqaSp5KokqmS
-						qpKrkqySrZKuhoEACKODzcxMPYaS
-						r5KEsZkcpQYAAAAUAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQCmBpsAmwGb
-						AJsAhoaXAwKG
+						gYAIhARbMmZdgwAAAD+DzcxMPYaS
+						r5KwhpcDA5KEmJkCkpySnZKvkrCG
+						lwQBkoSYmQOShJaWDU5TU3VwZXJT
+						Y3JpcHSGkoSEhAhOU051bWJlcgCE
+						hAdOU1ZhbHVlAJSEASqEhAFxq/+G
+						kpyShJ6fAgCEoZkMkqKSpJKlkqaS
+						p5KokqmSqpKrkqySrZKuhoEACKOD
+						zcxMPYaSr5KEsZkcpQYAAAAUAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQCm
+						BpsAmwGbAJsAhoaXAwKG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -35075,17 +34883,15 @@ F
 						mJkCkpyShJ6fAgCEoZkMkqKSpJKl
 						kqaSp5KokqmSqpKrkqySrZKuhoGA
 						CIQEWzJmXYMAAAA/g83MTD2Gkq+S
-						sIaXAwOShJiZApKckoSenwIAhKGZ
-						DJKikqSSpZKmkqeSqJKpkqqSq5Ks
-						kq2SroaBAAijg83MTD2Gkq+SsIaX
-						BAGShJiZA5KElpYNTlNTdXBlclNj
-						cmlwdIaShISECE5TTnVtYmVyAISE
-						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						nJKEnp8CAIShmQySopKkkqWSppKn
-						kqiSqZKqkquSrJKtkq6GgQAIo4PN
-						zEw9hpKvkoSxmRylBgAAABQAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAKYG
-						mwCbAZsAmwCGhpcDAoY=
+						sIaXAwOShJiZApKckp2Sr5KwhpcE
+						AZKEmJkDkoSWlg1OU1N1cGVyU2Ny
+						aXB0hpKEhIQITlNOdW1iZXIAhIQH
+						TlNWYWx1ZQCUhAEqhIQBcav/hpKc
+						koSenwIAhKGZDJKikqSSpZKmkqeS
+						qJKpkqqSq5Kskq2SroaBAAijg83M
+						TD2Gkq+ShLGZHKUGAAAAFAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEApgab
+						AJsBmwCbAIaGlwMChg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -35176,8 +34982,8 @@ F
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
 \f0\fs16 \cf2 Alice hasn't yet heard about bob's write. Her context is still \{ A
-\fs12 \sub 1
-\fs16 \nosupersub  \}\
+\fs12 \cf2 \sub 1
+\fs16 \cf2 \nosupersub  \}\
 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
@@ -35209,8 +35015,8 @@ F
 					<integer>5</integer>
 					<key>Points</key>
 					<array>
-						<string>{76.38752272310704, 146.50000000000003}</string>
-						<string>{134.14172826869768, 214.61837058714775}</string>
+						<string>{76.387374271534327, 146.5}</string>
+						<string>{134.14135477856857, 214.61868697028135}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -35315,8 +35121,8 @@ F
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
 \f0\fs16 \cf2 Bob Performs a similar write for key 11 and sets his context to \{ A
-\fs12 \sub 2
-\fs16 \nosupersub  \}}</string>
+\fs12 \cf2 \sub 2
+\fs16 \cf2 \nosupersub  \}}</string>
 					</dict>
 					<key>TextPlacement</key>
 					<integer>0</integer>
@@ -35755,8 +35561,8 @@ F
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -35903,20 +35709,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						krOStZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykrOStZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -35927,12 +35731,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F\sub 2}</string>
+\f0\b \cf3 \nosupersub 1:F\sub 2}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -36058,17 +35860,15 @@ C
 						AXGs/4aSspKEtJkopgYAAAAeAAAA
 						//5IAGUAbAB2AGUAdABpAGMAYQAt
 						AEIAbwBsAGQAAACnBaIAogGiAKIA
-						hpKZkpqSrJKthpcDAZKEmJkFkruS
-						vJKykoS0mSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AKcGogCiAaIAogCGkrWS
-						hLeqhKenAIaSmZKEm5wCAISemQyS
-						n5KhkqKSo5KkkqWSppKnkqiSqZKq
-						kquGgQEIoP+DzcxMPYaSrJKthpcE
-						B5KEmJkEkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqyShK6iAYQE
-						ZmZmZgAAAQGGkrKSs5K1kraGhg==
+						hpKZkpqSrJKthpcDAZKEmJkFkrWS
+						tpK7krySspKEtJkopgYAAAAgAAAA
+						//5IAGUAbAB2AGUAdABpAGMAYQAt
+						AEwAaQBnAGgAdACnBqIAogGiAKIA
+						hpKZkpqSrJKthpcEB5KEmJkEkpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkrWStpKykrOSrJKErqIBhARm
+						ZmZmAAABAYaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -36079,12 +35879,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 2
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub a:Panda}</string>
+\f0\b \cf3 \nosupersub a:Panda}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -36650,19 +36448,17 @@ Welcome Bob to the party}</string>
 						ogCiAIaShJaWBk5TS2VyboaShISE
 						CE5TTnVtYmVyAISEB05TVmFsdWUA
 						lIQBKoSEAWSrAIaGlwIBkoSYmQSS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBaIAogGiAKIAhpKZkpqS
-						hJaWDU5TU3VwZXJTY3JpcHSGkoS3
-						qoSEAXGs/4aStZK2hpcBAZcDApKE
+						mZKakrWStpKElpYNTlNTdXBlclNj
+						cmlwdIaShLeqhIQBcaz/hpKykoS0
+						mSimBgAAACAAAAD//kgAZQBsAHYA
+						ZQB0AGkAYwBhAC0ATABpAGcAaAB0
+						AKcFogCiAaIAogCGhpcBAZcDApKE
 						mJkEkpmSmpK1kraSspKzkqyShK6i
 						AYQEZmZmZgAAAQGGhpcEBpKEmJkE
-						kpmShJucAgCEnpkMkp+SoZKikqOS
-						pJKlkqaSp5KokqmSqpKrhoEBCKD9
-						g83MTD2GkqySwJKykoS0mRyEBVsy
-						OGNdBgAAABQAAAD//kgAZQBsAHYA
-						ZQB0AGkAYwBhAKcGogCiAaIAogCG
-						krWShLeqhKenAIaGlwMDlwQDhg==
+						kpmSmpK1kraSspKEtJkchAVbMjhj
+						XQYAAAAUAAAA//5IAGUAbAB2AGUA
+						dABpAGMAYQCnBqIAogGiAKIAhpKs
+						ksCGlwMDlwQDhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -36675,13 +36471,10 @@ F
 \fs10 \cf0 \sub 0
 \fs12 \cf2 \nosupersub \
 \cf3 a:
-\f1 \expnd0\expndtw0\kerning0
-Turtle
-\f0 \expnd0\expndtw0\kerning0
-\
+\f1 Turtle
+\f0 \
 b:
-\f1 \expnd0\expndtw0\kerning0
-Dog}</string>
+\f1 Dog}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -36781,41 +36574,41 @@ Dog}</string>
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKw1DMAowOkUwLCAx
 						OkYwhoQCaUkBAZKEhIQMTlNEaWN0
-						aW9uYXJ5AJSEAWkEkoSWlgZOU0tl
-						cm6GkoSEhAhOU051bWJlcgCEhAdO
-						U1ZhbHVlAJSEASqEhAFmnQCGkoSW
-						lhBOU1BhcmFncmFwaFN0eWxlhpKE
-						hIQXTlNNdXRhYmxlUGFyYWdyYXBo
-						U3R5bGUAhIQQTlNQYXJhZ3JhcGhT
-						dHlsZQCUhARDQ0BTAgCEhIQHTlNB
-						cnJheQCUmQyShISECU5TVGV4dFRh
-						YgCUhAJDZgAchpKEpaMAOIaShKWj
-						AFSGkoSlowBwhpKEpaMAgYwAhpKE
-						paMAgagAhpKEpaMAgcQAhpKEpaMA
-						geAAhpKEpaMAgfwAhpKEpaMAgRgB
-						hpKEpaMAgTQBhpKEpaMAgVABhoaB
-						AQiEBFsyZl3/g83MTD2GkoSWlgZO
-						U0ZvbnSGkoSEhAZOU0ZvbnQelJko
-						hAVbNDBjXQYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACdBoQBYwCnAacApwCGkoSW
-						lgdOU0NvbG9yhpKEhIQHTlNDb2xv
-						cgCUpwaEA0BAQISWlgZTeXN0ZW2G
-						hJaWCXRleHRDb2xvcoaEtqcDhAJm
-						ZgABhoaGlwIBkoSYmQSSsZKEs5ko
-						pgYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BacApwGnAKcAhpKekp+ShJaWDU5T
-						U3VwZXJTY3JpcHSGkoSbnISEAXGr
-						/4aSmZKEm5yEhAFkrACGhpcBAZcD
-						A5KEmJkEkp6ShKCgAgCEo5kMkqSS
-						ppKnkqiSqZKqkquSrJKtkq6Sr5Kw
-						hoEBCKT/g83MTD2GkrSShLanAYQE
-						ZmZmZgAAAQGGkrGSspKZkr+GlwQB
-						koSYmQWSvJK9kpmSv5KxkruSnpKE
-						oKACAISjmQySpJKmkqeSqJKpkqqS
-						q5Kskq2SrpKvkrCGgQEIpP+DzcxM
-						PYaStJLEhpcDBZcEAYY=
+						aW9uYXJ5AJSEAWkEkoSWlhBOU1Bh
+						cmFncmFwaFN0eWxlhpKEhIQXTlNN
+						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
+						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
+						hARDQ0BTAgCEhIQHTlNBcnJheQCU
+						mQyShISECU5TVGV4dFRhYgCUhAJD
+						ZgAchpKEoJ8AOIaShKCfAFSGkoSg
+						nwBwhpKEoJ8AgYwAhpKEoJ8AgagA
+						hpKEoJ8AgcQAhpKEoJ8AgeAAhpKE
+						oJ8AgfwAhpKEoJ8AgRgBhpKEoJ8A
+						gTQBhpKEoJ8AgVABhoaBAQiEBFsy
+						Zl3/g83MTD2GkoSWlgdOU0NvbG9y
+						hpKEhIQHTlNDb2xvcgCUhAFjBoQD
+						QEBAhJaWBlN5c3RlbYaElpYJdGV4
+						dENvbG9yhoSuogOEAmZmAAGGhpKE
+						lpYGTlNGb250hpKEhIQGTlNGb250
+						HpSZKIQFWzQwY10GAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQAhAFmBqIAogGiAKIA
+						hpKElpYGTlNLZXJuhpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBZKsAhoaXAgGShJiZBJKZkpqS
+						tZK2koSWlg1OU1N1cGVyU2NyaXB0
+						hpKEt6qEhAFxrP+GkrKShLSZKKYG
+						AAAAIAAAAP/+SABlAGwAdgBlAHQA
+						aQBjAGEALQBMAGkAZwBoAHQApwWi
+						AKIBogCiAIaGlwEBlwMDkoSYmQSS
+						mZKEm5wCAISemQySn5KhkqKSo5Kk
+						kqWSppKnkqiSqZKqkquGgQEIoP+D
+						zcxMPYaStZK2krKSs5KskoSuogGE
+						BGZmZmYAAAEBhoaXBAGShJiZBZK7
+						krySspK+krWStpKZkoSbnAIAhJ6Z
+						DJKfkqGSopKjkqSSpZKmkqeSqJKp
+						kqqSq4aBAQig/4PNzEw9hpKsksKG
+						lwMFlwQBhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -36825,13 +36618,10 @@ Dog}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:E
+\cf3 0:E
 \fs10 \sub 0
 \fs12 \nosupersub , 1:F
 \fs10 \sub 0}</string>
@@ -36937,13 +36727,10 @@ C
 
 \f0\fs12 \cf0 \expnd0\expndtw0\kerning0
 A
-\fs10 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \sub 0
+\fs12 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-0:B
+\cf2 0:B
 \fs10 \sub 0
 \fs12 \nosupersub , 1:C
 \fs10 \sub 0}</string>
@@ -37200,8 +36987,8 @@ A
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -37348,20 +37135,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkFkruSvJKy
-						krOStZK2kpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySyIaG
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykrOStZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -37372,12 +37157,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F\sub 1}</string>
+\f0\b \cf3 \nosupersub 1:F\sub 1}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -37503,17 +37286,15 @@ C
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -37524,12 +37305,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Cat}</string>
+\f0\b \cf3 \nosupersub b:Cat}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -37840,6 +37619,220 @@ F
 					<integer>0</integer>
 				</dict>
 				<dict>
+					<key>Bounds</key>
+					<string>{{198.716796875, 55.612800598144531}, {35.45130920410179, 22}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Clip</string>
+					<key>Flow</key>
+					<string>Clip</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Font</key>
+						<string>Helvetica</string>
+						<key>Size</key>
+						<real>6</real>
+					</dict>
+					<key>ID</key>
+					<integer>1088</integer>
+					<key>Layer</key>
+					<integer>6</integer>
+					<key>Shape</key>
+					<string>Cloud</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>b</key>
+								<string>0.653573</string>
+								<key>g</key>
+								<string>0.875658</string>
+								<key>r</key>
+								<string>0.386682</string>
+							</dict>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+							<key>Fuzziness</key>
+							<real>4.1422834396362305</real>
+							<key>ShadowVector</key>
+							<string>{1, 2}</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+
+\f0\fs12 \cf0 Start!}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{168.37500000000006, 18.612800598144531}, {96.013381958007983, 65}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Color</key>
+						<dict>
+							<key>a</key>
+							<string>0.2</string>
+							<key>w</key>
+							<string>0</string>
+						</dict>
+						<key>Font</key>
+						<string>Helvetica</string>
+						<key>Size</key>
+						<real>8</real>
+					</dict>
+					<key>ID</key>
+					<integer>1087</integer>
+					<key>Layer</key>
+					<integer>6</integer>
+					<key>Magnets</key>
+					<array>
+						<string>{-0.59628479784302701, -1.1925696134567303}</string>
+						<string>{1.9868215517249155e-08, -1.3333333730697678}</string>
+						<string>{0.59628487781105122, -1.1925696134567303}</string>
+						<string>{1.1925696134567261, -0.59628480672836726}</string>
+						<string>{1.3333333730697632, 1.5894571940104153e-07}</string>
+						<string>{1.1925696134567261, 0.59628473564567064}</string>
+						<string>{0.59628465308492196, 1.1925697326660114}</string>
+						<string>{0, 1.3333333730697585}</string>
+						<string>{-0.5962849488937394, 1.1925696134567219}</string>
+						<string>{-1.1925697326660156, 0.59628443983683188}</string>
+						<string>{-1.3333333730697632, -6.3578290128892467e-07}</string>
+						<string>{-1.1925696134567261, -0.59628480672836726}</string>
+					</array>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>1</string>
+								<key>g</key>
+								<string>1</string>
+								<key>r</key>
+								<string>1</string>
+							</dict>
+							<key>FillType</key>
+							<integer>2</integer>
+							<key>GradientAngle</key>
+							<real>90</real>
+							<key>GradientColor</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>1</string>
+								<key>g</key>
+								<string>0.645058</string>
+								<key>r</key>
+								<string>0.343042</string>
+							</dict>
+						</dict>
+						<key>image fill</key>
+						<dict>
+							<key>ImageSizing</key>
+							<integer>0</integer>
+							<key>Opacity</key>
+							<real>0.63210225105285645</real>
+							<key>Scale</key>
+							<real>0.125</real>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>0</string>
+								<key>g</key>
+								<string>0</string>
+								<key>r</key>
+								<string>0</string>
+							</dict>
+							<key>CornerRadius</key>
+							<real>5</real>
+							<key>Width</key>
+							<real>0.5</real>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Pad</key>
+						<integer>3</integer>
+						<key>RTFD</key>
+						<data>
+						BAtzdHJlYW10eXBlZIHoA4QBQISE
+						hBJOU0F0dHJpYnV0ZWRTdHJpbmcA
+						hIQITlNPYmplY3QAhZKEhIQITlNT
+						dHJpbmcBlIQBKxVBbGljZSdzIFF1
+						ZXJ5IENvbnRleHSGhAJpSQEVkoSE
+						hAxOU0RpY3Rpb25hcnkAlIQBaQOS
+						hJaWB05TQ29sb3KGkoSEhAdOU0Nv
+						bG9yAJSEAWMDhAJmZgCDomQkP4aS
+						hJaWEE5TUGFyYWdyYXBoU3R5bGWG
+						koSEhBdOU011dGFibGVQYXJhZ3Jh
+						cGhTdHlsZQCEhBBOU1BhcmFncmFw
+						aFN0eWxlAJSEBENDQFMCAISEhAdO
+						U0FycmF5AJSZDJKEhIQJTlNUZXh0
+						VGFiAJSEAkNmAByGkoSjogA4hpKE
+						o6IAVIaShKOiAHCGkoSjogCBjACG
+						koSjogCBqACGkoSjogCBxACGkoSj
+						ogCB4ACGkoSjogCB/ACGkoSjogCB
+						GAGGkoSjogCBNAGGkoSjogCBUAGG
+						hoEACIQEWzFmXYPNzEw9hpKElpYG
+						TlNGb250hpKEhIQGTlNGb250HpSZ
+						HIQFWzI4Y10GAAAAFAAAAP/+SABl
+						AGwAdgBlAHQAaQBjAGEAhAFmCJsA
+						mwGbAJsAhoaG
+						</data>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+
+\f0\fs16 \cf2 Alice's Query Context}</string>
+						<key>VerticalPad</key>
+						<integer>7</integer>
+						<key>alpha</key>
+						<array>
+							<array>
+								<integer>0</integer>
+								<integer>21</integer>
+								<real>0.64216053485870361</real>
+							</array>
+						</array>
+					</dict>
+					<key>TextPlacement</key>
+					<integer>0</integer>
+				</dict>
+				<dict>
 					<key>Class</key>
 					<string>LineGraphic</string>
 					<key>Head</key>
@@ -37853,8 +37846,8 @@ F
 					<integer>6</integer>
 					<key>Points</key>
 					<array>
-						<string>{360.08930035020865, 182.60917663574219}</string>
-						<string>{365.93128051684704, 193.5}</string>
+						<string>{360.18009857510708, 182.60917663574219}</string>
+						<string>{366.08388295606773, 193.5}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -37909,8 +37902,8 @@ F
 					<integer>6</integer>
 					<key>Points</key>
 					<array>
-						<string>{342.90063631515943, 135.61279296875}</string>
-						<string>{346.9980293057688, 150.60917663574219}</string>
+						<string>{342.93486419518433, 135.61279296875}</string>
+						<string>{347.06433808710375, 150.60917663574219}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -38428,8 +38421,9 @@ E
 \fs14 \nosupersub , F
 \fs12 \sub 1 
 \b0\fs14 \kerning1\expnd0\expndtw0 \nosupersub ]\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\i\fs10 (then traverse slot 1)}</string>
+\i\fs10 \cf0 (then traverse slot 1)}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -39111,37 +39105,36 @@ Nodes don't really exist, except as a projection of all memos on the subject.}</
 						dHJpbmcBlIQBKxJEMAphOkdvYXQK
 						YjpSYWJiaXSGhAJpSQEBkoSEhAxO
 						U0RpY3Rpb25hcnkAlIQBaQSShJaW
-						Bk5TS2VyboaShISECE5TTnVtYmVy
-						AISEB05TVmFsdWUAlIQBKoSEAWad
-						AIaShJaWEE5TUGFyYWdyYXBoU3R5
-						bGWGkoSEhBdOU011dGFibGVQYXJh
-						Z3JhcGhTdHlsZQCEhBBOU1BhcmFn
-						cmFwaFN0eWxlAJSEBENDQFMCAISE
-						hAdOU0FycmF5AJSZDJKEhIQJTlNU
-						ZXh0VGFiAJSEAkNmAByGkoSlowA4
-						hpKEpaMAVIaShKWjAHCGkoSlowCB
-						jACGkoSlowCBqACGkoSlowCBxACG
-						koSlowCB4ACGkoSlowCB/ACGkoSl
-						owCBGAGGkoSlowCBNAGGkoSlowCB
-						UAGGhoEBCIQEWzJmXf+DzcxMPYaS
-						hJaWBk5TRm9udIaShISEBk5TRm9u
-						dB6UmSiEBVs0MGNdBgAAACAAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAC0A
-						TABpAGcAaAB0AJ0GhAFjAKcBpwCn
-						AIaShJaWB05TQ29sb3KGkoSEhAdO
-						U0NvbG9yAJSnBoQDQEBAhJaWBlN5
-						c3RlbYaElpYJdGV4dENvbG9yhoS2
-						pwOEAmZmAAGGhoaXAgGShJiZBJKx
-						koSzmSimBgAAACAAAAD//kgAZQBs
-						AHYAZQB0AGkAYwBhAC0ATABpAGcA
-						aAB0AJ0FpwCnAacApwCGkp6Sn5KE
-						lpYNTlNTdXBlclNjcmlwdIaShJuc
-						hIQBcav/hpKZkoSbnISEAWSsAIaG
-						lwEBlwMPkoSYmQSSnpKEoKACAISj
-						mQySpJKmkqeSqJKpkqqSq5Kskq2S
-						rpKvkrCGgQEIpP+DzcxMPYaStJKE
-						tqcBhARmZmZmAAABAYaSsZKykpmS
-						v4aG
+						EE5TUGFyYWdyYXBoU3R5bGWGkoSE
+						hBdOU011dGFibGVQYXJhZ3JhcGhT
+						dHlsZQCEhBBOU1BhcmFncmFwaFN0
+						eWxlAJSEBENDQFMCAISEhAdOU0Fy
+						cmF5AJSZDJKEhIQJTlNUZXh0VGFi
+						AJSEAkNmAByGkoSgnwA4hpKEoJ8A
+						VIaShKCfAHCGkoSgnwCBjACGkoSg
+						nwCBqACGkoSgnwCBxACGkoSgnwCB
+						4ACGkoSgnwCB/ACGkoSgnwCBGAGG
+						koSgnwCBNAGGkoSgnwCBUAGGhoEB
+						CIQEWzJmXf+DzcxMPYaShJaWB05T
+						Q29sb3KGkoSEhAdOU0NvbG9yAJSE
+						AWMGhANAQECElpYGU3lzdGVthoSW
+						lgl0ZXh0Q29sb3KGhK6iA4QCZmYA
+						AYaGkoSWlgZOU0ZvbnSGkoSEhAZO
+						U0ZvbnQelJkohAVbNDBjXQYAAAAg
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQAtAEwAaQBnAGgAdACEAWYGogCi
+						AaIAogCGkoSWlgZOU0tlcm6GkoSE
+						hAhOU051bWJlcgCEhAdOU1ZhbHVl
+						AJSEASqEhAFkqwCGhpcCAZKEmJkE
+						kpmSmpK1kraShJaWDU5TU3VwZXJT
+						Y3JpcHSGkoS3qoSEAXGs/4aSspKE
+						tJkopgYAAAAgAAAA//5IAGUAbAB2
+						AGUAdABpAGMAYQAtAEwAaQBnAGgA
+						dACnBaIAogGiAKIAhoaXAQGXAw+S
+						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
+						opKjkqSSpZKmkqeSqJKpkqqSq4aB
+						AQig/4PNzEw9hpK1kraSspKzkqyS
+						hK6iAYQEZmZmZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -39151,13 +39144,10 @@ Nodes don't really exist, except as a projection of all memos on the subject.}</
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 D
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-a:Goat\
+\cf3 a:Goat\
 b:Rabbit}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -39259,37 +39249,36 @@ b:Rabbit}</string>
 						dHJpbmcBlIQBKxVFMAphOkhhbXN0
 						ZXIKYjpGZXJyZXSGhAJpSQEBkoSE
 						hAxOU0RpY3Rpb25hcnkAlIQBaQSS
-						hJaWBk5TS2VyboaShISECE5TTnVt
-						YmVyAISEB05TVmFsdWUAlIQBKoSE
-						AWadAIaShJaWEE5TUGFyYWdyYXBo
-						U3R5bGWGkoSEhBdOU011dGFibGVQ
-						YXJhZ3JhcGhTdHlsZQCEhBBOU1Bh
-						cmFncmFwaFN0eWxlAJSEBENDQFMC
-						AISEhAdOU0FycmF5AJSZDJKEhIQJ
-						TlNUZXh0VGFiAJSEAkNmAByGkoSl
-						owA4hpKEpaMAVIaShKWjAHCGkoSl
-						owCBjACGkoSlowCBqACGkoSlowCB
-						xACGkoSlowCB4ACGkoSlowCB/ACG
-						koSlowCBGAGGkoSlowCBNAGGkoSl
-						owCBUAGGhoEBCIQEWzJmXf+DzcxM
-						PYaShJaWBk5TRm9udIaShISEBk5T
-						Rm9udB6UmSiEBVs0MGNdBgAAACAA
-						AAD//kgAZQBsAHYAZQB0AGkAYwBh
-						AC0ATABpAGcAaAB0AJ0GhAFjAKcB
-						pwCnAIaShJaWB05TQ29sb3KGkoSE
-						hAdOU0NvbG9yAJSnBoQDQEBAhJaW
-						BlN5c3RlbYaElpYJdGV4dENvbG9y
-						hoS2pwOEAmZmAAGGhoaXAgGShJiZ
-						BJKxkoSzmSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AJ0FpwCnAacApwCGkp6S
-						n5KElpYNTlNTdXBlclNjcmlwdIaS
-						hJuchIQBcav/hpKZkoSbnISEAWSs
-						AIaGlwEBlwMSkoSYmQSSnpKEoKAC
-						AISjmQySpJKmkqeSqJKpkqqSq5Ks
-						kq2SrpKvkrCGgQEIpP+DzcxMPYaS
-						tJKEtqcBhARmZmZmAAABAYaSsZKy
-						kpmSv4aG
+						hJaWEE5TUGFyYWdyYXBoU3R5bGWG
+						koSEhBdOU011dGFibGVQYXJhZ3Jh
+						cGhTdHlsZQCEhBBOU1BhcmFncmFw
+						aFN0eWxlAJSEBENDQFMCAISEhAdO
+						U0FycmF5AJSZDJKEhIQJTlNUZXh0
+						VGFiAJSEAkNmAByGkoSgnwA4hpKE
+						oJ8AVIaShKCfAHCGkoSgnwCBjACG
+						koSgnwCBqACGkoSgnwCBxACGkoSg
+						nwCB4ACGkoSgnwCB/ACGkoSgnwCB
+						GAGGkoSgnwCBNAGGkoSgnwCBUAGG
+						hoEBCIQEWzJmXf+DzcxMPYaShJaW
+						B05TQ29sb3KGkoSEhAdOU0NvbG9y
+						AJSEAWMGhANAQECElpYGU3lzdGVt
+						hoSWlgl0ZXh0Q29sb3KGhK6iA4QC
+						ZmYAAYaGkoSWlgZOU0ZvbnSGkoSE
+						hAZOU0ZvbnQelJkohAVbNDBjXQYA
+						AAAgAAAA//5IAGUAbAB2AGUAdABp
+						AGMAYQAtAEwAaQBnAGgAdACEAWYG
+						ogCiAaIAogCGkoSWlgZOU0tlcm6G
+						koSEhAhOU051bWJlcgCEhAdOU1Zh
+						bHVlAJSEASqEhAFkqwCGhpcCAZKE
+						mJkEkpmSmpK1kraShJaWDU5TU3Vw
+						ZXJTY3JpcHSGkoS3qoSEAXGs/4aS
+						spKEtJkopgYAAAAgAAAA//5IAGUA
+						bAB2AGUAdABpAGMAYQAtAEwAaQBn
+						AGgAdACnBaIAogGiAKIAhoaXAQGX
+						AxKShJiZBJKZkoSbnAIAhJ6ZDJKf
+						kqGSopKjkqSSpZKmkqeSqJKpkqqS
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -39299,13 +39288,10 @@ b:Rabbit}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 E
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-a:Hamster\
+\cf3 a:Hamster\
 b:Ferret}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -39428,19 +39414,17 @@ b:Ferret}</string>
 						ogCiAIaShJaWBk5TS2VyboaShISE
 						CE5TTnVtYmVyAISEB05TVmFsdWUA
 						lIQBKoSEAWSrAIaGlwIBkoSYmQSS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBaIAogGiAKIAhpKZkpqS
-						hJaWDU5TU3VwZXJTY3JpcHSGkoS3
-						qoSEAXGs/4aStZK2hpcBAZcDApKE
+						mZKakrWStpKElpYNTlNTdXBlclNj
+						cmlwdIaShLeqhIQBcaz/hpKykoS0
+						mSimBgAAACAAAAD//kgAZQBsAHYA
+						ZQB0AGkAYwBhAC0ATABpAGcAaAB0
+						AKcFogCiAaIAogCGhpcBAZcDApKE
 						mJkEkpmSmpK1kraSspKzkqyShK6i
 						AYQEZmZmZgAAAQGGhpcEBpKEmJkE
-						kpmShJucAgCEnpkMkp+SoZKikqOS
-						pJKlkqaSp5KokqmSqpKrhoEBCKD9
-						g83MTD2GkqySwJKykoS0mRyEBVsy
-						OGNdBgAAABQAAAD//kgAZQBsAHYA
-						ZQB0AGkAYwBhAKcGogCiAaIAogCG
-						krWShLeqhKenAIaGlwMDlwQDhg==
+						kpmSmpK1kraSspKEtJkchAVbMjhj
+						XQYAAAAUAAAA//5IAGUAbAB2AGUA
+						dABpAGMAYQCnBqIAogGiAKIAhpKs
+						ksCGlwMDlwQDhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -39453,13 +39437,10 @@ F
 \fs10 \cf0 \sub 0
 \fs12 \cf2 \nosupersub \
 \cf3 a:
-\f1 \expnd0\expndtw0\kerning0
-Turtle
-\f0 \expnd0\expndtw0\kerning0
-\
+\f1 Turtle
+\f0 \
 b:
-\f1 \expnd0\expndtw0\kerning0
-Dog}</string>
+\f1 Dog}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -39559,42 +39540,40 @@ Dog}</string>
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKwdCMAowOkQwhoQC
 						aUkBAZKEhIQMTlNEaWN0aW9uYXJ5
-						AJSEAWkEkoSWlgZOU0tlcm6GkoSE
-						hAhOU051bWJlcgCEhAdOU1ZhbHVl
-						AJSEASqEhAFmnQCGkoSWlhBOU1Bh
-						cmFncmFwaFN0eWxlhpKEhIQXTlNN
-						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
-						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
-						hARDQ0BTAgCEhIQHTlNBcnJheQCU
-						mQyShISECU5TVGV4dFRhYgCUhAJD
-						ZgAchpKEpaMAOIaShKWjAFSGkoSl
-						owBwhpKEpaMAgYwAhpKEpaMAgagA
-						hpKEpaMAgcQAhpKEpaMAgeAAhpKE
-						paMAgfwAhpKEpaMAgRgBhpKEpaMA
-						gTQBhpKEpaMAgVABhoaBAQiEBFsy
-						Zl3/g83MTD2GkoSWlgZOU0ZvbnSG
-						koSEhAZOU0ZvbnQelJkohAVbNDBj
-						XQYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BoQBYwCnAacApwCGkoSWlgdOU0Nv
-						bG9yhpKEhIQHTlNDb2xvcgCUpwaE
-						A0BAQISWlgZTeXN0ZW2GhJaWCXRl
-						eHRDb2xvcoaEtqcDhAJmZgABhoaG
-						lwIBkoSYmQSSsZKEs5kopgYAAAAg
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQAtAEwAaQBnAGgAdACdBacApwGn
-						AKcAhpKekp+ShJaWDU5TU3VwZXJT
-						Y3JpcHSGkoSbnISEAXGr/4aSmZKE
-						m5yEhAFkrACGhpcBAZcDA5KEmJkE
-						kp6ShKCgAgCEo5kMkqSSppKnkqiS
-						qZKqkquSrJKtkq6Sr5KwhoEBCKT/
-						g83MTD2GkrSShLanAYQEZmZmZgAA
-						AQGGkrGSspKZkr+GlwQBkoSYmQaS
-						vJK9kpmSmpKxkruStJLEkp6ShKCg
-						AgCEo5kMkqSSppKnkqiSqZKqkquS
-						rJKtkq6Sr5KwhoEBCKT/g83MTD2G
-						koSWlg5OU09yaWdpbmFsRm9udIaS
-						u4aG
+						AJSEAWkEkoSWlhBOU1BhcmFncmFw
+						aFN0eWxlhpKEhIQXTlNNdXRhYmxl
+						UGFyYWdyYXBoU3R5bGUAhIQQTlNQ
+						YXJhZ3JhcGhTdHlsZQCUhARDQ0BT
+						AgCEhIQHTlNBcnJheQCUmQyShISE
+						CU5TVGV4dFRhYgCUhAJDZgAchpKE
+						oJ8AOIaShKCfAFSGkoSgnwBwhpKE
+						oJ8AgYwAhpKEoJ8AgagAhpKEoJ8A
+						gcQAhpKEoJ8AgeAAhpKEoJ8AgfwA
+						hpKEoJ8AgRgBhpKEoJ8AgTQBhpKE
+						oJ8AgVABhoaBAQiEBFsyZl3/g83M
+						TD2GkoSWlgdOU0NvbG9yhpKEhIQH
+						TlNDb2xvcgCUhAFjBoQDQEBAhJaW
+						BlN5c3RlbYaElpYJdGV4dENvbG9y
+						hoSuogOEAmZmAAGGhpKElpYGTlNG
+						b250hpKEhIQGTlNGb250HpSZKIQF
+						WzQwY10GAAAAIAAAAP/+SABlAGwA
+						dgBlAHQAaQBjAGEALQBMAGkAZwBo
+						AHQAhAFmBqIAogGiAKIAhpKElpYG
+						TlNLZXJuhpKEhIQITlNOdW1iZXIA
+						hIQHTlNWYWx1ZQCUhAEqhIQBZKsA
+						hoaXAgGShJiZBJKZkpqStZK2koSW
+						lg1OU1N1cGVyU2NyaXB0hpKEt6qE
+						hAFxrP+GkrKShLSZKKYGAAAAIAAA
+						AP/+SABlAGwAdgBlAHQAaQBjAGEA
+						LQBMAGkAZwBoAHQApwWiAKIBogCi
+						AIaGlwEBlwMDkoSYmQSSmZKEm5wC
+						AISemQySn5KhkqKSo5KkkqWSppKn
+						kqiSqZKqkquGgQEIoP+DzcxMPYaS
+						tZK2krKSs5KskoSuogGEBGZmZmYA
+						AAEBhoaXBAGShJiZBZK7krySspK+
+						krWStpKZkoSbnAIAhJ6ZDJKfkqGS
+						opKjkqSSpZKmkqeSqJKpkqqSq4aB
+						AQig/4PNzEw9hpKsksKGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -39604,15 +39583,11 @@ Dog}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 B
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:D
-\fs10 \expnd0\expndtw0\kerning0
-\sub 0}</string>
+\cf3 0:D
+\fs10 \sub 0}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -39712,41 +39687,41 @@ B
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKw1DMAowOkUwLCAx
 						OkYwhoQCaUkBAZKEhIQMTlNEaWN0
-						aW9uYXJ5AJSEAWkEkoSWlgZOU0tl
-						cm6GkoSEhAhOU051bWJlcgCEhAdO
-						U1ZhbHVlAJSEASqEhAFmnQCGkoSW
-						lhBOU1BhcmFncmFwaFN0eWxlhpKE
-						hIQXTlNNdXRhYmxlUGFyYWdyYXBo
-						U3R5bGUAhIQQTlNQYXJhZ3JhcGhT
-						dHlsZQCUhARDQ0BTAgCEhIQHTlNB
-						cnJheQCUmQyShISECU5TVGV4dFRh
-						YgCUhAJDZgAchpKEpaMAOIaShKWj
-						AFSGkoSlowBwhpKEpaMAgYwAhpKE
-						paMAgagAhpKEpaMAgcQAhpKEpaMA
-						geAAhpKEpaMAgfwAhpKEpaMAgRgB
-						hpKEpaMAgTQBhpKEpaMAgVABhoaB
-						AQiEBFsyZl3/g83MTD2GkoSWlgZO
-						U0ZvbnSGkoSEhAZOU0ZvbnQelJko
-						hAVbNDBjXQYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACdBoQBYwCnAacApwCGkoSW
-						lgdOU0NvbG9yhpKEhIQHTlNDb2xv
-						cgCUpwaEA0BAQISWlgZTeXN0ZW2G
-						hJaWCXRleHRDb2xvcoaEtqcDhAJm
-						ZgABhoaGlwIBkoSYmQSSsZKEs5ko
-						pgYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BacApwGnAKcAhpKekp+ShJaWDU5T
-						U3VwZXJTY3JpcHSGkoSbnISEAXGr
-						/4aSmZKEm5yEhAFkrACGhpcBAZcD
-						A5KEmJkEkp6ShKCgAgCEo5kMkqSS
-						ppKnkqiSqZKqkquSrJKtkq6Sr5Kw
-						hoEBCKT/g83MTD2GkrSShLanAYQE
-						ZmZmZgAAAQGGkrGSspKZkr+GlwQB
-						koSYmQWSvJK9kpmSv5KxkruSnpKE
-						oKACAISjmQySpJKmkqeSqJKpkqqS
-						q5Kskq2SrpKvkrCGgQEIpP+DzcxM
-						PYaStJLEhpcDBZcEAYY=
+						aW9uYXJ5AJSEAWkEkoSWlhBOU1Bh
+						cmFncmFwaFN0eWxlhpKEhIQXTlNN
+						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
+						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
+						hARDQ0BTAgCEhIQHTlNBcnJheQCU
+						mQyShISECU5TVGV4dFRhYgCUhAJD
+						ZgAchpKEoJ8AOIaShKCfAFSGkoSg
+						nwBwhpKEoJ8AgYwAhpKEoJ8AgagA
+						hpKEoJ8AgcQAhpKEoJ8AgeAAhpKE
+						oJ8AgfwAhpKEoJ8AgRgBhpKEoJ8A
+						gTQBhpKEoJ8AgVABhoaBAQiEBFsy
+						Zl3/g83MTD2GkoSWlgdOU0NvbG9y
+						hpKEhIQHTlNDb2xvcgCUhAFjBoQD
+						QEBAhJaWBlN5c3RlbYaElpYJdGV4
+						dENvbG9yhoSuogOEAmZmAAGGhpKE
+						lpYGTlNGb250hpKEhIQGTlNGb250
+						HpSZKIQFWzQwY10GAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQAhAFmBqIAogGiAKIA
+						hpKElpYGTlNLZXJuhpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBZKsAhoaXAgGShJiZBJKZkpqS
+						tZK2koSWlg1OU1N1cGVyU2NyaXB0
+						hpKEt6qEhAFxrP+GkrKShLSZKKYG
+						AAAAIAAAAP/+SABlAGwAdgBlAHQA
+						aQBjAGEALQBMAGkAZwBoAHQApwWi
+						AKIBogCiAIaGlwEBlwMDkoSYmQSS
+						mZKEm5wCAISemQySn5KhkqKSo5Kk
+						kqWSppKnkqiSqZKqkquGgQEIoP+D
+						zcxMPYaStZK2krKSs5KskoSuogGE
+						BGZmZmYAAAEBhoaXBAGShJiZBZK7
+						krySspK+krWStpKZkoSbnAIAhJ6Z
+						DJKfkqGSopKjkqSSpZKmkqeSqJKp
+						kqqSq4aBAQig/4PNzEw9hpKsksKG
+						lwMFlwQBhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -39756,13 +39731,10 @@ B
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:E
+\cf3 0:E
 \fs10 \sub 0
 \fs12 \nosupersub , 1:F
 \fs10 \sub 0}</string>
@@ -39868,13 +39840,10 @@ C
 
 \f0\fs12 \cf0 \expnd0\expndtw0\kerning0
 A
-\fs10 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \sub 0
+\fs12 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-0:B
+\cf2 0:B
 \fs10 \sub 0
 \fs12 \nosupersub , 1:C
 \fs10 \sub 0}</string>
@@ -39898,7 +39867,7 @@ A
 					<integer>6</integer>
 					<key>Points</key>
 					<array>
-						<string>{220.85962594961663, 77.368173996964458}</string>
+						<string>{220.77878702224572, 77.384060354481534}</string>
 						<string>{237.38171752486815, 118.624982625436}</string>
 					</array>
 					<key>Style</key>
@@ -39937,6 +39906,11 @@ A
 							<string>0</string>
 						</dict>
 					</dict>
+					<key>Tail</key>
+					<dict>
+						<key>ID</key>
+						<integer>1088</integer>
+					</dict>
 				</dict>
 				<dict>
 					<key>Class</key>
@@ -39952,8 +39926,8 @@ A
 					<integer>6</integer>
 					<key>Points</key>
 					<array>
-						<string>{339.28882417568434, 76.112800598144531}</string>
-						<string>{338.83556074087863, 103.61279296875}</string>
+						<string>{339.27593547633069, 76.112800598144531}</string>
+						<string>{338.80849447616919, 103.61279296875}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -40097,7 +40071,7 @@ A
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
 \cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
 \f0\fs14 \cf0 1. Project the state of node 
@@ -40110,14 +40084,15 @@ A
 \fs12 \expnd0\expndtw0\kerning0
 \sub 0
 \b0\fs14 \kerning1\expnd0\expndtw0 \nosupersub  resulting in: [ 
-\b \cf2 \expnd0\expndtw0\kerning0
+\b \expnd0\expndtw0\kerning0
 B
-\fs12 \cf0 \sub 0 
-\fs14 \cf2 \nosupersub , C
+\fs12 \sub 0 
+\fs14 \nosupersub , C
 \fs12 \sub 1 
-\b0\fs14 \cf0 \kerning1\expnd0\expndtw0 \nosupersub ]\
+\b0\fs14 \kerning1\expnd0\expndtw0 \nosupersub ]\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\i\fs10 (then traverse slot 1)}</string>
+\i\fs10 \cf0 (then traverse slot 1)}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -40371,8 +40346,8 @@ B
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -40519,21 +40494,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkGkruSvJK1
-						ksOSspKzkqySyJKZkoSbnAIAhJ6Z
-						DJKfkqGSopKjkqSSpZKmkqeSqJKp
-						kqqSq4aBAQig/4PNzEw9hpKElpYO
-						TlNPcmlnaW5hbEZvbnSGkrOGhg==
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykrOStZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -40544,13 +40516,10 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F\expnd0\expndtw0\kerning0
-\sub 1}</string>
+\f0\b \cf3 \nosupersub 1:F\sub 1}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -40676,17 +40645,15 @@ C
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -40697,12 +40664,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Cat}</string>
+\f0\b \cf3 \nosupersub b:Cat}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -41068,10 +41033,224 @@ Alice wishes to query the state of key 11. She starts from her present query con
 
 \f0\fs12 \cf2 "Node A" exists only as an\
 ephemeral projection of A
-\fs14 \sub *
-\fs12 \nosupersub  Memos}</string>
+\fs14 \cf2 \sub *
+\fs12 \cf2 \nosupersub  Memos}</string>
 						<key>VerticalPad</key>
 						<integer>2</integer>
+					</dict>
+					<key>TextPlacement</key>
+					<integer>0</integer>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{198.716796875, 55.612800598144531}, {35.45130920410179, 22}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Clip</string>
+					<key>Flow</key>
+					<string>Clip</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Font</key>
+						<string>Helvetica</string>
+						<key>Size</key>
+						<real>6</real>
+					</dict>
+					<key>ID</key>
+					<integer>1086</integer>
+					<key>Layer</key>
+					<integer>7</integer>
+					<key>Shape</key>
+					<string>Cloud</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>b</key>
+								<string>0.653573</string>
+								<key>g</key>
+								<string>0.875658</string>
+								<key>r</key>
+								<string>0.386682</string>
+							</dict>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+							<key>Fuzziness</key>
+							<real>4.1422834396362305</real>
+							<key>ShadowVector</key>
+							<string>{1, 2}</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+
+\f0\fs12 \cf0 Start!}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{168.37500000000006, 18.612800598144531}, {96.013381958007983, 65}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Color</key>
+						<dict>
+							<key>a</key>
+							<string>0.2</string>
+							<key>w</key>
+							<string>0</string>
+						</dict>
+						<key>Font</key>
+						<string>Helvetica</string>
+						<key>Size</key>
+						<real>8</real>
+					</dict>
+					<key>ID</key>
+					<integer>1085</integer>
+					<key>Layer</key>
+					<integer>7</integer>
+					<key>Magnets</key>
+					<array>
+						<string>{-0.59628479784302701, -1.1925696134567303}</string>
+						<string>{1.9868215517249155e-08, -1.3333333730697678}</string>
+						<string>{0.59628487781105122, -1.1925696134567303}</string>
+						<string>{1.1925696134567261, -0.59628480672836726}</string>
+						<string>{1.3333333730697632, 1.5894571940104153e-07}</string>
+						<string>{1.1925696134567261, 0.59628473564567064}</string>
+						<string>{0.59628465308492196, 1.1925697326660114}</string>
+						<string>{0, 1.3333333730697585}</string>
+						<string>{-0.5962849488937394, 1.1925696134567219}</string>
+						<string>{-1.1925697326660156, 0.59628443983683188}</string>
+						<string>{-1.3333333730697632, -6.3578290128892467e-07}</string>
+						<string>{-1.1925696134567261, -0.59628480672836726}</string>
+					</array>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>1</string>
+								<key>g</key>
+								<string>1</string>
+								<key>r</key>
+								<string>1</string>
+							</dict>
+							<key>FillType</key>
+							<integer>2</integer>
+							<key>GradientAngle</key>
+							<real>90</real>
+							<key>GradientColor</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>1</string>
+								<key>g</key>
+								<string>0.645058</string>
+								<key>r</key>
+								<string>0.343042</string>
+							</dict>
+						</dict>
+						<key>image fill</key>
+						<dict>
+							<key>ImageSizing</key>
+							<integer>0</integer>
+							<key>Opacity</key>
+							<real>0.63210225105285645</real>
+							<key>Scale</key>
+							<real>0.125</real>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>0</string>
+								<key>g</key>
+								<string>0</string>
+								<key>r</key>
+								<string>0</string>
+							</dict>
+							<key>CornerRadius</key>
+							<real>5</real>
+							<key>Width</key>
+							<real>0.5</real>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Pad</key>
+						<integer>3</integer>
+						<key>RTFD</key>
+						<data>
+						BAtzdHJlYW10eXBlZIHoA4QBQISE
+						hBJOU0F0dHJpYnV0ZWRTdHJpbmcA
+						hIQITlNPYmplY3QAhZKEhIQITlNT
+						dHJpbmcBlIQBKxVBbGljZSdzIFF1
+						ZXJ5IENvbnRleHSGhAJpSQEVkoSE
+						hAxOU0RpY3Rpb25hcnkAlIQBaQOS
+						hJaWB05TQ29sb3KGkoSEhAdOU0Nv
+						bG9yAJSEAWMDhAJmZgCDomQkP4aS
+						hJaWEE5TUGFyYWdyYXBoU3R5bGWG
+						koSEhBdOU011dGFibGVQYXJhZ3Jh
+						cGhTdHlsZQCEhBBOU1BhcmFncmFw
+						aFN0eWxlAJSEBENDQFMCAISEhAdO
+						U0FycmF5AJSZDJKEhIQJTlNUZXh0
+						VGFiAJSEAkNmAByGkoSjogA4hpKE
+						o6IAVIaShKOiAHCGkoSjogCBjACG
+						koSjogCBqACGkoSjogCBxACGkoSj
+						ogCB4ACGkoSjogCB/ACGkoSjogCB
+						GAGGkoSjogCBNAGGkoSjogCBUAGG
+						hoEACIQEWzFmXYPNzEw9hpKElpYG
+						TlNGb250hpKEhIQGTlNGb250HpSZ
+						HIQFWzI4Y10GAAAAFAAAAP/+SABl
+						AGwAdgBlAHQAaQBjAGEAhAFmCJsA
+						mwGbAJsAhoaG
+						</data>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+
+\f0\fs16 \cf2 Alice's Query Context}</string>
+						<key>VerticalPad</key>
+						<integer>7</integer>
+						<key>alpha</key>
+						<array>
+							<array>
+								<integer>0</integer>
+								<integer>21</integer>
+								<real>0.64216053485870361</real>
+							</array>
+						</array>
 					</dict>
 					<key>TextPlacement</key>
 					<integer>0</integer>
@@ -41191,7 +41370,7 @@ ephemeral projection of A
 					<key>Tail</key>
 					<dict>
 						<key>ID</key>
-						<integer>161</integer>
+						<integer>1086</integer>
 					</dict>
 				</dict>
 				<dict>
@@ -41807,37 +41986,36 @@ ephemeral projection of A
 						dHJpbmcBlIQBKxJEMAphOkdvYXQK
 						YjpSYWJiaXSGhAJpSQEBkoSEhAxO
 						U0RpY3Rpb25hcnkAlIQBaQSShJaW
-						Bk5TS2VyboaShISECE5TTnVtYmVy
-						AISEB05TVmFsdWUAlIQBKoSEAWad
-						AIaShJaWEE5TUGFyYWdyYXBoU3R5
-						bGWGkoSEhBdOU011dGFibGVQYXJh
-						Z3JhcGhTdHlsZQCEhBBOU1BhcmFn
-						cmFwaFN0eWxlAJSEBENDQFMCAISE
-						hAdOU0FycmF5AJSZDJKEhIQJTlNU
-						ZXh0VGFiAJSEAkNmAByGkoSlowA4
-						hpKEpaMAVIaShKWjAHCGkoSlowCB
-						jACGkoSlowCBqACGkoSlowCBxACG
-						koSlowCB4ACGkoSlowCB/ACGkoSl
-						owCBGAGGkoSlowCBNAGGkoSlowCB
-						UAGGhoEBCIQEWzJmXf+DzcxMPYaS
-						hJaWBk5TRm9udIaShISEBk5TRm9u
-						dB6UmSiEBVs0MGNdBgAAACAAAAD/
-						/kgAZQBsAHYAZQB0AGkAYwBhAC0A
-						TABpAGcAaAB0AJ0GhAFjAKcBpwCn
-						AIaShJaWB05TQ29sb3KGkoSEhAdO
-						U0NvbG9yAJSnBoQDQEBAhJaWBlN5
-						c3RlbYaElpYJdGV4dENvbG9yhoS2
-						pwOEAmZmAAGGhoaXAgGShJiZBJKx
-						koSzmSimBgAAACAAAAD//kgAZQBs
-						AHYAZQB0AGkAYwBhAC0ATABpAGcA
-						aAB0AJ0FpwCnAacApwCGkp6Sn5KE
-						lpYNTlNTdXBlclNjcmlwdIaShJuc
-						hIQBcav/hpKZkoSbnISEAWSsAIaG
-						lwEBlwMPkoSYmQSSnpKEoKACAISj
-						mQySpJKmkqeSqJKpkqqSq5Kskq2S
-						rpKvkrCGgQEIpP+DzcxMPYaStJKE
-						tqcBhARmZmZmAAABAYaSsZKykpmS
-						v4aG
+						EE5TUGFyYWdyYXBoU3R5bGWGkoSE
+						hBdOU011dGFibGVQYXJhZ3JhcGhT
+						dHlsZQCEhBBOU1BhcmFncmFwaFN0
+						eWxlAJSEBENDQFMCAISEhAdOU0Fy
+						cmF5AJSZDJKEhIQJTlNUZXh0VGFi
+						AJSEAkNmAByGkoSgnwA4hpKEoJ8A
+						VIaShKCfAHCGkoSgnwCBjACGkoSg
+						nwCBqACGkoSgnwCBxACGkoSgnwCB
+						4ACGkoSgnwCB/ACGkoSgnwCBGAGG
+						koSgnwCBNAGGkoSgnwCBUAGGhoEB
+						CIQEWzJmXf+DzcxMPYaShJaWB05T
+						Q29sb3KGkoSEhAdOU0NvbG9yAJSE
+						AWMGhANAQECElpYGU3lzdGVthoSW
+						lgl0ZXh0Q29sb3KGhK6iA4QCZmYA
+						AYaGkoSWlgZOU0ZvbnSGkoSEhAZO
+						U0ZvbnQelJkohAVbNDBjXQYAAAAg
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQAtAEwAaQBnAGgAdACEAWYGogCi
+						AaIAogCGkoSWlgZOU0tlcm6GkoSE
+						hAhOU051bWJlcgCEhAdOU1ZhbHVl
+						AJSEASqEhAFkqwCGhpcCAZKEmJkE
+						kpmSmpK1kraShJaWDU5TU3VwZXJT
+						Y3JpcHSGkoS3qoSEAXGs/4aSspKE
+						tJkopgYAAAAgAAAA//5IAGUAbAB2
+						AGUAdABpAGMAYQAtAEwAaQBnAGgA
+						dACnBaIAogGiAKIAhoaXAQGXAw+S
+						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
+						opKjkqSSpZKmkqeSqJKpkqqSq4aB
+						AQig/4PNzEw9hpK1kraSspKzkqyS
+						hK6iAYQEZmZmZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -41847,13 +42025,10 @@ ephemeral projection of A
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 D
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-a:Goat\
+\cf3 a:Goat\
 b:Rabbit}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -41955,37 +42130,36 @@ b:Rabbit}</string>
 						dHJpbmcBlIQBKxVFMAphOkhhbXN0
 						ZXIKYjpGZXJyZXSGhAJpSQEBkoSE
 						hAxOU0RpY3Rpb25hcnkAlIQBaQSS
-						hJaWBk5TS2VyboaShISECE5TTnVt
-						YmVyAISEB05TVmFsdWUAlIQBKoSE
-						AWadAIaShJaWEE5TUGFyYWdyYXBo
-						U3R5bGWGkoSEhBdOU011dGFibGVQ
-						YXJhZ3JhcGhTdHlsZQCEhBBOU1Bh
-						cmFncmFwaFN0eWxlAJSEBENDQFMC
-						AISEhAdOU0FycmF5AJSZDJKEhIQJ
-						TlNUZXh0VGFiAJSEAkNmAByGkoSl
-						owA4hpKEpaMAVIaShKWjAHCGkoSl
-						owCBjACGkoSlowCBqACGkoSlowCB
-						xACGkoSlowCB4ACGkoSlowCB/ACG
-						koSlowCBGAGGkoSlowCBNAGGkoSl
-						owCBUAGGhoEBCIQEWzJmXf+DzcxM
-						PYaShJaWBk5TRm9udIaShISEBk5T
-						Rm9udB6UmSiEBVs0MGNdBgAAACAA
-						AAD//kgAZQBsAHYAZQB0AGkAYwBh
-						AC0ATABpAGcAaAB0AJ0GhAFjAKcB
-						pwCnAIaShJaWB05TQ29sb3KGkoSE
-						hAdOU0NvbG9yAJSnBoQDQEBAhJaW
-						BlN5c3RlbYaElpYJdGV4dENvbG9y
-						hoS2pwOEAmZmAAGGhoaXAgGShJiZ
-						BJKxkoSzmSimBgAAACAAAAD//kgA
-						ZQBsAHYAZQB0AGkAYwBhAC0ATABp
-						AGcAaAB0AJ0FpwCnAacApwCGkp6S
-						n5KElpYNTlNTdXBlclNjcmlwdIaS
-						hJuchIQBcav/hpKZkoSbnISEAWSs
-						AIaGlwEBlwMSkoSYmQSSnpKEoKAC
-						AISjmQySpJKmkqeSqJKpkqqSq5Ks
-						kq2SrpKvkrCGgQEIpP+DzcxMPYaS
-						tJKEtqcBhARmZmZmAAABAYaSsZKy
-						kpmSv4aG
+						hJaWEE5TUGFyYWdyYXBoU3R5bGWG
+						koSEhBdOU011dGFibGVQYXJhZ3Jh
+						cGhTdHlsZQCEhBBOU1BhcmFncmFw
+						aFN0eWxlAJSEBENDQFMCAISEhAdO
+						U0FycmF5AJSZDJKEhIQJTlNUZXh0
+						VGFiAJSEAkNmAByGkoSgnwA4hpKE
+						oJ8AVIaShKCfAHCGkoSgnwCBjACG
+						koSgnwCBqACGkoSgnwCBxACGkoSg
+						nwCB4ACGkoSgnwCB/ACGkoSgnwCB
+						GAGGkoSgnwCBNAGGkoSgnwCBUAGG
+						hoEBCIQEWzJmXf+DzcxMPYaShJaW
+						B05TQ29sb3KGkoSEhAdOU0NvbG9y
+						AJSEAWMGhANAQECElpYGU3lzdGVt
+						hoSWlgl0ZXh0Q29sb3KGhK6iA4QC
+						ZmYAAYaGkoSWlgZOU0ZvbnSGkoSE
+						hAZOU0ZvbnQelJkohAVbNDBjXQYA
+						AAAgAAAA//5IAGUAbAB2AGUAdABp
+						AGMAYQAtAEwAaQBnAGgAdACEAWYG
+						ogCiAaIAogCGkoSWlgZOU0tlcm6G
+						koSEhAhOU051bWJlcgCEhAdOU1Zh
+						bHVlAJSEASqEhAFkqwCGhpcCAZKE
+						mJkEkpmSmpK1kraShJaWDU5TU3Vw
+						ZXJTY3JpcHSGkoS3qoSEAXGs/4aS
+						spKEtJkopgYAAAAgAAAA//5IAGUA
+						bAB2AGUAdABpAGMAYQAtAEwAaQBn
+						AGgAdACnBaIAogGiAKIAhoaXAQGX
+						AxKShJiZBJKZkoSbnAIAhJ6ZDJKf
+						kqGSopKjkqSSpZKmkqeSqJKpkqqS
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -41995,13 +42169,10 @@ b:Rabbit}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 E
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-a:Hamster\
+\cf3 a:Hamster\
 b:Ferret}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -42124,19 +42295,17 @@ b:Ferret}</string>
 						ogCiAIaShJaWBk5TS2VyboaShISE
 						CE5TTnVtYmVyAISEB05TVmFsdWUA
 						lIQBKoSEAWSrAIaGlwIBkoSYmQSS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBaIAogGiAKIAhpKZkpqS
-						hJaWDU5TU3VwZXJTY3JpcHSGkoS3
-						qoSEAXGs/4aStZK2hpcBAZcDApKE
+						mZKakrWStpKElpYNTlNTdXBlclNj
+						cmlwdIaShLeqhIQBcaz/hpKykoS0
+						mSimBgAAACAAAAD//kgAZQBsAHYA
+						ZQB0AGkAYwBhAC0ATABpAGcAaAB0
+						AKcFogCiAaIAogCGhpcBAZcDApKE
 						mJkEkpmSmpK1kraSspKzkqyShK6i
 						AYQEZmZmZgAAAQGGhpcEBpKEmJkE
-						kpmShJucAgCEnpkMkp+SoZKikqOS
-						pJKlkqaSp5KokqmSqpKrhoEBCKD9
-						g83MTD2GkqySwJKykoS0mRyEBVsy
-						OGNdBgAAABQAAAD//kgAZQBsAHYA
-						ZQB0AGkAYwBhAKcGogCiAaIAogCG
-						krWShLeqhKenAIaGlwMDlwQDhg==
+						kpmSmpK1kraSspKEtJkchAVbMjhj
+						XQYAAAAUAAAA//5IAGUAbAB2AGUA
+						dABpAGMAYQCnBqIAogGiAKIAhpKs
+						ksCGlwMDlwQDhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -42149,13 +42318,10 @@ F
 \fs10 \cf0 \sub 0
 \fs12 \cf2 \nosupersub \
 \cf3 a:
-\f1 \expnd0\expndtw0\kerning0
-Turtle
-\f0 \expnd0\expndtw0\kerning0
-\
+\f1 Turtle
+\f0 \
 b:
-\f1 \expnd0\expndtw0\kerning0
-Dog}</string>
+\f1 Dog}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -42255,41 +42421,40 @@ Dog}</string>
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKwdCMAowOkQwhoQC
 						aUkBAZKEhIQMTlNEaWN0aW9uYXJ5
-						AJSEAWkEkoSWlgZOU0tlcm6GkoSE
-						hAhOU051bWJlcgCEhAdOU1ZhbHVl
-						AJSEASqEhAFmnQCGkoSWlhBOU1Bh
-						cmFncmFwaFN0eWxlhpKEhIQXTlNN
-						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
-						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
-						hARDQ0BTAgCEhIQHTlNBcnJheQCU
-						mQyShISECU5TVGV4dFRhYgCUhAJD
-						ZgAchpKEpaMAOIaShKWjAFSGkoSl
-						owBwhpKEpaMAgYwAhpKEpaMAgagA
-						hpKEpaMAgcQAhpKEpaMAgeAAhpKE
-						paMAgfwAhpKEpaMAgRgBhpKEpaMA
-						gTQBhpKEpaMAgVABhoaBAQiEBFsy
-						Zl3/g83MTD2GkoSWlgZOU0ZvbnSG
-						koSEhAZOU0ZvbnQelJkohAVbNDBj
-						XQYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BoQBYwCnAacApwCGkoSWlgdOU0Nv
-						bG9yhpKEhIQHTlNDb2xvcgCUpwaE
-						A0BAQISWlgZTeXN0ZW2GhJaWCXRl
-						eHRDb2xvcoaEtqcDhAJmZgABhoaG
-						lwIBkoSYmQSSsZKEs5kopgYAAAAg
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQAtAEwAaQBnAGgAdACdBacApwGn
-						AKcAhpKekp+ShJaWDU5TU3VwZXJT
-						Y3JpcHSGkoSbnISEAXGr/4aSmZKE
-						m5yEhAFkrACGhpcBAZcDA5KEmJkE
-						kp6ShKCgAgCEo5kMkqSSppKnkqiS
-						qZKqkquSrJKtkq6Sr5KwhoEBCKT/
-						g83MTD2GkrSShLanAYQEZmZmZgAA
-						AQGGkrGSspKZkr+GlwQBkoSYmQWS
-						vJK9kpmSv5KxkruSnpKEoKACAISj
-						mQySpJKmkqeSqJKpkqqSq5Kskq2S
-						rpKvkrCGgQEIpP+DzcxMPYaStJLE
-						hoY=
+						AJSEAWkEkoSWlhBOU1BhcmFncmFw
+						aFN0eWxlhpKEhIQXTlNNdXRhYmxl
+						UGFyYWdyYXBoU3R5bGUAhIQQTlNQ
+						YXJhZ3JhcGhTdHlsZQCUhARDQ0BT
+						AgCEhIQHTlNBcnJheQCUmQyShISE
+						CU5TVGV4dFRhYgCUhAJDZgAchpKE
+						oJ8AOIaShKCfAFSGkoSgnwBwhpKE
+						oJ8AgYwAhpKEoJ8AgagAhpKEoJ8A
+						gcQAhpKEoJ8AgeAAhpKEoJ8AgfwA
+						hpKEoJ8AgRgBhpKEoJ8AgTQBhpKE
+						oJ8AgVABhoaBAQiEBFsyZl3/g83M
+						TD2GkoSWlgdOU0NvbG9yhpKEhIQH
+						TlNDb2xvcgCUhAFjBoQDQEBAhJaW
+						BlN5c3RlbYaElpYJdGV4dENvbG9y
+						hoSuogOEAmZmAAGGhpKElpYGTlNG
+						b250hpKEhIQGTlNGb250HpSZKIQF
+						WzQwY10GAAAAIAAAAP/+SABlAGwA
+						dgBlAHQAaQBjAGEALQBMAGkAZwBo
+						AHQAhAFmBqIAogGiAKIAhpKElpYG
+						TlNLZXJuhpKEhIQITlNOdW1iZXIA
+						hIQHTlNWYWx1ZQCUhAEqhIQBZKsA
+						hoaXAgGShJiZBJKZkpqStZK2koSW
+						lg1OU1N1cGVyU2NyaXB0hpKEt6qE
+						hAFxrP+GkrKShLSZKKYGAAAAIAAA
+						AP/+SABlAGwAdgBlAHQAaQBjAGEA
+						LQBMAGkAZwBoAHQApwWiAKIBogCi
+						AIaGlwEBlwMDkoSYmQSSmZKEm5wC
+						AISemQySn5KhkqKSo5KkkqWSppKn
+						kqiSqZKqkquGgQEIoP+DzcxMPYaS
+						tZK2krKSs5KskoSuogGEBGZmZmYA
+						AAEBhoaXBAGShJiZBZK7krySspK+
+						krWStpKZkoSbnAIAhJ6ZDJKfkqGS
+						opKjkqSSpZKmkqeSqJKpkqqSq4aB
+						AQig/4PNzEw9hpKsksKGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -42299,13 +42464,10 @@ Dog}</string>
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 B
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:D
+\cf3 0:D
 \fs10 \sub 0}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -42406,41 +42568,41 @@ B
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKw1DMAowOkUwLCAx
 						OkYwhoQCaUkBAZKEhIQMTlNEaWN0
-						aW9uYXJ5AJSEAWkEkoSWlgZOU0tl
-						cm6GkoSEhAhOU051bWJlcgCEhAdO
-						U1ZhbHVlAJSEASqEhAFmnQCGkoSW
-						lhBOU1BhcmFncmFwaFN0eWxlhpKE
-						hIQXTlNNdXRhYmxlUGFyYWdyYXBo
-						U3R5bGUAhIQQTlNQYXJhZ3JhcGhT
-						dHlsZQCUhARDQ0BTAgCEhIQHTlNB
-						cnJheQCUmQyShISECU5TVGV4dFRh
-						YgCUhAJDZgAchpKEpaMAOIaShKWj
-						AFSGkoSlowBwhpKEpaMAgYwAhpKE
-						paMAgagAhpKEpaMAgcQAhpKEpaMA
-						geAAhpKEpaMAgfwAhpKEpaMAgRgB
-						hpKEpaMAgTQBhpKEpaMAgVABhoaB
-						AQiEBFsyZl3/g83MTD2GkoSWlgZO
-						U0ZvbnSGkoSEhAZOU0ZvbnQelJko
-						hAVbNDBjXQYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACdBoQBYwCnAacApwCGkoSW
-						lgdOU0NvbG9yhpKEhIQHTlNDb2xv
-						cgCUpwaEA0BAQISWlgZTeXN0ZW2G
-						hJaWCXRleHRDb2xvcoaEtqcDhAJm
-						ZgABhoaGlwIBkoSYmQSSsZKEs5ko
-						pgYAAAAgAAAA//5IAGUAbAB2AGUA
-						dABpAGMAYQAtAEwAaQBnAGgAdACd
-						BacApwGnAKcAhpKekp+ShJaWDU5T
-						U3VwZXJTY3JpcHSGkoSbnISEAXGr
-						/4aSmZKEm5yEhAFkrACGhpcBAZcD
-						A5KEmJkEkp6ShKCgAgCEo5kMkqSS
-						ppKnkqiSqZKqkquSrJKtkq6Sr5Kw
-						hoEBCKT/g83MTD2GkrSShLanAYQE
-						ZmZmZgAAAQGGkrGSspKZkr+GlwQB
-						koSYmQWSvJK9kpmSv5KxkruSnpKE
-						oKACAISjmQySpJKmkqeSqJKpkqqS
-						q5Kskq2SrpKvkrCGgQEIpP+DzcxM
-						PYaStJLEhpcDBZcEAYY=
+						aW9uYXJ5AJSEAWkEkoSWlhBOU1Bh
+						cmFncmFwaFN0eWxlhpKEhIQXTlNN
+						dXRhYmxlUGFyYWdyYXBoU3R5bGUA
+						hIQQTlNQYXJhZ3JhcGhTdHlsZQCU
+						hARDQ0BTAgCEhIQHTlNBcnJheQCU
+						mQyShISECU5TVGV4dFRhYgCUhAJD
+						ZgAchpKEoJ8AOIaShKCfAFSGkoSg
+						nwBwhpKEoJ8AgYwAhpKEoJ8AgagA
+						hpKEoJ8AgcQAhpKEoJ8AgeAAhpKE
+						oJ8AgfwAhpKEoJ8AgRgBhpKEoJ8A
+						gTQBhpKEoJ8AgVABhoaBAQiEBFsy
+						Zl3/g83MTD2GkoSWlgdOU0NvbG9y
+						hpKEhIQHTlNDb2xvcgCUhAFjBoQD
+						QEBAhJaWBlN5c3RlbYaElpYJdGV4
+						dENvbG9yhoSuogOEAmZmAAGGhpKE
+						lpYGTlNGb250hpKEhIQGTlNGb250
+						HpSZKIQFWzQwY10GAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQAhAFmBqIAogGiAKIA
+						hpKElpYGTlNLZXJuhpKEhIQITlNO
+						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
+						hIQBZKsAhoaXAgGShJiZBJKZkpqS
+						tZK2koSWlg1OU1N1cGVyU2NyaXB0
+						hpKEt6qEhAFxrP+GkrKShLSZKKYG
+						AAAAIAAAAP/+SABlAGwAdgBlAHQA
+						aQBjAGEALQBMAGkAZwBoAHQApwWi
+						AKIBogCiAIaGlwEBlwMDkoSYmQSS
+						mZKEm5wCAISemQySn5KhkqKSo5Kk
+						kqWSppKnkqiSqZKqkquGgQEIoP+D
+						zcxMPYaStZK2krKSs5KskoSuogGE
+						BGZmZmYAAAEBhoaXBAGShJiZBZK7
+						krySspK+krWStpKZkoSbnAIAhJ6Z
+						DJKfkqGSopKjkqSSpZKmkqeSqJKp
+						kqqSq4aBAQig/4PNzEw9hpKsksKG
+						lwMFlwQBhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -42450,13 +42612,10 @@ B
 
 \f0\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
-\fs10 \cf0 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \cf2 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \cf0 \sub 0
+\fs12 \cf2 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf3 \expnd0\expndtw0\kerning0
-0:E
+\cf3 0:E
 \fs10 \sub 0
 \fs12 \nosupersub , 1:F
 \fs10 \sub 0}</string>
@@ -42562,13 +42721,10 @@ C
 
 \f0\fs12 \cf0 \expnd0\expndtw0\kerning0
 A
-\fs10 \expnd0\expndtw0\kerning0
-\sub 0
-\fs12 \expnd0\expndtw0\kerning0
-\nosupersub \
+\fs10 \sub 0
+\fs12 \nosupersub \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
-\cf2 \expnd0\expndtw0\kerning0
-0:B
+\cf2 0:B
 \fs10 \sub 0
 \fs12 \nosupersub , 1:C
 \fs10 \sub 0}</string>
@@ -42827,8 +42983,8 @@ A
 						kruSvJKykrOGlwQDkoSYmQSSmZKE
 						m5wCAISemQySn5KhkqKSo5KkkqWS
 						ppKnkqiSqZKqkquGgQEIoP+DzcxM
-						PYaSrJKErqIBhARmZmZmAAABAYaS
-						spKzkrWStoaXBQGShJiZBZK7kryS
+						PYaStZK2krKSs5KskoSuogGEBGZm
+						ZmYAAAEBhoaXBQGShJiZBZK7kryS
 						spK+krWStpKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
 						q4aBAQig/4PNzEw9hpKsksWGhg==
@@ -42975,19 +43131,18 @@ A
 						hAFxrP+GkrKShLSZKKYGAAAAHgAA
 						AP/+SABlAGwAdgBlAHQAaQBjAGEA
 						LQBCAG8AbABkAAAApwWiAKIBogCi
-						AIaGlwMBkoSYmQSSspKEtJkopgYA
-						AAAgAAAA//5IAGUAbAB2AGUAdABp
-						AGMAYQAtAEwAaQBnAGgAdACnBqIA
-						ogGiAKIAhpKZkoSbnAIAhJ6ZDJKf
+						AIaGlwMBkoSYmQSSmZKakrWStpK7
+						krySspKEtJkopgYAAAAgAAAA//5I
+						AGUAbAB2AGUAdABpAGMAYQAtAEwA
+						aQBnAGgAdACnBqIAogGiAKIAhoaX
+						BAOShJiZBJKZkoSbnAIAhJ6ZDJKf
 						kqGSopKjkqSSpZKmkqeSqJKpkqqS
-						q4aBAQig/4PNzEw9hpK7kryStZKE
-						t6qEp6cAhoaXBAOShJiZBJKZkoSb
-						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
-						kqeSqJKpkqqSq4aBAQig/4PNzEw9
-						hpKskoSuogGEBGZmZmYAAAEBhpKy
-						krOStZK2hpcFAZKEmJkGkruSvJK1
-						ksOSspK+kqySyJKZksGShJaWDk5T
-						T3JpZ2luYWxGb250hpK+hoY=
+						q4aBAQig/4PNzEw9hpK1kraSspKz
+						kqyShK6iAYQEZmZmZgAAAQGGhpcF
+						AZKEmJkFkruSvJKykr6StZK2kpmS
+						hJucAgCEnpkMkp+SoZKikqOSpJKl
+						kqaSp5KokqmSqpKrhoEBCKD/g83M
+						TD2GkqySxIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -42998,14 +43153,11 @@ A
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 C
 \fs10 \cf0 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub 1:F
-\fs10 \expnd0\expndtw0\kerning0
-\sub 1}</string>
+\f0\b \cf3 \nosupersub 1:F
+\fs10 \sub 1}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -43131,17 +43283,15 @@ C
 						rP+GkrKShLSZKKYGAAAAHgAAAP/+
 						SABlAGwAdgBlAHQAaQBjAGEALQBC
 						AG8AbABkAAAApwWiAKIBogCiAIaS
-						mZKakqySrYaXAwGShJiZBZK7kryS
-						spKEtJkopgYAAAAgAAAA//5IAGUA
-						bAB2AGUAdABpAGMAYQAtAEwAaQBn
-						AGgAdACnBqIAogGiAKIAhpK1koS3
-						qoSnpwCGkpmShJucAgCEnpkMkp+S
-						oZKikqOSpJKlkqaSp5KokqmSqpKr
-						hoEBCKD/g83MTD2GkqySrYaXBAWS
-						hJiZBJKZkoSbnAIAhJ6ZDJKfkqGS
-						opKjkqSSpZKmkqeSqJKpkqqSq4aB
-						AQig/4PNzEw9hpKskoSuogGEBGZm
-						ZmYAAAEBhpKykrOStZK2hoY=
+						mZKakqySrYaXAwGShJiZBZK1kraS
+						u5K8krKShLSZKKYGAAAAIAAAAP/+
+						SABlAGwAdgBlAHQAaQBjAGEALQBM
+						AGkAZwBoAHQApwaiAKIBogCiAIaS
+						mZKakqySrYaXBAWShJiZBJKZkoSb
+						nAIAhJ6ZDJKfkqGSopKjkqSSpZKm
+						kqeSqJKpkqqSq4aBAQig/4PNzEw9
+						hpK1kraSspKzkqyShK6iAYQEZmZm
+						ZgAAAQGGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -43152,12 +43302,10 @@ C
 \f0\b\fs12 \cf2 \expnd0\expndtw0\kerning0
 F
 \fs10 \sub 1
-\f1\b0\fs12 \expnd0\expndtw0\kerning0
-\
+\f1\b0\fs12 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural\qc
 
-\f0\b \cf3 \expnd0\expndtw0\kerning0
-\nosupersub b:Cat}</string>
+\f0\b \cf3 \nosupersub b:Cat}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -43308,8 +43456,8 @@ F
 					<integer>7</integer>
 					<key>Points</key>
 					<array>
-						<string>{378.4813326469519, 190.72560119628906}</string>
-						<string>{363.68393839352143, 142.5}</string>
+						<string>{378.48226664105903, 190.72560119628906}</string>
+						<string>{363.68777835068204, 142.5}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -43689,6 +43837,220 @@ F
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{198.46010589599609, 55.612800598144531}, {35.45130920410179, 22}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Clip</string>
+					<key>Flow</key>
+					<string>Clip</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Font</key>
+						<string>Helvetica</string>
+						<key>Size</key>
+						<real>6</real>
+					</dict>
+					<key>ID</key>
+					<integer>1082</integer>
+					<key>Layer</key>
+					<integer>8</integer>
+					<key>Shape</key>
+					<string>Cloud</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>b</key>
+								<string>0.653573</string>
+								<key>g</key>
+								<string>0.875658</string>
+								<key>r</key>
+								<string>0.386682</string>
+							</dict>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+							<key>Fuzziness</key>
+							<real>4.1422834396362305</real>
+							<key>ShadowVector</key>
+							<string>{1, 2}</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+
+\f0\fs12 \cf0 Start!}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{168.11830902099615, 18.612800598144531}, {96.013381958007983, 65}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Color</key>
+						<dict>
+							<key>a</key>
+							<string>0.2</string>
+							<key>w</key>
+							<string>0</string>
+						</dict>
+						<key>Font</key>
+						<string>Helvetica</string>
+						<key>Size</key>
+						<real>8</real>
+					</dict>
+					<key>ID</key>
+					<integer>1081</integer>
+					<key>Layer</key>
+					<integer>8</integer>
+					<key>Magnets</key>
+					<array>
+						<string>{-0.59628479784302701, -1.1925696134567303}</string>
+						<string>{1.9868215517249155e-08, -1.3333333730697678}</string>
+						<string>{0.59628487781105122, -1.1925696134567303}</string>
+						<string>{1.1925696134567261, -0.59628480672836726}</string>
+						<string>{1.3333333730697632, 1.5894571940104153e-07}</string>
+						<string>{1.1925696134567261, 0.59628473564567064}</string>
+						<string>{0.59628465308492196, 1.1925697326660114}</string>
+						<string>{0, 1.3333333730697585}</string>
+						<string>{-0.5962849488937394, 1.1925696134567219}</string>
+						<string>{-1.1925697326660156, 0.59628443983683188}</string>
+						<string>{-1.3333333730697632, -6.3578290128892467e-07}</string>
+						<string>{-1.1925696134567261, -0.59628480672836726}</string>
+					</array>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>1</string>
+								<key>g</key>
+								<string>1</string>
+								<key>r</key>
+								<string>1</string>
+							</dict>
+							<key>FillType</key>
+							<integer>2</integer>
+							<key>GradientAngle</key>
+							<real>90</real>
+							<key>GradientColor</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>1</string>
+								<key>g</key>
+								<string>0.645058</string>
+								<key>r</key>
+								<string>0.343042</string>
+							</dict>
+						</dict>
+						<key>image fill</key>
+						<dict>
+							<key>ImageSizing</key>
+							<integer>0</integer>
+							<key>Opacity</key>
+							<real>0.63210225105285645</real>
+							<key>Scale</key>
+							<real>0.125</real>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>0</string>
+								<key>g</key>
+								<string>0</string>
+								<key>r</key>
+								<string>0</string>
+							</dict>
+							<key>CornerRadius</key>
+							<real>5</real>
+							<key>Width</key>
+							<real>0.5</real>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Pad</key>
+						<integer>3</integer>
+						<key>RTFD</key>
+						<data>
+						BAtzdHJlYW10eXBlZIHoA4QBQISE
+						hBJOU0F0dHJpYnV0ZWRTdHJpbmcA
+						hIQITlNPYmplY3QAhZKEhIQITlNT
+						dHJpbmcBlIQBKxVBbGljZSdzIFF1
+						ZXJ5IENvbnRleHSGhAJpSQEVkoSE
+						hAxOU0RpY3Rpb25hcnkAlIQBaQOS
+						hJaWB05TQ29sb3KGkoSEhAdOU0Nv
+						bG9yAJSEAWMDhAJmZgCDomQkP4aS
+						hJaWEE5TUGFyYWdyYXBoU3R5bGWG
+						koSEhBdOU011dGFibGVQYXJhZ3Jh
+						cGhTdHlsZQCEhBBOU1BhcmFncmFw
+						aFN0eWxlAJSEBENDQFMCAISEhAdO
+						U0FycmF5AJSZDJKEhIQJTlNUZXh0
+						VGFiAJSEAkNmAByGkoSjogA4hpKE
+						o6IAVIaShKOiAHCGkoSjogCBjACG
+						koSjogCBqACGkoSjogCBxACGkoSj
+						ogCB4ACGkoSjogCB/ACGkoSjogCB
+						GAGGkoSjogCBNAGGkoSjogCBUAGG
+						hoEACIQEWzFmXYPNzEw9hpKElpYG
+						TlNGb250hpKEhIQGTlNGb250HpSZ
+						HIQFWzI4Y10GAAAAFAAAAP/+SABl
+						AGwAdgBlAHQAaQBjAGEAhAFmCJsA
+						mwGbAJsAhoaG
+						</data>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+
+\f0\fs16 \cf2 Alice's Query Context}</string>
+						<key>VerticalPad</key>
+						<integer>7</integer>
+						<key>alpha</key>
+						<array>
+							<array>
+								<integer>0</integer>
+								<integer>21</integer>
+								<real>0.64216053485870361</real>
+							</array>
+						</array>
+					</dict>
+					<key>TextPlacement</key>
+					<integer>0</integer>
 				</dict>
 				<dict>
 					<key>Class</key>
@@ -45019,7 +45381,7 @@ F
 					<integer>8</integer>
 					<key>Points</key>
 					<array>
-						<string>{220.64746854904988, 77.408748108799273}</string>
+						<string>{220.43912471190711, 77.399818248172167}</string>
 						<string>{237.25268778350147, 120.04093537191399}</string>
 					</array>
 					<key>Style</key>
@@ -45061,7 +45423,7 @@ F
 					<key>Tail</key>
 					<dict>
 						<key>ID</key>
-						<integer>161</integer>
+						<integer>1082</integer>
 					</dict>
 				</dict>
 				<dict>
@@ -45368,8 +45730,8 @@ F
 					<integer>8</integer>
 					<key>Points</key>
 					<array>
-						<string>{383.78053892874885, 209.61284637451172}</string>
-						<string>{381.07107826041135, 183.61892318725586}</string>
+						<string>{383.76108505175563, 209.61284637451172}</string>
+						<string>{381.00346413729847, 183.61892318725586}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -45950,7 +46312,9 @@ created to reference \{B, C
 						BAGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGs/4aS
-						nJK8kq+SsIaG
+						nJKEnp8CAIShmQySopKkkqWSppKn
+						kqiSqZKqkquSrJKtkq6GgYAIqIPN
+						zEw/g83MTD2Gkq+SsIaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -46100,9 +46464,11 @@ created to reference \{B, C
 						AgGShJiZA5KElpYNTlNTdXBlclNj
 						cmlwdIaShISECE5TTnVtYmVyAISE
 						B05TVmFsdWUAlIQBKoSEAXGr/4aS
-						n5KgkrKShLSZHKYGAAAAFAAAAP/+
-						SABlAGwAdgBlAHQAaQBjAGEApwab
-						AJsBmwCbAIaGhg==
+						n5KEoaACAISkmQySpZKnkqiSqZKq
+						kquSrJKtkq6Sr5KwkrGGgQAIpIPN
+						zEw9hpKykoS0mRymBgAAABQAAAD/
+						/kgAZQBsAHYAZQB0AGkAYwBhAKcG
+						mwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -46229,12 +46595,14 @@ created to reference \{B, C
 						hIQGTlNGb250HpSZHIQFWzI4Y10G
 						AAAAFAAAAP/+SABlAGwAdgBlAHQA
 						aQBjAGEAhAFmCZsAmwGbAJsAhoaX
-						AgGShJiZBJKfkqCSmZKakoSWlg1O
-						U1N1cGVyU2NyaXB0hpKEhIQITlNO
-						dW1iZXIAhIQHTlNWYWx1ZQCUhAEq
-						hIQBcav/hpKykoS0mRymBgAAABQA
-						AAD//kgAZQBsAHYAZQB0AGkAYwBh
-						AKcGmwCbAZsAmwCGhoY=
+						AgGShJiZBJKfkoShoAIAhKSZDJKl
+						kqeSqJKpkqqSq5Kskq2SrpKvkrCS
+						sYaBAAikg83MTD2GkpmSmpKElpYN
+						TlNTdXBlclNjcmlwdIaShISECE5T
+						TnVtYmVyAISEB05TVmFsdWUAlIQB
+						KoSEAXGr/4aSspKEtJkcpgYAAAAU
+						AAAA//5IAGUAbAB2AGUAdABpAGMA
+						YQCnBpsAmwGbAJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -46307,6 +46675,220 @@ created to reference \{B, C
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{198.716796875, 55.612800598144531}, {35.45130920410179, 22}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Clip</string>
+					<key>Flow</key>
+					<string>Clip</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Font</key>
+						<string>Helvetica</string>
+						<key>Size</key>
+						<real>6</real>
+					</dict>
+					<key>ID</key>
+					<integer>1080</integer>
+					<key>Layer</key>
+					<integer>9</integer>
+					<key>Shape</key>
+					<string>Cloud</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>b</key>
+								<string>0.653573</string>
+								<key>g</key>
+								<string>0.875658</string>
+								<key>r</key>
+								<string>0.386682</string>
+							</dict>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+							<key>Fuzziness</key>
+							<real>4.1422834396362305</real>
+							<key>ShadowVector</key>
+							<string>{1, 2}</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+
+\f0\fs12 \cf0 Start!}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{168.37500000000006, 18.612800598144531}, {96.013381958007983, 65}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Color</key>
+						<dict>
+							<key>a</key>
+							<string>0.2</string>
+							<key>w</key>
+							<string>0</string>
+						</dict>
+						<key>Font</key>
+						<string>Helvetica</string>
+						<key>Size</key>
+						<real>8</real>
+					</dict>
+					<key>ID</key>
+					<integer>1079</integer>
+					<key>Layer</key>
+					<integer>9</integer>
+					<key>Magnets</key>
+					<array>
+						<string>{-0.59628479784302701, -1.1925696134567303}</string>
+						<string>{1.9868215517249155e-08, -1.3333333730697678}</string>
+						<string>{0.59628487781105122, -1.1925696134567303}</string>
+						<string>{1.1925696134567261, -0.59628480672836726}</string>
+						<string>{1.3333333730697632, 1.5894571940104153e-07}</string>
+						<string>{1.1925696134567261, 0.59628473564567064}</string>
+						<string>{0.59628465308492196, 1.1925697326660114}</string>
+						<string>{0, 1.3333333730697585}</string>
+						<string>{-0.5962849488937394, 1.1925696134567219}</string>
+						<string>{-1.1925697326660156, 0.59628443983683188}</string>
+						<string>{-1.3333333730697632, -6.3578290128892467e-07}</string>
+						<string>{-1.1925696134567261, -0.59628480672836726}</string>
+					</array>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>1</string>
+								<key>g</key>
+								<string>1</string>
+								<key>r</key>
+								<string>1</string>
+							</dict>
+							<key>FillType</key>
+							<integer>2</integer>
+							<key>GradientAngle</key>
+							<real>90</real>
+							<key>GradientColor</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>1</string>
+								<key>g</key>
+								<string>0.645058</string>
+								<key>r</key>
+								<string>0.343042</string>
+							</dict>
+						</dict>
+						<key>image fill</key>
+						<dict>
+							<key>ImageSizing</key>
+							<integer>0</integer>
+							<key>Opacity</key>
+							<real>0.63210225105285645</real>
+							<key>Scale</key>
+							<real>0.125</real>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>a</key>
+								<string>0.2</string>
+								<key>b</key>
+								<string>0</string>
+								<key>g</key>
+								<string>0</string>
+								<key>r</key>
+								<string>0</string>
+							</dict>
+							<key>CornerRadius</key>
+							<real>5</real>
+							<key>Width</key>
+							<real>0.5</real>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Pad</key>
+						<integer>3</integer>
+						<key>RTFD</key>
+						<data>
+						BAtzdHJlYW10eXBlZIHoA4QBQISE
+						hBJOU0F0dHJpYnV0ZWRTdHJpbmcA
+						hIQITlNPYmplY3QAhZKEhIQITlNT
+						dHJpbmcBlIQBKxVBbGljZSdzIFF1
+						ZXJ5IENvbnRleHSGhAJpSQEVkoSE
+						hAxOU0RpY3Rpb25hcnkAlIQBaQOS
+						hJaWB05TQ29sb3KGkoSEhAdOU0Nv
+						bG9yAJSEAWMDhAJmZgCDomQkP4aS
+						hJaWEE5TUGFyYWdyYXBoU3R5bGWG
+						koSEhBdOU011dGFibGVQYXJhZ3Jh
+						cGhTdHlsZQCEhBBOU1BhcmFncmFw
+						aFN0eWxlAJSEBENDQFMCAISEhAdO
+						U0FycmF5AJSZDJKEhIQJTlNUZXh0
+						VGFiAJSEAkNmAByGkoSjogA4hpKE
+						o6IAVIaShKOiAHCGkoSjogCBjACG
+						koSjogCBqACGkoSjogCBxACGkoSj
+						ogCB4ACGkoSjogCB/ACGkoSjogCB
+						GAGGkoSjogCBNAGGkoSjogCBUAGG
+						hoEACIQEWzFmXYPNzEw9hpKElpYG
+						TlNGb250hpKEhIQGTlNGb250HpSZ
+						HIQFWzI4Y10GAAAAFAAAAP/+SABl
+						AGwAdgBlAHQAaQBjAGEAhAFmCJsA
+						mwGbAJsAhoaG
+						</data>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+
+\f0\fs16 \cf2 Alice's Query Context}</string>
+						<key>VerticalPad</key>
+						<integer>7</integer>
+						<key>alpha</key>
+						<array>
+							<array>
+								<integer>0</integer>
+								<integer>21</integer>
+								<real>0.64216053485870361</real>
+							</array>
+						</array>
+					</dict>
+					<key>TextPlacement</key>
+					<integer>0</integer>
 				</dict>
 				<dict>
 					<key>Class</key>
@@ -47467,8 +48049,8 @@ created to reference \{B, C
 					<integer>9</integer>
 					<key>Points</key>
 					<array>
-						<string>{209.96753546279993, 76.289184041313334}</string>
-						<string>{180.9584783235284, 119.64152399237558}</string>
+						<string>{209.96753455836668, 76.289184222638866}</string>
+						<string>{180.95847537198787, 119.64152198979349}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -47509,7 +48091,7 @@ created to reference \{B, C
 					<key>Tail</key>
 					<dict>
 						<key>ID</key>
-						<integer>161</integer>
+						<integer>1080</integer>
 					</dict>
 				</dict>
 				<dict>
@@ -47844,10 +48426,12 @@ created to reference \{B, C
 					<dict>
 						<key>Color</key>
 						<dict>
-							<key>a</key>
-							<string>0.2</string>
-							<key>w</key>
-							<string>0</string>
+							<key>b</key>
+							<string>0.461526</string>
+							<key>g</key>
+							<string>0.457648</string>
+							<key>r</key>
+							<string>0.459587</string>
 						</dict>
 						<key>Font</key>
 						<string>Helvetica</string>
@@ -47917,11 +48501,25 @@ created to reference \{B, C
 					</dict>
 					<key>Text</key>
 					<dict>
+						<key>Align</key>
+						<integer>2</integer>
 						<key>Pad</key>
 						<integer>3</integer>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica-Light;}
+{\colortbl;\red255\green255\blue255;\red210\green209\blue211;\red255\green255\blue255;\red26\green26\blue26;
+}
+\deftab720
+\pard\pardeftab720\qr
+
+\f0\fs14 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec4 \'a9 2016  https://\cb1 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 unba.se}</string>
 						<key>VerticalPad</key>
-						<integer>7</integer>
+						<integer>2</integer>
 					</dict>
+					<key>TextPlacement</key>
+					<integer>0</integer>
 				</dict>
 			</array>
 			<key>GridInfo</key>
@@ -47937,13 +48535,13 @@ created to reference \{B, C
 			<array>
 				<dict>
 					<key>Lock</key>
-					<string>NO</string>
+					<string>YES</string>
 					<key>Name</key>
 					<string>Solution2.2</string>
 					<key>Print</key>
 					<string>YES</string>
 					<key>View</key>
-					<string>YES</string>
+					<string>NO</string>
 				</dict>
 				<dict>
 					<key>Lock</key>
@@ -47953,7 +48551,7 @@ created to reference \{B, C
 					<key>Print</key>
 					<string>YES</string>
 					<key>View</key>
-					<string>NO</string>
+					<string>YES</string>
 				</dict>
 				<dict>
 					<key>Lock</key>
@@ -48997,7 +49595,9 @@ to reference E, F
 						r5K2hpcEAZKEmJkDkoSWlg1OU1N1
 						cGVyU2NyaXB0hpKEhIQITlNOdW1i
 						ZXIAhIQHTlNWYWx1ZQCUhAEqhIQB
-						caz/hpKckrySr5KwhoY=
+						caz/hpKckoSenwIAhKGZDJKikqSS
+						pZKmkqeSqJKpkqqSq5Kskq2SroaB
+						gAiog83MTD+DzcxMPYaSr5KwhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -49147,9 +49747,11 @@ to reference E, F
 						mwCGhpcCAZKEmJkDkoSWlg1OU1N1
 						cGVyU2NyaXB0hpKEhIQITlNOdW1i
 						ZXIAhIQHTlNWYWx1ZQCUhAEqhIQB
-						cav/hpKfkqCSspKEtJkcpgYAAAAU
-						AAAA//5IAGUAbAB2AGUAdABpAGMA
-						YQCnBpsAmwGbAJsAhoaG
+						cav/hpKfkoShoAIAhKSZDJKlkqeS
+						qJKpkqqSq5Kskq2SrpKvkrCSsYaB
+						AAikg83MTD2GkrKShLSZHKYGAAAA
+						FAAAAP/+SABlAGwAdgBlAHQAaQBj
+						AGEApwabAJsBmwCbAIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -49276,12 +49878,14 @@ to reference E, F
 						bnSGkoSEhAZOU0ZvbnQelJkchAVb
 						MjhjXQYAAAAUAAAA//5IAGUAbAB2
 						AGUAdABpAGMAYQCEAWYJmwCbAZsA
-						mwCGhpcCAZKEmJkEkp+SoJKZkpqS
-						hJaWDU5TU3VwZXJTY3JpcHSGkoSE
-						hAhOU051bWJlcgCEhAdOU1ZhbHVl
-						AJSEASqEhAFxq/+GkrKShLSZHKYG
-						AAAAFAAAAP/+SABlAGwAdgBlAHQA
-						aQBjAGEApwabAJsBmwCbAIaGhg==
+						mwCGhpcCAZKEmJkEkp+ShKGgAgCE
+						pJkMkqWSp5KokqmSqpKrkqySrZKu
+						kq+SsJKxhoEACKSDzcxMPYaSmZKa
+						koSWlg1OU1N1cGVyU2NyaXB0hpKE
+						hIQITlNOdW1iZXIAhIQHTlNWYWx1
+						ZQCUhAEqhIQBcav/hpKykoS0mRym
+						BgAAABQAAAD//kgAZQBsAHYAZQB0
+						AGkAYwBhAKcGmwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -57551,6 +58155,8 @@ Range: A-K}</string>
 				<string>Immutable Data structure</string>
 			</dict>
 		</array>
+		<key>Frame</key>
+		<string>{{1392, -283}, {1746, 777}}</string>
 		<key>ListView</key>
 		<true/>
 		<key>OutlineWidth</key>
@@ -57563,6 +58169,8 @@ Range: A-K}</string>
 		<true/>
 		<key>SidebarWidth</key>
 		<integer>220</integer>
+		<key>VisibleRegion</key>
+		<string>{{0, 0}, {748.5, 310}}</string>
 		<key>Zoom</key>
 		<real>2</real>
 		<key>ZoomValues</key>
