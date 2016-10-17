@@ -38,7 +38,7 @@ So, lets start with something easy...
 
 ### Alice has an immutable data structure
 
-<img src="media/immutable_ds_1.png" alt="Basic Immutable Data Structure" style="width: 755px; max-width: 100%"><br>
+<img src="media/immutable_ds_1.png" alt="Illustration of a basic immutable data structure" style="width: 755px; max-width: 100%"><br>
 **Fig 1. Basic persistent data structure**
 <br><br>
 
@@ -48,7 +48,7 @@ With immutable data structures, when an given value is "edited" it's *not* done 
 
 Now, Alice decides to make an edit. She keeps her root node in a basket of sorts, which we're calling the *Query Context.* By carrying around this Query context Alice can have a consistent view of her data and ensure that no stale data is observed. Once the new nodes are created, she swaps out the old root node for the new one in her Query context:
 
-<img src="media/immutable_ds_2.png" alt="Basic Immutable Edit" style="width: 755px; max-width: 100%"><br>
+<img src="media/immutable_ds_2.png" alt="Illustration of a basic immutable edit" style="width: 755px; max-width: 100%"><br>
 **Fig 2. Basic Immutable Edit**
 <br>
 
@@ -58,7 +58,7 @@ Ok, so this is all super straightforward [persistent data structures](https://en
 
 You might have thought Alice was writing out the whole record for **F** as **F<sub>1</sub>** but that's not what's happening in our case. Instead of writing out the whole record, she emits **F<sub>1</sub>**, which is an operation to be applied to, and is causally descendant of **F**. In Unbase, these are called "Memos", and *everything* is made of them.
 
-<img src="media/memos_1.png" alt="Immutable Memos Introduced" style="width: 755px; max-width: 100%"><br>
+<img src="media/memos_1.png" alt="Directed acyclic graph of immutable memos" style="width: 755px; max-width: 100%"><br>
 **FIG 3. Ok, so we're emitting immutable Memos, not really editing "Nodes".**
 <br>
 
@@ -66,7 +66,7 @@ You might have thought Alice was writing out the whole record for **F** as **F<s
 
 As an exercise, lets ask Alice to perform a query of key 11:
 
-<img src="media/memos_2.png" style="width: 755px; max-width: 100%"><br>
+<img src="media/memos_2.png" alt="Example projection of immutable edits into ephemeral state" style="width: 755px; max-width: 100%"><br>
 **FIG 4. State is merely an ephemeral projection based on a point of view (query context in our case).**
 <br>
 
@@ -84,8 +84,7 @@ When others wish to edit key 11, they can go right ahead and emit Memos on the b
 
 ----
 
-When Alice and Bob bump into each other, if they're interested in having a conversation, they may exchange contexts.
-When they each try to query the value of key 11 now, they must ensure that each node is projected while considering all memos in their query context.
+When Alice and Bob bump into each other, if they're interested in having a conversation, they may exchange contexts. When they each try to query the value of key 11 now, they must ensure that each node is projected while considering all memos in their query context.
 For instance, Alice projects Node A slot 1 as:
 
 **A<sub>1</sub> • A<sub>2</sub> • A<sub>0</sub> = 1:[C<sub>1</sub>, C<sub>2</sub>, C<sub>0</sub>]**  
@@ -108,8 +107,7 @@ Once context is exchanged, there is no un-ringing that bell – ALL of that part
 
 ### What's the point? What have we gained?
 
-Now we have a rudimentary coordination-free system which is capable of providing deterministic state projections for a given query context.
-A handy benefit of this approach is that the lower-bound latency for state projection of a received context can approach the latency of the sending light-cone itself. This is as good as it gets folks, at least with presently-known physics anyway.
+Now we have a rudimentary coordination-free system which is capable of providing deterministic state projections for a given query context. A handy benefit of this approach is that the lower-bound latency for state projection of a received context can approach the latency of the sending light-cone itself. This is as good as it gets folks, at least with presently-known physics anyway.
 
 Yes, this lower-bound is a property which we share with many eventual-consistency databases too, *except* that we also get strong consistency in the bargain.
 For a given query context, we get to know at query time if our data is stale or not. Sure, we may have to wait under some circumstances, but we will at least know that the data we're waiting for is probably in our receiving light-cone.
@@ -129,7 +127,7 @@ Alright, so there's no free lunch exactly. In setting up the above scenario, we 
 
 Inserting few Memos in your query context isn't so bad, but what about when we're around for a long time? Or when you invite a few million of your friends to the party? You have a serious context expansion problem.
 
-<img src="media/problem_1.png" style="width: 755px; max-width: 100%"><br>
+<img src="media/problem_1.png" alt="When one's query context expands past a certain threshold, issue new memos to compress this context, and update the context to include them" style="width: 755px; max-width: 100%"><br>
 **FIG 7. When Query context grows too large, materialize the projection as a series of "key-frame" memos, which supersede their predecessor memos.**
 
 *(TODO: Determine if it's meaningful for the purposes of this document to differentiate between causal compaction and key-frame creation.)*
@@ -148,16 +146,19 @@ Write amplification. For every payload-bearing memo we originate (more or less),
 
 So how do we solve this?
 
-<img src="media/problem_2.png" style="width: 755px; max-width: 100%"><br>
+<img src="media/problem_2.png" alt="Skip the creation of intermediate DAG links, and add the loose leaf memos to the query context directly" style="width: 755px; max-width: 100%"><br>
 **FIG 8. Initially, we skip the creation of parent memos, and simply add new leaf memos to the context.**
 <br>
 
 Hey wait, this just brings us right back to the context expansion problem again.
 
 
+<br>
+<br>
+
+**Document is a WIP Past this point.**
+
 #### Challenge #3 – Distributed merging
-
-
 
 * write amplification
 * sparse vector clocks
