@@ -16,10 +16,10 @@ See [Design Goals](http://unba.se/design/goals) for more details
 * Provide the strongest consistency guarantees possible with zero coordination/waiting
 * Drastically reduce operational latency by focusing on data locality (planet/city/memory-bus/processor-core)
 * Peer-to-peer networking to ensure continued operation during network partitions<sup>[2](#footnote2)</sup>
-* A robust type system <sup>[3](#footnote3)</sup> commonly employed by RDBMS
-* Tunable durability guarantees
+* A robust type system
+* Tunable [durability](http://unba.se/design/durability) guarantees
 * Reduced costs associated with hosting infrastructure, and the planning thereof.
-* Common, minimalist library for client and server<sup>[4](#footnote4)</sup> applications
+* Common, minimalist library for client and server<sup>[3](#footnote3)</sup> applications
 * Distributed content-filtered pub/sub for efficient push notifications
 * Provide a facility for the registration and execution of triggers to allow for reactive, but loose couplings
 
@@ -28,7 +28,6 @@ See [Design Goals](http://unba.se/design/goals) for more details
 Unbase seeks to implement a specific causal consistency model which we are calling "Infectious Knowledge".
 See [Consistency Model](http://unba.se/design/consistency-model) for more details
 
-<a name="footnote1">1</a>: When data storage locality is determined by an algorithm which fails to consider the points in space where the data is originated or observed, the requester must wait longer for its retrieval. See [light cones](https://en.wikipedia.org/wiki/Light_cone)<br>
+<a name="footnote1">1</a>: When data storage locality is determined by an algorithm which fails to consider the points in space where the data is originated or observed, the requester must wait longer for its retrieval. We can think of [light cones](https://en.wikipedia.org/wiki/Light_cone){:target="define"} as a good approximation of our upper-bound.<br>
 <a name="footnote2">2</a>: Using the term "partition" for conversational understanding. Partitions are not actually a thing.<br>
-<a name="footnote3">3</a>: entity-attribute-value, serializations stored as text, etc<br>
-<a name="footnote4">4</a>: We believe there should be no difference in capability between client and server except for capability and policy.
+<a name="footnote3">3</a>: We believe there should be no difference in capability between client and server except for capability and policy.
