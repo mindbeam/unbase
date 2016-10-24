@@ -3,6 +3,7 @@ layout: page
 title: "Design Goals"
 category: design
 seq: 3
+disqus: 1
 ---
 
 The objective of Unbase is to create a unified data/application framework, which achieves all of the following goals. Unbase could be loosely conceptualized as a sort of P2P Distributed Object Database (minus the "base")

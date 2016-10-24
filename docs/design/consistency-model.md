@@ -3,6 +3,7 @@ layout: page
 title: "Consistency Model"
 category: design
 seq: 2
+disqus: 1
 ---
 
 #### What is a consistency model?
@@ -18,7 +19,10 @@ A Consistency Model is a contract between the system and the user of the system 
 
 <br>
 
-### Why Causality?
+### Why Causality??
+
+<br>
+
 #### 1. Because we're Lazy
 We *really* don't like coordinating with other parties. Not just because it's inconvenient, it's also dangerous! Even if we accepted the latency of a round-trip around the globe ([or further](https://en.wikipedia.org/wiki/Interplanetary_Transport_System){:target="spacex"},) we could run into some serious problems while traveling!
 * Power Outages
