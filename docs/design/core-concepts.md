@@ -128,7 +128,7 @@ Alright, so there's no free lunch exactly. In setting up the above scenario, we 
 Inserting few Memos in your query context isn't so bad, but what about when we're around for a long time? Or when you invite a few million of your friends to the party? You have a serious context expansion problem.
 
 <img src="media/problem_1.png" alt="When one's query context expands past a certain threshold, issue new memos to compress this context, and update the context to include them" style="width: 755px; max-width: 100%"><br>
-**FIG 7. When Query context grows too large, materialize the projection as a series of "key-frame" memos, which supersede their predecessor memos.**
+**FIG 7. When Query context grows too large, compact it by materializing each node's projection as a "key-frame" memo, which supersede their predecessor memos.**
 
 *(TODO: Determine if it's meaningful for the purposes of this document to differentiate between causal compaction and key-frame creation.)*
 
@@ -146,25 +146,33 @@ Write amplification. For every payload-bearing memo we originate (more or less),
 
 So how do we solve this?
 
-<img src="media/problem_2.png" alt="Skip the creation of intermediate DAG links, and add the loose leaf memos to the query context directly" style="width: 755px; max-width: 100%"><br>
+<img src="media/less_chatty.png" alt="Skip the creation of intermediate DAG links, and add the loose leaf memos to the query context directly" style="width: 755px; max-width: 100%"><br>
 **FIG 8. Initially, we skip the creation of parent memos, and simply add new leaf memos to the context.**
 <br>
 
-Hey wait, this just brings us right back to the context expansion problem again.
+But wait! this just brings us right back to the context expansion problem again!
+So, we can use the compaction mechanism discussed above, but lets use it only when our context expands past a certain threshold. Moreover, we don't necessarily have to go all the way to the root. If a large fraction of the edits are in a certain area of the tree, we can emit only the intermediate Memos – essentially the same as the above process, but applied *incrementally*, and *selectively*.
 
+<img src="media/incremental_compaction.png" alt="Skip the creation of intermediate DAG links, and add the loose leaf memos to the query context directly" style="width: 755px; max-width: 100%"><br>
+**FIG 9. Perform the query context compaction selectively, and incrementally.**
+
+In the above scenario, Alice may have made or observed a whole lot of loose-leaf edit Memos on a number of different nodes, well beyond those which are pictured. Alice has the option of emitting these intermediate memos at any point where she feels like compacting her query context, even in the middle of a transaction – It doesn't matter. (Atomicity and transactions discussed later)
 
 <br>
-<br>
 
-**Document is a WIP Past this point.**
+
+**Core Concepts document is a WIP Past this point.**
 
 #### Challenge #3 – Distributed merging
 
-* write amplification
-* sparse vector clocks
+#### Sparse Vector Clocks - A key implementation detail
+Sparse vector clocks, AKA Beacons, are similar in principle to [Interval Tree Clocks](http://gsd.di.uminho.pt/members/cbm/ps/itc2008.pdf){:target="define"}, with some key differences.
 
 
-### Some of the finer points
+#### Commutative Index Merging - Enabled by sparse vector clocks
+
+
+### Notes:
 
 * implementation clarification ( What did we win? )
 * Introduce: Model or Subject or Topic ( this is a design goal )
