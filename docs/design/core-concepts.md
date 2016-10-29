@@ -148,29 +148,59 @@ Write amplification. For every payload-bearing memo we originate (more or less),
 So how do we solve this?
 
 <img src="media/less_chatty.png" alt="Skip the creation of intermediate DAG links, and add the loose leaf memos to the query context directly" style="width: 755px; max-width: 100%"><br>
-**FIG 8. Initially, we skip the creation of parent memos, and simply add new leaf memos to the context.**
+**FIG 8. Initially, we skip creation of parent memos, and simply add new leaf memos to the context.**
+
+Alice and Bob are now much less chatty per each edit, originating only one Memo each, and adding it directly to their respective query contexts. They create far fewer Memos than before, and thus our write amplification problem is resolved.
+
 <br>
 
-But wait! this just brings us right back to the context expansion problem again!
-So, we can use the compaction mechanism discussed above, but lets use it only when our context expands past a certain threshold. Moreover, we don't necessarily have to go all the way to the root. If a large fraction of the edits are in a certain area of the tree, we can emit only the intermediate Memos – essentially the same as the above process, but applied *incrementally*, and *selectively*.
+Now lets do an exercise again, where Alice and Bob bump into each other and exchange contexts:<br>
+<img src="media/core-concepts-figure9.png" alt="" style="width: 755px; max-width: 100%"><br>
+**FIG 9. State projection considers all Memos in one's context.**
+<br>
+
+Just like in Figure 6, Alice and Bob exchange contexts, and arrive at the same deterministic projection on the basis of their (now identical) query contexts. A query context directly contains a relatively small number of specific memos; however it could be considered to *logically* contain all those Memos which are recursively referenced as well. Whatever Memos in one's query context, either directly **or indirectly through referent recursion** shall be considered for the state projection of a given node.
+
+<br>
+
+#### But wait!
+This just brings us right back to the context expansion problem again! How do we rectify this?
+
+We can use the compaction mechanism discussed above in Figure 7, but instead of doing it immediately, let's use it *only* when our context expands past a certain threshold. Moreover, we don't necessarily have to apply this process all the way to the root node. If a large fraction of the edits are in a certain area of the tree, we can emit only *leaf* or *intermediate* consolidating Memos – Essentially applying the same process as in Figure 7, except doing so *selectively* and *incrementally*:
 
 <img src="media/incremental_compaction.png" alt="Skip the creation of intermediate DAG links, and add the loose leaf memos to the query context directly" style="width: 755px; max-width: 100%"><br>
-**FIG 9. Perform the query context compaction selectively, and incrementally.**
+**FIG 10. Perform the query context compaction selectively, and incrementally.**
 
-In the above scenario, Alice may have made or observed a whole lot of loose-leaf edit Memos on a number of different nodes, well beyond those which are pictured. Alice has the option of emitting these intermediate memos at any point where she feels like compacting her query context, even in the middle of a transaction – It doesn't matter. (Atomicity and transactions discussed later)
+In the above scenario, Alice may have made or observed a whole lot of loose-leaf edit Memos on a number of different nodes, perhaps even well beyond those which are pictured. Alice has the option of emitting these intermediate consolidating Memos at any point where she feels like compacting her query context, *even in the middle of a transaction* – It doesn't matter (Atomicity and transactions discussed later.)
 
 <br>
 
 
 **Core Concepts document is a WIP Past this point.**
 
-#### Challenge #3 – Distributed merging
+#### Challenge #3 – Distributed Merging at-Scale
+
+Alright, we've made it this far. Now for the hard part:
+
+How does this behave when it's not just Alice and Bob at the party – How does it behave when we have a million+ people in the system? It might not be too bad if most of them were reading, with some occasional writes. They'd share contexts among themselves, occasionally resulting in actual context expansion, and occasionally resulting in redundant compaction operations. Because the identity of each Memo is based on the hash of its precursors plus it's content, only one compaction memo would end up getting stored (even if it *was* calculated nearly a million times.)
+
+Let's ask Alice, Bob, and 999998 of their friends to do an exercise:
+
+**FIG 11. A single writer works ok, but too much redundant consolidation.**
+
+
+**FIG 12. When everybody writes, it's a disaster.**
+
+**Fig 13. Selective Hearing**
+
+
 
 #### Sparse Vector Clocks - A key implementation detail
 Sparse vector clocks, AKA Beacons, are similar in principle to [Interval Tree Clocks](http://gsd.di.uminho.pt/members/cbm/ps/itc2008.pdf){:target="define"}, with some key differences.
 
 
 #### Commutative Index Merging - Enabled by sparse vector clocks
+
 
 
 ### Notes:
