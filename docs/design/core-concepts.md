@@ -189,10 +189,12 @@ Alright, we've made it this far. Now for the hard part:
 
 How does this behave when it's not just Alice and Bob at the party – How does it behave when we have a million+ people in the system? It might not be too bad if most of them were reading, with some occasional writes. They'd share contexts among themselves, occasionally resulting in actual context expansion, and occasionally resulting in redundant compaction operations. Because the identity of each Memo is based on the hash of its precursors plus it's content, only one compaction memo would end up getting stored (even if it *was* calculated nearly a million times.)
 
-Let's ask Alice, Bob, and 999998 of their friends to do an exercise:
+Let's ask Alice, Bob, and several of their friends to do an exercise. To make things a little more interesting, We've decided that Alice and Bob don't consolidate as early as their neighbors, otherwise the F<sub>10</sub> would be received by peers before F<sub>9</sub> and our exercise would be a lot more boring.
 
-**FIG 11. A single writer works ok, but too much redundant consolidation.**
+<img src="media/large_scale_distributed_merging-example_of_infrequent_writes.png" alt="" style="width: 755px; max-width: 100%"><br>
+**FIG 11. A single writer works ok, but there's a little too much redundant consolidation.**
 
+As you can see, we have a fair bit of redundant transmission of F<sub>10</sub> but the network is quiescent fairly rapidly.
 
 **FIG 12. When everybody writes, it's a disaster.**
 
