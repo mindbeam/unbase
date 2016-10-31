@@ -39,7 +39,7 @@ So, lets start with something easy...
 
 ### Alice has an immutable data structure
 
-<img src="media/immutable_ds_1.png" alt="Illustration of a basic immutable data structure" style="width: 755px; max-width: 100%"><br>
+<img src="media/basic_immutable_data_structure.png" alt="Illustration of a basic immutable data structure" style="width: 755px; max-width: 100%"><br>
 **Fig 1. Basic persistent data structure**
 <br><br>
 
@@ -49,7 +49,7 @@ With immutable data structures, when an given value is "edited" it's *not* done 
 
 Now, Alice decides to make an edit. She keeps her root node in a basket of sorts, which we're calling the *Query Context.* By carrying around this Query context Alice can have a consistent view of her data and ensure that no stale data is observed. Once the new nodes are created, she swaps out the old root node for the new one in her Query context:
 
-<img src="media/immutable_ds_2.png" alt="Illustration of a basic immutable edit" style="width: 755px; max-width: 100%"><br>
+<img src="media/basic_immutable_data_structure-an_edit_is_performed.png" alt="Illustration of a basic immutable edit" style="width: 755px; max-width: 100%"><br>
 **Fig 2. Basic Immutable Edit**
 <br>
 
@@ -59,7 +59,7 @@ Ok, so this is all super straightforward [persistent data structures](https://en
 
 You might have thought Alice was writing out the whole record for **F** as **F<sub>1</sub>** but that's not what's happening in our case. Instead of writing out the whole record, she emits **F<sub>1</sub>**, which is an operation to be applied to, and is causally descendant of **F**. In Unbase, these are called "Memos", and *everything* is made of them.
 
-<img src="media/memos_1.png" alt="Directed acyclic graph of immutable memos" style="width: 755px; max-width: 100%"><br>
+<img src="media/immutable_data_structure-whats_really_going_on.png" alt="Directed acyclic graph of immutable memos" style="width: 755px; max-width: 100%"><br>
 **FIG 3. Ok, so we're emitting immutable Memos, not really editing "Nodes".**
 <br>
 
@@ -67,7 +67,7 @@ You might have thought Alice was writing out the whole record for **F** as **F<s
 
 As an exercise, lets ask Alice to perform a query of key 11:
 
-<img src="media/memos_2.png" alt="Example projection of immutable edits into ephemeral state" style="width: 755px; max-width: 100%"><br>
+<img src="media/immutable_data_structure-query_projection.png" alt="Example projection of immutable edits into ephemeral state" style="width: 755px; max-width: 100%"><br>
 **FIG 4. State is merely an ephemeral projection based on a point of view (query context in our case).**
 <br>
 
@@ -79,7 +79,7 @@ As an exercise, lets ask Alice to perform a query of key 11:
 
 When others wish to edit key 11, they can go right ahead and emit Memos on the basis of what they know already. We don't want to wait for coordination. Unbase assumes that all resources are non-exclusive, and conflicts are to be resolved by their datatypes. (Data types and conflict resolution are discussed a bit later)
 
-<img src="media/concurrent_1.png" style="width: 755px; max-width: 100%"><br>
+<img src="media/concurrent_immutable_data-welcome_bob_to_the_party.png" style="width: 755px; max-width: 100%"><br>
 **FIG 5. Concurrency is introduced.**
 <br>
 
@@ -93,7 +93,7 @@ For instance, Alice projects Node A slot 1 as:
 
 Continuing in this manner, and assuming their contexts are the same, they will each arrive at the same value for key 11.
 
-<img src="media/concurrent_2.png" style="width: 755px; max-width: 100%"><br>
+<img src="media/concurrent_immutable_data-basic_infectious_knowledge.png" style="width: 755px; max-width: 100%"><br>
 **FIG 6. Projection is performed with using all memos referenced by our context.**
 <br>
 
@@ -128,7 +128,7 @@ Alright, so there's no free lunch exactly. In setting up the above scenario, we 
 
 Inserting few Memos in your query context isn't so bad, but what about when we're around for a long time? Or when you invite a few million of your friends to the party? You have a serious context expansion problem.
 
-<img src="media/problem_1.png" alt="When one's query context expands past a certain threshold, issue new memos to compress this context, and update the context to include them" style="width: 755px; max-width: 100%"><br>
+<img src="media/handling_context_expansion-compaction_is_introduced.png" alt="When one's query context expands past a certain threshold, issue new memos to compress this context, and update the context to include them" style="width: 755px; max-width: 100%"><br>
 **FIG 7. When Query context grows too large, compact it by materializing each node's projection as a "key-frame" memo, which supersede their predecessor memos.**
 
 *(TODO: Determine if it's meaningful for the purposes of this document to differentiate between causal compaction and key-frame creation.)*
@@ -143,32 +143,37 @@ There's a key difference here though – while the key-frame memos are determini
 #### Problem #2 – Write Amplification
 
 Now that we have a mechanism to compress our context, we run smack into another problem:
-Write amplification. For every payload-bearing memo we originate (more or less), we have to originate several more in order to work our way to the root node. Then, when our context grows sufficiently to hit our compaction threshold, there's several more memos to generate still. With a small number of writers, this isn't so bad really; but when we're in system with many writers, the overhead of write amplification could easily overwhelm available bandwidth and computational resources.
+Write amplification. For every payload-bearing memo we originate, we have to originate several more in order to work our way to the root node. Then, when our context grows sufficiently to hit our compaction threshold, there's several more memos to generate still. With a small number of writers, this isn't so bad really; but when we're in system with many writers, the overhead of write amplification could easily overwhelm available bandwidth and computational resources.
 
 So how do we solve this?
 
-<img src="media/less_chatty.png" alt="Skip the creation of intermediate DAG links, and add the loose leaf memos to the query context directly" style="width: 755px; max-width: 100%"><br>
+<img src="media/avoiding_write_amplification-dont_be_so_chatty.png" alt="Alice and Bob initially skip the creation of parent Memos and add the new leaf Memos directly to their query contexts. At query time, the procedure and the result are the same as before: Simply consider all Memos in one's context when projecting state." style="width: 755px; max-width: 100%"><br>
 **FIG 8. Initially, we skip creation of parent memos, and simply add new leaf memos to the context.**
 
-Alice and Bob are now much less chatty per each edit, originating only one Memo each, and adding it directly to their respective query contexts. They create far fewer Memos than before, and thus our write amplification problem is resolved.
+Alice and Bob are now much less chatty per each edit, originating only one Memo each, and adding it directly to their respective query contexts. They create far fewer Memos than before.
 
 <br>
 
 Now lets do an exercise again, where Alice and Bob bump into each other and exchange contexts:<br>
-<img src="media/core-concepts-figure9.png" alt="" style="width: 755px; max-width: 100%"><br>
+<img src="media/avoiding_write_amplification-context_exchange_with_nonroot_memos.png" alt="After exchanging query contexts, Alice and Bob project the same state again." style="width: 755px; max-width: 100%"><br>
 **FIG 9. State projection considers all Memos in one's context.**
+
 <br>
 
-Just like in Figure 6, Alice and Bob exchange contexts, and arrive at the same deterministic projection on the basis of their (now identical) query contexts. A query context directly contains a relatively small number of specific memos; however it could be considered to *logically* contain all those Memos which are recursively referenced as well. Whatever Memos in one's query context, either directly **or indirectly through referent recursion** shall be considered for the state projection of a given node.
+Just like in Figure 6, Alice and Bob exchange contexts, and arrive at the same deterministic projection on the basis of their (now identical) query contexts. A query context directly contains a relatively small number of specific memos; however it could be considered to *logically* contain all those Memos which are recursively referenced as well. Whatever Memos are present in one's query context, either directly, **or indirectly** (through referential recursion) shall be considered for the state projection of a given node.
+
+<!-- TODO: consider visualizing query context logical containment of recursive referents -->
 
 <br>
 
 #### But wait!
-This just brings us right back to the context expansion problem again! How do we rectify this?
+This just brings us right back to the context expansion problem again! How do we resolve this?
 
-We can use the compaction mechanism discussed above in Figure 7, but instead of doing it immediately, let's use it *only* when our context expands past a certain threshold. Moreover, we don't necessarily have to apply this process all the way to the root node. If a large fraction of the edits are in a certain area of the tree, we can emit only *leaf* or *intermediate* consolidating Memos – Essentially applying the same process as in Figure 7, except doing so *selectively* and *incrementally*:
+<br>
 
-<img src="media/incremental_compaction.png" alt="Skip the creation of intermediate DAG links, and add the loose leaf memos to the query context directly" style="width: 755px; max-width: 100%"><br>
+We can use the compaction mechanism discussed above in Figure 7, but instead of doing it immediately, let's use it *only* when our context expands past a certain threshold. Moreover, we don't necessarily have to apply this process all the way to the root node. If a large fraction of the edits are in a certain area of the tree, we can choose to emit only leaf/intermediate consolidating Memos – Essentially applying the same process as in Figure 7, except doing so *selectively* and *incrementally*:
+
+<img src="media/avoiding_write_amplification-incremental_compaction.png" alt="Skip the creation of intermediate DAG links, and add the loose leaf memos to the query context directly" style="width: 755px; max-width: 100%"><br>
 **FIG 10. Perform the query context compaction selectively, and incrementally.**
 
 In the above scenario, Alice may have made or observed a whole lot of loose-leaf edit Memos on a number of different nodes, perhaps even well beyond those which are pictured. Alice has the option of emitting these intermediate consolidating Memos at any point where she feels like compacting her query context, *even in the middle of a transaction* – It doesn't matter (Atomicity and transactions discussed later.)
