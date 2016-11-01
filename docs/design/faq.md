@@ -2,7 +2,7 @@
 layout: page
 title: "Frequently asked questions"
 category: design
-seq: 5
+seq: 9
 disqus: 1
 ---
 

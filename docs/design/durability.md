@@ -2,7 +2,7 @@
 layout: page
 title: "Durability"
 category: design
-seq: 7
+seq: 8
 disqus: 1
 ---
 <br>
