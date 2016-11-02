@@ -58,6 +58,7 @@ A Peering is a gossip network across the system between all copies of one or two
 Each Memo participating in a peering may only be aware of a small subset of all copies of these Memo, but in aggregate, this is sufficient to create a fully-connected mesh.
 
 There are two main types of Peering:
+
 1. Replica - Peering between a Memo and other copies of itself. Necessary for [Durability Scoring](#durability-score) and Durability Management.
 2. Relationship - Peering between a Memo and other referenced memos. Necessary for reference traversal
 
