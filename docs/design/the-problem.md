@@ -6,16 +6,17 @@ seq: 1
 disqus: 1
 ---
 
-*From the spatial-overlay-as-a-service department*  
+***From the spatial-overlay-as-a-service department***  
 
 It's late on a Friday night. You're into your third hour of Guild Wars 2 and your european buddy hits you up – They want you to join their EU server. You then proceed to spend the next hour cursing the lag, and getting a lot of [rubberbanding](http://www.urbandictionary.com/define.php?term=rubberbanding){:target="define"} before you decide to call it a night.
 
 Why does this happen? Why do you get strange behavior from the EU server when you're in Los Angeles?
 
-The root of the problem is that for decades, we have been building computing systems on the basis of at least two major conceptual errors:
+The root of the problem is that for decades, we have been building computing systems on the basis of a few major conceptual errors:
 
 1. The belief that networks can be made reliable
 2. The belief that a single arbiter of state makes a consistency-model "strong"
+3. The belief that objective simultaneity exists
 
 As our demands on computer technology have expanded, so too has the strain induced by these faulty assumptions. We as an industry have spent the past few decades trying to cope with this foundational error in conceptualization, employing endless workarounds; Yet somehow still falling short of the reliable and predictable systems we seek. These shortcomings affect systems far and wide, and in ways which span the gamut from the mundane to the profound. This generally leads to the user being disappointed in one way or another and in the undue expenditure of human capital in an attempt to combat it.
 
@@ -31,7 +32,7 @@ As it turns out, the universe we occupy is a little lacking in terms of cool sci
 
 <br>
 
-#### Space exists...
+#### Space exists
 
 It doesn't matter if we're talking about interstellar distances, nanometers on silicon, or anywhere in between; Information can only propagate through space so fast. Information is therefore *local*, both in terms of it's origin, and it's effects. Don't hold your breath, physicists are not optimistic about FTL transportation of information through entanglement either.
 

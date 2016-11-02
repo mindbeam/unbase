@@ -6,7 +6,7 @@ seq: 3
 disqus: 1
 ---
 
-The objective of Unbase is to create a unified data/application framework, which achieves all of the following goals. Unbase could be loosely conceptualized as a sort of P2P Distributed Object Database (minus the "base")
+The objective of Unbase is to create a unified data/application framework, which achieves all of the following goals. Unbase could be loosely conceptualized as a sort of P2P Distributed Object Database, minus the "base".
 
 * Minimize latency
 
@@ -14,13 +14,16 @@ The objective of Unbase is to create a unified data/application framework, which
 
 * Scalability
 
-  The system must handle millions of nodes participants.
+  The system must gracefully handle millions of participants with mixed read/write loads.
 
 * Regional autonomy (geographical, planetary)
 
-  No significant fraction of the system should be offlined due to network partition.
-  Must handle significant latency between regions (minutes, hours, days), as well as relativistic effects.
-  No, this is not a joke.
+  No significant fraction of the system should be offlined<sup>[1](#footnote1)</sup> due to network partition.
+  Must handle significant latency between regions (minutes, hours, days), as well as relativistic effects. No, this is not a joke.
+
+* Strong Consistency Model
+
+  Provide system users with strong guarantees via the [Infectious Knowledge consistency model](consistency-model)
 
 * Eliminate the distinction between client and server
 
@@ -29,10 +32,12 @@ The objective of Unbase is to create a unified data/application framework, which
 
   Verify outcomes as part of the replication process, to ensure that they are authorized.
 
+<!-- SOA portion needs a rewrite
 * Distributed service oriented architecture
 
   Advertise and execute relevant business logic from any node in the network - By way of delegation to the nearest able peer when necessary, but optionally by replicating the action code itself to the calling node.
   "Actions" should be callable synchronously, or asynchronously. (With asynchronicity being strongly preferred)
+-->
 
 * Decouple business logic via triggers
 
@@ -50,3 +55,8 @@ The objective of Unbase is to create a unified data/application framework, which
 * Integral audit trail
 
   Given the mechanics of distributed data replication, significant efficiency can be gained by extending the system to handle audit trails natively, rather than storing audit trails in standard tablespace.
+
+<br>
+<br>
+
+<a name="footnote1">1</a>: Using the term "offline" for conversational understanding. There is no such thing as "Online" or "Offline" except as observed from a specific point in space and using a subjective metric.<br>

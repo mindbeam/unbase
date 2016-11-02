@@ -28,6 +28,7 @@ Materialized Memos may effectively be invalidated, but as with all other Memos, 
 A single immutable message.
 
 Properties of a Memo:
+
 * May specify an [Object](#object)
 * Identified by the hash of their contents and precursors
 * Originated on a single [Slab](#slab)
