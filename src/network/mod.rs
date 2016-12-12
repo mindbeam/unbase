@@ -1,5 +1,7 @@
 extern crate linked_hash_map;
 
+pub mod peer;
+use self::peer::*;
 
 use std::sync::{Arc,Mutex};
 use linked_hash_map::LinkedHashMap;
@@ -7,43 +9,6 @@ use std::sync::mpsc::{Sender,Receiver,channel};
 use std::{fmt};
 use slab::Slab;
 use memo::Memo;
-
-
-pub struct PeerSlab {
-    id: u32
-}
-pub enum PeerSpec {
-    Any (u8),
-    List(Vec<PeerSlab>)
-}
-
-impl fmt::Debug for PeerSlab{
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("PeerSlab")
-           .field("id", &self.id)
-           .finish()
-    }
-}
-
-impl fmt::Debug for PeerSpec {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-
-        let mut dbg = fmt.debug_struct("PeerSpec");
-
-        match self {
-            &PeerSpec::Any(c)  => {
-                dbg.field("Any", &c);
-            },
-            &PeerSpec::List(ref v) => {
-                for p in v {
-                    dbg.field("Peer", &p);
-                }
-            }
-        };
-
-        dbg.finish()
-    }
-}
 
 struct NetworkInternals{
     next_slab_id: u32,
@@ -68,16 +33,6 @@ impl Clone for Network {
     }
 }
 */
-
-impl fmt::Debug for Network{
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let inner = self.shared.internals.lock().unwrap();
-
-        fmt.debug_struct("Network")
-           .field("next_slab_id", &inner.next_slab_id)
-           .finish()
-    }
-}
 
 impl Network {
     pub fn new() -> Network {
@@ -109,5 +64,16 @@ impl Network {
     pub fn transmit_memo( &self, memo: Memo, peer_spec: PeerSpec) -> () {
         println!("{:?} - {:?}", memo, peer_spec);
         //unimplemented!()
+    }
+}
+
+
+impl fmt::Debug for Network{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let inner = self.shared.internals.lock().unwrap();
+
+        fmt.debug_struct("Network")
+           .field("next_slab_id", &inner.next_slab_id)
+           .finish()
     }
 }

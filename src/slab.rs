@@ -6,7 +6,7 @@ use linked_hash_map::LinkedHashMap;
 use std::thread;
 use std::thread::JoinHandle;
 
-use network::PeerSpec;
+use network::peer::PeerSpec;
 use network::Network;
 use memo::Memo;
 
@@ -38,7 +38,6 @@ impl Clone for Slab {
 
 impl Slab {
     pub fn new(net: &Network) -> Slab {
-
         let slab_id = net.generate_slab_id();
 
         let mut inner = SlabInner {
