@@ -10,10 +10,10 @@ fn test_init() {
 
     assert!(slab1.id == 1, "Slab 1 ID shoud be 1");
     assert!(slab2.id == 2, "Slab 2 ID shoud be 2");
-    assert!(slab2.memos_received() == 1, "Peer count should be 1");
+    assert!(slab2.count_of_memos_received() == 1, "Peer count should be 1");
 }
 
-//#[test]
+#[test]
 fn test_threads(){
     let net = unbase::Network::new();
 
@@ -31,4 +31,6 @@ fn test_threads(){
     for t in threads {
         t.join().unwrap();
     }
+
+    println!("{:?}", net);
 }

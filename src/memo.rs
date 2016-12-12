@@ -3,6 +3,10 @@
 */
 
 use slab::Slab;
+use std::{fmt};
+
+
+
 /*
 use std::hash::{Hash, Hasher};
 
@@ -18,11 +22,27 @@ impl Hash for MemoId {
 }
 */
 
+
 pub struct Memo {
     pub id: u64,
 //    type: TypeName enum {
 //        Beacon
 //    }
+}
+impl Clone for Memo {
+    fn clone(&self) -> Memo {
+        Memo {
+            id: self.id,
+        }
+    }
+}
+
+impl fmt::Debug for Memo{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("Memo")
+           .field("id", &self.id)
+           .finish()
+    }
 }
 
 impl Memo {
