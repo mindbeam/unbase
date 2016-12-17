@@ -3,7 +3,9 @@ extern crate linked_hash_map;
 
 use std::sync::{Arc,Mutex};
 use linked_hash_map::LinkedHashMap;
+use std::mem;
 use std::thread;
+use std::result;
 use std::thread::JoinHandle;
 
 use network::peer::PeerSpec;
@@ -60,12 +62,21 @@ impl Slab {
         let me_clone  = me.clone();
         inner.rx_thread = Some(thread::spawn(move || {
             for memo in rx.iter() {
+                //println!("Got memo from net: {:?}", memo);
                 me_clone.put_memo(memo);
             }
         }));
 
         me.do_ping();
         me
+    }
+    pub fn join (self) -> thread::Result<()> {
+        let mut inner = self.inner.lock().unwrap();
+
+        match mem::replace(&mut inner.rx_thread, None) {
+            Some(t)   => t.join(),
+            None      => result::Result::Ok(()) as thread::Result<()>
+        }
     }
     pub fn gen_memo_id (&self) -> u64 {
         let mut inner = self.inner.lock().unwrap();
@@ -83,7 +94,7 @@ impl Slab {
 
         inner.map.insert(memo.id,memo);
     }
-    pub fn count_of_memos_received( &self ) -> u32 {
+    pub fn count_of_memos_resident( &self ) -> u32 {
         let inner = self.inner.lock().unwrap();
         inner.map.len() as u32
     }
