@@ -54,7 +54,7 @@ impl Memo {
         };
 
         println!("New Memo: {:?}", me.id );
-        slab.put_memo(me);
+        slab.put_memos(vec![me]);
         //me
     }
 }

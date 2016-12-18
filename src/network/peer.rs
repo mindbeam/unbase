@@ -1,14 +1,17 @@
 use std::fmt;
 
-pub struct PeerSlab {
-    id: u32
+
+pub struct SlabRef {
+    //TODO - update Slabref to reference either network addresses OR resident slabs
+    //       attempt to avoid address lookups for resident slabs to minimize instructions
+    pub id: u32
 }
 pub enum PeerSpec {
     Any (u8),
-    List(Vec<PeerSlab>)
+    List(Vec<SlabRef>)
 }
 
-impl fmt::Debug for PeerSlab{
+impl fmt::Debug for SlabRef{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("PeerSlab")
            .field("id", &self.id)

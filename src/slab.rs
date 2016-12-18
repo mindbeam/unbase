@@ -3,13 +3,8 @@ extern crate linked_hash_map;
 
 use std::sync::{Arc,Mutex};
 use linked_hash_map::LinkedHashMap;
-use std::mem;
-use std::thread;
-use std::result;
-use std::thread::JoinHandle;
-
 use network::peer::PeerSpec;
-use network::Network;
+use network::{Network,TxItem};
 use memo::Memo;
 
 /* Initial plan:
@@ -20,14 +15,15 @@ use memo::Memo;
 struct SlabInner{
     map: LinkedHashMap<u64, Memo>,
     last_memo_id: u32,
-    net: Network,
-    rx_thread: Option<JoinHandle<()>>,
+    net: Network
 }
 
 pub struct Slab {
     pub id: u32,
     inner: Arc<Mutex<SlabInner>>
 }
+
+pub type SlabOuter = Arc<Slab>;
 
 impl Clone for Slab {
     fn clone(&self) -> Slab {
@@ -39,44 +35,27 @@ impl Clone for Slab {
 }
 
 impl Slab {
-    pub fn new(net: &Network) -> Slab {
+    pub fn new(net: &Network) -> SlabOuter {
         let slab_id = net.generate_slab_id();
 
-        let mut inner = SlabInner {
+        let inner = SlabInner {
             net: net.clone(),
             map: LinkedHashMap::new(),
-            rx_thread: None,
             last_memo_id: 0
         };
 
-        let me = Slab {
+        let me = Arc::new(Slab {
             id: slab_id,
             inner: Arc::new(Mutex::new(inner))
-        };
+        });
 
-        let rx = net.register_slab(&me);
+        net.register_slab(&me);
 
         // TODO: Cloning the outer slab for the thread closure is super ugly
         //       There must be a better way to do this
 
-        let me_clone  = me.clone();
-        inner.rx_thread = Some(thread::spawn(move || {
-            for memo in rx.iter() {
-                //println!("Got memo from net: {:?}", memo);
-                me_clone.put_memo(memo);
-            }
-        }));
-
         me.do_ping();
         me
-    }
-    pub fn join (self) -> thread::Result<()> {
-        let mut inner = self.inner.lock().unwrap();
-
-        match mem::replace(&mut inner.rx_thread, None) {
-            Some(t)   => t.join(),
-            None      => result::Result::Ok(()) as thread::Result<()>
-        }
     }
     pub fn gen_memo_id (&self) -> u64 {
         let mut inner = self.inner.lock().unwrap();
@@ -84,15 +63,25 @@ impl Slab {
 
         (self.id as u64).rotate_left(32) | inner.last_memo_id as u64
     }
-    pub fn put_memo(&self, memo : Memo){
+    pub fn put_memos(&self, memos : Vec<Memo>){
         let mut inner = self.inner.lock().unwrap();
 
-        let needs_peers = self.check_peering_target(&memo);
-        if needs_peers > 0 {
-            inner.net.transmit_memo( memo.clone(), PeerSpec::Any(needs_peers) );
+        let mut tx_items = Vec::new();
+
+        for memo in memos {
+            // TODO: delete check_peering_target and replace with memo_durability_score
+            let needs_peers = self.check_peering_target(&memo);
+            if needs_peers > 0 {
+                tx_items.push(TxItem {
+                    memo:      memo.clone(),
+                    peer_spec: PeerSpec::Any(needs_peers)
+                });
+            }
+
+            inner.map.insert(memo.id,memo);
         }
 
-        inner.map.insert(memo.id,memo);
+        inner.net.transmit_memos( tx_items );
     }
     pub fn count_of_memos_resident( &self ) -> u32 {
         let inner = self.inner.lock().unwrap();
@@ -101,7 +90,24 @@ impl Slab {
     pub fn check_peering_target( &self, _memo: &Memo ) -> u8 {
         5
     }
+    pub fn memo_durability_score( &self, _memo: &Memo ) -> u8 {
+        // TODO: devise durability_score algo
+        //       Should this number be inflated for memos we don't care about?
+        //       Or should that be a separate signal?
+
+        // Proposed factors:
+        // Estimated number of copies in the network (my count = count of first order peers + their counts weighted by: uptime?)
+        // Present diasporosity ( my diasporosity score = mean peer diasporosity scores weighted by what? )
+        0
+    }
     fn do_ping (&self){
         Memo::new(&self);
+    }
+}
+
+impl Drop for Slab {
+    fn drop(&mut self) {
+        println!("> Dropping Slab {}", self.id);
+        // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
     }
 }

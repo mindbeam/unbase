@@ -16,11 +16,11 @@ fn test_init() {
     // rethinking of per-slab channels. Will have to balance the need for deterministic
     // test cases vs concurrency in a production scenario.
 
-    net.deliver_memos(0);
-    for _ in 1..100000000 {}
+    net.deliver_all_memos();
 
     println!("Resident: {}", slab2.count_of_memos_resident());
     assert!(slab2.count_of_memos_resident() == 2, "Memos resident should be 2");
+
 }
 
 #[test]
@@ -34,8 +34,7 @@ fn test_threads(){
         threads.push(thread::spawn(move || {
             let slab = unbase::Slab::new(&net);
             assert!(slab.id > 0, "Nonzero Slab ID");
-            //println!("info Thread {} Slab: {}", i, slab.id);
-            slab.join().unwrap();
+            println!("info test thread. Slab: {}", slab.id);
         }));
     }
 
