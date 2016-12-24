@@ -3,29 +3,22 @@ extern crate linked_hash_map;
 pub mod peer;
 use self::peer::*;
 
-use std::sync::{Arc,Mutex,Weak};
-use linked_hash_map::LinkedHashMap;
-use std::{fmt};
-use slab::{Slab,SlabOuter};
+//use std::thread;
+//use std::sync::mpsc::{Sender, channel};
+//use std::thread::JoinHandle;
+use std::sync::{Arc, Mutex, Weak};
+use std::fmt;
+use slab::{Slab, SlabOuter};
 use memo::Memo;
 
-pub struct TxItem {
-    pub memo:     Memo,
-    pub peer_spec: PeerSpec
-}
-
-struct SlabMapItem{
-    slab:     Weak<Slab>,
-    tx_queue: Vec<Memo>
-}
-
-struct NetworkInternals{
+struct NetworkInternals {
     next_slab_id: u32,
-    slab_map:   LinkedHashMap<u32, SlabMapItem>
+    slabs: Vec<Weak<Slab>>
 }
 
 pub struct NetworkShared {
-    internals: Mutex<NetworkInternals>
+    internals: Mutex<NetworkInternals>,
+    //tx_thread: Option<JoinHandle<()>>,
 }
 
 #[derive(Clone)]
@@ -38,14 +31,32 @@ impl Network {
 
         let internals = NetworkInternals {
             next_slab_id: 0,
-            slab_map: LinkedHashMap::new()
+            slabs: Vec::new(),
         };
+
+        //let (tx_sender, tx_receiver) = channel();
+
         let shared = NetworkShared {
-            internals: Mutex::new(internals)
+            internals: Mutex::new(internals),
+            //tx_thread: None,
         };
-        Network {
-            shared: Arc::new(shared)
-        }
+
+        let net = Network {
+            shared: Arc::new(shared),
+            //tx_sender: tx_sender,
+        };
+/*
+        let net2 = net.clone();
+        let tx_thread = thread::spawn(move || {
+            for tx_item in tx_receiver.iter() {
+                net2.queue_memos(tx_item);
+            }
+        });
+
+        shared.tx_thread = Some(tx_thread);
+        */
+
+        net
     }
     pub fn generate_slab_id(&self) -> u32 {
         let mut internals = self.shared.internals.lock().unwrap();
@@ -53,87 +64,80 @@ impl Network {
 
         internals.next_slab_id
     }
-    pub fn register_slab( &self, slab: &SlabOuter ) {
+    pub fn register_slab(&self, slab: &SlabOuter) {
         let mut internals = self.shared.internals.lock().unwrap();
+        println!("register_slab {:?}", slab );
+        // TODO: convert this into a iter generator that automatically expunges missing slabs.
 
-        //TODO - employ weak refs to avoid memory leaks
-        //       Uncertain which should be weak: net->slab or slab->net
-
-        let item = SlabMapItem {
-            slab:     Arc::downgrade(slab),
-            tx_queue: Vec::new()
-        };
-
-        internals.slab_map.insert(slab.id, item);
-    }
-    pub fn transmit_memos ( &self, tx_items: Vec<TxItem>) {
-        //println!("transmit_memo {:?} - {:?}", memo, peer_spec);
-
-        let mut internals = self.shared.internals.lock().unwrap();
-
-        for tx_item in tx_items {
-            self.queue_memo(&mut internals, tx_item.memo, tx_item.peer_spec);
+        for prev_slab in internals.get_slabs() {
+            slab.add_peer( SlabRef::new( &prev_slab ) );
+            prev_slab.add_peer( SlabRef::new( slab ) );
         }
 
-        // TODO - configurably auto-deliver these memos
-        //        punting for now, because we want the test suite to monkey with delivery
+        internals.slabs.insert( 0, Arc::downgrade(slab) );
+
     }
 
-    fn queue_memo (&self, internals: &mut NetworkInternals, memo: Memo, peer_spec: PeerSpec){
-        use self::peer::PeerSpec::*;
+/*    pub fn get_local_peers(&self) -> Vec<SlabRef>{
+        let mut internals = self.shared.internals.lock().unwrap();
 
-        match peer_spec {
-            Any(n) => {
-                for (_,slab_item) in internals.slab_map.iter_mut().take(n as usize) {
-                    slab_item.tx_queue.push( memo.clone() )
-                }
-            },
-            List(slab_refs) => {
-                for slab_ref in slab_refs {
-                    match internals.slab_map.get_mut(&slab_ref.id) {
-                        Some(slab_item) => {
-                            slab_item.tx_queue.push(memo.clone())
-                        },
-                        None => {}
-                    }
-                }
+        let mut slabrefs : Vec<SlabRef> = Vec::new();
+
+        for (_, slab_item) in internals.slab_map.iter_mut() {
+            match slab_item.slab.upgrade() {
+                Some(slab) => {
+                    let slabref = SlabRef {
+                        slab: slab
+                    };
+                    slabrefs.push(slabref);
+                },
+                None => {}
             }
         }
 
+        slabrefs
     }
+*/
 
     // TODO: fancy stuff like random delivery, losing memos, delivering to subsets of peers, etc
-    pub fn deliver_all_memos (&self){
+    // TODO: convert slab_map to a vec, and use references internally
+    pub fn deliver_all_memos(&self) {
         let mut internals = self.shared.internals.lock().unwrap();
-        let slab_map = &mut internals.slab_map;
 
-        let mut missing: Vec<u32> = Vec::new();
-
-        for (k,slab_item) in slab_map.iter_mut() {
-            let tx_queue = &mut slab_item.tx_queue;
-
-            if tx_queue.len() > 0 {
-                match slab_item.slab.upgrade() {
-                    Some(slab) => {
-                        slab.put_memos(tx_queue.drain(..).collect());
-                    },
-                    None => {
-                        missing.push(*k)
-                    }
-                }
-            }
+        for slab in internals.get_slabs().iter_mut() {
+            slab.deliver_all_memos();
         }
     }
 }
 
+impl NetworkInternals {
 
-impl fmt::Debug for Network{
+    fn get_slabs (&mut self) -> Vec<SlabOuter> {
+        let mut res: Vec<SlabOuter> = Vec::with_capacity(self.slabs.len());
+        //let mut missing : Vec<usize> = Vec::new();
+
+        for slab in self.slabs.iter_mut() {
+            match slab.upgrade() {
+                Some(s) => {
+                    res.push( s );
+                },
+                None => {
+                    // TODO: expunge freed slabs
+                }
+            }
+        }
+
+        res
+    }
+}
+
+impl fmt::Debug for Network {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let inner = self.shared.internals.lock().unwrap();
 
         fmt.debug_struct("Network")
-           .field("next_slab_id", &inner.next_slab_id)
-           .finish()
+            .field("next_slab_id", &inner.next_slab_id)
+            .finish()
     }
 }
 

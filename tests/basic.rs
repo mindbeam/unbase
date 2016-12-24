@@ -11,20 +11,24 @@ fn test_init() {
     assert!(slab1.id == 1, "Slab 1 ID shoud be 1");
     assert!(slab2.id == 2, "Slab 2 ID shoud be 2");
 
-    // TODO: update internals to allow deliver_memos to fully deliver them to the slabs
-    // in question. This is necessary for deterministic testing. Will entail some
-    // rethinking of per-slab channels. Will have to balance the need for deterministic
-    // test cases vs concurrency in a production scenario.
-
+    println!("Slab1 Before: {:?}", &slab1);
+    println!("Slab2 Before: {:?}", &slab2);
+    //println!("Resident Before: {}", slab2.count_of_memos_resident());
     net.deliver_all_memos();
 
-    println!("Resident: {}", slab2.count_of_memos_resident());
+    println!("Resident After: {}", slab2.count_of_memos_resident());
     assert!(slab2.count_of_memos_resident() == 2, "Memos resident should be 2");
 
 }
+// TODO: update internals to allow deliver_memos to fully deliver them to the slabs
+// in question. This is necessary for deterministic testing. Will entail some
+// rethinking of per-slab channels. Will have to balance the need for deterministic
+// test cases vs concurrency in a production scenario.
 
-#[test]
-fn test_threads(){
+
+
+//#[test]
+fn test_threads() {
     let net = unbase::Network::new();
 
     let mut threads = Vec::new();
@@ -42,5 +46,5 @@ fn test_threads(){
         t.join().unwrap();
     }
 
-    //println!("{:?}", net);
+    // println!("{:?}", net);
 }
