@@ -5,6 +5,8 @@ extern crate linked_hash_map;
 pub mod network;
 pub mod slab;
 pub mod memo;
+pub mod context;
+pub mod record;
 pub use network::Network;
 pub use slab::Slab;
 

@@ -1,5 +1,5 @@
 use std::fmt;
-use slab::{SlabOuter};
+use slab::Slab;
 use memo::Memo;
 use std::mem;
 
@@ -8,12 +8,12 @@ pub struct SlabRef {
     // TODO - update Slabref to reference either network addresses OR resident slabs
     //       attempt to avoid address lookups for resident slabs to minimize instructions
     pub slab_id: u32,
-    slab: SlabOuter,
+    slab: Slab,
     pub tx_queue: Vec<Memo>
 }
 
 impl SlabRef{
-    pub fn new (slab: &SlabOuter) -> SlabRef {
+    pub fn new (slab: &Slab) -> SlabRef {
         SlabRef {
             slab_id: slab.id,
             slab:    slab.clone(),

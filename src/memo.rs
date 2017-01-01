@@ -2,10 +2,10 @@
  * A memo is an immutable message.
 */
 
+use std::collections::HashMap;
 use slab::Slab;
 use std::{fmt};
-
-
+use std::sync::Arc;
 
 /*
 use std::hash::{Hash, Hasher};
@@ -22,40 +22,49 @@ impl Hash for MemoId {
 }
 */
 
-
+#[derive(Clone)]
 pub struct Memo {
     pub id: u64,
-//    type: TypeName enum {
-//        Beacon
-//    }
+    pub record_id: u64,
+    inner: Arc<MemoInner>
 }
-impl Clone for Memo {
-    fn clone(&self) -> Memo {
-        Memo {
-            id: self.id,
-        }
-    }
+pub struct MemoInner {
+    pub id: u64,
+    pub record_id: u64,
+    parents: Vec<Memo>,
+    values: HashMap<String, String>
 }
 
 impl fmt::Debug for Memo{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let inner = self.inner;
         fmt.debug_struct("Memo")
-           .field("id", &self.id)
+           .field("id", &inner.id)
+           .field("record_id", &inner.record_id)
+           .field("parents", &inner.parents)
+           .field("values", &inner.values)
            .finish()
     }
 }
 
 impl Memo {
-    pub fn new (slab : &Slab) { // -> Memo{ // , topic: Topic){
+    pub fn new (slab : &Slab, record_id: u64, parents: Vec<Memo>, values: HashMap<String,String>) -> Self { // -> Memo{ // , topic: Topic){
+        let id = slab.gen_memo_id();
+
         let me = Memo {
-            id:    slab.gen_memo_id()
-            //topic: topic,
-//            type:  Beacon
+            id:    id,
+            record_id: record_id,
+            inner: Arc::new(MemoInner {
+                id:    id,
+                record_id: record_id,
+                parents: parents,
+                values: values
+            })
         };
 
-        println!("New Memo: {:?}", me.id );
-        slab.put_memos(vec![me]);
-        //me
+        println!("New Memo: {:?}", me.inner.id );
+        slab.put_memos(vec![me]); // TODO - should this be a clone?
+        me
     }
 }
 

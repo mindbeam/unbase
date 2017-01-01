@@ -6,14 +6,13 @@ use self::peer::*;
 //use std::thread;
 //use std::sync::mpsc::{Sender, channel};
 //use std::thread::JoinHandle;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex};
 use std::fmt;
-use slab::{Slab, SlabOuter};
-use memo::Memo;
+use slab::{Slab,WeakSlab};
 
 struct NetworkInternals {
     next_slab_id: u32,
-    slabs: Vec<Weak<Slab>>
+    slabs: Vec<WeakSlab>
 }
 
 pub struct NetworkShared {
@@ -64,7 +63,7 @@ impl Network {
 
         internals.next_slab_id
     }
-    pub fn register_slab(&self, slab: &SlabOuter) {
+    pub fn register_slab(&self, slab: &Slab) {
         let mut internals = self.shared.internals.lock().unwrap();
         println!("register_slab {:?}", slab );
         // TODO: convert this into a iter generator that automatically expunges missing slabs.
@@ -74,7 +73,7 @@ impl Network {
             prev_slab.add_peer( SlabRef::new( slab ) );
         }
 
-        internals.slabs.insert( 0, Arc::downgrade(slab) );
+        internals.slabs.insert( 0, slab.weak() );
 
     }
 
@@ -112,8 +111,8 @@ impl Network {
 
 impl NetworkInternals {
 
-    fn get_slabs (&mut self) -> Vec<SlabOuter> {
-        let mut res: Vec<SlabOuter> = Vec::with_capacity(self.slabs.len());
+    fn get_slabs (&mut self) -> Vec<Slab> {
+        let mut res: Vec<Slab> = Vec::with_capacity(self.slabs.len());
         //let mut missing : Vec<usize> = Vec::new();
 
         for slab in self.slabs.iter_mut() {

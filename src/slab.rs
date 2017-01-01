@@ -2,104 +2,148 @@
 extern crate linked_hash_map;
 
 use std::fmt;
-use std::sync::{Arc,Mutex};
+use std::sync::{Arc,Mutex,Weak};
+use std::collections::HashMap;
 use linked_hash_map::LinkedHashMap;
 use network::peer::{SlabRef};
 use network::Network;
 use memo::Memo;
+use context::Context;
 
 /* Initial plan:
  * Initially use Mutex-managed internal struct to manage slab storage
  * TODO: refactor to use a lock-free hashmap or similar
  */
 
-struct SlabInner{
+struct SlabShared{
     pub id: u32,
-    map: LinkedHashMap<u64, Memo>,
+    memos_by_id: LinkedHashMap<u64, Memo>,
+    record_subscriptions: HashMap<u64, Context>,
     last_memo_id: u32,
-    net: Network,
+    last_record_id: u32,
+    _net: Network,
     peer_refs: Vec<SlabRef>
 }
 
-pub struct Slab {
+pub struct SlabInner {
     pub id: u32,
-    inner: Mutex<SlabInner>
+    shared: Mutex<SlabShared>
 }
 
-pub type SlabOuter = Arc<Slab>;
+#[derive(Clone)]
+pub struct Slab {
+    pub id: u32,
+    inner: Arc<SlabInner>
+}
 
-/*impl Clone for Slab {
-    fn clone(&self) -> Slab {
-        Slab {
-            id: self.id,
-            inner: self.inner.clone()
-        }
-    }
-}*/
+pub struct WeakSlab{
+    pub id: u32,
+    inner: Weak<SlabInner>
+}
 
 impl Slab {
-    pub fn new(net: &Network) -> SlabOuter {
+    pub fn new(net: &Network) -> Slab {
         let slab_id = net.generate_slab_id();
 
-        let inner = SlabInner {
+        let shared = SlabShared {
             id: slab_id,
-            net: net.clone(),
-            map: LinkedHashMap::new(),
+            _net: net.clone(),
+            memos_by_id: LinkedHashMap::new(),
+            record_subscriptions: HashMap::new(),
             last_memo_id: 0,
+            last_record_id: 0,
             peer_refs: Vec::new()
         };
 
-        let me = Arc::new(Slab {
+        let me = Slab {
             id: slab_id,
-            inner: Mutex::new(inner)
-        });
+            inner: Arc::new(SlabInner {
+                id: slab_id,
+                shared: Mutex::new(shared)
+            })
+        };
 
         net.register_slab(&me);
 
         // TODO: Cloning the outer slab for the thread closure is super ugly
         //       There must be a better way to do this
 
-        me.do_ping();
+        //me.do_ping();
         me
     }
-    pub fn gen_memo_id (&self) -> u64 {
-        let mut inner = self.inner.lock().unwrap();
-        inner.last_memo_id += 1;
-
-        (self.id as u64).rotate_left(32) | inner.last_memo_id as u64
+    pub fn weak (&self) -> WeakSlab {
+        WeakSlab {
+            id: self.id,
+            inner: Arc::downgrade(&self.inner)
+        }
     }
-    pub fn put_memos(&self, memos : Vec<Memo>){
-        let mut inner = self.inner.lock().unwrap();
+    pub fn generate_record_id(&self) -> u64 {
+        let mut shared = self.inner.shared.lock().unwrap();
+        shared.last_record_id += 1;
+
+        (self.id as u64).rotate_left(32) | shared.last_record_id as u64
+    }
+    pub fn gen_memo_id (&self) -> u64 {
+        let mut shared = self.inner.shared.lock().unwrap();
+        shared.last_memo_id += 1;
+
+        (self.id as u64).rotate_left(32) | shared.last_memo_id as u64
+    }
+    pub fn put_memos(&self, memos : Vec<&Memo>){
+        let mut shared = self.inner.shared.lock().unwrap();
+
+        //let mut subs : HashMap<> = HashMap::new();
 
         for memo in memos.iter() {
-            inner.map.insert( memo.id, memo.clone() );
+            shared.memos_by_id.insert( memo.id, *memo.clone() );
+            match shared.record_subscriptions.get( &memo.record_id ) {
+                Some ( c ) => { c.put_memos(vec![memo]) },
+                None => {}
+            }
         }
 
-        inner.emit_memos( memos );
+        shared.emit_memos( memos );
     }
     pub fn count_of_memos_resident( &self ) -> u32 {
-        let inner = self.inner.lock().unwrap();
-        inner.map.len() as u32
+        let shared = self.inner.shared.lock().unwrap();
+        shared.memos_by_id.len() as u32
     }
-    fn do_ping (&self){
+/*    fn do_ping (&self){
         Memo::new(&self);
     }
+    */
     pub fn add_peer (&self, new_peer_ref: SlabRef) {
-        let mut inner = self.inner.lock().unwrap();
-        inner.peer_refs.push(new_peer_ref);
+        let mut shared = self.inner.shared.lock().unwrap();
+        shared.peer_refs.push(new_peer_ref);
+    }
+    pub fn peer_slab_count (&self) -> usize {
+        let shared = self.inner.shared.lock().unwrap();
+        shared.peer_refs.len()
     }
     pub fn deliver_all_memos (&self){
-        let mut inner = self.inner.lock().unwrap();
+        let mut shared = self.inner.shared.lock().unwrap();
 
-        for peer_ref in inner.peer_refs.iter_mut() {
+        for peer_ref in shared.peer_refs.iter_mut() {
             peer_ref.deliver_all_memos()
+        }
+    }
+    pub fn create_context (&self) -> Context {
+        Context::new(self)
+    }
+}
+
+impl WeakSlab {
+    pub fn upgrade (&self) -> Option<Slab> {
+        match self.inner.upgrade() {
+            Some(i) => Some( Slab { id: self.id, inner: i } ),
+            None    => None
         }
     }
 }
 
-impl SlabInner {
+impl SlabShared {
 
-    pub fn emit_memos(&mut self, memos: Vec<Memo>) {
+    pub fn emit_memos(&mut self, memos: Vec<&Memo>) {
         println!("Slab {} emit_memos {:?}", self.id, memos);
 
         // TODO - configurably auto-deliver these memos
@@ -130,7 +174,7 @@ impl SlabInner {
 */
 }
 
-impl Drop for Slab {
+impl Drop for SlabInner {
     fn drop(&mut self) {
         println!("> Dropping Slab {}", self.id);
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
@@ -139,11 +183,11 @@ impl Drop for Slab {
 
 impl fmt::Debug for Slab {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let inner = self.inner.lock().unwrap();
+        let shared = self.inner.shared.lock().unwrap();
 
         fmt.debug_struct("Slab")
             .field("slab_id", &self.id)
-            .field("peer_refs", &inner.peer_refs)
+            .field("peer_refs", &shared.peer_refs)
             .finish()
     }
 }
