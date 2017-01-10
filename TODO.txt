@@ -1,0 +1,11 @@
+
+Steps Believed necessary for the passage of the first self-consistency test case:
+
+[ ] Arc-ify SlabRef ( necessary because of all the memorefs that will be pointing to it for peering management )
+[ ] Enable MemoRef management by the Slab
+  [ ] For the memo itself
+  [ ] For memo -> parent memos
+  [ ] For memo -> relation memos
+[ ] Finish renaming Record -> Subject
+[ ] Finish Subject subscription plumbing
+[ ] Basic state projection logic

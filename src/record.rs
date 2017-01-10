@@ -11,54 +11,64 @@
 
 use std::collections::HashMap;
 use memo::Memo;
-use std::mem;
 //use slab::Slab;
 use context::Context;
 
-pub struct Record {
+pub struct RecordHandle {
     pub id:      u64,
-    context: Context,
-    head:    Vec<Memo>
+    context: Context
 }
 
-impl Record {
-    pub fn new ( context: Context, vals: HashMap<String, String> ) -> Result<Record,String> {
+pub struct RecordSetHandle {
+
+}
+
+impl RecordHandle {
+    pub fn new ( context: Context, vals: HashMap<String, String> ) -> Result<RecordHandle,String> {
 
         let id = context.get_slab().generate_record_id();
-        let firstmemo = Memo::new( context.get_slab(), id, vec![], vals );
 
-        let rec = Record {
+        let rec = RecordHandle {
             id:      id,
-            context: context.clone(),
-            head:    vec![firstmemo],
+            context: context.clone()
         };
 
         context.subscribe_record( &rec );
+        Memo::create( context.get_slab(), id, vec![], vals );
+
         Ok(rec)
     }
-    pub fn new_kv ( context: Context, key: &str, value: &str) -> Result<Record,String> {
+    pub fn new_kv ( context: Context, key: &str, value: &str) -> Result<RecordHandle,String> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
         Self::new( context, vals )
     }
-    pub fn get_value ( &self, _key: &str ) -> Result<&str, &str> {
-        Ok("woof")
-
-        // TODO: start from self.head and iterate through parents to collapse the value
-    }
     pub fn set_kv (&mut self, key: &str, value: &str) -> bool {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        let memo = Memo::new( self.context.get_slab(), self.id, self.head.clone(), vals );
+        self.context.create_record_memo(self,vals);
         //self.head = vec![ memo ];
 
         true
     }
+    pub fn get_value ( &self, key: &str ) -> Option<&str> {
+        //self.context.get_record_value(self.id, key)
+        let mut value : String;
+
+        //let mut memos = self.context.get_record_head(self.id);
+        for memo in self.context.subject_memo_iter(self.id) {
+            if let Some(v) = memo.inner.values.get(key) {
+                return Some(v);
+            }
+        }
+        None
+    }
+
 }
 
-impl Drop for Record {
+impl Drop for RecordHandle {
     fn drop (&mut self) {
         self.context.unsubscribe_record(self)
     }
@@ -90,36 +100,6 @@ var memosort = function(a,b){
 Record.prototype.get = function(field){
     // TODO: implement promises for get
     return this.getFreshOrNull(field);
-}
-
-Record.prototype.getFreshOrNull = function(field){
-    var me = this;
-    var value = undefined;
-
-    var done = false;
-    var memos = this.slab.getHeadMemosForRecord(this.id);
-
-    this.context.addMemos(memos);
-
-    while(!done){
-        var nextmemos = [];
-        memos.sort(memosort).forEach(function(memo){
-            if(!memo.v) console.log(memo);
-            if (typeof memo.v[field] !== 'undefined'){
-                value = memo.v[field];
-                done = true;
-            }else{
-                memo.parents.forEach(function(pid){ nextmemos.push(me.memos_by_id[pid]) });
-            }
-        });
-        // console.log('nextmemos',nextmemos, done);
-        if(!nextmemos.length) done = true;
-
-        // TODO - Look up memos from slab
-        if(!done) memos = nextmemos;
-    }
-
-    return value;
 }
 
 Record.prototype.getHeadMemoIDs = function(){

@@ -45,7 +45,7 @@ fn basic_eventual() {
 
     let rec_c1 = context_c.get_record( rec_a1.id );
     assert!(rec_c1.is_ok(), "new record should now be available on slab C");
-    let rec_c1 = rec_c1.unwrap();
+    let mut rec_c1 = rec_c1.unwrap();
 
     assert!(rec_c1.get_value("animal_sound").unwrap() == "moo", "Transferred record should be consistent");
 

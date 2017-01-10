@@ -3,7 +3,6 @@ use slab::Slab;
 use memo::Memo;
 use std::mem;
 
-
 pub struct SlabRef {
     // TODO - update Slabref to reference either network addresses OR resident slabs
     //       attempt to avoid address lookups for resident slabs to minimize instructions
@@ -21,11 +20,11 @@ impl SlabRef{
         }
     }
     pub fn deliver_all_memos (&mut self){
-        let mut tx_queue : Vec<Memo> = Vec::new();
+        /*let mut tx_queue : Vec<Memo> = Vec::new();
         mem::swap(&mut tx_queue, &mut self.tx_queue);
 
-        self.slab.put_memos(tx_queue);
-
+        self.slab.put_memos(&tx_queue);
+*/
     }
 }
 

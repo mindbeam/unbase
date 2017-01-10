@@ -1,13 +1,13 @@
-
-extern crate linked_hash_map;
+//extern crate linked_hash_map;
+//use linked_hash_map::LinkedHashMap;
 
 use std::fmt;
+use std::mem;
 use std::sync::{Arc,Mutex,Weak};
 use std::collections::HashMap;
-use linked_hash_map::LinkedHashMap;
 use network::peer::{SlabRef};
 use network::Network;
-use memo::Memo;
+use memo::{Memo,MemoId,MemoRef};
 use context::Context;
 
 /* Initial plan:
@@ -17,8 +17,9 @@ use context::Context;
 
 struct SlabShared{
     pub id: u32,
-    memos_by_id: LinkedHashMap<u64, Memo>,
-    record_subscriptions: HashMap<u64, Context>,
+    memos_by_id:    HashMap<MemoId, Memo>,
+    memorefs_by_id: HashMap<MemoId,MemoRef>,
+    record_subscriptions: HashMap<u64, Vec<Context>>,
     last_memo_id: u32,
     last_record_id: u32,
     _net: Network,
@@ -48,7 +49,8 @@ impl Slab {
         let shared = SlabShared {
             id: slab_id,
             _net: net.clone(),
-            memos_by_id: LinkedHashMap::new(),
+            memos_by_id:          HashMap::new(),
+            memorefs_by_id:       HashMap::new(),
             record_subscriptions: HashMap::new(),
             last_memo_id: 0,
             last_record_id: 0,
@@ -89,20 +91,37 @@ impl Slab {
 
         (self.id as u64).rotate_left(32) | shared.last_memo_id as u64
     }
-    pub fn put_memos(&self, memos : Vec<&Memo>){
+    pub fn put_memos(&self, memos : Vec<Memo>){
+        if memos.len() == 0 { return }
+
+        let mut groups : HashMap<u64, Vec<Memo>> = HashMap::new();
+
         let mut shared = self.inner.shared.lock().unwrap();
 
-        //let mut subs : HashMap<> = HashMap::new();
-
-        for memo in memos.iter() {
-            shared.memos_by_id.insert( memo.id, *memo.clone() );
-            match shared.record_subscriptions.get( &memo.record_id ) {
-                Some ( c ) => { c.put_memos(vec![memo]) },
-                None => {}
+        for memo in memos {
+            shared.memos_by_id   .insert( memo.id, memo.clone() );
+            shared.memorefs_by_id.insert( memo.id, memoref );
+            // TODO: rewrite this to use sort / split
+            let mut done = false;
+            if let Some(g) = groups.get_mut(&memo.record_id) {
+                g.push( memo.clone() );
+                done = true;
             }
+
+            // Ohhhhh merciful borrow checker
+            if !done {
+                groups.insert(memo.record_id, vec![memo.clone()]);
+            }
+
         }
 
-        shared.emit_memos( memos );
+        for (record_id,memos) in groups {
+            shared.dispatch_record_memos(record_id, &memos);
+        }
+
+        // LEFT OFF HERE - Next steps:
+        //   hook up context subscriptions
+        //   test each memo for durability_score and emit accordingly
     }
     pub fn count_of_memos_resident( &self ) -> u32 {
         let shared = self.inner.shared.lock().unwrap();
@@ -130,6 +149,21 @@ impl Slab {
     pub fn create_context (&self) -> Context {
         Context::new(self)
     }
+    pub fn subscribe_record (&self, record_id: u64, context: &Context) {
+        let shared = self.inner.shared.lock().unwrap();
+        if let Some(subs) = shared.record_subscriptions.get(&record_id) {
+            subs.push(context.clone());
+        }else{
+            shared.record_subscriptions.insert(record_id, vec![context.clone()]);
+        }
+    }
+    pub fn fetch_memo (&self, memo_id: MemoId, memoref: &mut MemoRef ) {
+
+        //let memo : Memo;
+        //mem::replace( memoref, MemoRef::Resident(memo) );
+
+        unimplemented!()
+    }
 }
 
 impl WeakSlab {
@@ -143,6 +177,13 @@ impl WeakSlab {
 
 impl SlabShared {
 
+    pub fn dispatch_record_memos (&mut self, record_id: u64, memos : &[Memo]){
+        if let Some(subscribers) = self.record_subscriptions.get( &record_id ) {
+            for sub in subscribers {
+                sub.put_memos( memos )
+            }
+        }
+    }
     pub fn emit_memos(&mut self, memos: Vec<&Memo>) {
         println!("Slab {} emit_memos {:?}", self.id, memos);
 

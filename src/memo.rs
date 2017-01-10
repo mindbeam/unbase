@@ -4,16 +4,58 @@
 
 use std::collections::HashMap;
 use slab::Slab;
+use network::peer::SlabRef;
 use std::{fmt};
 use std::sync::Arc;
+use subject::{SubjectId};
+use context::Context;
+
+pub type MemoId = [u8; 32];
+
+pub struct MemoRef {
+    id:    MemoId,
+    peers: Vec<SlabRef>,
+    ptr:   MemoRefPtr
+}
+pub enum MemoRefPtr {
+    Resident(Memo),
+    Remote
+}
+
+impl MemoRef {
+    /* pub fn id (&self) -> MemoId {
+        match self {
+            MemoRef::Resident(memo) => memo.id,
+            MemoRef::Remote(id)     => id
+        }
+    }*/
+    pub fn get (&mut self, slab: &Slab) -> Memo {
+        match self.ptr {
+            MemoRefPtr::Resident(memo) => memo,
+            MemoRefPtr::Remote(id)     => {
+                slab.fetch_memo(id, self)
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct Memo {
+    pub id: u64,
+    pub subject_id: u64,
+    pub inner: Arc<MemoInner>
+}
+pub struct MemoInner {
+    pub id: u64,
+    pub subject_id: u64,
+    parents: Vec<MemoRef>,
+    values: HashMap<String, String>
+}
+
 
 /*
 use std::hash::{Hash, Hasher};
 
-pub struct MemoId{
-    originSlab: u32,
-    id: u32,
-}
 impl Hash for MemoId {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.originSlab.hash(state);
@@ -22,25 +64,12 @@ impl Hash for MemoId {
 }
 */
 
-#[derive(Clone)]
-pub struct Memo {
-    pub id: u64,
-    pub record_id: u64,
-    inner: Arc<MemoInner>
-}
-pub struct MemoInner {
-    pub id: u64,
-    pub record_id: u64,
-    parents: Vec<Memo>,
-    values: HashMap<String, String>
-}
-
 impl fmt::Debug for Memo{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let inner = self.inner;
+        let inner = &self.inner;
         fmt.debug_struct("Memo")
            .field("id", &inner.id)
-           .field("record_id", &inner.record_id)
+           .field("subject_id", &inner.subject_id)
            .field("parents", &inner.parents)
            .field("values", &inner.values)
            .finish()
@@ -48,23 +77,25 @@ impl fmt::Debug for Memo{
 }
 
 impl Memo {
-    pub fn new (slab : &Slab, record_id: u64, parents: Vec<Memo>, values: HashMap<String,String>) -> Self { // -> Memo{ // , topic: Topic){
+    pub fn create (slab : &Slab, subject_id: SubjectId, parents: Vec<Memo>, values: HashMap<String,String>) { // -> Memo{ // , topic: Topic){
         let id = slab.gen_memo_id();
 
         let me = Memo {
             id:    id,
-            record_id: record_id,
+            subject_id: subject_id,
             inner: Arc::new(MemoInner {
                 id:    id,
-                record_id: record_id,
+                subject_id: subject_id,
                 parents: parents,
                 values: values
             })
         };
 
         println!("New Memo: {:?}", me.inner.id );
-        slab.put_memos(vec![me]); // TODO - should this be a clone?
-        me
+        slab.put_memos(vec![me]);
+    }
+    pub fn get_parent_refs (&self) -> Vec<MemoRef> {
+
     }
 }
 
