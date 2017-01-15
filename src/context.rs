@@ -2,15 +2,15 @@
 use std::collections::HashMap;
 use slab::Slab;
 use memo::Memo;
+use memoref::MemoRef;
 
-use subject::{SubjectId,SubjectHead,SubjectMemoIter};
-use record::RecordHandle;
+use subject::*;
 use std::sync::{Mutex,Arc};
 use std::result;
 
 pub struct ContextShared {
     memos: Vec<Memo>,
-    subjects: HashMap<SubjectId, SubjectHead>
+    subjects: HashMap<SubjectId, Subject>
 }
 
 pub struct ContextInner {
@@ -37,43 +37,33 @@ impl Context{
     pub fn get_slab (&self) -> &Slab {
         &self.inner.slab
     }
-    pub fn subscribe_record (&self, rh: &RecordHandle) {
+    pub fn subscribe_subject (&self, subject: &Subject) {
+        {
+            let mut shared = self.inner.shared.lock().unwrap();
+            shared.subjects.insert( subject.id, subject.clone() );
+        }
+        self.inner.slab.subscribe_subject(subject.id, self);
+    }
+    pub fn unsubscribe_subject (&self, subject: &Subject ){
+        //unimplemented!();
+    }
+    pub fn get_subject (&self, subject_id: SubjectId) -> Result<Subject, &str> {
+        let shared = self.inner.shared.lock().unwrap();
+        // First - Check to see if I have the subject resident in this context
+        if let Some(subject) = shared.subjects.get(&subject_id) {
+            return Ok(subject.clone());
+        }else{
+            // Else - Perform an index lookup on the primary subject index to construct the subject head
+            unimplemented!()
+        }
+    }
+
+    pub fn put_subject_memos (&self, subject_id: SubjectId, memorefs: &[MemoRef]){
         let mut shared = self.inner.shared.lock().unwrap();
 
-        let rec = Record {
-            id: rh.id,
-            head: vec![]
-        };
-        // it would seem that the record shouldn't actually own it's own guts
-        // Record vs RecordHandle vs RecordInternal vs ??
-        // Record
-        self.get_slab().subscribe_record(rec.id, self);
-        shared.subjects.insert( rec.id, rec );
-    }
-    pub fn unsubscribe_record (&self, record: &RecordHandle ){
-
-    }
-    pub fn create_record_memo (&self, rh: &RecordHandle, vals: HashMap<String,String> ){
-        if let Some(rec) = self.inner.shared.lock().unwrap().subjects.get(&rh.id) {
-            let head = rec.head.clone();
-            Memo::create( self.get_slab(), rh.id, vec![], vals );
+        if let Some(subject) = shared.subjects.get_mut(&subject_id) {
+            subject.append_memorefs(memorefs)
         }
-    }
-    pub fn get_record (&self, record_id: SubjectId) -> Result<RecordHandle, &str> {
-        Err("failed to retrieve record")
-    }
-
-    pub fn subject_memo_iter (&self, record_id: SubjectId ) -> SubjectMemoIter {
-
-        if let Some(rec) = self.inner.shared.lock().unwrap().subjects.get(&record_id) {
-            SubjectMemoIter::new(rec.head,self)
-        }else{
-            SubjectMemoIter::new(vec![],self)
-        }
-
-    }
-    pub fn put_memos (&self, memos: &[Memo]){
-        unimplemented!();
     }
 }
 
@@ -99,7 +89,7 @@ Context.prototype.getPresentContext = function () {
     //console.log('Context[slab' + this.slab.id + '].getPresentContext', this._context);
     return [].concat(this._context); // have to clone this, as it's a moving target
 };
-Context.prototype.addRecord = function(record){
+Context.prototype.addRecord = function(SubjectHandle){
     this._records_by_id[record.id] = record;
 }
 Context.prototype.getRecord = function(rid){

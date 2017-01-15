@@ -9,35 +9,12 @@ use std::{fmt};
 use std::sync::Arc;
 use subject::{SubjectId};
 use context::Context;
+use memoref::*;
 
-pub type MemoId = [u8; 32];
+//pub type MemoId = [u8; 32];
+pub type MemoId = u64;
 
-pub struct MemoRef {
-    id:    MemoId,
-    peers: Vec<SlabRef>,
-    ptr:   MemoRefPtr
-}
-pub enum MemoRefPtr {
-    Resident(Memo),
-    Remote
-}
-
-impl MemoRef {
-    /* pub fn id (&self) -> MemoId {
-        match self {
-            MemoRef::Resident(memo) => memo.id,
-            MemoRef::Remote(id)     => id
-        }
-    }*/
-    pub fn get (&mut self, slab: &Slab) -> Memo {
-        match self.ptr {
-            MemoRefPtr::Resident(memo) => memo,
-            MemoRefPtr::Remote(id)     => {
-                slab.fetch_memo(id, self)
-            }
-        }
-    }
-}
+// All portions of this struct should be immutable
 
 #[derive(Clone)]
 pub struct Memo {
@@ -49,7 +26,7 @@ pub struct MemoInner {
     pub id: u64,
     pub subject_id: u64,
     parents: Vec<MemoRef>,
-    values: HashMap<String, String>
+    pub values: HashMap<String, String>
 }
 
 
@@ -77,7 +54,7 @@ impl fmt::Debug for Memo{
 }
 
 impl Memo {
-    pub fn create (slab : &Slab, subject_id: SubjectId, parents: Vec<Memo>, values: HashMap<String,String>) { // -> Memo{ // , topic: Topic){
+    pub fn create (slab : &Slab, subject_id: SubjectId, parents: Vec<MemoRef>, values: HashMap<String,String>) { // -> Memo{ // , topic: Topic){
         let id = slab.gen_memo_id();
 
         let me = Memo {
@@ -95,7 +72,10 @@ impl Memo {
         slab.put_memos(vec![me]);
     }
     pub fn get_parent_refs (&self) -> Vec<MemoRef> {
-
+        self.inner.parents.clone()
+    }
+    pub fn get_values (&self) -> HashMap<String, String> {
+        self.inner.values.clone()
     }
 }
 

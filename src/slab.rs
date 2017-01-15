@@ -1,13 +1,11 @@
-//extern crate linked_hash_map;
-//use linked_hash_map::LinkedHashMap;
-
 use std::fmt;
 use std::mem;
 use std::sync::{Arc,Mutex,Weak};
 use std::collections::HashMap;
 use network::peer::{SlabRef};
 use network::Network;
-use memo::{Memo,MemoId,MemoRef};
+use memo::{Memo,MemoId};
+use memoref::MemoRef;
 use context::Context;
 
 /* Initial plan:
@@ -17,11 +15,10 @@ use context::Context;
 
 struct SlabShared{
     pub id: u32,
-    memos_by_id:    HashMap<MemoId, Memo>,
     memorefs_by_id: HashMap<MemoId,MemoRef>,
-    record_subscriptions: HashMap<u64, Vec<Context>>,
+    subject_subscriptions: HashMap<u64, Vec<Context>>,
     last_memo_id: u32,
-    last_record_id: u32,
+    last_subject_id: u32,
     _net: Network,
     peer_refs: Vec<SlabRef>
 }
@@ -49,11 +46,10 @@ impl Slab {
         let shared = SlabShared {
             id: slab_id,
             _net: net.clone(),
-            memos_by_id:          HashMap::new(),
             memorefs_by_id:       HashMap::new(),
-            record_subscriptions: HashMap::new(),
+            subject_subscriptions: HashMap::new(),
             last_memo_id: 0,
-            last_record_id: 0,
+            last_subject_id: 0,
             peer_refs: Vec::new()
         };
 
@@ -79,11 +75,11 @@ impl Slab {
             inner: Arc::downgrade(&self.inner)
         }
     }
-    pub fn generate_record_id(&self) -> u64 {
+    pub fn generate_subject_id(&self) -> u64 {
         let mut shared = self.inner.shared.lock().unwrap();
-        shared.last_record_id += 1;
+        shared.last_subject_id += 1;
 
-        (self.id as u64).rotate_left(32) | shared.last_record_id as u64
+        (self.id as u64).rotate_left(32) | shared.last_subject_id as u64
     }
     pub fn gen_memo_id (&self) -> u64 {
         let mut shared = self.inner.shared.lock().unwrap();
@@ -94,38 +90,39 @@ impl Slab {
     pub fn put_memos(&self, memos : Vec<Memo>){
         if memos.len() == 0 { return }
 
-        let mut groups : HashMap<u64, Vec<Memo>> = HashMap::new();
+        let mut groups : HashMap<u64, Vec<MemoRef>> = HashMap::new();
 
         let mut shared = self.inner.shared.lock().unwrap();
 
         for memo in memos {
-            shared.memos_by_id   .insert( memo.id, memo.clone() );
-            shared.memorefs_by_id.insert( memo.id, memoref );
+            // TODO: NoOp here if the memo is already resident
+            let memoref = MemoRef::new_from_resident_memo(&memo);
+
             // TODO: rewrite this to use sort / split
             let mut done = false;
-            if let Some(g) = groups.get_mut(&memo.record_id) {
-                g.push( memo.clone() );
+            if let Some(g) = groups.get_mut(&memo.subject_id) {
+                g.push( memoref.clone() );
                 done = true;
             }
-
             // Ohhhhh merciful borrow checker
             if !done {
-                groups.insert(memo.record_id, vec![memo.clone()]);
+                groups.insert(memo.subject_id, vec![memoref.clone()]);
             }
 
+            shared.memorefs_by_id.insert( memo.id, memoref );
         }
 
-        for (record_id,memos) in groups {
-            shared.dispatch_record_memos(record_id, &memos);
+        for (subject_id,memorefs) in groups {
+            shared.dispatch_subject_memorefs(subject_id, &memorefs);
         }
 
         // LEFT OFF HERE - Next steps:
         //   hook up context subscriptions
         //   test each memo for durability_score and emit accordingly
     }
-    pub fn count_of_memos_resident( &self ) -> u32 {
+    pub fn count_of_memorefs_resident( &self ) -> u32 {
         let shared = self.inner.shared.lock().unwrap();
-        shared.memos_by_id.len() as u32
+        shared.memorefs_by_id.len() as u32
     }
 /*    fn do_ping (&self){
         Memo::new(&self);
@@ -149,20 +146,25 @@ impl Slab {
     pub fn create_context (&self) -> Context {
         Context::new(self)
     }
-    pub fn subscribe_record (&self, record_id: u64, context: &Context) {
-        let shared = self.inner.shared.lock().unwrap();
-        if let Some(subs) = shared.record_subscriptions.get(&record_id) {
+    pub fn subscribe_subject (&self, subject_id: u64, context: &Context) {
+        let mut shared = self.inner.shared.lock().unwrap();
+
+        if let Some(subs) = shared.subject_subscriptions.get_mut(&subject_id) {
             subs.push(context.clone());
-        }else{
-            shared.record_subscriptions.insert(record_id, vec![context.clone()]);
+            return;
         }
+
+        // Stoopid borrow checker
+        shared.subject_subscriptions.insert(subject_id, vec![context.clone()]);
+        return;
     }
-    pub fn fetch_memo (&self, memo_id: MemoId, memoref: &mut MemoRef ) {
+    pub fn localize_memo (&self, memoref: &mut MemoRef ) -> Result<Memo, String> {
 
         //let memo : Memo;
         //mem::replace( memoref, MemoRef::Resident(memo) );
+        //memoref.set_memo();
 
-        unimplemented!()
+        Err("unable to localize memo".to_owned())
     }
 }
 
@@ -177,10 +179,10 @@ impl WeakSlab {
 
 impl SlabShared {
 
-    pub fn dispatch_record_memos (&mut self, record_id: u64, memos : &[Memo]){
-        if let Some(subscribers) = self.record_subscriptions.get( &record_id ) {
+    pub fn dispatch_subject_memorefs (&mut self, subject_id: u64, memorefs : &[MemoRef]){
+        if let Some(subscribers) = self.subject_subscriptions.get( &subject_id ) {
             for sub in subscribers {
-                sub.put_memos( memos )
+                sub.put_subject_memos( subject_id, memorefs )
             }
         }
     }
