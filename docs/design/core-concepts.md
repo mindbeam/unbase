@@ -180,9 +180,6 @@ In the above scenario, Alice may have made or observed a whole lot of loose-leaf
 
 <br>
 
-
-**Core Concepts document is a WIP Past this point.**
-
 #### Challenge #3 – Distributed Merging at-Scale
 
 Alright, we've made it this far. Now for the hard part:
@@ -194,13 +191,16 @@ Let's ask Alice, Bob, and several of their friends to do an exercise. To make th
 <img src="media/large_scale_distributed_merging-example_of_infrequent_writes.png" alt="" style="width: 755px; max-width: 100%"><br>
 **FIG 11. A single writer works ok, but there's a little too much redundant consolidation.**
 
-As you can see, we have a fair bit of redundant transmission of F<sub>10</sub> but the network is quiescent fairly rapidly.
+In the above scenario, we have a rather read-heavy workload, with very few writes. It works ok, and the network is quiescent fairly rapidly, but as you can see we have a fair bit of redundant generation/transmission of F<sub>10</sub>. As in gossip networks, the upper bound for write throughput on a given topic approaches the average free capacity of each of the interested parties individually. This is because all writes must be propagated to all interested parties. In the case of a system with a well distributed variety of not-so-popular topics, this is somewhat less crucial. In our case, it's a serious problem. Nearly every party in the system is likely to possess a root index node (indexing discussed a bit later).
 
-**FIG 12. When everybody writes, it's a disaster.**
+Because of these high-interest topics (such as the root index node,) and the desire to operate large, and/or write-heavy networks, we must find a way to mitigate this. We must find a way to permit the aggregate write throughput on a given topic to _dramatically_ exceed the average capacity of the interested parties. But how?
 
+**Core Concepts document is a WIP Past this point.**
+
+Have you ever been to a party where there are 20+ people talking in one room? Chances are, you focused on a few of them, and essentially ignored all the others. Even if you were within earshot of all of them, you lack the capacity to listen to all of the people at once, so you specifically choose to ignore what most of them are saying. You tune them out so you can use your capacity to understand the people on which you're focused.
 **Fig 13. Selective Hearing**
 
-
+The most important factor in solving the above problem is quite simple really. When you have more traffic on a given topic than the capacity of each interested party individually, the parties simply ignore the extra chatter which they cannot, or do not wish to process. In our case, rather than tuning into specific groups of people when necessarily, each peer mode decides to a hear a message, or not, on the basis of a carefully calibrated probability calculation. <!-- TODO: explain that we're not trying to propagate a specific message to the whole network, but rather create merges probablistically which are inclusive of descendants of prior merges in a commutative way. We're not just trying to deliver a single message once in the whole network -->
 
 #### Sparse Vector Clocks - A key implementation detail
 Sparse vector clocks, AKA Beacons, are similar in principle to [Interval Tree Clocks](http://gsd.di.uminho.pt/members/cbm/ps/itc2008.pdf){:target="define"}, with some key differences.
