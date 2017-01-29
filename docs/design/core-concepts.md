@@ -186,21 +186,21 @@ Alright, we've made it this far. Now for the hard part:
 
 How does this behave when it's not just Alice and Bob at the party – How does it behave when we have a million+ people in the system? It might not be too bad if most of them were reading, with some occasional writes. They'd share contexts among themselves, occasionally resulting in actual context expansion, and occasionally resulting in redundant compaction operations. Because the identity of each Memo is based on the hash of its precursors plus it's content, only one compaction memo would end up getting stored (even if it *was* calculated nearly a million times.)
 
-Let's ask Alice, Bob, and several of their friends to do an exercise. To make things a little more interesting, We've decided that Alice and Bob don't consolidate as early as their neighbors, otherwise the F<sub>10</sub> would be received by peers before F<sub>9</sub> and our exercise would be a lot more boring.
+Let's ask Alice, Bob, and several of their friends to do an exercise. To make things a little more interesting, We've decided that Alice and Bob don't consolidate as early as their neighbors, otherwise the F<sub>10</sub> would be received by peers before F<sub>9</sub> and our exercise would be a lot less interesting.
 
 <img src="media/large_scale_distributed_merging-example_of_infrequent_writes.png" alt="" style="width: 755px; max-width: 100%"><br>
 **FIG 11. A single writer works ok, but there's a little too much redundant consolidation.**
 
-In the above scenario, we have a rather read-heavy workload, with very few writes. It works ok, and the network is quiescent fairly rapidly, but as you can see we have a fair bit of redundant generation/transmission of F<sub>10</sub>. As in gossip networks, the upper bound for write throughput on a given topic approaches the average free capacity of each of the interested parties individually. This is because all writes must be propagated to all interested parties. In the case of a system with a well distributed variety of not-so-popular topics, this is somewhat less crucial. In our case, it's a serious problem. Nearly every party in the system is likely to possess a root index node (indexing discussed a bit later).
+In the above scenario, we have a rather read-heavy workload with very few writes. It works ok, and the network is quiescent fairly rapidly, but as you can see we have a fair bit of redundant generation/transmission of F<sub>10</sub>. As in gossip networks, the aggregate upper-bound for write throughput on a given topic is approximately equal to the average individual throughput of each interested party. This is because each write must be propagated to all interested parties. In the case of a system with a well distributed variety of not-so-popular topics, this is somewhat less crucial. In our case, it's a serious problem. Nearly every party in the system is likely to possess a root index node (indexing discussed a bit later).
 
-Because of these high-interest topics (such as the root index node,) and the desire to operate large, and/or write-heavy networks, we must find a way to mitigate this. We must find a way to permit the aggregate write throughput on a given topic to _dramatically_ exceed the average capacity of the interested parties. But how?
+Because of these high-interest topics (such as the root index node) and the desire to operate large, and/or write-heavy networks, we must find a way to mitigate this. We must find a way to permit the aggregate write throughput for a given topic to _dramatically_ exceed the average capacity of the interested parties. But how?
 
-**Core Concepts document is a WIP Past this point.**
 
-Have you ever been to a party where there are 20+ people talking in one room? Chances are, you focused on a few of them, and essentially ignored all the others. Even if you were within earshot of all of them, you lack the capacity to listen to all of the people at once, so you specifically choose to ignore what most of them are saying. You tune them out so you can use your capacity to understand the people on which you're focused.
-**Fig 13. Selective Hearing**
+**Selective Hearing**
 
-The most important factor in solving the above problem is quite simple really. When you have more traffic on a given topic than the capacity of each interested party individually, the parties simply ignore the extra chatter which they cannot, or do not wish to process. In our case, rather than tuning into specific groups of people when necessarily, each peer mode decides to a hear a message, or not, on the basis of a carefully calibrated probability calculation. <!-- TODO: explain that we're not trying to propagate a specific message to the whole network, but rather create merges probablistically which are inclusive of descendants of prior merges in a commutative way. We're not just trying to deliver a single message once in the whole network -->
+Have you ever been to a party where there are 20+ people talking in one room? Chances are, you focused on a few of them, and essentially ignored all the others. Even if you theoretically were within earshot of all of them, you lack the capacity to listen to all of the people at once – It exceeds your input acoustic processing bandwidth. You specifically choose to ignore what most of them are saying. You tune them out so you can use your capacity to understand the people on which you're focused.
+
+Solving the above problem is quite simple really. When you have more traffic on a given topic than the capacity of each interested party individually, the parties simply ignore the extra chatter which they cannot, or do not wish to process. In our case, rather than tuning into specific groups of people when necessarily, each peer mode decides to a hear a message, or not, on the basis of a carefully calibrated probability calculation. <!-- TODO: explain that we're not trying to propagate a specific message to the whole network, but rather create merges probablistically which are inclusive of descendants of prior merges in a commutative way. We're not just trying to deliver a single message once in the whole network -->
 
 #### Sparse Vector Clocks - A key implementation detail
 Sparse vector clocks, AKA Beacons, are similar in principle to [Interval Tree Clocks](http://gsd.di.uminho.pt/members/cbm/ps/itc2008.pdf){:target="define"}, with some key differences.
@@ -208,7 +208,10 @@ Sparse vector clocks, AKA Beacons, are similar in principle to [Interval Tree Cl
 
 #### Commutative Index Merging - Enabled by sparse vector clocks
 
+Index merging:
+Slots
 
+|  |
 
 ### Notes:
 

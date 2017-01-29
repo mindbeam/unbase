@@ -1,6 +1,6 @@
 use memo::*;
 use slab::*;
-use network::peer::*;
+use network::slabref::*;
 use std::sync::{Arc,Mutex};
 use std::fmt;
 
@@ -21,7 +21,7 @@ pub enum MemoRefPtr {
 }
 
 impl MemoRef {
-    pub fn new_from_resident_memo (memo : &Memo) -> MemoRef {
+    pub fn new_from_memo (memo : &Memo) -> MemoRef {
         MemoRef {
             id: memo.id,
             shared: Arc::new(Mutex::new(

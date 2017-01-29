@@ -1,18 +1,46 @@
 
 Steps Believed necessary for the passage of the first self-consistency test case:
 
-[X] Arc-ify SlabRef ( necessary because of all the memorefs that will be pointing to it for peering management )
-[ ] Enable MemoRef management by the Slab
-  [ ] For the memo itself
-  [ ] For memo -> parent memos
-  [ ] For memo -> relation memos
-[ ] Finish renaming Record -> Subject
-[ ] Finish Subject subscription plumbing
+PAUSED HERE: [~] Arc-ify SlabRef ( necessary because of all the memorefs that will be pointing to it for peering management )
+[X] Enable MemoRef management by the Slab
+  [X] For the memo itself
+  [X] For memo -> parent memos
+[X] Finish renaming Record -> Subject
+[X] Finish basic subject subscription plumbing
+[ ] Dummy memo durability scoring ( hardcode zero )
+[ ] Dummy subject subscription on remote slab
+[ ] memo peering
 [ ] Basic state projection logic
+[ ] memo durability scoring
+[ ] durability scoring buckets (start with fixed number of buckets, later make it variable)
+[ ] Memo -> relation memos
+[ ] Basic indexing
+[ ] Update slab.subject_subscriptions to use memo-based projection in lieu of hashmap
+    (local subscriptions should be no different from nonlocal subscriptions)
 
 
+ _________________________________________________
+| SLAB                                            |
+|  MemoRef A (peers) -> Memo A                    |
+|                       |                         |
+|                    MemoRef B (peers) -> Memo B  |
+|_________________________________________________|
 
-SLAB
-  MemoRef A (peers) -> Memo A
-                       |
-                    MemoRef B  -> Memo B
+
+Durability Buckets:
+
+Bucket 1 (min,max) [
+    MemoRef (peers,score),
+    ...
+]
+
+MemoPeerRef (peer,score)
+
+
+Selectable Write Mutex:
+When we want to force a specific order of events for testing purposes
+
+                        Lock <- SlabRef::send_memo
+                                Channel write
+deliver_all_messages -> Lock
+        Channel Read in full

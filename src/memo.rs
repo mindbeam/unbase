@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 use slab::Slab;
-use network::peer::SlabRef;
+use network::slabref::SlabRef;
 use std::{fmt};
 use std::sync::Arc;
 use subject::{SubjectId};

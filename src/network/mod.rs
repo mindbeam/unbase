@@ -1,7 +1,7 @@
 extern crate linked_hash_map;
 
-pub mod peer;
-use self::peer::*;
+pub mod slabref;
+use self::slabref::*;
 
 //use std::thread;
 //use std::sync::mpsc::{Sender, channel};
