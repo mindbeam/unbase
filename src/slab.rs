@@ -5,7 +5,7 @@ use network::slabref::{SlabRef};
 use network::Network;
 use memo::{Memo,MemoId};
 use memoref::MemoRef;
-use context::Context;
+use context::{Context,WeakContext};
 use std::sync::mpsc;
 
 
@@ -26,7 +26,7 @@ struct SlabShared{
     pub send_channel: mpsc::Sender<Memo>,
     send_sync_handle: Arc<Mutex<()>>,
     memorefs_by_id: HashMap<MemoId,MemoRef>,
-    subject_subscriptions: HashMap<u64, Vec<Context>>,
+    subject_subscriptions: HashMap<u64, Vec<WeakContext>>,
     last_memo_id: u32,
     last_subject_id: u32,
     _net: Network,
@@ -168,28 +168,27 @@ impl Slab {
         Context::new(self)
     }
     pub fn subscribe_subject (&self, subject_id: u64, context: &Context) {
+        let weakcontext : WeakContext = context.weak();
+
         let mut shared = self.inner.shared.lock().unwrap();
 
         if let Some(subs) = shared.subject_subscriptions.get_mut(&subject_id) {
-            subs.push(context.clone());
+            subs.push(weakcontext);
             return;
         }
 
         // Stoopid borrow checker
-        shared.subject_subscriptions.insert(subject_id, vec![context.clone()]);
+        shared.subject_subscriptions.insert(subject_id, vec![weakcontext]);
         return;
     }
     pub fn unsubscribe_subject (&self,  subject_id: u64, context: &Context ){
 
-            println!("mark 1");
         let mut shared = self.inner.shared.lock().unwrap();
-        println!("mark 2");
 
         if let Some(subs) = shared.subject_subscriptions.get_mut(&subject_id) {
-            println!("mark 3");
 
             subs.retain(|c| {
-                c.cmp(&context)
+                c.cmp(&context.weak()) // seems evil here
             });
             return;
         }
@@ -217,9 +216,17 @@ impl SlabShared {
 
     pub fn dispatch_subject_memorefs (&mut self, subject_id: u64, memorefs : &[MemoRef]){
         if let Some(subscribers) = self.subject_subscriptions.get( &subject_id ) {
-            for sub in subscribers {
-                sub.put_subject_memos( subject_id, memorefs )
+            for weakcontext in subscribers {
+                if let Some(context) = weakcontext.upgrade() {
+                    context.put_subject_memos( subject_id, memorefs );
+                }
+
             }
+        /*        let maybecontext : WeakContext = cw;
+                if let Some(context) = weakcontext.upgrade() {
+                    context.put_subject_memos( subject_id, memorefs )
+                }
+            } */
         }
     }
     pub fn emit_memos(&mut self, memos: Vec<&Memo>) {

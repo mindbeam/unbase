@@ -20,8 +20,8 @@ fn basic_eventual() {
 
 
     let context_a = slab_a.create_context();
-    let context_b = slab_b.create_context();
-    let _context_c = slab_c.create_context();
+    //let context_b = slab_b.create_context();
+    //let _context_c = slab_c.create_context();
 
     let rec_a1 = Subject::new_kv(context_a, "animal_sound", "Moo");
 

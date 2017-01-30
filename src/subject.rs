@@ -4,7 +4,7 @@ use memo::Memo;
 use memoref::MemoRef;
 use context::Context;
 use slab::Slab;
-use std::sync::{Arc,Mutex};
+use std::sync::{Arc,Mutex,Weak};
 
 pub type SubjectId     = u64;
 pub type SubjectField  = String;
@@ -13,6 +13,11 @@ pub type SubjectField  = String;
 pub struct Subject {
     pub id:  SubjectId,
     shared: Arc<Mutex<SubjectShared>>
+}
+
+pub struct WeakSubject {
+    pub id:  SubjectId,
+    shared: Weak<Mutex<SubjectShared>>
 }
 
 pub struct SubjectShared {
@@ -85,7 +90,12 @@ impl Subject {
 
         SubjectMemoIter::from_head(&shared.head, shared.context.get_slab() )
     }
-
+    pub fn weak (&self) -> WeakSubject {
+        WeakSubject {
+            id: self.id,
+            shared: Arc::downgrade(&self.shared)
+        }
+    }
 }
 
 pub struct SubjectMemoIter {
@@ -134,9 +144,8 @@ impl Iterator for SubjectMemoIter {
 
 impl Drop for SubjectShared {
     fn drop (&mut self) {
-        println!("SubjectShared Drop {:?}", &self);
+        println!("Drop {:?}", &self);
         self.context.unsubscribe_subject(self.id);
-        println!("POST Subject Drop");
     }
 }
 impl fmt::Debug for SubjectShared {
@@ -160,6 +169,14 @@ impl fmt::Debug for Subject {
     }
 }
 
+impl WeakSubject {
+    pub fn upgrade (&self) -> Option<Subject> {
+        match self.shared.upgrade() {
+            Some(s) => Some( Subject { id: self.id, shared: s } ),
+            None    => None
+        }
+    }
+}
 /*
 Record.prototype.set = function(vals){
     /*

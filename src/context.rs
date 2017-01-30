@@ -5,12 +5,12 @@ use memo::Memo;
 use memoref::MemoRef;
 
 use subject::*;
-use std::sync::{Mutex,Arc};
+use std::sync::{Mutex,Arc,Weak};
 use std::result;
 
 pub struct ContextShared {
     head: Vec<Memo>,
-    subjects: HashMap<SubjectId, Subject>
+    subjects: HashMap<SubjectId, WeakSubject>,
 }
 
 pub struct ContextInner {
@@ -21,6 +21,11 @@ pub struct ContextInner {
 pub struct Context {
     inner: Arc<ContextInner>
 }
+
+pub struct WeakContext {
+    inner: Weak<ContextInner>
+}
+
 
 impl Context{
     pub fn new ( slab: &Slab ) -> Context {
@@ -40,27 +45,28 @@ impl Context{
     pub fn subscribe_subject (&self, subject: &Subject) {
         {
             let mut shared = self.inner.shared.lock().unwrap();
-            shared.subjects.insert( subject.id, subject.clone() );
+            shared.subjects.insert( subject.id, subject.weak() );
         }
         self.inner.slab.subscribe_subject(subject.id, self);
     }
     pub fn unsubscribe_subject (&self, subject_id: SubjectId ){
-        println!("mark 0");
 
         {
-            println!("mark 0.1");
 
             let mut shared = self.inner.shared.lock().unwrap();
-                println!("mark 0.2");
             shared.subjects.remove( &subject_id );
         }
         self.inner.slab.unsubscribe_subject(subject_id, self);
     }
     pub fn get_subject (&self, subject_id: SubjectId) -> Result<Subject, &str> {
-        let shared = self.inner.shared.lock().unwrap();
+        let mut shared = self.inner.shared.lock().unwrap();
         // First - Check to see if I have the subject resident in this context
-        if let Some(subject) = shared.subjects.get(&subject_id) {
-            return Ok(subject.clone());
+        if let Some(weaksub) = shared.subjects.get_mut(&subject_id) {
+            if let Some(subject) = weaksub.upgrade() {
+                return Ok(subject);
+            }else{
+                return Err("not found")
+            }
         }else{
             // Else - Perform an index lookup on the primary subject index to construct the subject head
             //unimplemented!()
@@ -69,19 +75,22 @@ impl Context{
     }
 
     pub fn put_subject_memos (&self, subject_id: SubjectId, memorefs: &[MemoRef]){
-        let mut shared = self.inner.shared.lock().unwrap();
-
-        if let Some(subject) = shared.subjects.get_mut(&subject_id) {
+        if let Ok(mut subject) = self.get_subject(subject_id) {
             subject.append_memorefs(memorefs)
         }
     }
 
     pub fn cmp (&self, other: &Self) -> bool{
         // stable way:
-        //&*(self.inner) as *const _ != &*(other.inner) as *const _
+        &*(self.inner) as *const _ != &*(other.inner) as *const _
 
         // unstable way:
-        Arc::ptr_eq(&self.inner,&other.inner)
+        //Arc::ptr_eq(&self.inner,&other.inner)
+    }
+    pub fn weak (&self) -> WeakContext {
+        WeakContext {
+            inner: Arc::downgrade(&self.inner)
+        }
     }
 }
 
@@ -95,7 +104,8 @@ impl fmt::Debug for ContextShared {
 
         fmt.debug_struct("ContextShared")
             .field("head", &self.head)
-            .field("subjects", &self.subjects)
+            // TODO: restore Debug for WeakSubject
+            //.field("subjects", &self.subjects)
             .finish()
     }
 }
@@ -106,6 +116,32 @@ impl fmt::Debug for Context {
         fmt.debug_struct("Context")
             .field("inner", &shared)
             .finish()
+    }
+}
+
+impl WeakContext {
+    pub fn upgrade (&self) -> Option<Context> {
+        match self.inner.upgrade() {
+            Some(i) => Some( Context { inner: i } ),
+            None    => None
+        }
+    }
+    pub fn cmp (&self, other: &WeakContext) -> bool{
+        if let Some(context) = self.upgrade() {
+            if let Some(other) = other.upgrade(){
+                // stable way:
+                &*(context.inner) as *const _ != &*(other.inner) as *const _
+
+                // unstable way:
+                //Arc::ptr_eq(&context.inner,&other.inner)
+            }else{
+                false
+            }
+        }else {
+            false
+        }
+
+
     }
 }
 
