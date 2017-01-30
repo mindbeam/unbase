@@ -1,9 +1,9 @@
+use std::fmt;
 use std::collections::HashMap;
 use memo::Memo;
 use memoref::MemoRef;
 use context::Context;
 use slab::Slab;
-use std::collections::VecDeque;
 use std::sync::{Arc,Mutex};
 
 pub type SubjectId     = u64;
@@ -11,13 +11,14 @@ pub type SubjectField  = String;
 
 #[derive(Clone)]
 pub struct Subject {
-    pub id:  u64,
-    context: Context,
+    pub id:  SubjectId,
     shared: Arc<Mutex<SubjectShared>>
 }
 
 pub struct SubjectShared {
+    id:      SubjectId,
     head:    Vec<MemoRef>,
+    context: Context,
 }
 
 impl Subject {
@@ -26,10 +27,15 @@ impl Subject {
         let slab = context.get_slab();
         let subject_id = slab.generate_subject_id();
 
+        let shared = SubjectShared{
+            id: subject_id,
+            head: Vec::new(),
+            context: context.clone()
+        };
+
         let subject = Subject {
             id:      subject_id,
-            context: context.clone(),
-            shared: Arc::new(Mutex::new(SubjectShared{ head: Vec::new() }))
+            shared: Arc::new(Mutex::new(shared))
         };
 
         context.subscribe_subject( &subject );
@@ -47,19 +53,16 @@ impl Subject {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        let slab = self.context.get_slab();
-        {
-            let shared = self.shared.lock().unwrap();
-            let head = shared.head.clone();
-        }
+        let shared = self.shared.lock().unwrap();
+        let slab = shared.context.get_slab();
+        let head = shared.head.clone();
 
-        Memo::create( &slab, self.id, vec![], vals );
+        Memo::create( &slab, self.id, head, vals );
 
         true
     }
     pub fn get_value ( &self, key: &str ) -> Option<String> {
         //self.context.get_subject_value(self.id, key)
-        let mut value : String;
 
         //let mut memos = self.context.get_subject_head(self.id);
         for memo in self.memo_iter() {
@@ -80,15 +83,9 @@ impl Subject {
     fn memo_iter (&self) -> SubjectMemoIter {
         let shared = self.shared.lock().unwrap();
 
-        SubjectMemoIter::from_head(&shared.head, self.context.get_slab() )
+        SubjectMemoIter::from_head(&shared.head, shared.context.get_slab() )
     }
 
-}
-
-impl Drop for Subject {
-    fn drop (&mut self) {
-        self.context.unsubscribe_subject(self)
-    }
 }
 
 pub struct SubjectMemoIter {
@@ -132,6 +129,34 @@ impl Iterator for SubjectMemoIter {
         }
 
         return None;
+    }
+}
+
+impl Drop for SubjectShared {
+    fn drop (&mut self) {
+        println!("SubjectShared Drop {:?}", &self);
+        self.context.unsubscribe_subject(self.id);
+        println!("POST Subject Drop");
+    }
+}
+impl fmt::Debug for SubjectShared {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+
+        fmt.debug_struct("Subject")
+            .field("subject_id", &self.id)
+            .field("head", &self.head)
+            .finish()
+    }
+}
+
+impl fmt::Debug for Subject {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let shared = self.shared.lock().unwrap();
+
+        fmt.debug_struct("Subject")
+            .field("subject_id", &self.id)
+            .field("head", &shared.head)
+            .finish()
     }
 }
 

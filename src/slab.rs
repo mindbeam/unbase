@@ -1,5 +1,4 @@
 use std::fmt;
-use std::mem;
 use std::sync::{Arc,Mutex,Weak};
 use std::collections::HashMap;
 use network::slabref::{SlabRef};
@@ -14,6 +13,12 @@ use std::sync::mpsc;
  * Initially use Mutex-managed internal struct to manage slab storage
  * TODO: refactor to use a lock-free hashmap or similar
  */
+
+#[derive(Clone)]
+pub struct Slab {
+    pub id: u32,
+    inner: Arc<SlabInner>
+}
 
 struct SlabShared{
     pub id: u32,
@@ -31,12 +36,6 @@ struct SlabShared{
 pub struct SlabInner {
     pub id: u32,
     shared: Mutex<SlabShared>
-}
-
-#[derive(Clone)]
-pub struct Slab {
-    pub id: u32,
-    inner: Arc<SlabInner>
 }
 
 pub struct WeakSlab{
@@ -180,6 +179,21 @@ impl Slab {
         shared.subject_subscriptions.insert(subject_id, vec![context.clone()]);
         return;
     }
+    pub fn unsubscribe_subject (&self,  subject_id: u64, context: &Context ){
+
+            println!("mark 1");
+        let mut shared = self.inner.shared.lock().unwrap();
+        println!("mark 2");
+
+        if let Some(subs) = shared.subject_subscriptions.get_mut(&subject_id) {
+            println!("mark 3");
+
+            subs.retain(|c| {
+                c.cmp(&context)
+            });
+            return;
+        }
+    }
     pub fn localize_memo (&self, _memoref: &mut MemoRef ) -> Result<Memo, String> {
 
         //let memo : Memo;
@@ -257,12 +271,12 @@ impl fmt::Debug for Slab {
     }
 }
 
+
 impl SlabSender {
     pub fn send (&self, memo: &Memo) {
         // necessary for deterministic delivery ( For test cases )
         // TODO: make this a macro
         let _handle = self.sync_handle.lock().unwrap();
-
         self.send_channel.send( memo.clone() ).unwrap();
     }
 }

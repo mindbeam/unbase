@@ -6,3 +6,5 @@ authors = ["Daniel Norman <daniel@gudtech.com>"]
 [dependencies]
 linked-hash-map = "0.3.0"
 sha2 = "0.4.0"
+
+[features]

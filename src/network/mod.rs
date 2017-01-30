@@ -66,7 +66,6 @@ impl Network {
     pub fn register_slab(&self, slab: &Slab) {
         let mut internals = self.shared.internals.lock().unwrap();
         println!("register_slab {:?}", slab );
-        // TODO: convert this into a iter generator that automatically expunges missing slabs.
 
         for prev_slab in internals.get_slabs() {
             slab.add_peer( SlabRef::new( &prev_slab ) );
@@ -76,27 +75,6 @@ impl Network {
         internals.slabs.insert( 0, slab.weak() );
 
     }
-
-/*    pub fn get_local_peers(&self) -> Vec<SlabRef>{
-        let mut internals = self.shared.internals.lock().unwrap();
-
-        let mut slabrefs : Vec<SlabRef> = Vec::new();
-
-        for (_, slab_item) in internals.slab_map.iter_mut() {
-            match slab_item.slab.upgrade() {
-                Some(slab) => {
-                    let slabref = SlabRef {
-                        slab: slab
-                    };
-                    slabrefs.push(slabref);
-                },
-                None => {}
-            }
-        }
-
-        slabrefs
-    }
-*/
 
     // TODO: fancy stuff like random delivery, losing memos, delivering to subsets of peers, etc
     // TODO: convert slab_map to a vec, and use references internally
@@ -112,6 +90,8 @@ impl Network {
 impl NetworkInternals {
 
     fn get_slabs (&mut self) -> Vec<Slab> {
+
+        // TODO: convert this into a iter generator that automatically expunges missing slabs.
         let mut res: Vec<Slab> = Vec::with_capacity(self.slabs.len());
         //let mut missing : Vec<usize> = Vec::new();
 

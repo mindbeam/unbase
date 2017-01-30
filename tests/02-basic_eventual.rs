@@ -21,7 +21,8 @@ fn basic_eventual() {
 
     let context_a = slab_a.create_context();
     let context_b = slab_b.create_context();
-    let context_c = slab_c.create_context();
+    let _context_c = slab_c.create_context();
+
     let rec_a1 = Subject::new_kv(context_a, "animal_sound", "Moo");
 
     assert!(rec_a1.is_ok(), "New subject should be created");
@@ -29,10 +30,10 @@ fn basic_eventual() {
 
     assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
 
-// TODO: make the rest of the test cases work
-return;
+    /*
 
     assert!(context_b.get_subject( rec_a1.id ).is_ok(), "new subject should not yet have conveyed to slab B");
+
 
     // Time moves forward
     net.deliver_all_memos();
@@ -42,6 +43,7 @@ return;
     let rec_b1 = rec_b1.unwrap();
 
     assert!(rec_b1.get_value("animal_sound").unwrap() == "moo", "Transferred subject should be consistent");
+
 
     // Time moves forward
     net.deliver_all_memos();
@@ -64,5 +66,6 @@ return;
     net.deliver_all_memos();
 
     assert!( rec_a1.get_value("animal_sound").unwrap() == "woof", "Now the value should be changed on slab A" );
+*/
 
 }

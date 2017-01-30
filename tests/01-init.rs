@@ -1,5 +1,5 @@
 extern crate unbase;
-use std::thread;
+//use std::thread;
 
 #[test]
 fn test_init() {
@@ -18,6 +18,9 @@ fn test_init() {
     assert!(slab_b.peer_slab_count() == 2, "Slab B Should know two peers" );
     assert!(slab_c.peer_slab_count() == 2, "Slab C Should know two peers" );
 
+    let _context_a = slab_a.create_context();
+    let _context_b = slab_b.create_context();
+    let _context_c = slab_c.create_context();
 
 }
 

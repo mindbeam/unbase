@@ -1,3 +1,5 @@
+#![feature(ptr_eq)]
+
 extern crate linked_hash_map;
 
 //#[doc(inline)]

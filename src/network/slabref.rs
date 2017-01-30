@@ -1,9 +1,7 @@
 use std::fmt;
 use slab::{Slab,SlabSender};
 use memo::Memo;
-use std::mem;
-use std::sync::{Arc,Mutex};
-use std::sync::mpsc;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct SlabRef {

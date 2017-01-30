@@ -1,4 +1,4 @@
-
+use std::fmt;
 use std::collections::HashMap;
 use slab::Slab;
 use memo::Memo;
@@ -9,7 +9,7 @@ use std::sync::{Mutex,Arc};
 use std::result;
 
 pub struct ContextShared {
-    memos: Vec<Memo>,
+    head: Vec<Memo>,
     subjects: HashMap<SubjectId, Subject>
 }
 
@@ -28,7 +28,7 @@ impl Context{
             inner: Arc::new(ContextInner {
                 slab: slab.clone(),
                 shared: Mutex::new(ContextShared {
-                    memos: vec![],
+                    head: vec![],
                     subjects: HashMap::new()
                 })
             })
@@ -44,8 +44,17 @@ impl Context{
         }
         self.inner.slab.subscribe_subject(subject.id, self);
     }
-    pub fn unsubscribe_subject (&self, subject: &Subject ){
-        //unimplemented!();
+    pub fn unsubscribe_subject (&self, subject_id: SubjectId ){
+        println!("mark 0");
+
+        {
+            println!("mark 0.1");
+
+            let mut shared = self.inner.shared.lock().unwrap();
+                println!("mark 0.2");
+            shared.subjects.remove( &subject_id );
+        }
+        self.inner.slab.unsubscribe_subject(subject_id, self);
     }
     pub fn get_subject (&self, subject_id: SubjectId) -> Result<Subject, &str> {
         let shared = self.inner.shared.lock().unwrap();
@@ -54,7 +63,8 @@ impl Context{
             return Ok(subject.clone());
         }else{
             // Else - Perform an index lookup on the primary subject index to construct the subject head
-            unimplemented!()
+            //unimplemented!()
+            Err("not found")
         }
     }
 
@@ -64,6 +74,38 @@ impl Context{
         if let Some(subject) = shared.subjects.get_mut(&subject_id) {
             subject.append_memorefs(memorefs)
         }
+    }
+
+    pub fn cmp (&self, other: &Self) -> bool{
+        // stable way:
+        //&*(self.inner) as *const _ != &*(other.inner) as *const _
+
+        // unstable way:
+        Arc::ptr_eq(&self.inner,&other.inner)
+    }
+}
+
+impl Drop for ContextShared {
+    fn drop (&mut self) {
+        println!("ContextShared Drop {:?}", &self);
+    }
+}
+impl fmt::Debug for ContextShared {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+
+        fmt.debug_struct("ContextShared")
+            .field("head", &self.head)
+            .field("subjects", &self.subjects)
+            .finish()
+    }
+}
+impl fmt::Debug for Context {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let shared = self.inner.shared.lock().unwrap();
+
+        fmt.debug_struct("Context")
+            .field("inner", &shared)
+            .finish()
     }
 }
 

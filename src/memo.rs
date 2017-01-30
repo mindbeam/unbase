@@ -4,11 +4,9 @@
 
 use std::collections::HashMap;
 use slab::Slab;
-use network::slabref::SlabRef;
 use std::{fmt};
 use std::sync::Arc;
 use subject::{SubjectId};
-use context::Context;
 use memoref::*;
 
 //pub type MemoId = [u8; 32];
