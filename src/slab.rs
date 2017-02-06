@@ -2,11 +2,13 @@ use std::fmt;
 use std::sync::{Arc,Mutex,Weak};
 use std::collections::HashMap;
 use network::slabref::{SlabRef};
+use network::channel::Sender;
+
+
 use network::Network;
 use memo::{Memo,MemoId};
 use memoref::MemoRef;
 use context::{Context,WeakContext};
-use std::sync::mpsc;
 
 
 /* Initial plan:
@@ -14,56 +16,45 @@ use std::sync::mpsc;
  * TODO: refactor to use a lock-free hashmap or similar
  */
 
+pub type SlabId = u32;
+
 #[derive(Clone)]
 pub struct Slab {
-    pub id: u32,
+    pub id: SlabId,
     inner: Arc<SlabInner>
 }
 
 struct SlabShared{
-    pub id: u32,
-    rcv_channel: mpsc::Receiver<Memo>,
-    pub send_channel: mpsc::Sender<Memo>,
-    send_sync_handle: Arc<Mutex<()>>,
+    pub id: SlabId,
     memorefs_by_id: HashMap<MemoId,MemoRef>,
     subject_subscriptions: HashMap<u64, Vec<WeakContext>>,
     last_memo_id: u32,
     last_subject_id: u32,
-    _net: Network,
     peer_refs: Vec<SlabRef>
 }
 
 pub struct SlabInner {
-    pub id: u32,
+    pub id: SlabId,
     shared: Mutex<SlabShared>
 }
 
+#[derive(Clone)]
 pub struct WeakSlab{
     pub id: u32,
     inner: Weak<SlabInner>
-}
-
-pub struct SlabSender {
-    send_channel: mpsc::Sender<Memo>,
-    sync_handle: Arc<Mutex<()>>
 }
 
 impl Slab {
     pub fn new(net: &Network) -> Slab {
         let slab_id = net.generate_slab_id();
 
-        let (tx, rx) = mpsc::channel();
         let shared = SlabShared {
             id: slab_id,
-            _net: net.clone(),
-            memorefs_by_id:       HashMap::new(),
+            memorefs_by_id:        HashMap::new(),
             subject_subscriptions: HashMap::new(),
             last_memo_id: 0,
             last_subject_id: 0,
-            peer_refs: Vec::new(),
-            send_channel: tx,
-            rcv_channel: rx,
-            send_sync_handle: Arc::new( Mutex::new(()) )
+            peer_refs: Vec::new()
         };
 
         let me = Slab {
@@ -76,19 +67,7 @@ impl Slab {
 
         net.register_slab(&me);
 
-        // TODO: Cloning the outer slab for the thread closure is super ugly
-        //       There must be a better way to do this
-
-        //me.do_ping();
         me
-    }
-    pub fn get_sender (&self) -> SlabSender {
-        let shared = self.inner.shared.lock().unwrap();
-
-        SlabSender {
-            send_channel: shared.send_channel.clone(),
-            sync_handle: shared.send_sync_handle.clone()
-        }
     }
     pub fn weak (&self) -> WeakSlab {
         WeakSlab {
@@ -110,44 +89,14 @@ impl Slab {
     }
     pub fn put_memos(&self, memos : Vec<Memo>){
         if memos.len() == 0 { return }
-
-        let mut groups : HashMap<u64, Vec<MemoRef>> = HashMap::new();
-
         let mut shared = self.inner.shared.lock().unwrap();
 
-        for memo in memos {
-            // TODO: NoOp here if the memo is already resident
-            let memoref = MemoRef::new_from_memo(&memo);
-
-            // TODO: rewrite this to use sort / split
-            let mut done = false;
-            if let Some(g) = groups.get_mut(&memo.subject_id) {
-                g.push( memoref.clone() );
-                done = true;
-            }
-            // Ohhhhh merciful borrow checker
-            if !done {
-                groups.insert(memo.subject_id, vec![memoref.clone()]);
-            }
-
-            shared.memorefs_by_id.insert( memo.id, memoref );
-        }
-
-        for (subject_id,memorefs) in groups {
-            shared.dispatch_subject_memorefs(subject_id, &memorefs);
-        }
-
-        // LEFT OFF HERE - Next steps:
-        // test each memo for durability_score and emit accordingly
+        shared.put_memos(memos);
     }
     pub fn count_of_memorefs_resident( &self ) -> u32 {
         let shared = self.inner.shared.lock().unwrap();
         shared.memorefs_by_id.len() as u32
     }
-/*    fn do_ping (&self){
-        Memo::new(&self);
-    }
-    */
     pub fn add_peer (&self, new_peer_ref: SlabRef) {
         let mut shared = self.inner.shared.lock().unwrap();
         shared.peer_refs.push(new_peer_ref);
@@ -155,14 +104,6 @@ impl Slab {
     pub fn peer_slab_count (&self) -> usize {
         let shared = self.inner.shared.lock().unwrap();
         shared.peer_refs.len()
-    }
-    pub fn deliver_all_memos (&self){
-        let shared = self.inner.shared.lock().unwrap();
-        let _handle = shared.send_sync_handle.lock().unwrap();
-
-        for memo in shared.rcv_channel.try_iter() {
-            self.put_memos(vec![memo])
-        }
     }
     pub fn create_context (&self) -> Context {
         Context::new(self)
@@ -229,7 +170,37 @@ impl SlabShared {
             } */
         }
     }
-    pub fn emit_memos(&mut self, memos: Vec<&Memo>) {
+    pub fn put_memos (&mut self, memos: Vec<Memo>){
+        // TODO: Evaluate more efficient ways to group these memos by subject
+        let mut groups : HashMap<u64, Vec<MemoRef>> = HashMap::new();
+
+        // LEFT OFF HERE - Next steps:
+        // test each memo for durability_score and emit accordingly
+        self.emit_memos(&memos);
+
+        for memo in memos {
+            // TODO: NoOp here if the memo is already resident
+            let memoref = MemoRef::new_from_memo(&memo);
+
+            // TODO: rewrite this to use sort / split
+            let mut done = false;
+            if let Some(g) = groups.get_mut(&memo.subject_id) {
+                g.push( memoref.clone() );
+                done = true;
+            }
+            // Ohhhhh merciful borrow checker
+            if !done {
+                groups.insert(memo.subject_id, vec![memoref.clone()]);
+            }
+
+            self.memorefs_by_id.insert( memo.id, memoref );
+        }
+
+        for (subject_id,memorefs) in groups {
+            self.dispatch_subject_memorefs(subject_id, &memorefs);
+        }
+    }
+    pub fn emit_memos(&mut self, memos: &Vec<Memo>) {
         println!("Slab {} emit_memos {:?}", self.id, memos);
 
         // TODO - configurably auto-deliver these memos
@@ -274,16 +245,7 @@ impl fmt::Debug for Slab {
         fmt.debug_struct("Slab")
             .field("slab_id", &self.id)
             .field("peer_refs", &shared.peer_refs)
+            .field("memo_refs", &shared.memorefs_by_id)
             .finish()
-    }
-}
-
-
-impl SlabSender {
-    pub fn send (&self, memo: &Memo) {
-        // necessary for deterministic delivery ( For test cases )
-        // TODO: make this a macro
-        let _handle = self.sync_handle.lock().unwrap();
-        self.send_channel.send( memo.clone() ).unwrap();
     }
 }

@@ -3,7 +3,9 @@ use unbase::subject::Subject;
 
 #[test]
 fn basic_eventual() {
-    let net = unbase::Network::new();
+
+    let oculus_dei = unbase::network::channel::OculusDei::new();
+    let net = unbase::Network::new( &oculus_dei );
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
@@ -20,7 +22,7 @@ fn basic_eventual() {
 
 
     let context_a = slab_a.create_context();
-    //let context_b = slab_b.create_context();
+    let context_b = slab_b.create_context();
     //let _context_c = slab_c.create_context();
 
     let rec_a1 = Subject::new_kv(context_a, "animal_sound", "Moo");
@@ -30,11 +32,13 @@ fn basic_eventual() {
 
     assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
 
-    /*
+//    assert!(context_b.get_subject( rec_a1.id ).is_ok(), "new subject should not yet have conveyed to slab B");
+net.deliver_all_memos();
+    println!("slab_a {:?}", slab_a );
+    println!("slab_b {:?}", slab_b );
 
-    assert!(context_b.get_subject( rec_a1.id ).is_ok(), "new subject should not yet have conveyed to slab B");
 
-
+/*
     // Time moves forward
     net.deliver_all_memos();
 

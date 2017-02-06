@@ -1,22 +1,25 @@
 
 Steps Believed necessary for the passage of the first self-consistency test case:
 
-PAUSED HERE: [~] Arc-ify SlabRef ( necessary because of all the memorefs that will be pointing to it for peering management )
+[X] Arc-ify SlabRef ( necessary because of all the memorefs that will be pointing to it for peering management )
 [X] Enable MemoRef management by the Slab
   [X] For the memo itself
   [X] For memo -> parent memos
 [X] Finish renaming Record -> Subject
 [X] Finish basic subject subscription plumbing
+[ ] Implement determinizer
 [ ] Dummy memo durability scoring ( hardcode zero )
 [ ] Dummy subject subscription on remote slab
 [ ] memo peering
 [ ] Basic state projection logic
+[ ] Slab arc vs SlabRef arc - eliminate unnecessary double-Arc and switch all Slab handles to SlabRef handles?
 [ ] memo durability scoring
 [ ] durability scoring buckets (start with fixed number of buckets, later make it variable)
 [ ] Memo -> relation memos
 [ ] Basic indexing
 [ ] Update slab.subject_subscriptions to use memo-based projection in lieu of hashmap
     (local subscriptions should be no different from nonlocal subscriptions)
+[ ] Update SlabRef to accept different kinds of channels, not just deterministic
 
 
  _________________________________________________

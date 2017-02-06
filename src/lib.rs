@@ -1,6 +1,6 @@
-#![feature(ptr_eq)]
 
 extern crate linked_hash_map;
+extern crate itertools;
 
 //#[doc(inline)]
 pub mod network;

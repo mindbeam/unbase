@@ -1,7 +1,9 @@
 extern crate linked_hash_map;
 
+pub mod channel;
 pub mod slabref;
 use self::slabref::*;
+use self::channel::*;
 
 //use std::thread;
 //use std::sync::mpsc::{Sender, channel};
@@ -12,48 +14,39 @@ use slab::{Slab,WeakSlab};
 
 struct NetworkInternals {
     next_slab_id: u32,
-    slabs: Vec<WeakSlab>
+    slab_refs: Vec<SlabRef>
 }
 
 pub struct NetworkShared {
-    internals: Mutex<NetworkInternals>,
+    internals: Mutex<NetworkInternals>
+    //send_sync_handle: Arc<Mutex<()>>
     //tx_thread: Option<JoinHandle<()>>,
 }
 
 #[derive(Clone)]
 pub struct Network {
-    shared: Arc<NetworkShared>
+    shared: Arc<NetworkShared>,
+    oculus_dei: OculusDei
 }
 
+pub struct NetworkAddr ();
+
 impl Network {
-    pub fn new() -> Network {
+    pub fn new( oculus_dei: &OculusDei ) -> Network {
 
         let internals = NetworkInternals {
             next_slab_id: 0,
-            slabs: Vec::new(),
+            slab_refs: Vec::new()
         };
 
-        //let (tx_sender, tx_receiver) = channel();
-
         let shared = NetworkShared {
-            internals: Mutex::new(internals),
-            //tx_thread: None,
+            internals: Mutex::new(internals)
         };
 
         let net = Network {
-            shared: Arc::new(shared),
-            //tx_sender: tx_sender,
+            oculus_dei: oculus_dei.clone(),
+            shared: Arc::new(shared)
         };
-/*
-        let net2 = net.clone();
-        let tx_thread = thread::spawn(move || {
-            for tx_item in tx_receiver.iter() {
-                net2.queue_memos(tx_item);
-            }
-        });
-
-        shared.tx_thread = Some(tx_thread);
-        */
 
         net
     }
@@ -64,46 +57,43 @@ impl Network {
         internals.next_slab_id
     }
     pub fn register_slab(&self, slab: &Slab) {
-        let mut internals = self.shared.internals.lock().unwrap();
         println!("register_slab {:?}", slab );
 
-        for prev_slab in internals.get_slabs() {
-            slab.add_peer( SlabRef::new( &prev_slab ) );
-            prev_slab.add_peer( SlabRef::new( slab ) );
-        }
+        let sender = Sender{
+                        source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
+                        dest_point:   XYZPoint{ x: 1000, y: 1000, z: 1000 },
+                        oculus_dei:   self.oculus_dei.clone(),
+                        dest:    slab.weak()
+                    };
 
-        internals.slabs.insert( 0, slab.weak() );
+        let slab_ref = SlabRef::new( slab.id, sender );
 
-    }
-
-    // TODO: fancy stuff like random delivery, losing memos, delivering to subsets of peers, etc
-    // TODO: convert slab_map to a vec, and use references internally
-    pub fn deliver_all_memos(&self) {
         let mut internals = self.shared.internals.lock().unwrap();
 
-        for slab in internals.get_slabs().iter_mut() {
-            slab.deliver_all_memos();
+        for prev_slab_ref in internals.get_slabrefs() {
+            slab.add_peer( prev_slab_ref.clone() );
+            // TODO: Resolve the slab vs slabref issue - should this be a memo?
+            prev_slab_ref.add_peer( slab_ref.clone() );
         }
+
+        internals.slab_refs.insert( 0, slab_ref );
+
     }
 }
 
 impl NetworkInternals {
 
-    fn get_slabs (&mut self) -> Vec<Slab> {
+    fn get_slabrefs (&mut self) -> Vec<SlabRef> {
 
         // TODO: convert this into a iter generator that automatically expunges missing slabs.
-        let mut res: Vec<Slab> = Vec::with_capacity(self.slabs.len());
+        let mut res: Vec<SlabRef> = Vec::with_capacity(self.slab_refs.len());
         //let mut missing : Vec<usize> = Vec::new();
 
-        for slab in self.slabs.iter_mut() {
-            match slab.upgrade() {
-                Some(s) => {
-                    res.push( s );
-                },
-                None => {
-                    // TODO: expunge freed slabs
-                }
-            }
+        for slabref in self.slab_refs.iter_mut() {
+            // TODO who figures out if a slab is a good peer or not?
+            //if slabref.is_resident() {
+                res.push( slabref.clone() );
+            //}
         }
 
         res
@@ -120,8 +110,8 @@ impl fmt::Debug for Network {
     }
 }
 
-impl Drop for Network {
+impl Drop for NetworkInternals {
     fn drop(&mut self) {
-        println!("> Dropping Network");
+        println!("> Dropping NetworkInternals");
     }
 }

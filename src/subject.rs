@@ -144,7 +144,7 @@ impl Iterator for SubjectMemoIter {
 
 impl Drop for SubjectShared {
     fn drop (&mut self) {
-        println!("Drop {:?}", &self);
+        println!("Drop Subject {}", &self.id);
         self.context.unsubscribe_subject(self.id);
     }
 }

@@ -1,39 +1,44 @@
+/*
+    SlabRef intends to provide an abstraction for refering to a remote slab.
+    Posessing a SlabRef does not confer ownership, or even imply locality.
+    It does however provide us with a way to refer to a slab abstractly,
+    and a means of getting messages to it.
+
+    I labored a fair bit about whether this is materially different from
+    the sender itself, but I think it is important, at least conceptually.
+    Also, the internals of the sender could vary dramatically, whereas the
+    SlabRef can continue to serve its purpose without material change.
+*/
+
+
 use std::fmt;
-use slab::{Slab,SlabSender};
+use network::channel::Sender;
+use slab::{SlabId,Slab,WeakSlab};
 use memo::Memo;
 use std::sync::Arc;
+use std::sync::mpsc;
 
 #[derive(Clone)]
 pub struct SlabRef {
-    // TODO - update Slabref to reference either network addresses OR resident slabs
-    //       attempt to avoid address lookups for resident slabs to minimize instructions
     inner: Arc<SlabRefInner>
 }
 struct SlabRefInner {
-    slab_id: u32,
-    //slab: Slab,
-    sender: SlabSender
+    slab_id: SlabId,
+    sender: Sender
 }
 
 impl SlabRef{
-    pub fn new (slab: &Slab) -> SlabRef {
+    pub fn new (slab_id: SlabId, sender: Sender ) -> SlabRef {
         SlabRef {
             inner: Arc::new (SlabRefInner {
-                slab_id: slab.id,
-                sender:  slab.get_sender()
+                slab_id: slab_id,
+                sender: sender
             })
         }
     }
 
-    pub fn send_memo (&mut self, memo: &Memo) {
+    pub fn send_memo (&mut self, memo: Memo) {
         self.inner.sender.send(memo);
-    }
-    pub fn deliver_all_memos (&mut self){
-        /*let mut tx_queue : Vec<Memo> = Vec::new();
-        mem::swap(&mut tx_queue, &mut self.tx_queue);
-
-        self.slab.put_memos(&tx_queue);
-*/
     }
 }
 
