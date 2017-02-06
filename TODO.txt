@@ -19,8 +19,10 @@ Steps Believed necessary for the passage of the first self-consistency test case
 [ ] Basic indexing
 [ ] Update slab.subject_subscriptions to use memo-based projection in lieu of hashmap
     (local subscriptions should be no different from nonlocal subscriptions)
-[ ] Update SlabRef to accept different kinds of channels, not just deterministic
-
+[ ] Update SlabRef to accept different kinds of channels, not just simulator channels
+[ ] Peering Memos
+  [ ] Emit Goodbye memos for slabs that are shutting down
+  [ ] Local Peering Memos?
 
  _________________________________________________
 | SLAB                                            |

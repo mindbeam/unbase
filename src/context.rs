@@ -6,7 +6,6 @@ use memoref::MemoRef;
 
 use subject::*;
 use std::sync::{Mutex,Arc,Weak};
-use std::result;
 
 pub struct ContextShared {
     head: Vec<Memo>,

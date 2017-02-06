@@ -2,7 +2,7 @@ use memo::Memo;
 
 use itertools::partition;
 use std::sync::{Arc,Mutex};
-use slab::{Slab,WeakSlab,SlabId};
+use slab::{WeakSlab,SlabId};
 
 // INITIAL channel implementation - A deterministic channel sufficient for testing only
 // This is not intended to be high performance
@@ -11,10 +11,10 @@ use slab::{Slab,WeakSlab,SlabId};
 // which is decidedly bogus - but useful for initial testing purposes
 
 pub struct Sender{
-    source_point: XYZPoint,
-    dest_point: XYZPoint,
-    oculus_dei: OculusDei,
-    dest: WeakSlab
+    pub source_point: XYZPoint,
+    pub dest_point: XYZPoint,
+    pub oculus_dei: OculusDei,
+    pub dest: WeakSlab
 }
 
 // A ridiculous name for a ridiculous thing
@@ -30,18 +30,18 @@ struct InteriusOculusDei {
 
 // Minkowski stuff: Still ridiculous, but necessary for our purposes.
 pub struct XYZPoint{
-    x: i64,
-    y: i64,
-    z: i64
+    pub x: i64,
+    pub y: i64,
+    pub z: i64
 }
 pub struct MinkowskiPoint {
-    x: i64,
-    y: i64,
-    z: i64,
-    t: u64
+    pub x: i64,
+    pub y: i64,
+    pub z: i64,
+    pub t: u64
 }
 
-struct Event {
+pub struct Event {
     source_point: MinkowskiPoint,
     dest_point:   MinkowskiPoint,
     dest:         WeakSlab,
@@ -49,7 +49,7 @@ struct Event {
 }
 
 impl Event {
-    pub fn deliver (&self) {
+    pub fn deliver (self) {
         if let Some(slab) = self.dest.upgrade() {
             slab.put_memos(vec![self.memo])
         }
@@ -60,8 +60,8 @@ impl Event {
 impl Sender {
     pub fn send (&self, memo: Memo){
 
-        let q = self.source_point;
-        let p = self.dest_point;
+        let ref q = self.source_point;
+        let ref p = self.dest_point;
 
         let source_point = MinkowskiPoint {
             x: q.x,
@@ -70,8 +70,7 @@ impl Sender {
             t: self.oculus_dei.get_clock()
         };
 
-        let distance = (( (q.x - p.x)^2 + (q.z - p.z)^2 + (q.z - p.z)^2 ) as f64).sqrt();
-
+        let distance = (( (q.x - p.x)^2 + (q.y - p.y)^2 + (q.z - p.z)^2 ) as f64).sqrt();
 
         let dest_point = MinkowskiPoint {
             x: p.x,

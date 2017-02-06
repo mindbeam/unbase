@@ -30,7 +30,8 @@ struct SlabShared{
     subject_subscriptions: HashMap<u64, Vec<WeakContext>>,
     last_memo_id: u32,
     last_subject_id: u32,
-    peer_refs: Vec<SlabRef>
+    peer_refs: Vec<SlabRef>,
+    net: Network
 }
 
 pub struct SlabInner {
@@ -54,7 +55,8 @@ impl Slab {
             subject_subscriptions: HashMap::new(),
             last_memo_id: 0,
             last_subject_id: 0,
-            peer_refs: Vec::new()
+            peer_refs: Vec::new(),
+            net: net.clone()
         };
 
         let me = Slab {
@@ -97,9 +99,26 @@ impl Slab {
         let shared = self.inner.shared.lock().unwrap();
         shared.memorefs_by_id.len() as u32
     }
-    pub fn add_peer (&self, new_peer_ref: SlabRef) {
+    pub fn inject_peer_slabref (&self, new_peer_ref: SlabRef ) {
+        // We don't have to figure it out, it's just being given to us
+        // What luxury!
+
         let mut shared = self.inner.shared.lock().unwrap();
         shared.peer_refs.push(new_peer_ref);
+    }
+    pub fn _add_peer_from_memo (&self, slab_id: SlabId ) {
+        // TODO - switch peer-injection to use Memos
+        //        Identify resident / nonresident Slab
+
+        let mut shared = self.inner.shared.lock().unwrap();
+
+        // check with the network to see if there's an existing slabref
+        // This is important for
+        //   A. procuring Resident slabrefs, which are otherwise not obtainable
+        //   B. sharing slabrefs when possible to increase efficiency
+        if let Some(peer_slabref) =  shared.net.get_slabref( slab_id ) {
+            shared.peer_refs.push(peer_slabref);
+        }
     }
     pub fn peer_slab_count (&self) -> usize {
         let shared = self.inner.shared.lock().unwrap();
@@ -209,7 +228,7 @@ impl SlabShared {
         for memo in memos {
             let needs_peers = self.check_peering_target(&memo);
             for peer_ref in self.peer_refs.iter_mut().take( needs_peers as usize ) {
-                peer_ref.send_memo( &memo );
+                peer_ref.send_memo( memo.clone() );
             }
         }
 

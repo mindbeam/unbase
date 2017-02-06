@@ -10,10 +10,11 @@ use self::channel::*;
 //use std::thread::JoinHandle;
 use std::sync::{Arc, Mutex};
 use std::fmt;
-use slab::{Slab,WeakSlab};
+use slab::{Slab,WeakSlab,SlabId};
 
 struct NetworkInternals {
     next_slab_id: u32,
+    slabs:     Vec<WeakSlab>,
     slab_refs: Vec<SlabRef>
 }
 
@@ -36,6 +37,7 @@ impl Network {
 
         let internals = NetworkInternals {
             next_slab_id: 0,
+            slabs:     Vec::new(),
             slab_refs: Vec::new()
         };
 
@@ -56,6 +58,9 @@ impl Network {
 
         internals.next_slab_id
     }
+    pub fn get_slabref(&self, slab_id: SlabId) -> Option<SlabRef> {
+        unimplemented!();
+    }
     pub fn register_slab(&self, slab: &Slab) {
         println!("register_slab {:?}", slab );
 
@@ -70,29 +75,50 @@ impl Network {
 
         let mut internals = self.shared.internals.lock().unwrap();
 
-        for prev_slab_ref in internals.get_slabrefs() {
-            slab.add_peer( prev_slab_ref.clone() );
-            // TODO: Resolve the slab vs slabref issue - should this be a memo?
-            prev_slab_ref.add_peer( slab_ref.clone() );
+        for prev_slab in internals.get_slabs() {
+            prev_slab.inject_peer_slabref( slab_ref.clone() );
+        }
+        for prev_slab_ref in internals.get_slab_refs() {
+            slab.inject_peer_slabref( prev_slab_ref.clone() );
         }
 
         internals.slab_refs.insert( 0, slab_ref );
+        internals.slabs.insert(0, slab.weak() );
 
     }
 }
 
 impl NetworkInternals {
 
-    fn get_slabrefs (&mut self) -> Vec<SlabRef> {
 
+    fn get_slabs (&mut self) -> Vec<Slab> {
         // TODO: convert this into a iter generator that automatically expunges missing slabs.
-        let mut res: Vec<SlabRef> = Vec::with_capacity(self.slab_refs.len());
+        let mut res: Vec<Slab> = Vec::with_capacity(self.slabs.len());
         //let mut missing : Vec<usize> = Vec::new();
 
-        for slabref in self.slab_refs.iter_mut() {
-            // TODO who figures out if a slab is a good peer or not?
-            //if slabref.is_resident() {
-                res.push( slabref.clone() );
+        for slab in self.slabs.iter_mut() {
+            match slab.upgrade() {
+                Some(s) => {
+                    res.push( s );
+                },
+                None => {
+                    // TODO: expunge freed slabs
+                }
+            }
+
+        }
+
+        res
+    }
+
+    fn get_slab_refs (&mut self) -> Vec<SlabRef> {
+        // TODO: convert this into a iter generator that automatically expunges missing slabs.
+        let mut res: Vec<SlabRef> = Vec::with_capacity(self.slabs.len());
+        //let mut missing : Vec<usize> = Vec::new();
+
+        for slab_ref in self.slab_refs.iter() {
+            //if slab_ref.is_resident() {
+                res.push(slab_ref.clone());
             //}
         }
 

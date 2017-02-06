@@ -33,7 +33,9 @@ fn basic_eventual() {
     assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
 
 //    assert!(context_b.get_subject( rec_a1.id ).is_ok(), "new subject should not yet have conveyed to slab B");
-net.deliver_all_memos();
+
+    oculus_dei.advance_clock(1); // advance the god clock by one tick
+
     println!("slab_a {:?}", slab_a );
     println!("slab_b {:?}", slab_b );
 
