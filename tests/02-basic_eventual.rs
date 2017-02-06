@@ -4,8 +4,9 @@ use unbase::subject::Subject;
 #[test]
 fn basic_eventual() {
 
-    let oculus_dei = unbase::network::channel::OculusDei::new();
-    let net = unbase::Network::new( &oculus_dei );
+    let simulator = unbase::network::Simulator::new();
+
+    let net = unbase::Network::new( &simulator );
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
@@ -34,10 +35,16 @@ fn basic_eventual() {
 
 //    assert!(context_b.get_subject( rec_a1.id ).is_ok(), "new subject should not yet have conveyed to slab B");
 
-    oculus_dei.advance_clock(1); // advance the god clock by one tick
 
     println!("slab_a {:?}", slab_a );
     println!("slab_b {:?}", slab_b );
+    println!("slab_c {:?}", slab_c );
+
+    simulator.advance_clock(1); // advance the simulator clock by one tick
+
+    println!("slab_a {:?}", slab_a );
+    println!("slab_b {:?}", slab_b );
+    println!("slab_c {:?}", slab_c );
 
 
 /*

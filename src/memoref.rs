@@ -1,6 +1,6 @@
 use memo::*;
 use slab::*;
-use network::slabref::*;
+use network::*;
 use std::sync::{Arc,Mutex};
 use std::fmt;
 

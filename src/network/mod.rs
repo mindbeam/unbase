@@ -1,16 +1,17 @@
 extern crate linked_hash_map;
 
-pub mod channel;
-pub mod slabref;
-use self::slabref::*;
-use self::channel::*;
+mod simulator;
+mod channel;
+mod slabref;
 
-//use std::thread;
-//use std::sync::mpsc::{Sender, channel};
-//use std::thread::JoinHandle;
+pub use self::simulator::{Simulator,XYZPoint,MinkowskiPoint};
+pub use self::slabref::SlabRef;
+pub use self::channel::Sender;
+
 use std::sync::{Arc, Mutex};
 use std::fmt;
 use slab::{Slab,WeakSlab,SlabId};
+use memo::Memo;
 
 struct NetworkInternals {
     next_slab_id: u32,
@@ -27,13 +28,13 @@ pub struct NetworkShared {
 #[derive(Clone)]
 pub struct Network {
     shared: Arc<NetworkShared>,
-    oculus_dei: OculusDei
+    simulator: Simulator
 }
 
 pub struct NetworkAddr ();
 
 impl Network {
-    pub fn new( oculus_dei: &OculusDei ) -> Network {
+    pub fn new( simulator: &Simulator ) -> Network {
 
         let internals = NetworkInternals {
             next_slab_id: 0,
@@ -46,7 +47,7 @@ impl Network {
         };
 
         let net = Network {
-            oculus_dei: oculus_dei.clone(),
+            simulator: simulator.clone(),
             shared: Arc::new(shared)
         };
 
@@ -58,7 +59,7 @@ impl Network {
 
         internals.next_slab_id
     }
-    pub fn get_slabref(&self, slab_id: SlabId) -> Option<SlabRef> {
+    pub fn get_slabref(&self, _slab_id: SlabId) -> Option<SlabRef> {
         unimplemented!();
     }
     pub fn register_slab(&self, slab: &Slab) {
@@ -67,11 +68,11 @@ impl Network {
         let sender = Sender{
                         source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
                         dest_point:   XYZPoint{ x: 1000, y: 1000, z: 1000 },
-                        oculus_dei:   self.oculus_dei.clone(),
-                        dest:    slab.weak()
+                        simulator:    self.simulator.clone(),
+                        dest:         slab.weak()
                     };
 
-        let slab_ref = SlabRef::new( slab.id, sender );
+        let slab_ref = SlabRef::new( &slab, sender );
 
         let mut internals = self.shared.internals.lock().unwrap();
 

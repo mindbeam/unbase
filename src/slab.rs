@@ -1,8 +1,7 @@
 use std::fmt;
 use std::sync::{Arc,Mutex,Weak};
 use std::collections::HashMap;
-use network::slabref::{SlabRef};
-use network::channel::Sender;
+use network::SlabRef;
 
 
 use network::Network;
@@ -34,7 +33,7 @@ struct SlabShared{
     net: Network
 }
 
-pub struct SlabInner {
+struct SlabInner {
     pub id: SlabId,
     shared: Mutex<SlabShared>
 }

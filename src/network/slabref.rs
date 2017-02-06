@@ -12,11 +12,10 @@
 
 
 use std::fmt;
-use network::channel::Sender;
-use slab::{SlabId,Slab,WeakSlab};
+use network::Sender;
+use slab::{Slab,WeakSlab,SlabId};
 use memo::Memo;
 use std::sync::Arc;
-use std::sync::mpsc;
 
 #[derive(Clone)]
 pub struct SlabRef {
@@ -24,15 +23,17 @@ pub struct SlabRef {
 }
 struct SlabRefInner {
     slab_id: SlabId,
-    sender: Sender
+    sender: Sender,
+    _slab: WeakSlab
 }
 
 impl SlabRef{
-    pub fn new (slab_id: SlabId, sender: Sender ) -> SlabRef {
+    pub fn new (slab: &Slab, sender: Sender ) -> SlabRef {
         SlabRef {
             inner: Arc::new (SlabRefInner {
-                slab_id: slab_id,
-                sender: sender
+                slab_id: slab.id,
+                sender: sender,
+                _slab: slab.weak() // for future use when we're actually communicating to resident slabs directly
             })
         }
     }
