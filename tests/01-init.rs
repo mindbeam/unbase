@@ -3,7 +3,8 @@ extern crate unbase;
 
 #[test]
 fn test_init() {
-    let net = unbase::Network::new();
+    let sim = unbase::Simulator::new();
+    let net = unbase::Network::new(&sim);
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
