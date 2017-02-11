@@ -7,16 +7,26 @@ Steps Believed necessary for the passage of the first self-consistency test case
   [X] For memo -> parent memos
 [X] Finish renaming Record -> Subject
 [X] Finish basic subject subscription plumbing
-[ ] Implement determinizer
-[ ] Dummy memo durability scoring ( hardcode zero )
-[ ] Dummy subject subscription on remote slab
+[~] Implement simulator
+    [ ] Determine how to make second order effects deterministic
+    [ ] Revise test suite with more robust spatial scenarios
+[ ] Dummy memo durability scoring
+    [ ] hardcode zero
+    [ ] stop endless memo emission / bouncing
+[~] Subject indexes
+    [X] Dummy subject head index
+    [X] All received memos get mindlessly jammed into subject head index
+    [ ] subject head index is actually pruned to leave only the head memos
+    [ ] subject head index is itself built from memos
 [ ] memo peering
-[ ] Basic state projection logic
+[ ] memo retrieval for projection
+[~] Basic state projection logic
+    [X] Extremely basic Causal LWW hash keys
+    [ ] Differentiable data types
 [ ] Slab arc vs SlabRef arc - eliminate unnecessary double-Arc and switch all Slab handles to SlabRef handles?
 [ ] memo durability scoring
 [ ] durability scoring buckets (start with fixed number of buckets, later make it variable)
 [ ] Memo -> relation memos
-[ ] Basic indexing
 [ ] Update slab.subject_subscriptions to use memo-based projection in lieu of hashmap
     (local subscriptions should be no different from nonlocal subscriptions)
 [ ] Update SlabRef to accept different kinds of channels, not just simulator channels

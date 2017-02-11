@@ -1,11 +1,11 @@
 extern crate unbase;
 use unbase::subject::Subject;
+use unbase::error::*;
 
 #[test]
 fn basic_eventual() {
 
     let simulator = unbase::network::Simulator::new();
-
     let net = unbase::Network::new( &simulator );
 
     let slab_a = unbase::Slab::new(&net);
@@ -24,28 +24,50 @@ fn basic_eventual() {
 
     let context_a = slab_a.create_context();
     let context_b = slab_b.create_context();
-    //let _context_c = slab_c.create_context();
+    let context_c = slab_c.create_context();
 
-    let rec_a1 = Subject::new_kv(context_a, "animal_sound", "Moo");
+    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo");
 
     assert!(rec_a1.is_ok(), "New subject should be created");
     let rec_a1 = rec_a1.unwrap();
 
     assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
 
-//    assert!(context_b.get_subject( rec_a1.id ).is_ok(), "new subject should not yet have conveyed to slab B");
+    assert!(slab_a.count_of_memorefs_resident() == 1, "Slab A should have 1 memorefs resident");
+    assert!(slab_b.count_of_memorefs_resident() == 0, "Slab B should have 0 memorefs resident");
+    assert!(slab_c.count_of_memorefs_resident() == 0, "Slab C should have 0 memorefs resident");
 
-
-    println!("slab_a {:?}", slab_a );
-    println!("slab_b {:?}", slab_b );
-    println!("slab_c {:?}", slab_c );
+    assert!(context_b.get_subject( rec_a1.id ).unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab B");
+    assert!(context_c.get_subject( rec_a1.id ).unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab C");
 
     simulator.advance_clock(1); // advance the simulator clock by one tick
 
-    println!("slab_a {:?}", slab_a );
-    println!("slab_b {:?}", slab_b );
-    println!("slab_c {:?}", slab_c );
+    assert!(slab_a.count_of_memorefs_resident() == 1, "Slab A should have 1 memorefs resident");
+    assert!(slab_b.count_of_memorefs_resident() == 1, "Slab B should have 1 memorefs resident");
+    assert!(slab_c.count_of_memorefs_resident() == 1, "Slab C should have 1 memorefs resident");
 
+    let rec_b1 = context_b.get_subject( rec_a1.id );
+    let rec_c1 = context_c.get_subject( rec_a1.id );
+
+    assert!(rec_b1.is_ok(), "new subject should now have conveyed to slab B");
+    assert!(rec_c1.is_ok(), "new subject should now have conveyed to slab C");
+
+    let rec_b1 = rec_b1.unwrap();
+    let rec_c1 = rec_c1.unwrap();
+
+    assert!(rec_b1.get_value("animal_sound").unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
+    assert!(rec_c1.get_value("animal_sound").unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
+
+    simulator.advance_clock(1); // advance the simulator clock by one tick
+
+    assert_eq!(rec_a1.get_value("animal_sound").unwrap(), "Moo");
+    assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Moo");
+    assert_eq!(rec_c1.get_value("animal_sound").unwrap(), "Moo");
+
+    rec_b1.set_kv("animal_sound","Woof");
+
+    // TODO
+    //assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Woof");
 
 /*
     // Time moves forward

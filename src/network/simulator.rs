@@ -1,4 +1,5 @@
 
+use std::fmt;
 use super::WeakSlab;
 use super::Memo;
 use super::Sender;
@@ -42,6 +43,15 @@ impl SimEvent {
             slab.put_memos(vec![self.memo])
         }
         // we all have to learn to deal with loss sometime
+    }
+}
+impl fmt::Debug for SimEvent{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("SimEvent")
+            .field("dest", &self.dest.id )
+            .field("memo", &self.memo.id )
+            .field("t", &self.dest_point.t )
+            .finish()
     }
 }
 
@@ -105,10 +115,20 @@ impl Simulator {
             t = shared.clock;
 
             let split_index = partition(&mut shared.queue, |evt| evt.dest_point.t >= t );
-            events = shared.queue.drain(1..split_index).collect();
+
+            events = shared.queue.drain(0..split_index).collect();
         }
         for event in events {
             event.deliver();
         }
+    }
+}
+
+impl fmt::Debug for Simulator {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let shared = self.shared.lock().unwrap();
+        fmt.debug_struct("Simulator")
+            .field("queue", &shared.queue)
+            .finish()
     }
 }

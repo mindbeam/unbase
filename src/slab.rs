@@ -2,10 +2,11 @@ use std::fmt;
 use std::sync::{Arc,Mutex,Weak};
 use std::collections::HashMap;
 use network::SlabRef;
-
+use error::*;
 
 use network::Network;
 use memo::{Memo,MemoId};
+use subject::SubjectId;
 use memoref::MemoRef;
 use context::{Context,WeakContext};
 
@@ -26,7 +27,10 @@ pub struct Slab {
 struct SlabShared{
     pub id: SlabId,
     memorefs_by_id: HashMap<MemoId,MemoRef>,
-    subject_subscriptions: HashMap<u64, Vec<WeakContext>>,
+    subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
+
+    hack_subject_index: HashMap<SubjectId, Vec<MemoRef>>,
+
     last_memo_id: u32,
     last_subject_id: u32,
     peer_refs: Vec<SlabRef>,
@@ -52,6 +56,7 @@ impl Slab {
             id: slab_id,
             memorefs_by_id:        HashMap::new(),
             subject_subscriptions: HashMap::new(),
+            hack_subject_index: HashMap::new(),
             last_memo_id: 0,
             last_subject_id: 0,
             peer_refs: Vec::new(),
@@ -145,9 +150,9 @@ impl Slab {
         let mut shared = self.inner.shared.lock().unwrap();
 
         if let Some(subs) = shared.subject_subscriptions.get_mut(&subject_id) {
-
+            let weak_context = context.weak();
             subs.retain(|c| {
-                c.cmp(&context.weak()) // seems evil here
+                c.cmp(&weak_context)
             });
             return;
         }
@@ -159,6 +164,13 @@ impl Slab {
         //memoref.set_memo();
 
         Err("unable to localize memo".to_owned())
+    }
+    pub fn lookup_subject_head (&self, subject_id: SubjectId ) -> Result<Vec<MemoRef>, RetrieveError> {
+        let shared = self.inner.shared.lock().unwrap();
+        match shared.hack_subject_index.get(&subject_id) {
+            Some( head ) => Ok(head.clone()),
+            None         => Err(RetrieveError::NotFound)
+        }
     }
 }
 
@@ -211,7 +223,20 @@ impl SlabShared {
                 groups.insert(memo.subject_id, vec![memoref.clone()]);
             }
 
+            // HACK HACK HACK
+            let mut subjecthead_inserted = false;
+            if let Some(v) = self.hack_subject_index.get_mut( &memo.subject_id ){
+                v.push(memoref.clone());
+                subjecthead_inserted = true;
+            };
+            if !subjecthead_inserted {
+                self.hack_subject_index.insert(memo.subject_id, vec![memoref.clone()]);
+            }
+            // END HACK END HACK END HACK
+
+
             self.memorefs_by_id.insert( memo.id, memoref );
+
         }
 
         for (subject_id,memorefs) in groups {

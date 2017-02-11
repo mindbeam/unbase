@@ -2,6 +2,7 @@
 extern crate linked_hash_map;
 extern crate itertools;
 
+
 //#[doc(inline)]
 pub mod network;
 pub mod slab;
@@ -9,6 +10,7 @@ pub mod memo;
 pub mod memoref;
 pub mod subject;
 pub mod context;
+pub mod error;
 
 pub use network::Network;
 pub use slab::Slab;

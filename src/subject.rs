@@ -27,7 +27,7 @@ pub struct SubjectShared {
 }
 
 impl Subject {
-    pub fn new ( context: Context, vals: HashMap<String, String> ) -> Result<Subject,String> {
+    pub fn new ( context: &Context, vals: HashMap<String, String> ) -> Result<Subject,String> {
 
         let slab = context.get_slab();
         let subject_id = slab.generate_subject_id();
@@ -48,28 +48,45 @@ impl Subject {
 
         Ok(subject)
     }
-    pub fn new_kv ( context: Context, key: &str, value: &str) -> Result<Subject,String> {
+    pub fn reconstitute (context: &Context, subject_id: SubjectId, head: Vec<MemoRef>) -> Subject {
+        let shared = SubjectShared{
+            id: subject_id,
+            head: head,
+            context: context.clone()
+        };
+
+        let subject = Subject {
+            id:      subject_id,
+            shared: Arc::new(Mutex::new(shared))
+        };
+
+        context.subscribe_subject( &subject );
+
+        subject
+    }
+    pub fn new_kv ( context: &Context, key: &str, value: &str) -> Result<Subject,String> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
         Self::new( context, vals )
     }
-    pub fn set_kv (&mut self, key: &str, value: &str) -> bool {
+    pub fn set_kv (&self, key: &str, value: &str) -> bool {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        let shared = self.shared.lock().unwrap();
-        let slab = shared.context.get_slab();
-        let head = shared.head.clone();
-
+        let slab;
+        let head;
+        {
+            let shared = self.shared.lock().unwrap();
+            slab = shared.context.get_slab().clone();
+            head = shared.head.clone();
+        }
         Memo::create( &slab, self.id, head, vals );
-
         true
     }
     pub fn get_value ( &self, key: &str ) -> Option<String> {
         //self.context.get_subject_value(self.id, key)
 
-        //let mut memos = self.context.get_subject_head(self.id);
         for memo in self.memo_iter() {
             let values = memo.get_values();
             if let Some(v) = values.get(key) {
@@ -136,6 +153,7 @@ impl Iterator for SubjectMemoIter {
                 self.queue.append(&mut memo.get_parent_refs());
                 return Some(memo)
             }
+            //TODO: memoref.get_memo needs to be able to fail
         }
 
         return None;

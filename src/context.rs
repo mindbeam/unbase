@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use slab::Slab;
 use memo::Memo;
 use memoref::MemoRef;
+use error::RetrieveError;
 
 use subject::*;
 use std::sync::{Mutex,Arc,Weak};
@@ -57,19 +58,27 @@ impl Context{
         }
         self.inner.slab.unsubscribe_subject(subject_id, self);
     }
-    pub fn get_subject (&self, subject_id: SubjectId) -> Result<Subject, &str> {
-        let mut shared = self.inner.shared.lock().unwrap();
-        // First - Check to see if I have the subject resident in this context
-        if let Some(weaksub) = shared.subjects.get_mut(&subject_id) {
-            if let Some(subject) = weaksub.upgrade() {
-                return Ok(subject);
-            }else{
-                return Err("not found")
+    pub fn get_subject (&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
+        {
+            let mut shared = self.inner.shared.lock().unwrap();
+            // First - Check to see if I have the subject resident in this context
+            if let Some(weaksub) = shared.subjects.get_mut(&subject_id) {
+                if let Some(subject) = weaksub.upgrade() {
+                    return Ok(subject);
+                }else{
+                    return Err(RetrieveError::NotFound);
+                }
             }
-        }else{
-            // Else - Perform an index lookup on the primary subject index to construct the subject head
-            //unimplemented!()
-            Err("not found")
+        }
+
+        // Else - Perform an index lookup on the primary subject index to construct the subject head
+        match self.inner.slab.lookup_subject_head(subject_id) {
+            Ok(head) => {
+                return Ok(Subject::reconstitute(self,subject_id,head));
+            },
+            Err(e) => {
+                return Err(e)
+            }
         }
     }
 
