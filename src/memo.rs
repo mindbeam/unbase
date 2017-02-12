@@ -3,7 +3,6 @@
 */
 
 use std::collections::HashMap;
-use slab::Slab;
 use std::{fmt};
 use std::sync::Arc;
 use subject::{SubjectId};
@@ -11,6 +10,19 @@ use memoref::*;
 
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
+
+#[derive(Debug)]
+pub enum PeeringStatus{
+    Resident,
+    Participating,
+    NonParticipating
+}
+
+#[derive(Debug)]
+pub enum MemoBody{
+    Edit(HashMap<String, String>),
+    Peering(PeeringStatus)
+}
 
 // All portions of this struct should be immutable
 
@@ -24,7 +36,7 @@ pub struct MemoInner {
     pub id: u64,
     pub subject_id: u64,
     parents: Vec<MemoRef>,
-    pub values: HashMap<String, String>
+    pub body: MemoBody
 }
 
 
@@ -46,15 +58,13 @@ impl fmt::Debug for Memo{
            .field("id", &inner.id)
            .field("subject_id", &inner.subject_id)
            .field("parents", &inner.parents)
-           .field("values", &inner.values)
+           .field("body", &inner.body)
            .finish()
     }
 }
 
 impl Memo {
-    pub fn create (slab : &Slab, subject_id: SubjectId, parents: Vec<MemoRef>, values: HashMap<String,String>) { // -> Memo{ // , topic: Topic){
-        let id = slab.gen_memo_id();
-
+    pub fn new (id: MemoId, subject_id: SubjectId, parents: Vec<MemoRef>, body: MemoBody) -> Memo {
         let me = Memo {
             id:    id,
             subject_id: subject_id,
@@ -62,18 +72,22 @@ impl Memo {
                 id:    id,
                 subject_id: subject_id,
                 parents: parents,
-                values: values
+                body: body
             })
         };
 
         println!("New Memo: {:?}", me.inner.id );
-        slab.put_memos(vec![me]);
+        me
     }
     pub fn get_parent_refs (&self) -> Vec<MemoRef> {
         self.inner.parents.clone()
     }
     pub fn get_values (&self) -> HashMap<String, String> {
-        self.inner.values.clone()
+        if let MemoBody::Edit(ref v) = self.inner.body {
+            v.clone()
+        }else{
+            return HashMap::new()
+        }
     }
 }
 

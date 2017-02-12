@@ -10,7 +10,7 @@ pub use self::channel::Sender;
 
 use std::sync::{Arc, Mutex};
 use std::fmt;
-use slab::{Slab,WeakSlab,SlabId};
+use slab::{Slab,WeakSlab,SlabId,MemoOrigin};
 use memo::Memo;
 
 struct NetworkInternals {
@@ -62,11 +62,11 @@ impl Network {
     pub fn get_slabref(&self, _slab_id: SlabId) -> Option<SlabRef> {
         unimplemented!();
     }
-    pub fn register_slab(&self, slab: &Slab) {
+    pub fn register_slab(&self, slab: &Slab) -> SlabRef {
         println!("register_slab {:?}", slab );
 
         let sender = Sender{
-                        source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
+                        source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
                         dest_point:   XYZPoint{ x: 1000, y: 1000, z: 1000 },
                         simulator:    self.simulator.clone(),
                         dest:         slab.weak()
@@ -83,9 +83,10 @@ impl Network {
             slab.inject_peer_slabref( prev_slab_ref.clone() );
         }
 
-        internals.slab_refs.insert( 0, slab_ref );
+        internals.slab_refs.insert( 0, slab_ref.clone() );
         internals.slabs.insert(0, slab.weak() );
 
+        slab_ref
     }
 }
 

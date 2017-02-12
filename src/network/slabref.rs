@@ -38,8 +38,8 @@ impl SlabRef{
         }
     }
 
-    pub fn send_memo (&mut self, memo: Memo) {
-        self.inner.sender.send(memo);
+    pub fn send_memo (&self, from: &SlabRef, memo: Memo) {
+        self.inner.sender.send(from, memo);
     }
 }
 

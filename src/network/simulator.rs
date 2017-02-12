@@ -1,8 +1,6 @@
 
 use std::fmt;
-use super::WeakSlab;
-use super::Memo;
-use super::Sender;
+use super::*;
 use std::sync::{Arc,Mutex};
 use itertools::partition;
 
@@ -32,6 +30,7 @@ pub struct MinkowskiPoint {
 struct SimEvent {
     _source_point: MinkowskiPoint,
     dest_point:    MinkowskiPoint,
+    from:          SlabRef,
     dest:          WeakSlab,
     memo:          Memo
 }
@@ -40,7 +39,7 @@ impl SimEvent {
     pub fn deliver (self) {
         println!("SimEvent.deliver {:?} to Slab {}", &self.memo, self.dest.id );
         if let Some(slab) = self.dest.upgrade() {
-            slab.put_memos(vec![self.memo])
+            slab.put_memos(MemoOrigin::Remote(&self.from), vec![self.memo])
         }
         // we all have to learn to deal with loss sometime
     }
@@ -67,7 +66,7 @@ impl Simulator {
             ))
         }
     }
-    pub fn send_memo (&self, sender: &Sender, memo: Memo ){
+    pub fn send_memo (&self, sender: &Sender, from: &SlabRef, memo: Memo ){
         let ref q = sender.source_point;
         let ref p = sender.dest_point;
 
@@ -90,6 +89,7 @@ impl Simulator {
         let evt = SimEvent {
             _source_point: source_point,
             dest_point: dest_point,
+            from: from.clone(),
             dest: sender.dest.clone(),
             memo: memo
         };

@@ -8,6 +8,7 @@ Steps Believed necessary for the passage of the first self-consistency test case
 [X] Finish renaming Record -> Subject
 [X] Finish basic subject subscription plumbing
 [~] Implement simulator
+    [ ] Move XYZPoint out of network::Sender into slab
     [ ] Determine how to make second order effects deterministic
     [ ] Revise test suite with more robust spatial scenarios
 [ ] Dummy memo durability scoring
@@ -18,7 +19,8 @@ Steps Believed necessary for the passage of the first self-consistency test case
     [X] All received memos get mindlessly jammed into subject head index
     [ ] subject head index is actually pruned to leave only the head memos
     [ ] subject head index is itself built from memos
-[ ] memo peering
+[X] memo body
+[...] memo peering
 [ ] memo retrieval for projection
 [~] Basic state projection logic
     [X] Extremely basic Causal LWW hash keys
@@ -50,12 +52,3 @@ Bucket 1 (min,max) [
 ]
 
 MemoPeerRef (peer,score)
-
-
-Selectable Write Mutex:
-When we want to force a specific order of events for testing purposes
-
-                        Lock <- SlabRef::send_memo
-                                Channel write
-deliver_all_messages -> Lock
-        Channel Read in full

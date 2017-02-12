@@ -5,7 +5,7 @@ use network::SlabRef;
 use error::*;
 
 use network::Network;
-use memo::{Memo,MemoId};
+use memo::*;
 use subject::SubjectId;
 use memoref::MemoRef;
 use context::{Context,WeakContext};
@@ -33,6 +33,7 @@ struct SlabShared{
 
     last_memo_id: u32,
     last_subject_id: u32,
+    my_ref: Option<SlabRef>,
     peer_refs: Vec<SlabRef>,
     net: Network
 }
@@ -48,6 +49,11 @@ pub struct WeakSlab{
     inner: Weak<SlabInner>
 }
 
+pub enum MemoOrigin<'a>{
+    Local,
+    Remote(&'a SlabRef)
+}
+
 impl Slab {
     pub fn new(net: &Network) -> Slab {
         let slab_id = net.generate_slab_id();
@@ -59,6 +65,7 @@ impl Slab {
             hack_subject_index: HashMap::new(),
             last_memo_id: 0,
             last_subject_id: 0,
+            my_ref: None,
             peer_refs: Vec::new(),
             net: net.clone()
         };
@@ -71,7 +78,10 @@ impl Slab {
             })
         };
 
-        net.register_slab(&me);
+        let my_ref = net.register_slab(&me);
+
+        // not sure if there's a better way to do this, but I want to have a handy return address
+        me.inner.shared.lock().unwrap().my_ref = Some(my_ref);
 
         me
     }
@@ -81,6 +91,10 @@ impl Slab {
             inner: Arc::downgrade(&self.inner)
         }
     }
+    pub fn get_ref (&self) -> SlabRef {
+        let shared = self.inner.shared.lock().unwrap();
+        shared.get_my_ref().clone()
+    }
     pub fn generate_subject_id(&self) -> u64 {
         let mut shared = self.inner.shared.lock().unwrap();
         shared.last_subject_id += 1;
@@ -88,16 +102,13 @@ impl Slab {
         (self.id as u64).rotate_left(32) | shared.last_subject_id as u64
     }
     pub fn gen_memo_id (&self) -> u64 {
-        let mut shared = self.inner.shared.lock().unwrap();
-        shared.last_memo_id += 1;
-
-        (self.id as u64).rotate_left(32) | shared.last_memo_id as u64
+        self.inner.shared.lock().unwrap().gen_memo_id()
     }
-    pub fn put_memos(&self, memos : Vec<Memo>){
+    pub fn put_memos(&self, from: MemoOrigin, memos : Vec<Memo>){
         if memos.len() == 0 { return }
         let mut shared = self.inner.shared.lock().unwrap();
 
-        shared.put_memos(memos);
+        shared.put_memos(from, memos);
     }
     pub fn count_of_memorefs_resident( &self ) -> u32 {
         let shared = self.inner.shared.lock().unwrap();
@@ -200,42 +211,58 @@ impl SlabShared {
             } */
         }
     }
-    pub fn put_memos (&mut self, memos: Vec<Memo>){
+    pub fn get_my_ref (&self) -> &SlabRef {
+        if let Some(ref my_ref) = self.my_ref {
+            return &my_ref
+        }else{
+            panic!("Called get_my_ref on unregistered slab");
+        }
+    }
+    pub fn gen_memo_id (&mut self) -> u64 {
+        self.last_memo_id += 1;
+
+        (self.id as u64).rotate_left(32) | self.last_memo_id as u64
+    }
+    pub fn put_memos (&mut self, from: MemoOrigin, memos: Vec<Memo>){
         // TODO: Evaluate more efficient ways to group these memos by subject
         let mut groups : HashMap<u64, Vec<MemoRef>> = HashMap::new();
 
-        // LEFT OFF HERE - Next steps:
-        // test each memo for durability_score and emit accordingly
+        // TODO: test each memo for durability_score and emit accordingly
         self.emit_memos(&memos);
 
         for memo in memos {
-            // TODO: NoOp here if the memo is already resident
-            let memoref = MemoRef::new_from_memo(&memo);
+            match memo.inner.body {
+                MemoBody::Edit(_) => {
 
-            // TODO: rewrite this to use sort / split
-            let mut done = false;
-            if let Some(g) = groups.get_mut(&memo.subject_id) {
-                g.push( memoref.clone() );
-                done = true;
-            }
-            // Ohhhhh merciful borrow checker
-            if !done {
-                groups.insert(memo.subject_id, vec![memoref.clone()]);
+                }
+                MemoBody::Peering(ref status) => {
+                    
+                }
             }
 
-            // HACK HACK HACK
-            let mut subjecthead_inserted = false;
-            if let Some(v) = self.hack_subject_index.get_mut( &memo.subject_id ){
-                v.push(memoref.clone());
-                subjecthead_inserted = true;
-            };
-            if !subjecthead_inserted {
-                self.hack_subject_index.insert(memo.subject_id, vec![memoref.clone()]);
+
+            // Get/Insert the memoref - Avoid creating duplicate memorefs
+            let memoref = self.memorefs_by_id.entry(memo.id).or_insert_with(|| {
+                MemoRef::new_from_memo(&memo)
+            }).clone(); // TODO: Figure out how to do this without cloning the memoref needlessly
+
+            // That we received the memo means that the sender didn't think we had it
+            // Whether or not we had it already, lets tell them we have it now.
+            // It's useful for them to know we have it, and it'll help them STFU
+
+            if let MemoOrigin::Remote(origin_slab) = from {
+                let peering_memo = Memo::new( self.gen_memo_id(), 0, vec![memoref.clone()], MemoBody::Peering(PeeringStatus::Resident) );
+                origin_slab.send_memo( self.get_my_ref(), peering_memo )
             }
+
+            groups.entry(memo.subject_id).or_insert( vec![] ).push( memoref.clone() );
+
+            // HACK HACK HACK - Cheesy substitute for the coming Memo-based index mechanism
+            let mut subject_head = self.hack_subject_index.entry( memo.subject_id ).or_insert(vec![]);
+
+            // TODO: implement proper head memo supersession, rather than just jamming it in
+            subject_head.push( memoref.clone() );
             // END HACK END HACK END HACK
-
-
-            self.memorefs_by_id.insert( memo.id, memoref );
 
         }
 
@@ -243,16 +270,18 @@ impl SlabShared {
             self.dispatch_subject_memorefs(subject_id, &memorefs);
         }
     }
-    pub fn emit_memos(&mut self, memos: &Vec<Memo>) {
+    pub fn emit_memos(&self, memos: &Vec<Memo>) {
         println!("Slab {} emit_memos {:?}", self.id, memos);
 
         // TODO - configurably auto-deliver these memos
         //        punting for now, because we want the test suite to monkey with delivery
 
+        let my_ref : &SlabRef = &self.get_my_ref();
         for memo in memos {
             let needs_peers = self.check_peering_target(&memo);
-            for peer_ref in self.peer_refs.iter_mut().take( needs_peers as usize ) {
-                peer_ref.send_memo( memo.clone() );
+
+            for peer_ref in self.peer_refs.iter().take( needs_peers as usize ) {
+                peer_ref.send_memo( my_ref, memo.clone() );
             }
         }
 

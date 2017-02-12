@@ -1,9 +1,9 @@
 use std::fmt;
 use std::collections::HashMap;
-use memo::Memo;
+use memo::*;
 use memoref::MemoRef;
 use context::Context;
-use slab::Slab;
+use slab::*;
 use std::sync::{Arc,Mutex,Weak};
 
 pub type SubjectId     = u64;
@@ -29,7 +29,7 @@ pub struct SubjectShared {
 impl Subject {
     pub fn new ( context: &Context, vals: HashMap<String, String> ) -> Result<Subject,String> {
 
-        let slab = context.get_slab();
+        let slab : &Slab = context.get_slab();
         let subject_id = slab.generate_subject_id();
 
         let shared = SubjectShared{
@@ -44,7 +44,10 @@ impl Subject {
         };
 
         context.subscribe_subject( &subject );
-        Memo::create( &slab, subject_id, vec![], vals );
+
+        slab.put_memos(MemoOrigin::Local, vec![
+            Memo::new( slab.gen_memo_id(), subject_id, vec![], MemoBody::Edit(vals) )
+        ]);
 
         Ok(subject)
     }
@@ -81,7 +84,10 @@ impl Subject {
             slab = shared.context.get_slab().clone();
             head = shared.head.clone();
         }
-        Memo::create( &slab, self.id, head, vals );
+
+        slab.put_memos(MemoOrigin::Local, vec![
+            Memo::new( slab.gen_memo_id(), self.id, head, MemoBody::Edit(vals) )
+        ]);
         true
     }
     pub fn get_value ( &self, key: &str ) -> Option<String> {
