@@ -37,7 +37,7 @@ struct SimEvent {
 
 impl SimEvent {
     pub fn deliver (self) {
-        println!("SimEvent.deliver {:?} to Slab {}", &self.memo, self.dest.id );
+        println!("SimEvent.deliver {} to Slab {}", &self.memo.id, self.dest.id );
         if let Some(slab) = self.dest.upgrade() {
             slab.put_memos(MemoOrigin::Remote(&self.from), vec![self.memo])
         }

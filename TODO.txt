@@ -20,7 +20,7 @@ Steps Believed necessary for the passage of the first self-consistency test case
     [ ] subject head index is actually pruned to leave only the head memos
     [ ] subject head index is itself built from memos
 [X] memo body
-[...] memo peering
+[X] memo peering
 [ ] memo retrieval for projection
 [~] Basic state projection logic
     [X] Extremely basic Causal LWW hash keys

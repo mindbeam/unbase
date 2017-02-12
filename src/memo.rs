@@ -7,11 +7,14 @@ use std::{fmt};
 use std::sync::Arc;
 use subject::{SubjectId};
 use memoref::*;
+use network::SlabRef;
+use slab::Slab;
 
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
 
-#[derive(Debug)]
+
+#[derive(Debug,Clone,PartialEq)]
 pub enum PeeringStatus{
     Resident,
     Participating,
@@ -21,7 +24,7 @@ pub enum PeeringStatus{
 #[derive(Debug)]
 pub enum MemoBody{
     Edit(HashMap<String, String>),
-    Peering(PeeringStatus)
+    Peering(MemoId,SlabRef,PeeringStatus)
 }
 
 // All portions of this struct should be immutable
@@ -76,7 +79,7 @@ impl Memo {
             })
         };
 
-        println!("New Memo: {:?}", me.inner.id );
+        //println!("New Memo: {:?}", me.inner.id );
         me
     }
     pub fn get_parent_refs (&self) -> Vec<MemoRef> {
@@ -88,6 +91,31 @@ impl Memo {
         }else{
             return HashMap::new()
         }
+    }
+    pub fn does_peering (&self) -> bool {
+        if let MemoBody::Edit(_) = self.inner.body {
+            true
+        }else{
+            false
+        }
+    }
+    pub fn descends (&self, memoref: &MemoRef, slab: &Slab) -> bool {
+        //TODO: parallelize this
+        //TODO: Use sparse-vector/beacon to avoid having to trace out the whole lineage
+        //      Should be able to stop traversal once happens-before=true. Cannot descend a thing that happens after
+
+
+        // breadth-first
+        for parent in self.inner.parents.iter() {
+            if parent.id == memoref.id { return true };
+        }
+
+        let mut memoref = memoref.clone();
+        // Ok now depth
+        for parent in self.inner.parents.iter() {
+            if memoref.descends(&parent, slab) { return true }
+        }
+        return false;
     }
 }
 

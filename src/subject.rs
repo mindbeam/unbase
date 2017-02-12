@@ -84,16 +84,20 @@ impl Subject {
             slab = shared.context.get_slab().clone();
             head = shared.head.clone();
         }
+        //println!("Subject({}).set_kv({},{}) -> Starting head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
 
         slab.put_memos(MemoOrigin::Local, vec![
             Memo::new( slab.gen_memo_id(), self.id, head, MemoBody::Edit(vals) )
         ]);
+        //println!("Subject({}).set_kv({},{}) -> Ending head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
+
+        //println!("Subject({}).set_kv({},{}) -> {:?}",self.id,key,value,self.shared.lock().unwrap().head );
         true
     }
     pub fn get_value ( &self, key: &str ) -> Option<String> {
-        //self.context.get_subject_value(self.id, key)
-
+        println!("Subject({}).get_value({})",self.id,key);
         for memo in self.memo_iter() {
+            println!("\t Memo {:?}", memo );
             let values = memo.get_values();
             if let Some(v) = values.get(key) {
                 return Some(v.clone());
@@ -101,12 +105,12 @@ impl Subject {
         }
         None
     }
-    pub fn append_memorefs (&mut self, memorefs: &[MemoRef]){
+    pub fn update_head (&mut self, head: &[MemoRef]){
 
         let mut shared = self.shared.lock().unwrap();
 
         // TODO: prune the head to remove any memos which are referenced by these memos
-        shared.head.append(&mut memorefs.to_vec());
+        shared.head = head.to_vec();
     }
     fn memo_iter (&self) -> SubjectMemoIter {
         let shared = self.shared.lock().unwrap();
@@ -168,7 +172,7 @@ impl Iterator for SubjectMemoIter {
 
 impl Drop for SubjectShared {
     fn drop (&mut self) {
-        println!("Drop Subject {}", &self.id);
+        println!("Subject({}).drop", &self.id);
         self.context.unsubscribe_subject(self.id);
     }
 }
@@ -201,40 +205,3 @@ impl WeakSubject {
         }
     }
 }
-/*
-Record.prototype.set = function(vals){
-    /*
-     * Update values of this record. Presently schemaless. should have a schema in the future
-    */
-
-    var memo = new memo_cls.create( this.slab,this.id, this.getHeadMemoIDs(), this.context.getPresentContext(), vals );
-    this.context.addMemos([memo]);
-    // TODO - return promise which is fulfilled on transaction commit
-}
-
-var memosort = function(a,b){
-    // TODO - implement sorting by beacon-offset-millisecond LWW or node id as required to achieve desired determinism
-
-    if ( a.id < b.id )
-        return -1;
-    if ( a.id > b.id )
-        return 1;
-
-    return 0;
-}
-
-
-Record.prototype.get = function(field){
-    // TODO: implement promises for get
-    return this.getFreshOrNull(field);
-}
-
-Record.prototype.getHeadMemoIDs = function(){
-    return this.slab.getHeadMemoIDsForRecord( this.id );
-}
-
-
-Record.prototype.getMemoIDs = function(){
-    return Object.keys(this.memos_by_id);
-};
-*/

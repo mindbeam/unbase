@@ -64,10 +64,26 @@ fn basic_eventual() {
     assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Moo");
     assert_eq!(rec_c1.get_value("animal_sound").unwrap(), "Moo");
 
-    rec_b1.set_kv("animal_sound","Woof");
 
-    // TODO
-    //assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Woof");
+    rec_b1.set_kv("animal_type","Bovine");
+    assert_eq!(rec_b1.get_value("animal_type").unwrap(), "Bovine");
+    assert_eq!(rec_b1.get_value("animal_sound").unwrap(),   "Moo");
+
+    rec_b1.set_kv("animal_sound","Woof");
+    rec_b1.set_kv("animal_type","Kanine");
+    assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Woof");
+    assert_eq!(rec_b1.get_value("animal_type").unwrap(),  "Kanine");
+
+    // Should not yet have propagated to slab A
+    assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Moo");
+    assert!(rec_a1.get_value("animal_type").is_none(), "Should not yet have a value on Slab A for animal_type");
+
+    simulator.advance_clock(1); // advance the simulator clock by one tick
+
+    // Nowwww it should have propagated
+    assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Woof");
+    assert_eq!(rec_a1.get_value("animal_type").unwrap(),    "Kanine");
+
 
 /*
     // Time moves forward

@@ -19,6 +19,7 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct SlabRef {
+    pub slab_id: SlabId,
     inner: Arc<SlabRefInner>
 }
 struct SlabRefInner {
@@ -30,6 +31,7 @@ struct SlabRefInner {
 impl SlabRef{
     pub fn new (slab: &Slab, sender: Sender ) -> SlabRef {
         SlabRef {
+            slab_id: slab.id,
             inner: Arc::new (SlabRefInner {
                 slab_id: slab.id,
                 sender: sender,

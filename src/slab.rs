@@ -1,6 +1,7 @@
 use std::fmt;
 use std::sync::{Arc,Mutex,Weak};
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use network::SlabRef;
 use error::*;
 
@@ -33,6 +34,7 @@ struct SlabShared{
 
     last_memo_id: u32,
     last_subject_id: u32,
+    my_slab: Option<WeakSlab>,
     my_ref: Option<SlabRef>,
     peer_refs: Vec<SlabRef>,
     net: Network
@@ -49,6 +51,7 @@ pub struct WeakSlab{
     inner: Weak<SlabInner>
 }
 
+#[derive(Debug)]
 pub enum MemoOrigin<'a>{
     Local,
     Remote(&'a SlabRef)
@@ -66,6 +69,7 @@ impl Slab {
             last_memo_id: 0,
             last_subject_id: 0,
             my_ref: None,
+            my_slab: None,
             peer_refs: Vec::new(),
             net: net.clone()
         };
@@ -81,7 +85,11 @@ impl Slab {
         let my_ref = net.register_slab(&me);
 
         // not sure if there's a better way to do this, but I want to have a handy return address
-        me.inner.shared.lock().unwrap().my_ref = Some(my_ref);
+        {
+            let mut shared = me.inner.shared.lock().unwrap();
+            shared.my_slab = Some(me.weak());
+            shared.my_ref = Some(my_ref);
+        }
 
         me
     }
@@ -196,24 +204,20 @@ impl WeakSlab {
 
 impl SlabShared {
 
-    pub fn dispatch_subject_memorefs (&mut self, subject_id: u64, memorefs : &[MemoRef]){
-        if let Some(subscribers) = self.subject_subscriptions.get( &subject_id ) {
-            for weakcontext in subscribers {
-                if let Some(context) = weakcontext.upgrade() {
-                    context.put_subject_memos( subject_id, memorefs );
-                }
-
-            }
-        /*        let maybecontext : WeakContext = cw;
-                if let Some(context) = weakcontext.upgrade() {
-                    context.put_subject_memos( subject_id, memorefs )
-                }
-            } */
-        }
-    }
     pub fn get_my_ref (&self) -> &SlabRef {
         if let Some(ref my_ref) = self.my_ref {
             return &my_ref
+        }else{
+            panic!("Called get_my_ref on unregistered slab");
+        }
+    }
+    pub fn get_my_slab <'a> (&self) -> Slab {
+        if let Some(ref weak) = self.my_slab {
+            if let Some(s) = weak.upgrade() {
+                return s;
+            }else{
+                panic!("Weak self slab failed to upgrade - this should not happen");
+            }
         }else{
             panic!("Called get_my_ref on unregistered slab");
         }
@@ -223,65 +227,120 @@ impl SlabShared {
 
         (self.id as u64).rotate_left(32) | self.last_memo_id as u64
     }
-    pub fn put_memos (&mut self, from: MemoOrigin, memos: Vec<Memo>){
-        // TODO: Evaluate more efficient ways to group these memos by subject
-        let mut groups : HashMap<u64, Vec<MemoRef>> = HashMap::new();
+    pub fn put_memos<'a> (&mut self, from: MemoOrigin, memos: Vec<Memo>){
+        let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
+        println!("Slab({}).put_memos({:?},{:?})", self.id, from, mids);
 
-        // TODO: test each memo for durability_score and emit accordingly
-        self.emit_memos(&memos);
+        // TODO: Evaluate more efficient ways to group these memos by subject
+        let mut subject_updates : Vec<SubjectId> = Vec::with_capacity(10);
+        let mut memorefs = Vec::new();
+
+        // TODO: figure out how to appease the borrow checker without cloning this
+        let my_ref = self.get_my_ref().clone();
+        let my_slab = self.get_my_slab();
 
         for memo in memos {
-            match memo.inner.body {
-                MemoBody::Edit(_) => {
-
+            // Store the memoref - avoid creating duplicates
+            let mut memoref = match self.memorefs_by_id.entry(memo.id) {
+                Entry::Vacant(o)   => {
+                    o.insert( MemoRef::new_from_memo(&memo) ).clone() // TODO: figure out how to prolong the borrow here & avoid clone
                 }
-                MemoBody::Peering(ref status) => {
-                    
+                Entry::Occupied(o) => {
+                    let mr = o.get();
+                    mr.residentize(&my_ref, &memo);
+                    mr.clone()
+                }
+            };
+
+            // This Memo is a peering status update for another memo
+            if let MemoBody::Peering(memo_id, ref slabref, ref status) = memo.inner.body {
+                // Don't peer with yourself
+                if slabref.slab_id != my_ref.slab_id {
+                    // TODO: Determine when this memo is superseded/stale, punt update
+                    let peered_memoref = self.memorefs_by_id.entry(memo_id).or_insert_with(|| MemoRef::new_remote(memo_id));
+                    peered_memoref.update_peer(slabref, status);
                 }
             }
 
+            // Peering memos don't get peering memos, but Edit memos do
+            // Abstracting this, because there might be more types that don't do peering
+            if memo.does_peering() {
+                // That we received the memo means that the sender didn't think we had it
+                // Whether or not we had it already, lets tell them we have it now.
+                // It's useful for them to know we have it, and it'll help them STFU
+                if let MemoOrigin::Remote(origin_slabref) = from {
+                    // TODO: Don't assume that receiving it from origin_slabref means we should assume it to be resident there
+                    // Should EITHER: Ensure that a peering memo is co-delivered, OR ensure the memo is delivered with PeeringStatus
+                    // memoref.update_peer(origin_slabref, &PeeringStatus::Resident);
 
-            // Get/Insert the memoref - Avoid creating duplicate memorefs
-            let memoref = self.memorefs_by_id.entry(memo.id).or_insert_with(|| {
-                MemoRef::new_from_memo(&memo)
-            }).clone(); // TODO: Figure out how to do this without cloning the memoref needlessly
-
-            // That we received the memo means that the sender didn't think we had it
-            // Whether or not we had it already, lets tell them we have it now.
-            // It's useful for them to know we have it, and it'll help them STFU
-
-            if let MemoOrigin::Remote(origin_slab) = from {
-                let peering_memo = Memo::new( self.gen_memo_id(), 0, vec![memoref.clone()], MemoBody::Peering(PeeringStatus::Resident) );
-                origin_slab.send_memo( self.get_my_ref(), peering_memo )
+                    // TODO: determine if peering memo should:
+                    //    A. use parents at all
+                    //    B. and if so, what should be should we be using them for?
+                    //    C. Should we be sing that to determine the peered memo instead of the payload?
+                    let peering_memo = Memo::new(
+                        self.gen_memo_id(), 0, vec![memoref.clone()], MemoBody::Peering( memo.id, my_ref.clone(), PeeringStatus::Resident)
+                    );
+                    origin_slabref.send_memo( &my_ref, peering_memo );
+                }
             }
 
-            groups.entry(memo.subject_id).or_insert( vec![] ).push( memoref.clone() );
+            if memo.subject_id > 0 {
+                // HACK HACK HACK - Cheesy substitute for the coming Memo-based index mechanism
+                let mut head = self.hack_subject_index.entry( memo.subject_id ).or_insert( Vec::with_capacity(2) );
 
-            // HACK HACK HACK - Cheesy substitute for the coming Memo-based index mechanism
-            let mut subject_head = self.hack_subject_index.entry( memo.subject_id ).or_insert(vec![]);
+                // Punt if we already have this memo in the subject head
+                if !head.iter().any(|x| x.id == memo.id) {
+                    // remove any memos which are descended by the one we're about to add
+                    head.retain(|x| !memoref.descends(x,&my_slab) );
+                    head.push( memoref.clone() );
 
-            // TODO: implement proper head memo supersession, rather than just jamming it in
-            subject_head.push( memoref.clone() );
-            // END HACK END HACK END HACK
+                    subject_updates.push(memo.subject_id);
+                }
+                println!("\tsubject({}) head len({})",memo.subject_id, head.len() );
+                // END HACK END HACK END HACK
 
+                //TODO: should we emit all memorefs, or just those with subject_ids?
+                memorefs.push(memoref);
+            }
         }
 
-        for (subject_id,memorefs) in groups {
-            self.dispatch_subject_memorefs(subject_id, &memorefs);
+
+        // TODO: test each memo for durability_score and emit accordingly
+        self.emit_memos(&memorefs);
+
+        subject_updates.sort();
+        subject_updates.dedup();
+        for subject_id in subject_updates {
+            if let Some(memorefs) = self.hack_subject_index.get(&subject_id) {
+                self.dispatch_subject_head(subject_id, &memorefs);
+            }
+        }
+
+    }
+    pub fn dispatch_subject_head (&self, subject_id: u64, head : &[MemoRef]){
+        if let Some(subscribers) = self.subject_subscriptions.get( &subject_id ) {
+            for weakcontext in subscribers {
+                if let Some(context) = weakcontext.upgrade() {
+                    context.update_subject_head( subject_id, head );
+                }
+
+            }
         }
     }
-    pub fn emit_memos(&self, memos: &Vec<Memo>) {
-        println!("Slab {} emit_memos {:?}", self.id, memos);
+    pub fn emit_memos(&self, memorefs: &Vec<MemoRef>) {
 
         // TODO - configurably auto-deliver these memos
         //        punting for now, because we want the test suite to monkey with delivery
 
         let my_ref : &SlabRef = &self.get_my_ref();
-        for memo in memos {
-            let needs_peers = self.check_peering_target(&memo);
+        for memoref in memorefs.iter() {
+            if let Some(memo) = memoref.get_memo_if_resident() {
+                let needs_peers = self.check_peering_target(&memo);
 
-            for peer_ref in self.peer_refs.iter().take( needs_peers as usize ) {
-                peer_ref.send_memo( my_ref, memo.clone() );
+                for peer_ref in self.peer_refs.iter().filter(|x| !memoref.is_peered_with_slabref(x) ).take( needs_peers as usize ) {
+                    println!("Slab({}).emit_memos - EMIT Memo {} to Slab {}", my_ref.slab_id, memo.id, peer_ref.slab_id );
+                    peer_ref.send_memo( my_ref, memo.clone() );
+                }
             }
         }
 
@@ -305,7 +364,7 @@ impl SlabShared {
 
 impl Drop for SlabInner {
     fn drop(&mut self) {
-        println!("> Dropping Slab {}", self.id);
+        println!("Slab({}).drop", self.id);
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
     }
 }
