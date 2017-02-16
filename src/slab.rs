@@ -184,6 +184,8 @@ impl Slab {
 
         Err("unable to localize memo".to_owned())
     }
+    //TODO: figure out how to bootstrab the subject index
+    // given that the index nodes themselves needs an index
     pub fn lookup_subject_head (&self, subject_id: SubjectId ) -> Result<Vec<MemoRef>, RetrieveError> {
         let shared = self.inner.shared.lock().unwrap();
         match shared.hack_subject_index.get(&subject_id) {
@@ -252,16 +254,21 @@ impl SlabShared {
                 }
             };
 
-            // This Memo is a peering status update for another memo
-            if let MemoBody::Peering(memo_id, ref slabref, ref status) = memo.inner.body {
-                // Don't peer with yourself
-                if slabref.slab_id != my_ref.slab_id {
-                    // TODO: Determine when this memo is superseded/stale, punt update
-                    let peered_memoref = self.memorefs_by_id.entry(memo_id).or_insert_with(|| MemoRef::new_remote(memo_id));
-                    peered_memoref.update_peer(slabref, status);
-                }
+            match memo.inner.body {
+                // This Memo is a peering status update for another memo
+                MemoBody::Peering(memo_id, ref slabref, ref status) => {
+                    // Don't peer with yourself
+                    if slabref.slab_id != my_ref.slab_id {
+                        // TODO: Determine when this memo is superseded/stale, punt update
+                        let peered_memoref = self.memorefs_by_id.entry(memo_id).or_insert_with(|| MemoRef::new_remote(memo_id));
+                        peered_memoref.update_peer(slabref, status);
+                    }
+                },
+                //MemoBody::Relation(ref relations) => {
+                //
+                //},
+                _ => {}
             }
-
             // Peering memos don't get peering memos, but Edit memos do
             // Abstracting this, because there might be more types that don't do peering
             if memo.does_peering() {
@@ -278,7 +285,9 @@ impl SlabShared {
                     //    B. and if so, what should be should we be using them for?
                     //    C. Should we be sing that to determine the peered memo instead of the payload?
                     let peering_memo = Memo::new(
-                        self.gen_memo_id(), 0, vec![memoref.clone()], MemoBody::Peering( memo.id, my_ref.clone(), PeeringStatus::Resident)
+                        self.gen_memo_id(), 0,
+                        vec![memoref.clone()],
+                        MemoBody::Peering( memo.id, my_ref.clone(), PeeringStatus::Resident)
                     );
                     origin_slabref.send_memo( &my_ref, peering_memo );
                 }

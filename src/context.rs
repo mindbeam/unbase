@@ -83,6 +83,19 @@ impl Context{
         }
     }
 
+    pub fn get_subject_with_head (&self, subject_id: SubjectId, head: Vec<MemoRef>) -> Result<Subject, RetrieveError> {
+        if head.len() == 0 {
+            panic!("invalid subject head");
+        }
+
+        println!("Reconstituting from slab {} subject {} head {:?}", self.inner.slab.id, subject_id, head );
+
+        //TODO: this is wrong – We're creating a duplicate subject and overwriting the previous subject.
+        // Instad, Should lookup the existing subject (if any), and ensure that the relation is at least as fresh as head.
+        // Don't just take it at face value. The index might have a fresher head for this subject.
+        return Ok(Subject::reconstitute(self,subject_id,head));
+
+    }
     pub fn update_subject_head (&self, subject_id: SubjectId, head: &[MemoRef]){
         if let Ok(mut subject) = self.get_subject(subject_id) {
             subject.update_head(head)

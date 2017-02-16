@@ -46,7 +46,7 @@ impl Subject {
         context.subscribe_subject( &subject );
 
         slab.put_memos(MemoOrigin::Local, vec![
-            Memo::new( slab.gen_memo_id(), subject_id, vec![], MemoBody::Edit(vals) )
+            Memo::new_basic_noparent( slab.gen_memo_id(), subject_id, MemoBody::Edit(vals) )
         ]);
 
         Ok(subject)
@@ -87,7 +87,7 @@ impl Subject {
         //println!("Subject({}).set_kv({},{}) -> Starting head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
 
         slab.put_memos(MemoOrigin::Local, vec![
-            Memo::new( slab.gen_memo_id(), self.id, head, MemoBody::Edit(vals) )
+            Memo::new_basic( slab.gen_memo_id(), self.id, head, MemoBody::Edit(vals) )
         ]);
         //println!("Subject({}).set_kv({},{}) -> Ending head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
 
@@ -105,12 +105,58 @@ impl Subject {
         }
         None
     }
-    pub fn update_head (&mut self, head: &[MemoRef]){
+    pub fn set_relation (&self, key: u8, relation: Self) {
+        let mut memoref_map = HashMap::new();
+        memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
+        let slab;
+        let head;
+        {
+            let shared = self.shared.lock().unwrap();
+            slab = shared.context.get_slab().clone();
+            head = shared.head.clone();
+        }
+
+
+        slab.put_memos(MemoOrigin::Local, vec![
+            Memo::new(
+                slab.gen_memo_id(),
+                self.id,
+                head,
+                MemoBody::Relation(memoref_map)
+            )
+        ]);
+    }
+    pub fn get_relation ( &self, key: u8 ) -> Option<Subject> {
+        println!("Subject({}).get_relation({})",self.id,key);
+
+        let shared = self.shared.lock().unwrap();
+        let context = &shared.context;
+
+        for memo in self.memo_iter() {
+            println!("\t Memo {:?}", memo );
+            let relations : HashMap<u8, (SubjectId, Vec<MemoRef>)> = memo.get_relations();
+
+            if let Some(r) = relations.get(&key) {
+                if let Ok(relation) = context.get_subject_with_head(r.0,r.1.clone()) {
+                    return Some(relation)
+                }else{
+                    return None;
+                    //return Err("subject retrieval error")
+                }
+            }
+        }
+        None
+    }
+    pub fn update_head (&mut self, head: &[MemoRef]){
         let mut shared = self.shared.lock().unwrap();
 
         // TODO: prune the head to remove any memos which are referenced by these memos
         shared.head = head.to_vec();
+    }
+    pub fn get_head (&self) -> Vec<MemoRef> {
+        let shared = self.shared.lock().unwrap();
+        shared.head.clone()
     }
     fn memo_iter (&self) -> SubjectMemoIter {
         let shared = self.shared.lock().unwrap();

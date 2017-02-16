@@ -23,6 +23,7 @@ pub enum PeeringStatus{
 
 #[derive(Debug)]
 pub enum MemoBody{
+    Relation(HashMap<u8,(SubjectId,Vec<MemoRef>)>),
     Edit(HashMap<String, String>),
     Peering(MemoId,SlabRef,PeeringStatus)
 }
@@ -82,12 +83,25 @@ impl Memo {
         //println!("New Memo: {:?}", me.inner.id );
         me
     }
+    pub fn new_basic (id: MemoId, subject_id: SubjectId, parents: Vec<MemoRef>, body: MemoBody) -> Self {
+        Self::new(id, subject_id, parents, body)
+    }
+    pub fn new_basic_noparent (id: MemoId, subject_id: SubjectId, body: MemoBody) -> Self {
+        Self::new(id, subject_id, Vec::new(), body)
+    }
     pub fn get_parent_refs (&self) -> Vec<MemoRef> {
         self.inner.parents.clone()
     }
     pub fn get_values (&self) -> HashMap<String, String> {
         if let MemoBody::Edit(ref v) = self.inner.body {
             v.clone()
+        }else{
+            return HashMap::new()
+        }
+    }
+    pub fn get_relations (&self) -> HashMap<u8, (SubjectId, Vec<MemoRef>)> {
+        if let MemoBody::Relation(ref r) = self.inner.body {
+            r.clone()
         }else{
             return HashMap::new()
         }

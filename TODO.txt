@@ -7,34 +7,40 @@ Steps Believed necessary for the passage of the first self-consistency test case
   [X] For memo -> parent memos
 [X] Finish renaming Record -> Subject
 [X] Finish basic subject subscription plumbing
-[~] Implement simulator
-    [ ] Move XYZPoint out of network::Sender into slab
-    [ ] Determine how to make second order effects deterministic
-    [ ] Revise test suite with more robust spatial scenarios
-[ ] Dummy memo durability scoring
-    [ ] hardcode zero
-    [ ] stop endless memo emission / bouncing
+[X] Implement rudimentary simulator
+[X] stop endless memo emission / bouncing
 [~] Subject indexes
     [X] Dummy subject head index
     [X] All received memos get mindlessly jammed into subject head index
-    [ ] subject head index is actually pruned to leave only the head memos
-    [ ] subject head index is itself built from memos
+    [X] subject head index is actually pruned to leave only the head memos
+    [NEXT] subject head index is itself built from memos
+    [ ] bootstrap subject index which requires the subject index
+    [ ] local subscriptions should be no different from nonlocal subscriptions
 [X] memo body
 [X] memo peering
-[ ] memo retrieval for projection
+[NEXT] Memo -> relation memos
+[NEXT] memo retrieval ( slab.localize_memo )
+[ ] basic memo durability scoring
 [~] Basic state projection logic
     [X] Extremely basic Causal LWW hash keys
-    [ ] Differentiable data types
-[ ] Slab arc vs SlabRef arc - eliminate unnecessary double-Arc and switch all Slab handles to SlabRef handles?
-[ ] memo durability scoring
-[ ] durability scoring buckets (start with fixed number of buckets, later make it variable)
-[ ] Memo -> relation memos
-[ ] Update slab.subject_subscriptions to use memo-based projection in lieu of hashmap
-    (local subscriptions should be no different from nonlocal subscriptions)
-[ ] Update SlabRef to accept different kinds of channels, not just simulator channels
-[ ] Peering Memos
+    [ ] Extremely basic LWW relationship-supersession
+[~] Peering Memos
+  [X] inter-slab peering memos
   [ ] Emit Goodbye memos for slabs that are shutting down
   [ ] Local Peering Memos?
+[ ] Very basic testing
+  [ ] basic asymmetric communication scenarios ( memo conveyed from SlabA->SlabB but not C, etc )
+  [ ] basic data loss scenarios
+[ ] Cleanup
+  [ ] Memo / MemoRef serialization across slabs ( Memorefs may get leaked at present )
+  [ ] Differentiable data types
+  [ ] durability scoring buckets (start with fixed number of buckets, later make it variable)
+  [ ] Remove unnecessary memo relations arguments
+  [ ] Update SlabRef to accept different kinds of channels, not just simulator channels
+  [ ] Move XYZPoint out of network::Sender into slab
+  [ ] Determine how to make second order effects deterministic
+  [ ] Revise test suite with more robust spatial scenarios
+  [?] Slab arc vs SlabRef arc - eliminate unnecessary double-Arc and switch all Slab handles to SlabRef handles?
 
  _________________________________________________
 | SLAB                                            |
@@ -51,4 +57,4 @@ Bucket 1 (min,max) [
     ...
 ]
 
-MemoPeerRef (peer,score)
+MemoPeerRef (peer,score) ?

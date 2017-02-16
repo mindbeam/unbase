@@ -85,6 +85,19 @@ fn basic_eventual() {
     assert_eq!(rec_a1.get_value("animal_type").unwrap(),    "Kanine");
 
 
+    let rec_b2 = Subject::new_kv(&context_a, "dummy","value").unwrap();
+
+    rec_b2.set_relation( 0, rec_b1 );
+
+    // TODO: drop the referenced memos, ensuring we only have the remote memorefs Present
+    // TODO: test relation changing/projection
+    // TODO: fix/test subject reconstitution for relationship traversal (it's duping now)
+    // TODO: build the index class using this primative
+    // TODO: figure out how to bootstrap subject index, given that the subject index
+    //       needs a (probably lesser) subject index to locate its index nodes
+
+    //rec_b1.drop();
+
 /*
     // Time moves forward
     net.deliver_all_memos();

@@ -102,7 +102,11 @@ impl MemoRef {
         if let MemoRefPtr::Remote = shared.ptr {
             shared.ptr = MemoRefPtr::Resident( memo.clone() );
 
-            let peering_memo = Memo::new( memo.id, 0, vec![self.clone()], MemoBody::Peering(self.id,slabref.clone(),PeeringStatus::Resident) );
+            let peering_memo = Memo::new_basic(
+                memo.id, 0,
+                vec![self.clone()],
+                MemoBody::Peering(self.id,slabref.clone(),PeeringStatus::Resident)
+            );
 
             for peer in shared.peers.iter() {
                 peer.slabref.send_memo( slabref, peering_memo.clone() );
