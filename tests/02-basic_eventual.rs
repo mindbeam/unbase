@@ -85,9 +85,23 @@ fn basic_eventual() {
     assert_eq!(rec_a1.get_value("animal_type").unwrap(),    "Kanine");
 
 
-    let rec_b2 = Subject::new_kv(&context_a, "dummy","value").unwrap();
+/*
 
-    rec_b2.set_relation( 0, rec_b1 );
+    let idx_node = Subject::new_kv(&context_b, "dummy","value").unwrap();
+    idx_node.set_relation( 0, rec_b1 );
+
+    println!("All rec_b1 MemoIds: {:?}", rec_b1_memoids);
+    slab_b.remotize_memo_ids( &rec_b1_memoids );
+
+    if let Some(record) = idx_node.get_relation(0) {
+        println!("Retrieved record: {} - {:?}", record.id, record.get_value("animal_sound") );
+    }
+
+    let rec_b2 = Subject::new_kv(&context_a, "animal_sound","Meow");
+    let rec_b3 = Subject::new_kv(&context_a, "animal_sound","Ribbit");
+
+    rec_b2.set_relation( 1, rec_b1 );
+    */
 
     // TODO: drop the referenced memos, ensuring we only have the remote memorefs Present
     // TODO: test relation changing/projection

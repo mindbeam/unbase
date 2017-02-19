@@ -1,7 +1,7 @@
 use std::fmt;
 use std::collections::HashMap;
 use slab::Slab;
-use memo::Memo;
+use memo::*;
 use memoref::MemoRef;
 use error::RetrieveError;
 
@@ -59,6 +59,7 @@ impl Context{
         self.inner.slab.unsubscribe_subject(subject_id, self);
     }
     pub fn get_subject (&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
+        println!("# Context.get_subject({})", subject_id );
         {
             let mut shared = self.inner.shared.lock().unwrap();
             // First - Check to see if I have the subject resident in this context
@@ -74,7 +75,8 @@ impl Context{
         // Else - Perform an index lookup on the primary subject index to construct the subject head
         match self.inner.slab.lookup_subject_head(subject_id) {
             Ok(head) => {
-                println!("Reconstituting from slab {} subject {} head {:?}", self.inner.slab.id, subject_id, head );
+                let headmemoids : Vec<MemoId> = head.iter().map(|m| m.id).collect();
+                println!("# \\ Reconstituting from slab {} subject {} head {:?}", self.inner.slab.id, subject_id, headmemoids );
                 return Ok(Subject::reconstitute(self,subject_id,head));
             },
             Err(e) => {
@@ -84,11 +86,12 @@ impl Context{
     }
 
     pub fn get_subject_with_head (&self, subject_id: SubjectId, head: Vec<MemoRef>) -> Result<Subject, RetrieveError> {
+        let headmemoids : Vec<MemoId> = head.iter().map(|m| m.id).collect();
+        println!("# Context.get_subject_with_head({},{:?})", subject_id, headmemoids );
+        
         if head.len() == 0 {
             panic!("invalid subject head");
         }
-
-        println!("Reconstituting from slab {} subject {} head {:?}", self.inner.slab.id, subject_id, head );
 
         //TODO: this is wrong – We're creating a duplicate subject and overwriting the previous subject.
         // Instad, Should lookup the existing subject (if any), and ensure that the relation is at least as fresh as head.
@@ -118,7 +121,7 @@ impl Context{
 
 impl Drop for ContextShared {
     fn drop (&mut self) {
-        println!("ContextShared.drop");
+        println!("# ContextShared.drop");
     }
 }
 impl fmt::Debug for ContextShared {

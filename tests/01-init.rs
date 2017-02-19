@@ -34,12 +34,12 @@ fn test_init() {
 #[test]
 fn test_meow(){
 
-        println!("Slab1 Before: {:?}", &slab1);
-        println!("Slab2 Before: {:?}", &slab2);
-        //println!("Resident Before: {}", slab2.count_of_memos_resident());
+        println!("# Slab1 Before: {:?}", &slab1);
+        println!("# Slab2 Before: {:?}", &slab2);
+        //println!("# Resident Before: {}", slab2.count_of_memos_resident());
         net.deliver_all_memos();
 
-        println!("Resident After: {}", slab2.count_of_memos_resident());
+        println!("# Resident After: {}", slab2.count_of_memos_resident());
         assert!(slab2.count_of_memos_resident() == 2, "Memos resident should be 2");
 }
 */
@@ -62,7 +62,7 @@ fn test_threads() {
         threads.push(thread::spawn(move || {
             let slab = unbase::Slab::new(&net);
             assert!(slab.id > 0, "Nonzero Slab ID");
-            println!("info test thread. Slab: {}", slab.id);
+            println!("# info test thread. Slab: {}", slab.id);
         }));
     }
 
@@ -70,6 +70,6 @@ fn test_threads() {
         t.join().unwrap();
     }
 
-    // println!("{:?}", net);
+    // println!("# {:?}", net);
 }
 */

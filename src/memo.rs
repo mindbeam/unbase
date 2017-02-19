@@ -25,7 +25,8 @@ pub enum PeeringStatus{
 pub enum MemoBody{
     Relation(HashMap<u8,(SubjectId,Vec<MemoRef>)>),
     Edit(HashMap<String, String>),
-    Peering(MemoId,SlabRef,PeeringStatus)
+    Peering(MemoId,SlabRef,PeeringStatus),
+    MemoRequest(Vec<MemoId>,SlabRef)
 }
 
 // All portions of this struct should be immutable
@@ -69,6 +70,10 @@ impl fmt::Debug for Memo{
 
 impl Memo {
     pub fn new (id: MemoId, subject_id: SubjectId, parents: Vec<MemoRef>, body: MemoBody) -> Memo {
+
+        let parentmemoids : Vec<MemoId> = parents.iter().map(|m| m.id).collect();
+        println!("# Memo.new(id: {},subject_id: {}, parents: {:?}, body: {:?})", id, subject_id, parentmemoids, body );
+
         let me = Memo {
             id:    id,
             subject_id: subject_id,
@@ -80,7 +85,7 @@ impl Memo {
             })
         };
 
-        //println!("New Memo: {:?}", me.inner.id );
+        //println!("# New Memo: {:?}", me.inner.id );
         me
     }
     pub fn new_basic (id: MemoId, subject_id: SubjectId, parents: Vec<MemoRef>, body: MemoBody) -> Self {

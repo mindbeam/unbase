@@ -1,4 +1,6 @@
 use std::fmt;
+use std::sync::mpsc;
+use std::sync::mpsc::channel;
 use std::sync::{Arc,Mutex,Weak};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
@@ -28,21 +30,25 @@ pub struct Slab {
 struct SlabShared{
     pub id: SlabId,
     memorefs_by_id: HashMap<MemoId,MemoRef>,
+    memo_wait_channels: HashMap<MemoId,Vec<mpsc::Sender<Memo>>>,
     subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
 
     hack_subject_index: HashMap<SubjectId, Vec<MemoRef>>,
 
-    last_memo_id: u32,
-    last_subject_id: u32,
     my_slab: Option<WeakSlab>,
     my_ref: Option<SlabRef>,
     peer_refs: Vec<SlabRef>,
     net: Network
 }
-
+struct SlabCounters{
+    last_memo_id: u32,
+    last_subject_id: u32,
+}
 struct SlabInner {
     pub id: SlabId,
-    shared: Mutex<SlabShared>
+    my_ref: Mutex<Option<SlabRef>>,
+    shared: Mutex<SlabShared>,
+    counters: Mutex<SlabCounters>
 }
 
 #[derive(Clone)]
@@ -64,12 +70,11 @@ impl Slab {
         let shared = SlabShared {
             id: slab_id,
             memorefs_by_id:        HashMap::new(),
+            memo_wait_channels:    HashMap::new(),
             subject_subscriptions: HashMap::new(),
             hack_subject_index: HashMap::new(),
-            last_memo_id: 0,
-            last_subject_id: 0,
-            my_ref: None,
             my_slab: None,
+            my_ref: None,
             peer_refs: Vec::new(),
             net: net.clone()
         };
@@ -78,17 +83,25 @@ impl Slab {
             id: slab_id,
             inner: Arc::new(SlabInner {
                 id: slab_id,
-                shared: Mutex::new(shared)
+                my_ref: Mutex::new(None),
+                shared: Mutex::new(shared),
+                counters: Mutex::new(SlabCounters {
+                    last_memo_id: 0,
+                    last_subject_id: 0,
+                }),
             })
         };
 
         let my_ref = net.register_slab(&me);
+        {
+            *(me.inner.my_ref.lock().unwrap()) = Some(my_ref.clone());
+        }
 
         // not sure if there's a better way to do this, but I want to have a handy return address
         {
             let mut shared = me.inner.shared.lock().unwrap();
             shared.my_slab = Some(me.weak());
-            shared.my_ref = Some(my_ref);
+            shared.my_ref   = Some(my_ref);
         }
 
         me
@@ -99,18 +112,23 @@ impl Slab {
             inner: Arc::downgrade(&self.inner)
         }
     }
-    pub fn get_ref (&self) -> SlabRef {
-        let shared = self.inner.shared.lock().unwrap();
-        shared.get_my_ref().clone()
+    pub fn get_ref(&self) -> SlabRef {
+        // TODO: figure out how to get this to return a borrow, rather than cloning
+        // TODO: determine a better way than a Mutex<Option<SlabRef>> it's dumb
+        let my_ref : SlabRef = self.inner.my_ref.lock().unwrap().clone().unwrap();
+        my_ref
     }
-    pub fn generate_subject_id(&self) -> u64 {
-        let mut shared = self.inner.shared.lock().unwrap();
-        shared.last_subject_id += 1;
+    pub fn generate_subject_id(&self) -> SubjectId {
+        let mut counters = self.inner.counters.lock().unwrap();
+        counters.last_subject_id += 1;
 
-        (self.id as u64).rotate_left(32) | shared.last_subject_id as u64
+        (self.id as u64).rotate_left(32) | counters.last_subject_id as u64
     }
-    pub fn gen_memo_id (&self) -> u64 {
-        self.inner.shared.lock().unwrap().gen_memo_id()
+    pub fn gen_memo_id (&self) -> MemoId {
+        let mut counters = self.inner.counters.lock().unwrap();
+        counters.last_memo_id += 1;
+
+        (self.id as u64).rotate_left(32) | counters.last_memo_id as u64
     }
     pub fn put_memos(&self, from: MemoOrigin, memos : Vec<Memo>){
         if memos.len() == 0 { return }
@@ -176,13 +194,17 @@ impl Slab {
             return;
         }
     }
-    pub fn localize_memo (&self, _memoref: &mut MemoRef ) -> Result<Memo, String> {
+    pub fn memo_wait_channel (&self, memo_id: MemoId ) -> mpsc::Receiver<Memo> {
 
-        //let memo : Memo;
-        //mem::replace( memoref, MemoRef::Resident(memo) );
-        //memoref.set_memo();
+        let (tx, rx) = channel::<Memo>();
+        let mut shared = self.inner.shared.lock().unwrap();
 
-        Err("unable to localize memo".to_owned())
+        match shared.memo_wait_channels.entry(memo_id) {
+            Entry::Vacant(o)       => { o.insert( vec![tx] ); }
+            Entry::Occupied(mut o) => { o.get_mut().push(tx); }
+        };
+
+        rx
     }
     //TODO: figure out how to bootstrab the subject index
     // given that the index nodes themselves needs an index
@@ -191,6 +213,24 @@ impl Slab {
         match shared.hack_subject_index.get(&subject_id) {
             Some( head ) => Ok(head.clone()),
             None         => Err(RetrieveError::NotFound)
+        }
+    }
+    pub fn remotize_memo_ids( &self, memo_ids: &[MemoId] ) {
+        println!("# Slab({}).remotize_memo_ids({:?})", self.id, memo_ids);
+
+        let mut memorefs : Vec<MemoRef> = Vec::with_capacity(memo_ids.len());
+
+        {
+            let shared = self.inner.shared.lock().unwrap();
+            for memo_id in memo_ids.iter() {
+                if let Some(memoref) = shared.memorefs_by_id.get(memo_id) {
+                    memorefs.push( memoref.clone() )
+                }
+            }
+        }
+
+        for memoref in memorefs {
+            memoref.remotize(&self)
         }
     }
 }
@@ -205,14 +245,6 @@ impl WeakSlab {
 }
 
 impl SlabShared {
-
-    pub fn get_my_ref (&self) -> &SlabRef {
-        if let Some(ref my_ref) = self.my_ref {
-            return &my_ref
-        }else{
-            panic!("Called get_my_ref on unregistered slab");
-        }
-    }
     pub fn get_my_slab <'a> (&self) -> Slab {
         if let Some(ref weak) = self.my_slab {
             if let Some(s) = weak.upgrade() {
@@ -224,24 +256,28 @@ impl SlabShared {
             panic!("Called get_my_ref on unregistered slab");
         }
     }
-    pub fn gen_memo_id (&mut self) -> u64 {
-        self.last_memo_id += 1;
-
-        (self.id as u64).rotate_left(32) | self.last_memo_id as u64
+    pub fn get_my_ref (&self) -> &SlabRef {
+        if let Some(ref slabref) = self.my_ref {
+            &slabref
+        }else{
+            panic!("Invalid state - Missing my_ref")
+        }
     }
     pub fn put_memos<'a> (&mut self, from: MemoOrigin, memos: Vec<Memo>){
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
-        println!("Slab({}).put_memos({:?},{:?})", self.id, from, mids);
+        println!("# SlabShared({}).put_memos({:?},{:?})", self.id, from, mids);
 
         // TODO: Evaluate more efficient ways to group these memos by subject
         let mut subject_updates : Vec<SubjectId> = Vec::with_capacity(10);
         let mut memorefs = Vec::new();
 
         // TODO: figure out how to appease the borrow checker without cloning this
-        let my_ref = self.get_my_ref().clone();
         let my_slab = self.get_my_slab();
+        let my_ref = my_slab.get_ref().clone();
 
         for memo in memos {
+
+            println!("# \\ Memo Type {:?}", memo.inner.body );
             // Store the memoref - avoid creating duplicates
             let mut memoref = match self.memorefs_by_id.entry(memo.id) {
                 Entry::Vacant(o)   => {
@@ -249,9 +285,24 @@ impl SlabShared {
                 }
                 Entry::Occupied(o) => {
                     let mr = o.get();
-                    mr.residentize(&my_ref, &memo);
+                    mr.residentize(&my_slab, &memo);
+                    // TODO: consider whether all of the below code should be short circuited
+                    //       in the case that we already have this memo resident
+
                     mr.clone()
                 }
+            };
+
+            match self.memo_wait_channels.entry(memo.id) {
+                Entry::Occupied(o) => {
+                    for channel in o.get() {
+                        // we don't care if it worked or not.
+                        // if the channel is closed, we're scrubbing it anyway
+                        channel.send(memo.clone()).ok();
+                    }
+                    o.remove();
+                },
+                Entry::Vacant(_) => {}
             };
 
             match memo.inner.body {
@@ -264,6 +315,18 @@ impl SlabShared {
                         peered_memoref.update_peer(slabref, status);
                     }
                 },
+                MemoBody::MemoRequest(ref desired_memo_ids, ref requesting_slabref ) => {
+
+                    if requesting_slabref.slab_id != my_ref.slab_id {
+                        for desired_memo_id in desired_memo_ids {
+                            if let Some(desired_memoref) = self.memorefs_by_id.get(&desired_memo_id) {
+                                if let Some(desired_memo) = desired_memoref.get_memo_if_resident() {
+                                    requesting_slabref.send_memo(&my_ref, desired_memo)
+                                }
+                            }
+                        }
+                    }
+                }
                 //MemoBody::Relation(ref relations) => {
                 //
                 //},
@@ -285,7 +348,7 @@ impl SlabShared {
                     //    B. and if so, what should be should we be using them for?
                     //    C. Should we be sing that to determine the peered memo instead of the payload?
                     let peering_memo = Memo::new(
-                        self.gen_memo_id(), 0,
+                        my_slab.gen_memo_id(), 0,
                         vec![memoref.clone()],
                         MemoBody::Peering( memo.id, my_ref.clone(), PeeringStatus::Resident)
                     );
@@ -305,7 +368,8 @@ impl SlabShared {
 
                     subject_updates.push(memo.subject_id);
                 }
-                println!("\tsubject({}) head len({})",memo.subject_id, head.len() );
+                let headmemoids : Vec<MemoId> = head.iter().map(|m| m.id).collect();
+                println!("# \t\\ subject({}) revised head is: {:?}",memo.subject_id, headmemoids );
                 // END HACK END HACK END HACK
 
                 //TODO: should we emit all memorefs, or just those with subject_ids?
@@ -341,13 +405,14 @@ impl SlabShared {
         // TODO - configurably auto-deliver these memos
         //        punting for now, because we want the test suite to monkey with delivery
 
-        let my_ref : &SlabRef = &self.get_my_ref();
+
+        let my_ref : &SlabRef = self.get_my_ref();
         for memoref in memorefs.iter() {
             if let Some(memo) = memoref.get_memo_if_resident() {
                 let needs_peers = self.check_peering_target(&memo);
 
                 for peer_ref in self.peer_refs.iter().filter(|x| !memoref.is_peered_with_slabref(x) ).take( needs_peers as usize ) {
-                    println!("Slab({}).emit_memos - EMIT Memo {} to Slab {}", my_ref.slab_id, memo.id, peer_ref.slab_id );
+                    println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", my_ref.slab_id, memo.id, peer_ref.slab_id );
                     peer_ref.send_memo( my_ref, memo.clone() );
                 }
             }
@@ -373,7 +438,7 @@ impl SlabShared {
 
 impl Drop for SlabInner {
     fn drop(&mut self) {
-        println!("Slab({}).drop", self.id);
+        println!("# Slab({}).drop", self.id);
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
     }
 }

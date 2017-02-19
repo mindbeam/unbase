@@ -63,7 +63,7 @@ impl Network {
         unimplemented!();
     }
     pub fn register_slab(&self, slab: &Slab) -> SlabRef {
-        println!("register_slab {:?}", slab );
+        println!("# register_slab {:?}", slab );
 
         let sender = Sender{
                         source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
@@ -140,6 +140,6 @@ impl fmt::Debug for Network {
 
 impl Drop for NetworkInternals {
     fn drop(&mut self) {
-        println!("> Dropping NetworkInternals");
+        println!("# > Dropping NetworkInternals");
     }
 }

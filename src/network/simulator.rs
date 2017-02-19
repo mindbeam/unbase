@@ -37,7 +37,7 @@ struct SimEvent {
 
 impl SimEvent {
     pub fn deliver (self) {
-        println!("SimEvent.deliver {} to Slab {}", &self.memo.id, self.dest.id );
+        println!("# SimEvent.deliver {} to Slab {}", &self.memo.id, self.dest.id );
         if let Some(slab) = self.dest.upgrade() {
             slab.put_memos(MemoOrigin::Remote(&self.from), vec![self.memo])
         }
@@ -105,7 +105,7 @@ impl Simulator {
     }
     pub fn advance_clock (&self, ticks: u64) {
 
-        println!("Simulator.advance_clock({})", ticks);
+        println!("# Simulator.advance_clock({})", ticks);
 
         let t;
         let events : Vec<SimEvent>;

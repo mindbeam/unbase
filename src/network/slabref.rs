@@ -41,6 +41,7 @@ impl SlabRef{
     }
 
     pub fn send_memo (&self, from: &SlabRef, memo: Memo) {
+        println!("# SlabRef({}).send_memo({})", self.slab_id, memo.id );
         self.inner.sender.send(from, memo);
     }
 }

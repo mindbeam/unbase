@@ -3,6 +3,7 @@ use slab::*;
 use network::*;
 use std::sync::{Arc,Mutex};
 use std::fmt;
+use std::error::Error;
 
 #[derive(Clone)]
 pub struct MemoRef {
@@ -71,14 +72,37 @@ impl MemoRef {
         })
     }
     pub fn get_memo (&mut self, slab: &Slab) -> Result<Memo, String> {
+        // This seems pretty crude, but using channels for now in the interest of expediency
+        let channel;
+
         {
             let shared = self.shared.lock().unwrap();
             if let MemoRefPtr::Resident(ref memo) = shared.ptr {
                 return Ok(memo.clone());
             }
+
+            let slabref = slab.get_ref();
+            let request_memo = Memo::new_basic(
+                slab.gen_memo_id(),
+                0,
+                vec![], // TODO: how should this be parented?
+                MemoBody::MemoRequest(vec![self.id],slabref.clone())
+            );
+
+            channel = slab.memo_wait_channel(self.id);
+
+            for peer in shared.peers.iter().take(5) {
+                peer.slabref.send_memo( &slabref, request_memo.clone() );
+            }
         }
 
-        slab.localize_memo(self)
+        // By sending the memo itself through the channel
+        // we guarantee that there's no funny business with request / remotize timing
+        match channel.recv() {
+            Ok(memo)       => Ok(memo),
+            Err(rcv_error) => Err(rcv_error.description().to_string()) // HACK
+        }
+
     }
     pub fn descends (&mut self, memoref: &MemoRef, slab: &Slab) -> bool {
         match self.get_memo( slab ) {
@@ -92,7 +116,9 @@ impl MemoRef {
 
         false
     }
-    pub fn residentize(&self, slabref: &SlabRef, memo: &Memo) {
+    pub fn residentize(&self, slab: &Slab, memo: &Memo) {
+        println!("# MemoRef({}).residentize()", self.id);
+
         let mut shared = self.shared.lock().unwrap();
 
         if self.id != memo.id {
@@ -102,16 +128,45 @@ impl MemoRef {
         if let MemoRefPtr::Remote = shared.ptr {
             shared.ptr = MemoRefPtr::Resident( memo.clone() );
 
+            let slabref = slab.get_ref();
+
             let peering_memo = Memo::new_basic(
-                memo.id, 0,
+                slab.gen_memo_id(),
+                0,
                 vec![self.clone()],
                 MemoBody::Peering(self.id,slabref.clone(),PeeringStatus::Resident)
             );
 
             for peer in shared.peers.iter() {
-                peer.slabref.send_memo( slabref, peering_memo.clone() );
+                peer.slabref.send_memo( &slabref, peering_memo.clone() );
+            }
+
+        }
+    }
+    pub fn remotize(&self, slab: &Slab ) {
+        println!("# MemoRef({}).remotize()", self.id);
+        let mut shared = self.shared.lock().unwrap();
+
+        if let MemoRefPtr::Resident(_) = shared.ptr {
+            if shared.peers.len() == 0 {
+                panic!("Attempt to remotize a non-peered memo")
+            }
+
+            let slabref = slab.get_ref();
+
+            let peering_memo = Memo::new_basic(
+                slab.gen_memo_id(),
+                0,
+                vec![self.clone()],
+                MemoBody::Peering(self.id,slabref.clone(),PeeringStatus::Participating)
+            );
+
+            for peer in shared.peers.iter() {
+                peer.slabref.send_memo( &slabref, peering_memo.clone() );
             }
         }
+
+        shared.ptr = MemoRefPtr::Remote;
     }
     pub fn update_peer (&self, slabref: &SlabRef, status: &PeeringStatus){
 

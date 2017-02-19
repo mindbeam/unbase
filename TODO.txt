@@ -26,6 +26,7 @@ Steps Believed necessary for the passage of the first self-consistency test case
     [ ] Extremely basic LWW relationship-supersession
 [~] Peering Memos
   [X] inter-slab peering memos
+  [ ] Consolidate multiple peering changes into a single peering memo 
   [ ] Emit Goodbye memos for slabs that are shutting down
   [ ] Local Peering Memos?
 [ ] Very basic testing
