@@ -196,22 +196,33 @@ In the above scenario, we have a rather read-heavy workload with very few writes
 Because of these high-interest topics (such as the root index node) and the desire to operate large, and/or write-heavy networks, we must find a way to mitigate this. We must find a way to permit the aggregate write throughput for a given topic to _dramatically_ exceed the average capacity of the interested parties. But how?
 
 
-**Selective Hearing**
+**Probabilistic Index Merging**
 
 Have you ever been to a party where there are 20+ people talking in one room? Chances are, you focused on a few of them, and essentially ignored all the others. Even if you theoretically were within earshot of all of them, you lack the capacity to listen to all of the people at once – It exceeds your input acoustic processing bandwidth. You specifically choose to ignore what most of them are saying. You tune them out so you can use your capacity to understand the people on which you're focused.
 
-Solving the above problem is quite simple really. When you have more traffic on a given topic than the capacity of each interested party individually, the parties simply ignore the extra chatter which they cannot, or do not wish to process. In our case, rather than tuning into specific groups of people when necessarily, each peer mode decides to a hear a message, or not, on the basis of a carefully calibrated probability calculation. <!-- TODO: explain that we're not trying to propagate a specific message to the whole network, but rather create merges probablistically which are inclusive of descendants of prior merges in a commutative way. We're not just trying to deliver a single message once in the whole network -->
+Solving the above problem is quite simple really. When you have more traffic on a given topic than the capacity of each interested party individually, the parties simply ignore the extra chatter which they cannot, or do not wish to process. In our case, rather than tuning into specific groups of people when necessarily, each peer mode decides to a hear a message, or not, on the basis of a carefully calibrated probability calculation. <!-- TODO: explain that we're not trying to propagate a specific message to the whole network, but rather create merges probabilistically which are inclusive of descendants of prior merges in a commutative way. We're not just trying to deliver a single message once in the whole network -->
 
-#### Sparse Vector Clocks - A key implementation detail
-Sparse vector clocks, AKA Beacons, are similar in principle to [Interval Tree Clocks](http://gsd.di.uminho.pt/members/cbm/ps/itc2008.pdf){:target="define"}, with some key differences.
+<img src="media/probabilistic_index_merging.png" alt="" style="width: 755px; max-width: 100%"><br>
+**FIG 12.**
 
 
-#### Commutative Index Merging - Enabled by sparse vector clocks
+#### Probabilistic Beacon Clocks - A key implementation detail
+<img src="media/beacons.png" alt="media/beacons.png" style="width: 755px; max-width: 100%"><br>
+**FIG 13. Beacon Pings reference each other to form a distributed monotonic clock.**
 
-Index merging:
-Slots
+Each Slab has one "Beacon" – a monotonically incrementing counter which periodically emits "Ping" Memos bearing the present counter value. The probability of Ping emission by a given Beacon is determined by the relative (inverse of) cardinality of other Beacon pings observed.<br><br>
 
-|  |
+The purpose is to create a distributed monotonic clock which is self-tuning to create the smallest amount of logical-timekeeping traffic across the network while still providing acceptable timing references to spatial/network regions.
+
+
+
+#### Commutative Index Merging
+<img src="media/commutative_index_merging.png" alt="" style="width: 755px; max-width: 100%"><br>
+**FIG 14.**
+
+#### Gravity and Pressure
+<img src="media/gravity_and_pressure.png" alt="" style="width: 755px; max-width: 100%"><br>
+**FIG 15.**
 
 ### Notes:
 
