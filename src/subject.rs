@@ -8,6 +8,7 @@ use std::sync::{Arc,Mutex,Weak};
 
 pub type SubjectId     = u64;
 pub type SubjectField  = String;
+pub const SUBJECT_MAX_RELATION : u8 = 255;
 
 #[derive(Clone)]
 pub struct Subject {
@@ -31,6 +32,7 @@ impl Subject {
 
         let slab : &Slab = context.get_slab();
         let subject_id = slab.generate_subject_id();
+        println!("# Subject({}).new()",subject_id);
 
         let shared = SubjectShared{
             id: subject_id,
@@ -137,10 +139,14 @@ impl Subject {
         let context = &shared.context;
 
         for memo in shared.memo_iter() {
-            println!("# \t\\ Considering Memo {}", memo.id );
             let relations : HashMap<u8, (SubjectId, Vec<MemoRef>)> = memo.get_relations();
 
+            println!("# \t\\ Considering Memo {}, {:?}", memo.id, relations );
             if let Some(r) = relations.get(&key) {
+                // BUG: the parent->child was formed prior to the revision of the child.
+                // TODO: Should be adding the new head memo to the query context
+                //       and superseding the referenced head due to its inclusion in the context
+
                 if let Ok(relation) = context.get_subject_with_head(r.0,r.1.clone()) {
                     return Some(relation)
                 }else{

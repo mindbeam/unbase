@@ -11,6 +11,7 @@ pub mod memoref;
 pub mod subject;
 pub mod context;
 pub mod error;
+pub mod index;
 
 pub use network::Network;
 pub use slab::Slab;
