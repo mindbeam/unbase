@@ -19,14 +19,16 @@ Steps Believed necessary for the passage of the first self-consistency test case
 [X] memo body
 [X] memo peering
 [NEXT] Memo -> relation memos
-[NEXT] memo retrieval ( slab.localize_memo )
+[X] memo retrieval ( slab.localize_memo )
+   [X] Return found Memo
+   [X] Memo not found response (Participating/NonParticipating)
 [ ] basic memo durability scoring
 [~] Basic state projection logic
     [X] Extremely basic Causal LWW hash keys
     [ ] Extremely basic LWW relationship-supersession
 [~] Peering Memos
   [X] inter-slab peering memos
-  [ ] Consolidate multiple peering changes into a single peering memo 
+  [ ] Consolidate multiple peering changes into a single peering memo
   [ ] Emit Goodbye memos for slabs that are shutting down
   [ ] Local Peering Memos?
 [ ] Very basic testing

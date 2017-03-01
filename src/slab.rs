@@ -322,7 +322,23 @@ impl SlabShared {
                             if let Some(desired_memoref) = self.memorefs_by_id.get(&desired_memo_id) {
                                 if let Some(desired_memo) = desired_memoref.get_memo_if_resident() {
                                     requesting_slabref.send_memo(&my_ref, desired_memo)
+                                } else {
+                                    // Somebody asked me for a memo I don't have
+                                    // It would be neighborly to tell them I don't have it
+                                    let peering_memo = Memo::new(
+                                        my_slab.gen_memo_id(), 0,
+                                        vec![memoref.clone()],
+                                        MemoBody::Peering( memo.id, my_ref.clone(), PeeringStatus::Participating)
+                                    );
+                                    requesting_slabref.send_memo(&my_ref, peering_memo)
                                 }
+                            }else{
+                                let peering_memo = Memo::new(
+                                    my_slab.gen_memo_id(), 0,
+                                    vec![memoref.clone()],
+                                    MemoBody::Peering( memo.id, my_ref.clone(), PeeringStatus::NonParticipating)
+                                );
+                                requesting_slabref.send_memo(&my_ref, peering_memo)
                             }
                         }
                     }

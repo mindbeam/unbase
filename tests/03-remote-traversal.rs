@@ -19,13 +19,9 @@ fn remote_traversal() {
     rec_a1.set_kv("animal_sound","Woof");
     rec_a1.set_kv("animal_sound","Meow");
 
-    simulator.advance_clock(1); // advance the simulator clock by one tick
+    simulator.advance_clock(1); // Now it should have propagated to slab B
 
-    // Now it should have propagated to slab B
-
-    simulator.advance_clock(1);
-
-    // now slab A should know that Slab B has it
+    simulator.advance_clock(1); // now slab A should know that Slab B has it
 
     slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() );
 
