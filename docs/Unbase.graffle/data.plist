@@ -36,7 +36,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2017-03-03 10:31:15 +0000</string>
+	<string>2017-03-03 10:46:07 +0000</string>
 	<key>Modifier</key>
 	<string>Daniel Norman</string>
 	<key>NotesVisible</key>
@@ -8125,6 +8125,141 @@ Locate records by ID
 					<dict>
 						<key>ID</key>
 						<integer>2076</integer>
+					</dict>
+					<key>ID</key>
+					<integer>2089</integer>
+					<key>Layer</key>
+					<integer>0</integer>
+					<key>Points</key>
+					<array>
+						<string>{179.90617958208765, 185.96103721360467}</string>
+						<string>{193.14953992298243, 194.93929668129101}</string>
+					</array>
+					<key>Style</key>
+					<dict>
+						<key>shadow</key>
+						<dict>
+							<key>Fuzziness</key>
+							<real>4.1422834396362305</real>
+							<key>ShadowVector</key>
+							<string>{1, 2}</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Color</key>
+							<dict>
+								<key>b</key>
+								<string>0</string>
+								<key>g</key>
+								<string>0</string>
+								<key>r</key>
+								<string>1</string>
+							</dict>
+							<key>HeadArrow</key>
+							<string>SharpArrow</string>
+							<key>HeadScale</key>
+							<real>0.5</real>
+							<key>HopLines</key>
+							<true/>
+							<key>HopType</key>
+							<integer>101</integer>
+							<key>Legacy</key>
+							<true/>
+							<key>LineType</key>
+							<integer>1</integer>
+							<key>Pattern</key>
+							<integer>11</integer>
+							<key>TailArrow</key>
+							<string>0</string>
+						</dict>
+					</dict>
+					<key>Tail</key>
+					<dict>
+						<key>ID</key>
+						<integer>2060</integer>
+						<key>Info</key>
+						<integer>9</integer>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{242.50407704158414, 191.86527294733676}, {78.907600402832031, 22}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Vertical</string>
+					<key>Flow</key>
+					<string>Resize</string>
+					<key>ID</key>
+					<integer>2082</integer>
+					<key>Layer</key>
+					<integer>0</integer>
+					<key>Line</key>
+					<dict>
+						<key>ID</key>
+						<integer>2077</integer>
+						<key>Offset</key>
+						<real>-2</real>
+						<key>Position</key>
+						<real>0.45505219697952271</real>
+						<key>RotationType</key>
+						<integer>0</integer>
+					</dict>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Align</key>
+						<integer>0</integer>
+						<key>Pad</key>
+						<integer>0</integer>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+\cocoascreenfonts1{\fonttbl\f0\fswiss\fcharset0 Helvetica-Light;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\slleading-20\pardirnatural
+
+\f0\fs12 \cf0 \expnd0\expndtw0\kerning0
+C
+\fs10 \sub 7
+\fs12 \nosupersub  would not be necessary\
+in cases where the referenced memo is identical}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+				</dict>
+				<dict>
+					<key>Class</key>
+					<string>LineGraphic</string>
+					<key>ControlPoints</key>
+					<array>
+						<string>{28.830300173907176, -0.32316462077679375}</string>
+						<string>{-21.355316659481673, -10.287369398590812}</string>
+						<string>{21.355316659481673, 10.287369398590812}</string>
+						<string>{-29.499989796220007, 0.56342911510853355}</string>
+					</array>
+					<key>Head</key>
+					<dict>
+						<key>ID</key>
+						<integer>2076</integer>
 						<key>Info</key>
 						<integer>11</integer>
 					</dict>
@@ -8135,6 +8270,7 @@ Locate records by ID
 					<key>Points</key>
 					<array>
 						<string>{71.169699826092824, 128.32316462077679}</string>
+						<string>{94, 196.5}</string>
 						<string>{190.99998979622001, 200.93657088489147}</string>
 					</array>
 					<key>Style</key>
@@ -8148,6 +8284,8 @@ Locate records by ID
 						</dict>
 						<key>stroke</key>
 						<dict>
+							<key>Bezier</key>
+							<true/>
 							<key>Color</key>
 							<dict>
 								<key>b</key>
@@ -8177,6 +8315,8 @@ Locate records by ID
 					<dict>
 						<key>ID</key>
 						<integer>2004</integer>
+						<key>Info</key>
+						<integer>6</integer>
 					</dict>
 				</dict>
 				<dict>
@@ -8251,7 +8391,7 @@ Locate records by ID
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{44.964653015136719, 211.5}, {96.013381958007983, 8}}</string>
+					<string>{{44.964653015136719, 211.5}, {96.013381958007983, 24}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -8301,7 +8441,9 @@ Locate records by ID
 {\colortbl;\red255\green255\blue255;\red102\green102\blue102;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs14 \cf2 Partially materialized memos?}</string>
+\f0\fs14 \cf2 Partially materialized memos?\
+\
+Subscription annotations?}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
@@ -9881,7 +10023,7 @@ b: Bird}</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{336.5, 223.24828720092773}, {59, 24}}</string>
+					<string>{{336.5, 223.24828720092773}, {78.907600402832031, 24}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -9932,7 +10074,7 @@ b: Bird}</string>
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
 \f0\fs14 \cf2 Approach 2:\
-Fully Linked\
+Fully Linked.\
 Content + history}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
@@ -9940,7 +10082,7 @@ Content + history}</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{171.5, 216.5}, {59, 24}}</string>
+					<string>{{171.5, 221.5}, {85, 24}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -9991,8 +10133,7 @@ Content + history}</string>
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
 \f0\fs14 \cf2 Approach 1:\
-Content only\
-No history}</string>
+Content only. No history for materialized memos}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
