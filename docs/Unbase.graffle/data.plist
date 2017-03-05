@@ -36,7 +36,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2017-03-03 10:46:07 +0000</string>
+	<string>2017-03-05 00:52:37 +0000</string>
 	<key>Modifier</key>
 	<string>Daniel Norman</string>
 	<key>NotesVisible</key>
@@ -5837,9 +5837,11 @@ Contexts gather provisional memos until they are assimilated ( by whom? ) and a 
 						WzM2Y10GAAAAGgAAAP/+QQBwAHAA
 						bABlAFMAeQBtAGIAbwBsAHMAAACm
 						CJsAmwGbAJsAhoaXAwmShJiZA5KZ
-						kpqSnJKdkq+ShLGZHIQFWzI4Y10G
-						AAAAFAAAAP/+SABlAGwAdgBlAHQA
-						aQBjAGEApgibAJsBmwCbAIaGhg==
+						kpqSnJKEnp8CAIShmQySopKkkqWS
+						ppKnkqiSqZKqkquSrJKtkq6GgQAI
+						o4PNzEw9hpKvkoSxmRyEBVsyOGNd
+						BgAAABQAAAD//kgAZQBsAHYAZQB0
+						AGkAYwBhAKYImwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -5996,10 +5998,12 @@ Contexts gather provisional memos until they are assimilated ( by whom? ) and a 
 						koSxmSSEBVszNmNdBgAAABoAAAD/
 						/kEAcABwAGwAZQBTAHkAbQBiAG8A
 						bABzAAAApgibAJsBmwCbAIaGlwMQ
-						koSYmQOSmZKakpySnZKvkoSxmRyE
-						BVsyOGNdBgAAABQAAAD//kgAZQBs
-						AHYAZQB0AGkAYwBhAKYImwCbAZsA
-						mwCGhoY=
+						koSYmQOSmZKEm5sDnACDzczMPoaS
+						nJKEnp8CAIShmQySopKkkqWSppKn
+						kqiSqZKqkquSrJKtkq6GgQAIo4PN
+						zEw9hpKvkoSxmRyEBVsyOGNdBgAA
+						ABQAAAD//kgAZQBsAHYAZQB0AGkA
+						YwBhAKYImwCbAZsAmwCGhoY=
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -6009,7 +6013,7 @@ Contexts gather provisional memos until they are assimilated ( by whom? ) and a 
 
 \f0\b\fs16 \cf2 X5.A2 
 \f1\b0 \uc0\u8827 
-\f0  \{\} || \{\} P = 20}</string>
+\f0 \cf2  \{\} || \{\} P = 20}</string>
 						<key>VerticalPad</key>
 						<integer>7</integer>
 						<key>alpha</key>
@@ -6156,10 +6160,12 @@ Contexts gather provisional memos until they are assimilated ( by whom? ) and a 
 						sZkkhAVbMzZjXQYAAAAaAAAA//5B
 						AHAAcABsAGUAUwB5AG0AYgBvAGwA
 						cwAAAKYImwCbAZsAmwCGhpcDDpKE
-						mJkDkpmSmpKckp2Sr5KEsZkchAVb
-						MjhjXQYAAAAUAAAA//5IAGUAbAB2
-						AGUAdABpAGMAYQCmCJsAmwGbAJsA
-						hoaG
+						mJkDkpmSmpKckoSenwIAhKGZDJKi
+						kqSSpZKmkqeSqJKpkqqSq5Kskq2S
+						roaBAAijg83MTD2Gkq+ShLGZHIQF
+						WzI4Y10GAAAAFAAAAP/+SABlAGwA
+						dgBlAHQAaQBjAGEApgibAJsBmwCb
+						AIaGhg==
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -6316,10 +6322,12 @@ Contexts gather provisional memos until they are assimilated ( by whom? ) and a 
 						koSxmSSEBVszNmNdBgAAABoAAAD/
 						/kEAcABwAGwAZQBTAHkAbQBiAG8A
 						bABzAAAApgibAJsBmwCbAIaGlwMQ
-						koSYmQOSmZKakpySnZKvkoSxmRyE
-						BVsyOGNdBgAAABQAAAD//kgAZQBs
-						AHYAZQB0AGkAYwBhAKYImwCbAZsA
-						mwCGhoY=
+						koSYmQOSmZKakpyShJ6fAgCEoZkM
+						kqKSpJKlkqaSp5KokqmSqpKrkqyS
+						rZKuhoEACKODzcxMPYaSr5KEsZkc
+						hAVbMjhjXQYAAAAUAAAA//5IAGUA
+						bAB2AGUAdABpAGMAYQCmCJsAmwGb
+						AJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -12890,25 +12898,24 @@ F
 						hIQITlNPYmplY3QAhZKEhIQITlNT
 						dHJpbmcBlIQBKxVBbGljZSdzIFF1
 						ZXJ5IENvbnRleHSGhAJpSQEVkoSE
-						hAxOU0RpY3Rpb25hcnkAlIQBaQSS
-						hJaWDk5TT3JpZ2luYWxGb250hpKE
-						hIQGTlNGb250HpSZHIQFWzI4Y10G
-						AAAAFAAAAP/+SABlAGwAdgBlAHQA
-						aQBjAGEAhAFmBYQBYwCdAZ0AnQCG
-						koSWlhBOU1BhcmFncmFwaFN0eWxl
-						hpKEhIQXTlNNdXRhYmxlUGFyYWdy
-						YXBoU3R5bGUAhIQQTlNQYXJhZ3Jh
-						cGhTdHlsZQCUhARDQ0BTAgCEhIQH
-						TlNBcnJheQCUmQyShISECU5TVGV4
-						dFRhYgCUhAJDZgAchpKEo6MAOIaS
-						hKOjAFSGkoSjowBwhpKEo6MAgYwA
-						hpKEo6MAgagAhpKEo6MAgcQAhpKE
-						o6MAgeAAhpKEo6MAgfwAhpKEo6MA
-						gRgBhpKEo6MAgTQBhpKEo6MAgVAB
-						hoaBAAiEBFsxZl2DzcxMPYaShJaW
-						Bk5TRm9udIaSmpKElpYHTlNDb2xv
-						coaShISEB05TQ29sb3IAlJ0DhAJm
-						ZgCDomQkP4aGhg==
+						hAxOU0RpY3Rpb25hcnkAlIQBaQOS
+						hJaWB05TQ29sb3KGkoSEhAdOU0Nv
+						bG9yAJSEAWMDhAJmZgCDomQkP4aS
+						hJaWEE5TUGFyYWdyYXBoU3R5bGWG
+						koSEhBdOU011dGFibGVQYXJhZ3Jh
+						cGhTdHlsZQCEhBBOU1BhcmFncmFw
+						aFN0eWxlAJSEBENDQFMCAISEhAdO
+						U0FycmF5AJSZDJKEhIQJTlNUZXh0
+						VGFiAJSEAkNmAByGkoSjogA4hpKE
+						o6IAVIaShKOiAHCGkoSjogCBjACG
+						koSjogCBqACGkoSjogCBxACGkoSj
+						ogCB4ACGkoSjogCB/ACGkoSjogCB
+						GAGGkoSjogCBNAGGkoSjogCBUAGG
+						hoEACIQEWzFmXYPNzEw9hpKElpYG
+						TlNGb250hpKEhIQGTlNGb250HpSZ
+						HIQFWzI4Y10GAAAAFAAAAP/+SABl
+						AGwAdgBlAHQAaQBjAGEAhAFmBZsA
+						mwGbAJsAhoaG
 						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
@@ -22774,8 +22781,8 @@ Z
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{245.53990883913553, 159.53789073102948}</string>
-						<string>{195.20795167582773, 167.27554351653222}</string>
+						<string>{245.53990883920957, 159.53789073123829}</string>
+						<string>{195.2079516760848, 167.27554351725709}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -22835,8 +22842,8 @@ Z
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{237.65029183618131, 152.80372461587962}</string>
-						<string>{194.09756867603497, 165.00970962790976}</string>
+						<string>{237.65029183684206, 152.80372461689805}</string>
+						<string>{194.09756867819013, 165.00970963123152}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -22896,8 +22903,8 @@ Z
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{230.46603929704369, 146.04528572622286}</string>
-						<string>{192.2818212092422, 162.76814851347075}</string>
+						<string>{230.46603929898913, 146.0452857281355}</string>
+						<string>{192.28182121544663, 162.76814851957073}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -25232,8 +25239,8 @@ P ~ 1}</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{334.23399874011568, 110.68208653642058}</string>
-						<string>{280.61945060292283, 146.5614147389463}</string>
+						<string>{334.23399874011562, 110.68208653642061}</string>
+						<string>{280.61945060292277, 146.5614147389463}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -26678,8 +26685,8 @@ P ~ 50}</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{146.90140389404735, 166.9317863573751}</string>
-						<string>{68.682317256404986, 190.08987314144608}</string>
+						<string>{146.90140389404763, 166.93178635737553}</string>
+						<string>{68.682317256406535, 190.08987314144835}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -26739,8 +26746,8 @@ P ~ 50}</string>
 					<integer>3</integer>
 					<key>Points</key>
 					<array>
-						<string>{139.148340382621, 159.5005365202467}</string>
-						<string>{67.435380767840243, 188.52112297858471}</string>
+						<string>{139.14834038261986, 159.5005365202455}</string>
+						<string>{67.435380767834644, 188.5211229785788}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -33298,8 +33305,8 @@ Localize data you care about}</string>
 					<integer>4</integer>
 					<key>Points</key>
 					<array>
-						<string>{256.43182571209127, 97.882469767289081}</string>
-						<string>{395.90734663461052, 143.00746488220054}</string>
+						<string>{256.43182571209127, 97.88246977243216}</string>
+						<string>{395.90734663461046, 143.00746491207931}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -61232,8 +61239,8 @@ F
 					<integer>12</integer>
 					<key>Points</key>
 					<array>
-						<string>{362.28148896752418, 182.60917663574219}</string>
-						<string>{368.2162995150378, 193.5}</string>
+						<string>{362.29172444394101, 182.60917663574219}</string>
+						<string>{368.23350203931125, 193.5}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -61288,8 +61295,8 @@ F
 					<integer>12</integer>
 					<key>Points</key>
 					<array>
-						<string>{344.96657836305235, 135.61279296875}</string>
-						<string>{349.125777119286, 150.60917663574219}</string>
+						<string>{344.96637217040808, 135.61279296875}</string>
+						<string>{349.12537766764154, 150.60917663574219}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -63314,8 +63321,8 @@ A
 					<integer>12</integer>
 					<key>Points</key>
 					<array>
-						<string>{338.73311635562754, 76.112800598144531}</string>
-						<string>{339.86857387799625, 103.61279296875}</string>
+						<string>{338.73306396074031, 76.112800598144531}</string>
+						<string>{339.86846384874912, 103.61279296875}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -66919,8 +66926,8 @@ F
 					<integer>13</integer>
 					<key>Points</key>
 					<array>
-						<string>{378.48231418123163, 190.72560119628906}</string>
-						<string>{363.6879738039774, 142.5}</string>
+						<string>{378.48231420998331, 190.72560119628906}</string>
+						<string>{363.68797392218522, 142.5}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -69084,8 +69091,8 @@ F
 					<integer>14</integer>
 					<key>Points</key>
 					<array>
-						<string>{357.58721662623861, 115.62498664855957}</string>
-						<string>{352.26032305977293, 98.612800598144531}</string>
+						<string>{357.58217668117766, 115.62498664855957}</string>
+						<string>{352.24711735442048, 98.612800598144531}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -69140,8 +69147,8 @@ F
 					<integer>14</integer>
 					<key>Points</key>
 					<array>
-						<string>{370.58209946618808, 162.61892318725586}</string>
-						<string>{363.66795858668297, 136.62498664855957}</string>
+						<string>{370.58208756901911, 162.61892318725586}</string>
+						<string>{363.66791723672776, 136.62498664855957}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -69196,8 +69203,8 @@ F
 					<integer>14</integer>
 					<key>Points</key>
 					<array>
-						<string>{382.3055639230214, 209.61284637451172}</string>
-						<string>{375.94463782592186, 183.61892318725586}</string>
+						<string>{382.30552257723173, 209.61284637451172}</string>
+						<string>{375.94449412401013, 183.61892318725586}</string>
 					</array>
 					<key>Style</key>
 					<dict>
@@ -72070,13 +72077,13 @@ to reference \{B, C
 			<array>
 				<dict>
 					<key>Lock</key>
-					<string>NO</string>
+					<string>YES</string>
 					<key>Name</key>
 					<string>Index Merging</string>
 					<key>Print</key>
 					<string>YES</string>
 					<key>View</key>
-					<string>YES</string>
+					<string>NO</string>
 				</dict>
 				<dict>
 					<key>Lock</key>
@@ -72156,7 +72163,7 @@ to reference \{B, C
 					<key>Print</key>
 					<string>YES</string>
 					<key>View</key>
-					<string>NO</string>
+					<string>YES</string>
 				</dict>
 				<dict>
 					<key>Lock</key>
@@ -81758,6 +81765,8 @@ Range: A-K}</string>
 				<string>Canvas 1</string>
 			</dict>
 		</array>
+		<key>Frame</key>
+		<string>{{1354, -229}, {1695, 777}}</string>
 		<key>ListView</key>
 		<true/>
 		<key>OutlineWidth</key>
@@ -81770,6 +81779,8 @@ Range: A-K}</string>
 		<true/>
 		<key>SidebarWidth</key>
 		<integer>169</integer>
+		<key>VisibleRegion</key>
+		<string>{{0, 0}, {748.5, 310}}</string>
 		<key>Zoom</key>
 		<real>2</real>
 		<key>ZoomValues</key>
