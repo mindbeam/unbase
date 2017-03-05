@@ -75,7 +75,7 @@ impl MemoRef {
             (peer.slabref.slab_id == slabref.slab_id) && peer.status != PeeringStatus::NonParticipating
         })
     }
-    pub fn get_memo (&mut self, slab: &Slab) -> Result<Memo, String> {
+    pub fn get_memo (&self, slab: &Slab) -> Result<Memo, String> {
         // This seems pretty crude, but using channels for now in the interest of expediency
         let channel;
 
@@ -108,10 +108,11 @@ impl MemoRef {
         }
 
     }
-    pub fn descends (&mut self, memoref: &MemoRef, slab: &Slab) -> bool {
+    pub fn descends (&self, memoref: &MemoRef, slab: &Slab) -> bool {
         match self.get_memo( slab ) {
             Ok(my_memo) => {
-                if my_memo.descends(&memoref, slab) { return true }
+                if my_memo.descends(&memoref, slab) {
+                    return true }
             }
             Err(_) => {
                 panic!("Unable to retrieve my memo")

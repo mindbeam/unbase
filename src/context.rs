@@ -44,7 +44,7 @@ impl Context{
 
         // TODO: trim existing context based on descendants
 
-        for mut memoref in memorefs.drain(0..) {
+        for memoref in memorefs.drain(0..) {
             let subject_id = memoref.get_memo(&self.inner.slab).unwrap().subject_id;
 
             println!("# Context calling apply_memoref");

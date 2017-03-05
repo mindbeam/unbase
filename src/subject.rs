@@ -155,7 +155,7 @@ impl Subject {
         for memo in shared.memo_iter() {
             let relations : HashMap<u8, (SubjectId, MemoRefHead)> = memo.get_relations();
 
-            println!("# \t\\ Considering Memo {}, {:?}", memo.id, relations );
+            println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
             if let Some(r) = relations.get(&key) {
                 // BUG: the parent->child was formed prior to the revision of the child.
                 // TODO: Should be adding the new head memo to the query context
@@ -172,7 +172,7 @@ impl Subject {
             }
         }
 
-        println!("# \t\\ Not Found" );
+        println!("\n# \t\\ Not Found" );
         None
     }
     pub fn update_head (&mut self, new: &MemoRefHead){
@@ -239,7 +239,7 @@ impl Iterator for SubjectMemoIter {
         // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>
 
         // TODO: Stop traversal when we come across a Keyframe memo
-        if let Some(mut memoref) = self.queue.pop_front() {
+        if let Some(memoref) = self.queue.pop_front() {
             // this is wrong - Will result in G, E, F, C, D, B, A
 
             match memoref.get_memo( &self.slab ){

@@ -126,13 +126,16 @@ impl Memo {
 
         // breadth-first
         for parent in self.inner.parents.iter() {
-            if parent == memoref { return true };
+            if parent == memoref {
+                return true
+            };
         }
 
-        let mut memoref = memoref.clone();
         // Ok now depth
         for parent in self.inner.parents.iter() {
-            if memoref.descends(&parent, slab) { return true }
+            if parent.descends(&memoref,slab) {
+                return true
+            }
         }
         return false;
     }

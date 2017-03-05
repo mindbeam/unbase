@@ -16,7 +16,7 @@ impl MemoRefHead {
     pub fn from_memoref (memoref: MemoRef) -> Self {
         MemoRefHead( vec![memoref] )
     }
-    pub fn apply_memoref(&mut self, mut new: MemoRef, slab: &Slab ) -> bool {
+    pub fn apply_memoref(&mut self, new: MemoRef, slab: &Slab ) -> bool {
         println!("# MemoRefHead({:?}).apply_memoref({})", self.memo_ids(), &new.id);
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
