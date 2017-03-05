@@ -12,9 +12,9 @@ fn basic_eventual() {
     let slab_b = unbase::Slab::new(&net);
     let slab_c = unbase::Slab::new(&net);
 
-    assert!(slab_a.id == 1, "Slab A ID shoud be 1");
-    assert!(slab_b.id == 2, "Slab B ID shoud be 2");
-    assert!(slab_c.id == 3, "Slab C ID shoud be 3");
+    assert!(slab_a.id == 0, "Slab A ID shoud be 0");
+    assert!(slab_b.id == 1, "Slab B ID shoud be 1");
+    assert!(slab_c.id == 2, "Slab C ID shoud be 2");
 
 
     assert!(slab_a.peer_slab_count() == 2, "Slab A Should know two peers" );
@@ -30,7 +30,7 @@ fn basic_eventual() {
 
     assert!(rec_a1.is_ok(), "New subject should be created");
     let rec_a1 = rec_a1.unwrap();
-
+    
     assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
 
     assert!(slab_a.count_of_memorefs_resident() == 1, "Slab A should have 1 memorefs resident");

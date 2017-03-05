@@ -1,14 +1,16 @@
 use std::fmt;
 use std::collections::HashMap;
+use std::collections::VecDeque;
 use memo::*;
 use memoref::MemoRef;
+use memorefhead::MemoRefHead;
 use context::Context;
 use slab::*;
 use std::sync::{Arc,Mutex,Weak};
 
 pub type SubjectId     = u64;
 pub type SubjectField  = String;
-pub const SUBJECT_MAX_RELATION : u8 = 255;
+pub const SUBJECT_MAX_RELATIONS : u16 = 256;
 
 #[derive(Clone)]
 pub struct Subject {
@@ -23,7 +25,7 @@ pub struct WeakSubject {
 
 pub struct SubjectShared {
     id:      SubjectId,
-    head:    Vec<MemoRef>,
+    head:    MemoRefHead,
     context: Context,
 }
 
@@ -36,7 +38,7 @@ impl Subject {
 
         let shared = SubjectShared{
             id: subject_id,
-            head: Vec::new(),
+            head: MemoRefHead::new(),
             context: context.clone()
         };
 
@@ -53,7 +55,7 @@ impl Subject {
 
         Ok(subject)
     }
-    pub fn reconstitute (context: &Context, subject_id: SubjectId, head: Vec<MemoRef>) -> Subject {
+    pub fn reconstitute (context: &Context, subject_id: SubjectId, head: MemoRefHead) -> Subject {
         let shared = SubjectShared{
             id: subject_id,
             head: head,
@@ -80,17 +82,22 @@ impl Subject {
         vals.insert(key.to_string(), value.to_string());
 
         let slab;
+        let context;
         let head;
         {
             let shared = self.shared.lock().unwrap();
-            slab = shared.context.get_slab().clone();
+            context = shared.context.clone();
+            slab = context.get_slab().clone();
             head = shared.head.clone();
         }
         //println!("# Subject({}).set_kv({},{}) -> Starting head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
 
-        slab.put_memos(MemoOrigin::Local, vec![
+        let memos = vec![
             Memo::new_basic( slab.gen_memo_id(), self.id, head, MemoBody::Edit(vals) )
-        ]);
+        ];
+
+        let memorefs : Vec<MemoRef> = slab.put_memos(MemoOrigin::Local, memos );
+        context.add( memorefs );
         //println!("# Subject({}).set_kv({},{}) -> Ending head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
 
         //println!("# Subject({}).set_kv({},{}) -> {:?}",self.id,key,value,self.shared.lock().unwrap().head );
@@ -110,26 +117,33 @@ impl Subject {
     }
     pub fn set_relation (&self, key: u8, relation: Self) {
         println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
-        let mut memoref_map = HashMap::new();
+        let mut memoref_map : HashMap<u8, (SubjectId,MemoRefHead)> = HashMap::new();
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
         let slab;
+        let context;
         let head;
         {
             let shared = self.shared.lock().unwrap();
-            slab = shared.context.get_slab().clone();
+            context = shared.context.clone();
+            slab = context.get_slab().clone();
             head = shared.head.clone();
         }
 
+        let memos = vec![
+           Memo::new(
+               slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
+               self.id,
+               head,
+               MemoBody::Relation(memoref_map)
+           )
+        ];
 
-        slab.put_memos(MemoOrigin::Local, vec![
-            Memo::new(
-                slab.gen_memo_id(),
-                self.id,
-                head,
-                MemoBody::Relation(memoref_map)
-            )
-        ]);
+        let memorefs = slab.put_memos( MemoOrigin::Local, memos );
+        context.add( memorefs );
+
+        //let memorefs = slab.put_memos( MemoOrigin::Local, memos );
+        //context.add( memorefs );
     }
     pub fn get_relation ( &self, key: u8 ) -> Option<Subject> {
         println!("# Subject({}).get_relation({})",self.id,key);
@@ -139,7 +153,7 @@ impl Subject {
         let context = &shared.context;
 
         for memo in shared.memo_iter() {
-            let relations : HashMap<u8, (SubjectId, Vec<MemoRef>)> = memo.get_relations();
+            let relations : HashMap<u8, (SubjectId, MemoRefHead)> = memo.get_relations();
 
             println!("# \t\\ Considering Memo {}, {:?}", memo.id, relations );
             if let Some(r) = relations.get(&key) {
@@ -148,25 +162,29 @@ impl Subject {
                 //       and superseding the referenced head due to its inclusion in the context
 
                 if let Ok(relation) = context.get_subject_with_head(r.0,r.1.clone()) {
+                    println!("# \t\\ Found {}", relation.id );
                     return Some(relation)
                 }else{
+                    println!("# \t\\ Retrieval Error" );
                     return None;
                     //return Err("subject retrieval error")
                 }
             }
         }
+
+        println!("# \t\\ Not Found" );
         None
     }
-    pub fn update_head (&mut self, head: &[MemoRef]){
-        let memoids : Vec<MemoId> = head.to_vec().iter().map(|m| m.id).collect();
-        println!("# Subject({}).update_head({:?})", &self.id, memoids );
+    pub fn update_head (&mut self, new: &MemoRefHead){
+        println!("# Subject({}).update_head({:?})", &self.id, new.memo_ids() );
 
         let mut shared = self.shared.lock().unwrap();
+        let slab = shared.context.get_slab().clone(); // TODO: find a way to get rid of this clone
 
-        // TODO: prune the head to remove any memos which are referenced by these memos
-        shared.head = head.to_vec();
+        println!("# Record({}) calling apply_memoref", self.id);
+        shared.head.apply(&new, &slab);
     }
-    pub fn get_head (&self) -> Vec<MemoRef> {
+    pub fn get_head (&self) -> MemoRefHead {
         let shared = self.shared.lock().unwrap();
         shared.head.clone()
     }
@@ -188,7 +206,7 @@ impl Subject {
 }
 
 pub struct SubjectMemoIter {
-    queue: Vec<MemoRef>,
+    queue: VecDeque<MemoRef>,
     slab:  Slab
 }
 
@@ -203,13 +221,12 @@ head ^    \- F -> D -/
      Going with the iterator for now in the interest of simplicity
 */
 impl SubjectMemoIter {
-    pub fn from_head ( head: &Vec<MemoRef>, slab: &Slab) -> Self {
-        let headmemoids : Vec<MemoId> = head.iter().map(|m| m.id).collect();
-        println!("# -- SubjectMemoIter.from_head({:?})", headmemoids );
+    pub fn from_head ( head: &MemoRefHead, slab: &Slab) -> Self {
+        println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
 
         SubjectMemoIter {
-            queue: head.clone(),
-            slab: slab.clone()
+            queue: head.to_vecdeque(),
+            slab:  slab.clone()
         }
     }
 }
@@ -222,14 +239,12 @@ impl Iterator for SubjectMemoIter {
         // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>
 
         // TODO: Stop traversal when we come across a Keyframe memo
-        if self.queue.len() > 0 {
-            let mut memoref = self.queue.remove(0);
+        if let Some(mut memoref) = self.queue.pop_front() {
             // this is wrong - Will result in G, E, F, C, D, B, A
-
 
             match memoref.get_memo( &self.slab ){
                 Ok(memo) => {
-                    self.queue.append(&mut memo.get_parent_refs());
+                    self.queue.append(&mut memo.get_parent_head().to_vecdeque());
                     return Some(memo)
                 },
                 Err(err) => {

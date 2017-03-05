@@ -1,15 +1,15 @@
 use std::fmt;
 use std::collections::HashMap;
 use slab::Slab;
-use memo::*;
 use memoref::MemoRef;
+use memorefhead::MemoRefHead;
 use error::RetrieveError;
 
 use subject::*;
 use std::sync::{Mutex,Arc,Weak};
 
 pub struct ContextShared {
-    head: Vec<Memo>,
+    subject_heads: HashMap<SubjectId, MemoRefHead>,
     subjects: HashMap<SubjectId, WeakSubject>,
 }
 
@@ -33,10 +33,22 @@ impl Context{
             inner: Arc::new(ContextInner {
                 slab: slab.clone(),
                 shared: Mutex::new(ContextShared {
-                    head: vec![],
+                    subject_heads: HashMap::new(),
                     subjects: HashMap::new()
                 })
             })
+        }
+    }
+    pub fn add (&self, mut memorefs: Vec<MemoRef>) {
+        let mut shared = self.inner.shared.lock().unwrap();
+
+        // TODO: trim existing context based on descendants
+
+        for mut memoref in memorefs.drain(0..) {
+            let subject_id = memoref.get_memo(&self.inner.slab).unwrap().subject_id;
+
+            println!("# Context calling apply_memoref");
+            shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() ).apply_memoref(memoref, &self.inner.slab);
         }
     }
     pub fn get_slab (&self) -> &Slab {
@@ -75,8 +87,7 @@ impl Context{
         // Else - Perform an index lookup on the primary subject index to construct the subject head
         match self.inner.slab.lookup_subject_head(subject_id) {
             Ok(head) => {
-                let headmemoids : Vec<MemoId> = head.iter().map(|m| m.id).collect();
-                println!("# \\ Reconstituting from slab {} subject {} head {:?}", self.inner.slab.id, subject_id, headmemoids );
+                println!("# \\ Reconstituting from slab {} subject {} head {:?}", self.inner.slab.id, subject_id, head.memo_ids() );
                 return Ok(Subject::reconstitute(self,subject_id,head));
             },
             Err(e) => {
@@ -85,21 +96,32 @@ impl Context{
         }
     }
 
-    pub fn get_subject_with_head (&self, subject_id: SubjectId, head: Vec<MemoRef>) -> Result<Subject, RetrieveError> {
-        let headmemoids : Vec<MemoId> = head.iter().map(|m| m.id).collect();
-        println!("# Context.get_subject_with_head({},{:?})", subject_id, headmemoids );
-        
+    pub fn get_subject_with_head (&self, subject_id: SubjectId, mut head: MemoRefHead) -> Result<Subject, RetrieveError> {
+        println!("# Context.get_subject_with_head({},{:?})", subject_id, head.memo_ids() );
+
+        {
+            let shared = self.inner.shared.lock().unwrap();
+            if let Some(relevant_context_head) = shared.subject_heads.get(&subject_id) {
+                println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
+
+                head.apply( relevant_context_head, &self.inner.slab );
+
+            }else{
+                println!("# \\ No relevant head found in context");
+            }
+        }
         if head.len() == 0 {
             panic!("invalid subject head");
         }
 
         //TODO: this is wrong – We're creating a duplicate subject and overwriting the previous subject.
         // Instad, Should lookup the existing subject (if any), and ensure that the relation is at least as fresh as head.
-        // Don't just take it at face value. The index might have a fresher head for this subject.
         return Ok(Subject::reconstitute(self,subject_id,head));
 
     }
-    pub fn update_subject_head (&self, subject_id: SubjectId, head: &[MemoRef]){
+    pub fn update_subject_head (&self, subject_id: SubjectId, head: &MemoRefHead){
+        //QUESTION: Should we be updating our query context here? arguably yes?
+
         if let Ok(mut subject) = self.get_subject(subject_id) {
             subject.update_head(head)
         }
@@ -128,7 +150,7 @@ impl fmt::Debug for ContextShared {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 
         fmt.debug_struct("ContextShared")
-            .field("head", &self.head)
+            .field("subject_heads", &self.subject_heads)
             // TODO: restore Debug for WeakSubject
             //.field("subjects", &self.subjects)
             .finish()

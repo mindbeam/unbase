@@ -7,6 +7,7 @@ use std::{fmt};
 use std::sync::Arc;
 use subject::{SubjectId};
 use memoref::*;
+use memorefhead::*;
 use network::SlabRef;
 use slab::Slab;
 
@@ -23,7 +24,7 @@ pub enum PeeringStatus{
 
 #[derive(Debug)]
 pub enum MemoBody{
-    Relation(HashMap<u8,(SubjectId,Vec<MemoRef>)>),
+    Relation(HashMap<u8,(SubjectId,MemoRefHead)>),
     Edit(HashMap<String, String>),
     Peering(MemoId,SlabRef,PeeringStatus),
     MemoRequest(Vec<MemoId>,SlabRef)
@@ -40,7 +41,7 @@ pub struct Memo {
 pub struct MemoInner {
     pub id: u64,
     pub subject_id: u64,
-    parents: Vec<MemoRef>,
+    parents: MemoRefHead,
     pub body: MemoBody
 }
 
@@ -69,10 +70,9 @@ impl fmt::Debug for Memo{
 }
 
 impl Memo {
-    pub fn new (id: MemoId, subject_id: SubjectId, parents: Vec<MemoRef>, body: MemoBody) -> Memo {
+    pub fn new (id: MemoId, subject_id: SubjectId, parents: MemoRefHead, body: MemoBody) -> Memo {
 
-        let parentmemoids : Vec<MemoId> = parents.iter().map(|m| m.id).collect();
-        println!("# Memo.new(id: {},subject_id: {}, parents: {:?}, body: {:?})", id, subject_id, parentmemoids, body );
+        println!("# Memo.new(id: {},subject_id: {}, parents: {:?}, body: {:?})", id, subject_id, parents.memo_ids(), body );
 
         let me = Memo {
             id:    id,
@@ -88,13 +88,13 @@ impl Memo {
         //println!("# New Memo: {:?}", me.inner.id );
         me
     }
-    pub fn new_basic (id: MemoId, subject_id: SubjectId, parents: Vec<MemoRef>, body: MemoBody) -> Self {
+    pub fn new_basic (id: MemoId, subject_id: SubjectId, parents: MemoRefHead, body: MemoBody) -> Self {
         Self::new(id, subject_id, parents, body)
     }
     pub fn new_basic_noparent (id: MemoId, subject_id: SubjectId, body: MemoBody) -> Self {
-        Self::new(id, subject_id, Vec::new(), body)
+        Self::new(id, subject_id, MemoRefHead::new(), body)
     }
-    pub fn get_parent_refs (&self) -> Vec<MemoRef> {
+    pub fn get_parent_head (&self) -> MemoRefHead {
         self.inner.parents.clone()
     }
     pub fn get_values (&self) -> HashMap<String, String> {
@@ -104,7 +104,7 @@ impl Memo {
             return HashMap::new()
         }
     }
-    pub fn get_relations (&self) -> HashMap<u8, (SubjectId, Vec<MemoRef>)> {
+    pub fn get_relations (&self) -> HashMap<u8, (SubjectId, MemoRefHead)> {
         if let MemoBody::Relation(ref r) = self.inner.body {
             r.clone()
         }else{
@@ -126,7 +126,7 @@ impl Memo {
 
         // breadth-first
         for parent in self.inner.parents.iter() {
-            if parent.id == memoref.id { return true };
+            if parent == memoref { return true };
         }
 
         let mut memoref = memoref.clone();

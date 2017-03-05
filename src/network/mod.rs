@@ -55,9 +55,12 @@ impl Network {
     }
     pub fn generate_slab_id(&self) -> u32 {
         let mut internals = self.shared.internals.lock().unwrap();
+
+        let id = internals.next_slab_id;
+        
         internals.next_slab_id += 1;
 
-        internals.next_slab_id
+        id
     }
     pub fn get_slabref(&self, _slab_id: SlabId) -> Option<SlabRef> {
         unimplemented!();

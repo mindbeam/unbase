@@ -11,6 +11,7 @@ use network::Network;
 use memo::*;
 use subject::SubjectId;
 use memoref::MemoRef;
+use memorefhead::*;
 use context::{Context,WeakContext};
 
 
@@ -33,7 +34,7 @@ struct SlabShared{
     memo_wait_channels: HashMap<MemoId,Vec<mpsc::Sender<Memo>>>,
     subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
 
-    hack_subject_index: HashMap<SubjectId, Vec<MemoRef>>,
+    hack_subject_index: HashMap<SubjectId, MemoRefHead>,
 
     my_slab: Option<WeakSlab>,
     my_ref: Option<SlabRef>,
@@ -86,7 +87,7 @@ impl Slab {
                 my_ref: Mutex::new(None),
                 shared: Mutex::new(shared),
                 counters: Mutex::new(SlabCounters {
-                    last_memo_id: 0,
+                    last_memo_id: 5000,
                     last_subject_id: 0,
                 }),
             })
@@ -130,11 +131,11 @@ impl Slab {
 
         (self.id as u64).rotate_left(32) | counters.last_memo_id as u64
     }
-    pub fn put_memos(&self, from: MemoOrigin, memos : Vec<Memo>){
-        if memos.len() == 0 { return }
+    pub fn put_memos(&self, from: MemoOrigin, memos : Vec<Memo>) -> Vec<MemoRef> {
+        if memos.len() == 0 { return Vec::new() }
         let mut shared = self.inner.shared.lock().unwrap();
 
-        shared.put_memos(from, memos);
+        shared.put_memos(from, memos)
     }
     pub fn count_of_memorefs_resident( &self ) -> u32 {
         let shared = self.inner.shared.lock().unwrap();
@@ -208,7 +209,7 @@ impl Slab {
     }
     //TODO: figure out how to bootstrab the subject index
     // given that the index nodes themselves needs an index
-    pub fn lookup_subject_head (&self, subject_id: SubjectId ) -> Result<Vec<MemoRef>, RetrieveError> {
+    pub fn lookup_subject_head (&self, subject_id: SubjectId ) -> Result<MemoRefHead, RetrieveError> {
         let shared = self.inner.shared.lock().unwrap();
         match shared.hack_subject_index.get(&subject_id) {
             Some( head ) => Ok(head.clone()),
@@ -263,13 +264,13 @@ impl SlabShared {
             panic!("Invalid state - Missing my_ref")
         }
     }
-    pub fn put_memos<'a> (&mut self, from: MemoOrigin, memos: Vec<Memo>){
+    pub fn put_memos<'a> (&mut self, from: MemoOrigin, memos: Vec<Memo>) -> Vec<MemoRef> {
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
         println!("# SlabShared({}).put_memos({:?},{:?})", self.id, from, mids);
 
         // TODO: Evaluate more efficient ways to group these memos by subject
         let mut subject_updates : Vec<SubjectId> = Vec::with_capacity(10);
-        let mut memorefs = Vec::new();
+        let mut memorefs = Vec::with_capacity( memos.len() );
 
         // TODO: figure out how to appease the borrow checker without cloning this
         let my_slab = self.get_my_slab();
@@ -279,7 +280,7 @@ impl SlabShared {
 
             println!("# \\ Memo Type {:?}", memo.inner.body );
             // Store the memoref - avoid creating duplicates
-            let mut memoref = match self.memorefs_by_id.entry(memo.id) {
+            let memoref = match self.memorefs_by_id.entry(memo.id) {
                 Entry::Vacant(o)   => {
                     o.insert( MemoRef::new_from_memo(&memo) ).clone() // TODO: figure out how to prolong the borrow here & avoid clone
                 }
@@ -327,7 +328,7 @@ impl SlabShared {
                                     // It would be neighborly to tell them I don't have it
                                     let peering_memo = Memo::new(
                                         my_slab.gen_memo_id(), 0,
-                                        vec![memoref.clone()],
+                                        MemoRefHead::from_memoref(memoref.clone()),
                                         MemoBody::Peering( memo.id, my_ref.clone(), PeeringStatus::Participating)
                                     );
                                     requesting_slabref.send_memo(&my_ref, peering_memo)
@@ -335,7 +336,7 @@ impl SlabShared {
                             }else{
                                 let peering_memo = Memo::new(
                                     my_slab.gen_memo_id(), 0,
-                                    vec![memoref.clone()],
+                                    MemoRefHead::from_memoref(memoref.clone()),
                                     MemoBody::Peering( memo.id, my_ref.clone(), PeeringStatus::NonParticipating)
                                 );
                                 requesting_slabref.send_memo(&my_ref, peering_memo)
@@ -365,7 +366,7 @@ impl SlabShared {
                     //    C. Should we be sing that to determine the peered memo instead of the payload?
                     let peering_memo = Memo::new(
                         my_slab.gen_memo_id(), 0,
-                        vec![memoref.clone()],
+                        MemoRefHead::from_memoref(memoref.clone()),
                         MemoBody::Peering( memo.id, my_ref.clone(), PeeringStatus::Resident)
                     );
                     origin_slabref.send_memo( &my_ref, peering_memo );
@@ -374,18 +375,14 @@ impl SlabShared {
 
             if memo.subject_id > 0 {
                 // HACK HACK HACK - Cheesy substitute for the coming Memo-based index mechanism
-                let mut head = self.hack_subject_index.entry( memo.subject_id ).or_insert( Vec::with_capacity(2) );
+                let mut head = self.hack_subject_index.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
 
-                // Punt if we already have this memo in the subject head
-                if !head.iter().any(|x| x.id == memo.id) {
-                    // remove any memos which are descended by the one we're about to add
-                    head.retain(|x| !memoref.descends(x,&my_slab) );
-                    head.push( memoref.clone() );
-
+                println!("# Slab({}) calling apply_memoref", self.id);
+                if head.apply_memoref(memoref.clone(), &my_slab) {
                     subject_updates.push(memo.subject_id);
                 }
-                let headmemoids : Vec<MemoId> = head.iter().map(|m| m.id).collect();
-                println!("# \t\\ subject({}) revised head is: {:?}",memo.subject_id, headmemoids );
+
+                //println!("# \t\\ subject({}) revised head is: {:?}",memo.subject_id, head.memo_ids() );
                 // END HACK END HACK END HACK
 
                 //TODO: should we emit all memorefs, or just those with subject_ids?
@@ -400,13 +397,17 @@ impl SlabShared {
         subject_updates.sort();
         subject_updates.dedup();
         for subject_id in subject_updates {
-            if let Some(memorefs) = self.hack_subject_index.get(&subject_id) {
-                self.dispatch_subject_head(subject_id, &memorefs);
+            if let Some(ref head) = self.hack_subject_index.get(&subject_id) {
+                // TODO: consider if we should be pushing only the new memorefs
+                //       versus the whole thing
+                self.dispatch_subject_head(subject_id, head);
             }
         }
 
+        memorefs
     }
-    pub fn dispatch_subject_head (&self, subject_id: u64, head : &[MemoRef]){
+    pub fn dispatch_subject_head (&self, subject_id: u64, head : &MemoRefHead){
+        println!("# \t\\ Slab({}).dispatch_subject_head({}, {:?})", self.id, subject_id, head.memo_ids() );
         if let Some(subscribers) = self.subject_subscriptions.get( &subject_id ) {
             for weakcontext in subscribers {
                 if let Some(context) = weakcontext.upgrade() {

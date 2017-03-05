@@ -1,6 +1,8 @@
 use memo::*;
 use slab::*;
 use network::*;
+use subject::*;
+use memorefhead::MemoRefHead;
 use std::sync::{Arc,Mutex};
 use std::fmt;
 use std::error::Error;
@@ -8,6 +10,7 @@ use std::error::Error;
 #[derive(Clone)]
 pub struct MemoRef {
     pub id:    MemoId,
+    pub subject_id: Option<SubjectId>,
     shared: Arc<Mutex<MemoRefShared>>
 }
 #[derive(Debug)]
@@ -30,6 +33,7 @@ impl MemoRef {
     pub fn new_from_memo (memo : &Memo) -> Self {
         MemoRef {
             id: memo.id,
+            subject_id: Some(memo.subject_id),
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
                     peers: Vec::with_capacity(3),
@@ -41,6 +45,7 @@ impl MemoRef {
     pub fn new_remote (memo_id: MemoId) -> Self {
         MemoRef {
             id: memo_id,
+            subject_id: None,
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
                     peers: Vec::with_capacity(3),
@@ -55,7 +60,6 @@ impl MemoRef {
             MemoRef::Remote(id)     => id
         }
     }*/
-
     pub fn get_memo_if_resident(&self) -> Option<Memo> {
         let shared = self.shared.lock().unwrap();
 
@@ -85,7 +89,7 @@ impl MemoRef {
             let request_memo = Memo::new_basic(
                 slab.gen_memo_id(),
                 0,
-                vec![], // TODO: how should this be parented?
+                MemoRefHead::new(), // TODO: how should this be parented?
                 MemoBody::MemoRequest(vec![self.id],slabref.clone())
             );
 
@@ -133,7 +137,7 @@ impl MemoRef {
             let peering_memo = Memo::new_basic(
                 slab.gen_memo_id(),
                 0,
-                vec![self.clone()],
+                MemoRefHead::from_memoref(self.clone()),
                 MemoBody::Peering(self.id,slabref.clone(),PeeringStatus::Resident)
             );
 
@@ -157,7 +161,7 @@ impl MemoRef {
             let peering_memo = Memo::new_basic(
                 slab.gen_memo_id(),
                 0,
-                vec![self.clone()],
+                MemoRefHead::from_memoref(self.clone()),
                 MemoBody::Peering(self.id,slabref.clone(),PeeringStatus::Participating)
             );
 
@@ -190,6 +194,13 @@ impl MemoRef {
         }
     }
 
+}
+
+impl PartialEq for MemoRef {
+    fn eq(&self, other: &MemoRef) -> bool {
+        // TODO: handle the comparision of pre-hashed memos as well as hashed memos
+        self.id == other.id
+    }
 }
 
 impl fmt::Debug for MemoRef{
