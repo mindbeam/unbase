@@ -112,6 +112,9 @@ impl MemoRefHead {
     pub fn iter (&self) -> slice::Iter<MemoRef> {
         self.0.iter()
     }
+    pub fn causal_memo_iter(&self, slab: &Slab ) -> CausalMemoIter {
+        CausalMemoIter::from_head( &self, slab )
+    }
 }
 
 impl fmt::Debug for MemoRefHead{
@@ -120,5 +123,59 @@ impl fmt::Debug for MemoRefHead{
         fmt.debug_struct("MemoRefHead")
            .field("memo_ids", &self.memo_ids() )
            .finish()
+    }
+}
+
+
+pub struct CausalMemoIter {
+    queue: VecDeque<MemoRef>,
+    slab:  Slab
+}
+
+/*
+  Plausible Memo Structure:
+          /- E -> C -\
+     G ->              -> B -> A
+head ^    \- F -> D -/
+     Desired iterator sequence: G, E, C, F, D, B, A ( Why? )
+     Consider:                  [G], [E,C], [F,D], [B], [A]
+     Arguably this should not be an iterator at all, but rather a recursive function
+     Going with the iterator for now in the interest of simplicity
+*/
+impl CausalMemoIter {
+    pub fn from_head ( head: &MemoRefHead, slab: &Slab) -> Self {
+        println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
+
+        CausalMemoIter {
+            queue: head.to_vecdeque(),
+            slab:  slab.clone()
+        }
+    }
+}
+impl Iterator for CausalMemoIter {
+    type Item = Memo;
+
+    fn next (&mut self) -> Option<Memo> {
+        // iterate over head memos
+        // Unnecessarly complex because we're not always dealing with MemoRefs
+        // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>
+
+        // TODO: Stop traversal when we come across a Keyframe memo
+        if let Some(memoref) = self.queue.pop_front() {
+            // this is wrong - Will result in G, E, F, C, D, B, A
+
+            match memoref.get_memo( &self.slab ){
+                Ok(memo) => {
+                    self.queue.append(&mut memo.get_parent_head().to_vecdeque());
+                    return Some(memo)
+                },
+                Err(err) => {
+                    panic!(err);
+                }
+            }
+            //TODO: memoref.get_memo needs to be able to fail
+        }
+
+        return None;
     }
 }

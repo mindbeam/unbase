@@ -139,6 +139,14 @@ impl Context{
             inner: Arc::downgrade(&self.inner)
         }
     }
+    pub fn force_compaction (&self) {
+        // Iterate over subjects ( what about cross subject links? )
+        // Create said subject with the respective head
+        // project said subject into a keyframe memo
+        // what about partial keyframes?
+        // 
+
+    }
 }
 
 impl Drop for ContextShared {
