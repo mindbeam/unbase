@@ -1,9 +1,8 @@
 use std::fmt;
 use std::collections::HashMap;
-use std::collections::VecDeque;
 use memo::*;
 use memoref::MemoRef;
-use memorefhead::MemoRefHead;
+use memorefhead::*;
 use context::Context;
 use slab::*;
 use std::sync::{Arc,Mutex,Weak};
@@ -193,9 +192,8 @@ impl Subject {
 
         self.memo_iter().map(|m| m.id).collect()
     }
-    fn memo_iter (&self) -> SubjectMemoIter {
-        let shared = self.shared.lock().unwrap();
-        shared.memo_iter()
+    fn memo_iter (&self) -> CausalMemoIter {
+        self.shared.lock().unwrap().memo_iter()
     }
     pub fn weak (&self) -> WeakSubject {
         WeakSubject {
@@ -205,62 +203,9 @@ impl Subject {
     }
 }
 
-pub struct SubjectMemoIter {
-    queue: VecDeque<MemoRef>,
-    slab:  Slab
-}
-
-/*
-  Plausible Memo Structure:
-          /- E -> C -\
-     G ->              -> B -> A
-head ^    \- F -> D -/
-     Desired iterator sequence: G, E, C, F, D, B, A ( Why? )
-     Consider:                  [G], [E,C], [F,D], [B], [A]
-     Arguably this should not be an iterator at all, but rather a recursive function
-     Going with the iterator for now in the interest of simplicity
-*/
-impl SubjectMemoIter {
-    pub fn from_head ( head: &MemoRefHead, slab: &Slab) -> Self {
-        println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
-
-        SubjectMemoIter {
-            queue: head.to_vecdeque(),
-            slab:  slab.clone()
-        }
-    }
-}
-impl Iterator for SubjectMemoIter {
-    type Item = Memo;
-
-    fn next (&mut self) -> Option<Memo> {
-        // iterate over head memos
-        // Unnecessarly complex because we're not always dealing with MemoRefs
-        // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>
-
-        // TODO: Stop traversal when we come across a Keyframe memo
-        if let Some(memoref) = self.queue.pop_front() {
-            // this is wrong - Will result in G, E, F, C, D, B, A
-
-            match memoref.get_memo( &self.slab ){
-                Ok(memo) => {
-                    self.queue.append(&mut memo.get_parent_head().to_vecdeque());
-                    return Some(memo)
-                },
-                Err(err) => {
-                    panic!(err);
-                }
-            }
-            //TODO: memoref.get_memo needs to be able to fail
-        }
-
-        return None;
-    }
-}
-
 impl SubjectShared {
-    pub fn memo_iter (&self) -> SubjectMemoIter {
-        SubjectMemoIter::from_head( &self.head, self.context.get_slab() )
+    pub fn memo_iter(&self) -> CausalMemoIter {
+        self.head.causal_memo_iter(self.context.get_slab())
     }
 }
 
