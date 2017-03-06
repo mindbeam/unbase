@@ -29,5 +29,5 @@ Unbase seeks to implement a specific causal consistency model which we are calli
 See [Consistency Model](http://unba.se/design/consistency-model) for more details
 
 <a name="footnote1">1</a>: When data storage locality is determined by an algorithm which fails to consider the points in space where the data is originated or observed, the requester must wait longer for its retrieval. We can think of [light cones](https://en.wikipedia.org/wiki/Light_cone){:target="define"} as a good approximation of our upper-bound.<br>
-<a name="footnote2">2</a>: Using the term "partition" for conversational understanding. Partitions are not actually a thing.<br>
-<a name="footnote3">3</a>: We believe there should be no difference in capability between client and server except for capability and policy.
+<a name="footnote2">2</a>: Using the term "partition" for conversational understanding. [Partitions are not actually a thing](https://arxiv.org/abs/1509.05393).<br>
+<a name="footnote3">3</a>:  We believe there should be no difference between "client" and "server" except for computational/storage/network capacity and policy.
