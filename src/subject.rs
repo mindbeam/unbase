@@ -49,7 +49,11 @@ impl Subject {
         context.subscribe_subject( &subject );
 
         slab.put_memos(MemoOrigin::Local, vec![
-            Memo::new_basic_noparent( slab.gen_memo_id(), subject_id, MemoBody::Edit(vals) )
+            Memo::new_basic_noparent(
+                slab.gen_memo_id(),
+                subject_id,
+                MemoBody::FullyMaterialized {v: vals, r: HashMap::new() } // TODO: accept relations
+            )
         ]);
 
         Ok(subject)
@@ -104,12 +108,17 @@ impl Subject {
     }
     pub fn get_value ( &self, key: &str ) -> Option<String> {
         println!("# Subject({}).get_value({})",self.id,key);
+
+        //TODO: consider creating a consolidated projection routine for most/all uses
         for memo in self.memo_iter() {
 
             println!("# \t\\ Considering Memo {}", memo.id );
-            let values = memo.get_values();
-            if let Some(v) = values.get(key) {
-                return Some(v.clone());
+            if let Some((values, materialized)) = memo.get_values() {
+                if let Some(v) = values.get(key) {
+                    return Some(v.clone());
+                }else if materialized {
+                    return None; //end of the line here
+                }
             }
         }
         None
@@ -152,21 +161,24 @@ impl Subject {
         let context = &shared.context;
 
         for memo in shared.memo_iter() {
-            let relations : HashMap<u8, (SubjectId, MemoRefHead)> = memo.get_relations();
+            if let Some((relations,materialized)) = memo.get_relations(){
+                println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
+                if let Some(r) = relations.get(&key) {
+                    // BUG: the parent->child was formed prior to the revision of the child.
+                    // TODO: Should be adding the new head memo to the query context
+                    //       and superseding the referenced head due to its inclusion in the context
 
-            println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
-            if let Some(r) = relations.get(&key) {
-                // BUG: the parent->child was formed prior to the revision of the child.
-                // TODO: Should be adding the new head memo to the query context
-                //       and superseding the referenced head due to its inclusion in the context
-
-                if let Ok(relation) = context.get_subject_with_head(r.0,r.1.clone()) {
-                    println!("# \t\\ Found {}", relation.id );
-                    return Some(relation)
-                }else{
-                    println!("# \t\\ Retrieval Error" );
+                    if let Ok(relation) = context.get_subject_with_head(r.0,r.1.clone()) {
+                        println!("# \t\\ Found {}", relation.id );
+                        return Some(relation)
+                    }else{
+                        println!("# \t\\ Retrieval Error" );
+                        return None;
+                        //return Err("subject retrieval error")
+                    }
+                }else if materialized {
+                    println!("\n# \t\\ Not Found (materialized)" );
                     return None;
-                    //return Err("subject retrieval error")
                 }
             }
         }

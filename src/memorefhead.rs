@@ -6,6 +6,12 @@ use memo::*;
 use memoref::*;
 use slab::*;
 
+// MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
+//
+// This "head" is rather like a git HEAD, insofar as it is intended to contain only the youngest
+// descendents of a given causal chain. It provides mechanisms for applying memorefs, or applying
+// other MemoRefHeads such that the mutated list may be pruned as appropriate given the above.
+
 #[derive(Clone)]
 pub struct MemoRefHead (Vec<MemoRef>);
 
@@ -114,6 +120,24 @@ impl MemoRefHead {
     }
     pub fn causal_memo_iter(&self, slab: &Slab ) -> CausalMemoIter {
         CausalMemoIter::from_head( &self, slab )
+    }
+    pub fn is_fully_materialized(&self, slab: &Slab ) -> bool {
+        // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
+        //       as part of the list management. That way we won't have to incur the below computational effort.
+
+        for memoref in self.iter(){
+            if let Ok(memo) = memoref.get_memo(slab) {
+                match memo.inner.body {
+                    MemoBody::FullyMaterialized { v: _, r: _ } => {},
+                    _                           => { return false }
+                }
+            }else{
+                // TODO: do something more intelligent here
+                panic!("failed to retrieve memo")
+            }
+        }
+
+        true
     }
 }
 

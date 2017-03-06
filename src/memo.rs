@@ -26,6 +26,8 @@ pub enum PeeringStatus{
 pub enum MemoBody{
     Relation(HashMap<u8,(SubjectId,MemoRefHead)>),
     Edit(HashMap<String, String>),
+    FullyMaterialized     { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
+    PartiallyMaterialized { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
     Peering(MemoId,SlabRef,PeeringStatus),
     MemoRequest(Vec<MemoId>,SlabRef)
 }
@@ -97,18 +99,24 @@ impl Memo {
     pub fn get_parent_head (&self) -> MemoRefHead {
         self.inner.parents.clone()
     }
-    pub fn get_values (&self) -> HashMap<String, String> {
-        if let MemoBody::Edit(ref v) = self.inner.body {
-            v.clone()
-        }else{
-            return HashMap::new()
+    pub fn get_values (&self) -> Option<(HashMap<String, String>,bool)> {
+
+        match self.inner.body {
+            MemoBody::Edit(ref v)
+                => Some((v.clone(),false)),
+            MemoBody::FullyMaterialized { ref v, r: _ }
+                => Some((v.clone(),true)),
+            _   => None
         }
     }
-    pub fn get_relations (&self) -> HashMap<u8, (SubjectId, MemoRefHead)> {
-        if let MemoBody::Relation(ref r) = self.inner.body {
-            r.clone()
-        }else{
-            return HashMap::new()
+    pub fn get_relations (&self) -> Option<(HashMap<u8, (SubjectId, MemoRefHead)>,bool)> {
+
+        match self.inner.body {
+            MemoBody::Relation(ref r)
+                => Some((r.clone(),false)),
+            MemoBody::FullyMaterialized { v: _, ref r }
+                => Some((r.clone(),true)),
+            _   => None
         }
     }
     pub fn does_peering (&self) -> bool {

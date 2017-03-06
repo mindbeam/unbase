@@ -139,6 +139,39 @@ impl Context{
             inner: Arc::downgrade(&self.inner)
         }
     }
+    pub fn force_compaction (&self) {
+        // Iterate over subjects ( what about cross subject links? )
+        // Create said subject with the respective head
+        // project said subject into a keyframe memo
+        // what about partial keyframes?
+
+        let _shared = self.inner.shared.lock().unwrap();
+
+        // iterate over all subjects and ask them to fully materialize
+        // TODO: ensure that materializing a given subject will cause it to update the context
+        // TODO: ensure that updating the context with subject A that references the head of subject B
+        //       causes subject B to be removed from the context.
+        // TODO: find a way to try to perform these in
+        //       referential order - child to parent. Maybe annotate the subject_heads with cross-subject descendent references?
+
+        /*
+        for subject in shared.subject_iter() {
+            subject.fully_materialize()
+        }
+        */
+    }
+    pub fn is_fully_materialized (&self) -> bool {
+        let shared = self.inner.shared.lock().unwrap();
+
+        for (_,head) in shared.subject_heads.iter() {
+            if ! head.is_fully_materialized(&self.inner.slab) {
+                return false
+            }
+        }
+
+        return true;
+
+    }
 }
 
 impl Drop for ContextShared {
