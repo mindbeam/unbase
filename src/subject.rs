@@ -213,6 +213,9 @@ impl Subject {
             shared: Arc::downgrade(&self.shared)
         }
     }
+    pub fn fully_materialize (&mut self) {
+
+    }
 }
 
 impl SubjectShared {

@@ -71,6 +71,8 @@ impl Context{
         self.inner.slab.unsubscribe_subject(subject_id, self);
     }
     pub fn get_subject (&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
+        // TODO: Should I apply the subject head here?
+
         println!("# Context.get_subject({})", subject_id );
         {
             let mut shared = self.inner.shared.lock().unwrap();
@@ -99,8 +101,9 @@ impl Context{
     pub fn get_subject_with_head (&self, subject_id: SubjectId, mut head: MemoRefHead) -> Result<Subject, RetrieveError> {
         println!("# Context.get_subject_with_head({},{:?})", subject_id, head.memo_ids() );
 
+        let maybe_subject : Option<Subject> = None;
         {
-            let shared = self.inner.shared.lock().unwrap();
+            let mut shared = self.inner.shared.lock().unwrap();
             if let Some(relevant_context_head) = shared.subject_heads.get(&subject_id) {
                 println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
 
@@ -109,6 +112,11 @@ impl Context{
             }else{
                 println!("# \\ No relevant head found in context");
             }
+
+            //Check to see if I have the subject resident in this context
+            if let Some(weaksub) = shared.subjects.get_mut(&subject_id) {
+                maybe_subject = weaksub.upgrade()
+            }
         }
         if head.len() == 0 {
             panic!("invalid subject head");
@@ -116,7 +124,13 @@ impl Context{
 
         //TODO: this is wrong – We're creating a duplicate subject and overwriting the previous subject.
         // Instad, Should lookup the existing subject (if any), and ensure that the relation is at least as fresh as head.
-        return Ok(Subject::reconstitute(self,subject_id,head));
+        if let Some(subject) = maybe_subject {
+            return Ok(Subject);
+        }else{
+            subject = Subject::reconstitute(self,subject_id,head);
+            // TODO should this be inseretd a as
+        }
+        return Ok(subject);
 
     }
     pub fn update_subject_head (&self, subject_id: SubjectId, head: &MemoRefHead){
@@ -139,31 +153,46 @@ impl Context{
             inner: Arc::downgrade(&self.inner)
         }
     }
-    pub fn force_compaction (&self) {
+    pub fn subject_head_iter (&self) -> ContextSubjectHeadIter {
+        // TODO: Do this in a less ridiculous way,
+        //       and move it into ContextSubjectHeadIter::new
+        let subject_ids : Vec<SubjectId>;
+        {
+            let shared = self.inner.shared.lock().unwrap();
+            subject_ids = shared.subject_heads.keys().map(|k| k.to_owned()).collect();
+        }
+        ContextSubjectHeadIter {
+            subject_ids: subject_ids,
+            context: self.clone()
+        }
+    }
+    pub fn fully_materialize (&self) {
         // Iterate over subjects ( what about cross subject links? )
         // Create said subject with the respective head
         // project said subject into a keyframe memo
         // what about partial keyframes?
 
-        let _shared = self.inner.shared.lock().unwrap();
 
         // iterate over all subjects and ask them to fully materialize
+        // TODO: deconflict get_subject and get_subject_with_head ( this is broken )
+        // TODO: Figure out how to materialize Subject memos without incurring the overhead of subject creation/destruction
         // TODO: ensure that materializing a given subject will cause it to update the context
         // TODO: ensure that updating the context with subject A that references the head of subject B
         //       causes subject B to be removed from the context.
         // TODO: find a way to try to perform these in
         //       referential order - child to parent. Maybe annotate the subject_heads with cross-subject descendent references?
 
-        /*
-        for subject in shared.subject_iter() {
-            subject.fully_materialize()
+        for (subject_id,head) in self.subject_head_iter() {
+            if let Ok(ref mut subject) = self.get_subject_with_head(subject_id, head){
+                subject.fully_materialize()
+            }
         }
-        */
+
+
     }
     pub fn is_fully_materialized (&self) -> bool {
-        let shared = self.inner.shared.lock().unwrap();
 
-        for (_,head) in shared.subject_heads.iter() {
+        for (_,head) in self.subject_head_iter() {
             if ! head.is_fully_materialized(&self.inner.slab) {
                 return false
             }
@@ -222,5 +251,30 @@ impl WeakContext {
         }
 
 
+    }
+}
+
+pub struct ContextSubjectHeadIter{
+    context: Context,
+    subject_ids: Vec<SubjectId>
+}
+
+impl Iterator for ContextSubjectHeadIter {
+    type Item = (SubjectId, MemoRefHead);
+    fn next (&mut self) -> Option<(SubjectId, MemoRefHead)> {
+
+        //NOTE: Some pretttyy shenanegous stuff here, but taking the
+        //      low road for now in the interest of time. Playing
+        //      stupid games to try to avoid a deadlock with the slab
+        //      inserting new memos mid-iteration via update_subject_head
+        if let Some(subject_id) = self.subject_ids.pop() {
+            if let Some(head) = self.context.inner.shared.lock().unwrap().subject_heads.get(&subject_id) {
+                Some((subject_id,head.clone()))
+            }else{
+                None
+            }
+        }else{
+            None
+        }
     }
 }

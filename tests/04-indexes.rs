@@ -43,5 +43,5 @@ fn index_construction() {
     }
 
     assert_eq!( context_a.is_fully_materialized(), false );
-    context_a.force_compaction();
+    context_a.fully_materialize();
 }
