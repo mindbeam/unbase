@@ -6,12 +6,13 @@ mod slabref;
 
 pub use self::simulator::{Simulator,XYZPoint,MinkowskiPoint};
 pub use self::slabref::SlabRef;
-pub use self::channel::Sender;
+pub use self::channel::{Transmitter, MinkowskiTransmitter};
 
 use std::sync::{Arc, Mutex};
 use std::fmt;
 use slab::{Slab,WeakSlab,SlabId,MemoOrigin};
 use memo::Memo;
+use transports::{Transport, SimulatorTransport};
 
 struct NetworkInternals {
     next_slab_id: u32,
@@ -28,13 +29,13 @@ pub struct NetworkShared {
 #[derive(Clone)]
 pub struct Network {
     shared: Arc<NetworkShared>,
-    simulator: Simulator
+    transport: Arc<Transport>
 }
 
 pub struct NetworkAddr ();
 
 impl Network {
-    pub fn new( simulator: &Simulator ) -> Network {
+    pub fn new( simulator: Arc<Simulator> ) -> Network {
 
         let internals = NetworkInternals {
             next_slab_id: 0,
@@ -47,7 +48,7 @@ impl Network {
         };
 
         let net = Network {
-            simulator: simulator.clone(),
+            transport: Arc::new(SimulatorTransport::new(simulator)),
             shared: Arc::new(shared)
         };
 
@@ -68,14 +69,14 @@ impl Network {
     pub fn register_slab(&self, slab: &Slab) -> SlabRef {
         println!("# register_slab {:?}", slab );
 
-        let sender = Sender{
-                        source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
-                        dest_point:   XYZPoint{ x: 1000, y: 1000, z: 1000 },
-                        simulator:    self.simulator.clone(),
-                        dest:         slab.weak()
-                    };
+        let tx = MinkowskiTransmitter::new(
+                        XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
+                        XYZPoint{ x: 1000, y: 1000, z: 1000 },
+                        self.transport.clone(),
+                        slab.weak()
+        );
 
-        let slab_ref = SlabRef::new( &slab, sender );
+        let slab_ref = SlabRef::new( &slab, Arc::new(tx) );
 
         let mut internals = self.shared.internals.lock().unwrap();
 

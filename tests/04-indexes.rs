@@ -2,12 +2,13 @@ extern crate unbase;
 use unbase::subject::*;
 use unbase::index::fixed::IndexFixed;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[test]
 fn index_construction() {
 
-    let simulator = unbase::network::Simulator::new();
-    let net = unbase::Network::new( &simulator );
+    let simulator = Arc::new(unbase::network::Simulator::new());
+    let net = unbase::Network::new( simulator.clone() );
 
     let slab_a = unbase::Slab::new(&net);
     let context_a = slab_a.create_context();

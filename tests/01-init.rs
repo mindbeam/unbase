@@ -1,10 +1,11 @@
 extern crate unbase;
 //use std::thread;
+use std::sync::Arc;
 
 #[test]
 fn test_init() {
-    let simulator = unbase::network::Simulator::new();
-    let net = unbase::Network::new(&simulator);
+    let simulator = Arc::new(unbase::network::Simulator::new());
+    let net = unbase::Network::new(simulator.clone());
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);

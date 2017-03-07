@@ -55,6 +55,7 @@ impl fmt::Debug for SimEvent{
 }
 
 impl Simulator {
+    // TODO: Potentially, make this return an Arc of itself.
     pub fn new () -> Self{
         Simulator {
             speed_of_light: 1, // 1 distance unit per time unit
@@ -66,9 +67,9 @@ impl Simulator {
             ))
         }
     }
-    pub fn send_memo (&self, sender: &Sender, from: &SlabRef, memo: Memo ){
-        let ref q = sender.source_point;
-        let ref p = sender.dest_point;
+    pub fn send_memo (&self, tx: &MinkowskiTransmitter, from: &SlabRef, memo: Memo ){
+        let ref q = tx.source_point;
+        let ref p = tx.dest_point;
 
         let source_point = MinkowskiPoint {
             x: q.x,
@@ -90,7 +91,7 @@ impl Simulator {
             _source_point: source_point,
             dest_point: dest_point,
             from: from.clone(),
-            dest: sender.dest.clone(),
+            dest: tx.dest.clone(),
             memo: memo
         };
 
