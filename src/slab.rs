@@ -5,7 +5,6 @@ use std::sync::{Arc,Mutex,Weak};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use network::SlabRef;
-use error::*;
 
 use network::Network;
 use memo::*;
@@ -33,8 +32,6 @@ struct SlabShared{
     memorefs_by_id: HashMap<MemoId,MemoRef>,
     memo_wait_channels: HashMap<MemoId,Vec<mpsc::Sender<Memo>>>,
     subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
-
-    hack_subject_index: HashMap<SubjectId, MemoRefHead>,
 
     my_slab: Option<WeakSlab>,
     my_ref: Option<SlabRef>,
@@ -73,7 +70,6 @@ impl Slab {
             memorefs_by_id:        HashMap::new(),
             memo_wait_channels:    HashMap::new(),
             subject_subscriptions: HashMap::new(),
-            hack_subject_index: HashMap::new(),
             my_slab: None,
             my_ref: None,
             peer_refs: Vec::new(),
@@ -118,6 +114,27 @@ impl Slab {
         // TODO: determine a better way than a Mutex<Option<SlabRef>> it's dumb
         let my_ref : SlabRef = self.inner.my_ref.lock().unwrap().clone().unwrap();
         my_ref
+    }
+    pub fn generate_root_index_seed(&self) -> MemoRefHead {
+
+        let memo = Memo::new_basic_noparent(
+            self.gen_memo_id(),
+            self.generate_subject_id(),
+            MemoBody::FullyMaterialized {v: HashMap::new(), r: HashMap::new() } // TODO: accept relations
+        );
+
+        let memorefs = self.put_memos(MemoOrigin::Local, vec![ memo.clone() ]);
+
+        MemoRefHead::from_memoref(memorefs[0].clone())
+    }
+    pub fn get_root_index_seed (&self) -> MemoRefHead {
+        let net;
+        {
+            let shared = self.inner.shared.lock().unwrap();
+            net = shared.net.clone();
+        }
+
+        net.get_root_index_seed( self )
     }
     pub fn generate_subject_id(&self) -> SubjectId {
         let mut counters = self.inner.counters.lock().unwrap();
@@ -207,15 +224,6 @@ impl Slab {
 
         rx
     }
-    //TODO: figure out how to bootstrab the subject index
-    // given that the index nodes themselves needs an index
-    pub fn lookup_subject_head (&self, subject_id: SubjectId ) -> Result<MemoRefHead, RetrieveError> {
-        let shared = self.inner.shared.lock().unwrap();
-        match shared.hack_subject_index.get(&subject_id) {
-            Some( head ) => Ok(head.clone()),
-            None         => Err(RetrieveError::NotFound)
-        }
-    }
     pub fn remotize_memo_ids( &self, memo_ids: &[MemoId] ) {
         println!("# Slab({}).remotize_memo_ids({:?})", self.id, memo_ids);
 
@@ -269,7 +277,8 @@ impl SlabShared {
         println!("# SlabShared({}).put_memos({:?},{:?})", self.id, from, mids);
 
         // TODO: Evaluate more efficient ways to group these memos by subject
-        let mut subject_updates : Vec<SubjectId> = Vec::with_capacity(10);
+
+        let mut subject_updates : HashMap<SubjectId, MemoRefHead> = HashMap::new();
         let mut memorefs = Vec::with_capacity( memos.len() );
 
         // TODO: figure out how to appease the borrow checker without cloning this
@@ -374,16 +383,8 @@ impl SlabShared {
             }
 
             if memo.subject_id > 0 {
-                // HACK HACK HACK - Cheesy substitute for the coming Memo-based index mechanism
-                let mut head = self.hack_subject_index.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
-
-                println!("# Slab({}) calling apply_memoref", self.id);
-                if head.apply_memoref(memoref.clone(), &my_slab) {
-                    subject_updates.push(memo.subject_id);
-                }
-
-                //println!("# \t\\ subject({}) revised head is: {:?}",memo.subject_id, head.memo_ids() );
-                // END HACK END HACK END HACK
+                let mut head = subject_updates.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
+                head.apply_memoref(memoref.clone(), &my_slab);
 
                 //TODO: should we emit all memorefs, or just those with subject_ids?
                 memorefs.push(memoref);
@@ -394,14 +395,8 @@ impl SlabShared {
         // TODO: test each memo for durability_score and emit accordingly
         self.emit_memos(&memorefs);
 
-        subject_updates.sort();
-        subject_updates.dedup();
-        for subject_id in subject_updates {
-            if let Some(ref head) = self.hack_subject_index.get(&subject_id) {
-                // TODO: consider if we should be pushing only the new memorefs
-                //       versus the whole thing
-                self.dispatch_subject_head(subject_id, head);
-            }
+        for (subject_id,head) in subject_updates {
+            self.dispatch_subject_head(subject_id, &head);
         }
 
         memorefs
@@ -411,7 +406,7 @@ impl SlabShared {
         if let Some(subscribers) = self.subject_subscriptions.get( &subject_id ) {
             for weakcontext in subscribers {
                 if let Some(context) = weakcontext.upgrade() {
-                    context.update_subject_head( subject_id, head );
+                    context.apply_subject_head( &subject_id, head );
                 }
 
             }

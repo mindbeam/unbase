@@ -1,6 +1,7 @@
 use subject::Subject;
 
-pub mod fixed;
+mod fixed;
+pub use self::fixed::IndexFixed;
 
 trait Index{
     fn insert(&self, u64, Subject);

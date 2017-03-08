@@ -2,5 +2,7 @@
 pub enum RetrieveError {
     NotFound,
     NotFoundByDeadline,
-    AccessDenied
+    AccessDenied,
+    InvalidMemoRefHead,
+    IndexNotInitialized
 }

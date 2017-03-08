@@ -4,6 +4,7 @@ use memo::*;
 use memoref::MemoRef;
 use memorefhead::*;
 use context::Context;
+use error::*;
 use slab::*;
 use std::sync::{Arc,Mutex,Weak};
 
@@ -46,6 +47,7 @@ impl Subject {
             shared: Arc::new(Mutex::new(shared))
         };
 
+        context.insert_into_root_index( subject_id, &subject );
         context.subscribe_subject( &subject );
 
         slab.put_memos(MemoOrigin::Local, vec![
@@ -58,7 +60,9 @@ impl Subject {
 
         Ok(subject)
     }
-    pub fn reconstitute (context: &Context, subject_id: SubjectId, head: MemoRefHead) -> Subject {
+    pub fn reconstitute (context: &Context, head: MemoRefHead) -> Subject {
+        let subject_id = head.get_first_subject_id( context.get_slab() ).unwrap();
+
         let shared = SubjectShared{
             id: subject_id,
             head: head,
@@ -153,12 +157,14 @@ impl Subject {
         //let memorefs = slab.put_memos( MemoOrigin::Local, memos );
         //context.add( memorefs );
     }
-    pub fn get_relation ( &self, key: u8 ) -> Option<Subject> {
+    pub fn get_relation ( &self, key: u8 ) -> Result<Subject, RetrieveError> {
         println!("# Subject({}).get_relation({})",self.id,key);
 
 
         let shared = self.shared.lock().unwrap();
         let context = &shared.context;
+
+        // TODO: Make error handling more robust
 
         for memo in shared.memo_iter() {
             if let Some((relations,materialized)) = memo.get_relations(){
@@ -168,26 +174,19 @@ impl Subject {
                     // TODO: Should be adding the new head memo to the query context
                     //       and superseding the referenced head due to its inclusion in the context
 
-                    if let Ok(relation) = context.get_subject_with_head(r.0,r.1.clone()) {
-                        println!("# \t\\ Found {}", relation.id );
-                        return Some(relation)
-                    }else{
-                        println!("# \t\\ Retrieval Error" );
-                        return None;
-                        //return Err("subject retrieval error")
-                    }
+                    return context.get_subject_with_head(r.0,r.1.clone())
                 }else if materialized {
                     println!("\n# \t\\ Not Found (materialized)" );
-                    return None;
+                    return Err(RetrieveError::NotFound);
                 }
             }
         }
 
         println!("\n# \t\\ Not Found" );
-        None
+        Err(RetrieveError::NotFound)
     }
-    pub fn update_head (&mut self, new: &MemoRefHead){
-        println!("# Subject({}).update_head({:?})", &self.id, new.memo_ids() );
+    pub fn apply_head (&mut self, new: &MemoRefHead){
+        println!("# Subject({}).apply_head({:?})", &self.id, new.memo_ids() );
 
         let mut shared = self.shared.lock().unwrap();
         let slab = shared.context.get_slab().clone(); // TODO: find a way to get rid of this clone

@@ -12,11 +12,13 @@ use std::sync::{Arc, Mutex};
 use std::fmt;
 use slab::{Slab,WeakSlab,SlabId,MemoOrigin};
 use memo::Memo;
+use memorefhead::MemoRefHead;
 
 struct NetworkInternals {
     next_slab_id: u32,
     slabs:     Vec<WeakSlab>,
-    slab_refs: Vec<SlabRef>
+    slab_refs: Vec<SlabRef>,
+    root_index_seed: Option<MemoRefHead>
 }
 
 pub struct NetworkShared {
@@ -39,7 +41,8 @@ impl Network {
         let internals = NetworkInternals {
             next_slab_id: 0,
             slabs:     Vec::new(),
-            slab_refs: Vec::new()
+            slab_refs: Vec::new(),
+            root_index_seed: None
         };
 
         let shared = NetworkShared {
@@ -57,7 +60,7 @@ impl Network {
         let mut internals = self.shared.internals.lock().unwrap();
 
         let id = internals.next_slab_id;
-        
+
         internals.next_slab_id += 1;
 
         id
@@ -90,6 +93,22 @@ impl Network {
         internals.slabs.insert(0, slab.weak() );
 
         slab_ref
+    }
+
+    pub fn get_root_index_seed(&self, slab: &Slab) -> MemoRefHead {
+
+        let mut internals = self.shared.internals.lock().unwrap();
+
+        match internals.root_index_seed {
+            Some(ref s) => {
+                return s.clone()
+            }
+            None => {}
+        }
+
+        let seed = slab.generate_root_index_seed();
+        internals.root_index_seed = Some(seed.clone());
+        seed
     }
 }
 

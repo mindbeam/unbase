@@ -30,24 +30,24 @@ fn basic_eventual() {
 
     assert!(rec_a1.is_ok(), "New subject should be created");
     let rec_a1 = rec_a1.unwrap();
-    
+
     assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
 
-    assert!(slab_a.count_of_memorefs_resident() == 1, "Slab A should have 1 memorefs resident");
-    assert!(slab_b.count_of_memorefs_resident() == 0, "Slab B should have 0 memorefs resident");
-    assert!(slab_c.count_of_memorefs_resident() == 0, "Slab C should have 0 memorefs resident");
+    assert_eq!(slab_a.count_of_memorefs_resident(), 2, "Slab A should have 2 memorefs resident");
+    assert_eq!(slab_b.count_of_memorefs_resident(), 0, "Slab B should have 1 memorefs resident");
+    assert_eq!(slab_c.count_of_memorefs_resident(), 0, "Slab C should have 1 memorefs resident");
 
-    assert!(context_b.get_subject( rec_a1.id ).unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab B");
-    assert!(context_c.get_subject( rec_a1.id ).unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab C");
+    assert!(context_b.get_subject_by_id( rec_a1.id ).unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab B");
+    assert!(context_c.get_subject_by_id( rec_a1.id ).unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab C");
 
     simulator.advance_clock(1); // advance the simulator clock by one tick
 
-    assert!(slab_a.count_of_memorefs_resident() == 1, "Slab A should have 1 memorefs resident");
-    assert!(slab_b.count_of_memorefs_resident() == 1, "Slab B should have 1 memorefs resident");
-    assert!(slab_c.count_of_memorefs_resident() == 1, "Slab C should have 1 memorefs resident");
+    assert!(slab_a.count_of_memorefs_resident() == 2, "Slab A should have 2 memorefs resident");
+    assert!(slab_b.count_of_memorefs_resident() == 2, "Slab B should have 2 memorefs resident");
+    assert!(slab_c.count_of_memorefs_resident() == 2, "Slab C should have 2 memorefs resident");
 
-    let rec_b1 = context_b.get_subject( rec_a1.id );
-    let rec_c1 = context_c.get_subject( rec_a1.id );
+    let rec_b1 = context_b.get_subject_by_id( rec_a1.id );
+    let rec_c1 = context_c.get_subject_by_id( rec_a1.id );
 
     assert!(rec_b1.is_ok(), "new subject should now have conveyed to slab B");
     assert!(rec_c1.is_ok(), "new subject should now have conveyed to slab C");
@@ -116,7 +116,7 @@ fn basic_eventual() {
     // Time moves forward
     net.deliver_all_memos();
 
-    let rec_b1 = context_b.get_subject( rec_a1.id );
+    let rec_b1 = context_b.get_subject_by_id( rec_a1.id );
     assert!(rec_b1.is_ok(), "new subject should now be available on slab B");
     let rec_b1 = rec_b1.unwrap();
 
@@ -126,7 +126,7 @@ fn basic_eventual() {
     // Time moves forward
     net.deliver_all_memos();
 
-    let rec_c1 = context_c.get_subject( rec_a1.id );
+    let rec_c1 = context_c.get_subject_by_id( rec_a1.id );
     assert!(rec_c1.is_ok(), "new subject should now be available on slab C");
     let mut rec_c1 = rec_c1.unwrap();
 

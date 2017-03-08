@@ -1,5 +1,7 @@
 use context::Context;
 use subject::*;
+use memorefhead::MemoRefHead;
+use error::RetrieveError;
 use std::collections::HashMap;
 
 
@@ -17,8 +19,15 @@ impl IndexFixed {
             depth: depth
         }
     }
+    pub fn new_from_memorefhead (context: &Context, depth: u8, memorefhead: MemoRefHead ) -> IndexFixed {
+        Self {
+            context: context.clone(),
+            root: Subject::reconstitute( context, memorefhead ),
+            depth: depth
+        }
+    }
     pub fn insert <'a> (&self, key: u64, subject: &Subject) {
-
+        println!("IndexFixed.insert({}, {:?})", key, subject );
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
         let mut node = self.root.clone();
@@ -39,23 +48,35 @@ impl IndexFixed {
 
             println!("Tier {}, {}, {}", tier, x, y );
 
-            if let Some(n) = node.get_relation(y){
-                node = n;
-            }else{
-                if exponent == 0 {
-                    println!("]]] end of the line");
-                    node.set_relation(y as u8,subject.clone()); // TODO: should accept a borrow
-                }else{
-                    let new_node = Subject::new( &self.context, HashMap::new() ).unwrap();
-                    node.set_relation(y as u8,new_node.clone()); // TODO: should accept a borrow
-                    node = new_node;
+            match node.get_relation(y) {
+                Ok(n) => {
+                    node = n;
+                }
+                Err(e) => {
+                    match e {
+                        RetrieveError::NotFound => {
+                            if exponent == 0 {
+                                // BUG: move this clause up
+                                println!("]]] end of the line");
+                                node.set_relation(y as u8,subject.clone()); // TODO: should accept a borrow
+                            }else{
+                                let new_node = Subject::new( &self.context, HashMap::new() ).unwrap();
+                                node.set_relation(y as u8,new_node.clone()); // TODO: should accept a borrow
+                                node = new_node;
+                            }
+                        }
+                        _ => {
+                            panic!("unhandled error")
+                        }
+                    }
                 }
             }
         }
 
     }
-    pub fn get (&self, key: u64 ) -> Option<Subject> {
+    pub fn get (&self, key: u64 ) -> Result<Subject, RetrieveError> {
 
+        println!("IndexFixed.get({})", key );
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
         let mut node = self.root.clone();
@@ -71,15 +92,14 @@ impl IndexFixed {
             if exponent == 0 {
                 println!("]]] end of the line");
                 return node.get_relation(y as u8);
-                
+
             }else{
-                if let Some(n) = node.get_relation(y){
+                if let Ok(n) = node.get_relation(y){
                     node = n;
                 }else{
-                    return None;
+                    return Err(RetrieveError::NotFound);
                 }
             }
-
 
         };
 

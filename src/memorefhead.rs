@@ -5,6 +5,7 @@ use std::collections::VecDeque;
 use memo::*;
 use memoref::*;
 use slab::*;
+use subject::SubjectId;
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -95,6 +96,14 @@ impl MemoRefHead {
         }
 
         applied
+    }
+    pub fn get_first_subject_id (&self, slab: &Slab) -> Option<SubjectId> {
+        if let Some(memoref) = self.0.iter().next() {
+            // TODO: Could stand to be much more robust here
+            Some(memoref.get_memo(slab).unwrap().inner.subject_id)
+        }else{
+            None
+        }
     }
     pub fn apply_memorefs (&mut self, new_memorefs: Vec<MemoRef>, slab: &Slab) {
         for new in new_memorefs{

@@ -4,18 +4,20 @@ use slab::Slab;
 use memoref::MemoRef;
 use memorefhead::MemoRefHead;
 use error::RetrieveError;
+use index::IndexFixed;
 
 use subject::*;
 use std::sync::{Mutex,Arc,Weak};
 
 pub struct ContextShared {
     subject_heads: HashMap<SubjectId, MemoRefHead>,
-    subjects: HashMap<SubjectId, WeakSubject>,
+    subjects: HashMap<SubjectId, WeakSubject>
 }
 
 pub struct ContextInner {
     slab: Slab,
-    shared: Mutex<ContextShared>
+    shared: Mutex<ContextShared>,
+    root_index: Mutex<Option<IndexFixed>>
 }
 #[derive(Clone)]
 pub struct Context {
@@ -29,14 +31,33 @@ pub struct WeakContext {
 
 impl Context{
     pub fn new ( slab: &Slab ) -> Context {
-        Context {
+
+        let new_self = Context {
             inner: Arc::new(ContextInner {
                 slab: slab.clone(),
+                root_index: Mutex::new(None),
                 shared: Mutex::new(ContextShared {
                     subject_heads: HashMap::new(),
                     subjects: HashMap::new()
                 })
             })
+        };
+
+        let index = IndexFixed::new_from_memorefhead(&new_self, 5, slab.get_root_index_seed() );
+
+        {
+            *new_self.inner.root_index.lock().unwrap() = Some(index);
+        }
+
+        new_self
+    }
+    pub fn insert_into_root_index (&self, subject_id: SubjectId, subject: &Subject) {
+        println!("MARK11");
+        if let Some(ref index) = *self.inner.root_index.lock().unwrap() {
+            println!("MARK22" );
+            index.insert(subject_id,subject);
+        }else{
+            panic!("no root index")
         }
     }
     pub fn add (&self, mut memorefs: Vec<MemoRef>) {
@@ -70,74 +91,49 @@ impl Context{
         }
         self.inner.slab.unsubscribe_subject(subject_id, self);
     }
-    pub fn get_subject (&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
-        // TODO: Should I apply the subject head here?
+    pub fn get_subject_by_id (&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
 
-        println!("# Context.get_subject({})", subject_id );
-        {
-            let mut shared = self.inner.shared.lock().unwrap();
-            // First - Check to see if I have the subject resident in this context
-            if let Some(weaksub) = shared.subjects.get_mut(&subject_id) {
-                if let Some(subject) = weaksub.upgrade() {
-                    return Ok(subject);
-                }else{
-                    return Err(RetrieveError::NotFound);
-                }
-            }
-        }
-
-        // Else - Perform an index lookup on the primary subject index to construct the subject head
-        match self.inner.slab.lookup_subject_head(subject_id) {
-            Ok(head) => {
-                println!("# \\ Reconstituting from slab {} subject {} head {:?}", self.inner.slab.id, subject_id, head.memo_ids() );
-                return Ok(Subject::reconstitute(self,subject_id,head));
-            },
-            Err(e) => {
-                return Err(e)
-            }
+        match *self.inner.root_index.lock().unwrap() {
+            Some(ref index) => index.get(subject_id),
+            None            => Err(RetrieveError::IndexNotInitialized)
         }
     }
 
     pub fn get_subject_with_head (&self, subject_id: SubjectId, mut head: MemoRefHead) -> Result<Subject, RetrieveError> {
         println!("# Context.get_subject_with_head({},{:?})", subject_id, head.memo_ids() );
 
-        let maybe_subject : Option<Subject> = None;
-        {
-            let mut shared = self.inner.shared.lock().unwrap();
-            if let Some(relevant_context_head) = shared.subject_heads.get(&subject_id) {
-                println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
-
-                head.apply( relevant_context_head, &self.inner.slab );
-
-            }else{
-                println!("# \\ No relevant head found in context");
-            }
-
-            //Check to see if I have the subject resident in this context
-            if let Some(weaksub) = shared.subjects.get_mut(&subject_id) {
-                maybe_subject = weaksub.upgrade()
-            }
-        }
         if head.len() == 0 {
-            panic!("invalid subject head");
+            return Err(RetrieveError::InvalidMemoRefHead);
         }
 
-        //TODO: this is wrong – We're creating a duplicate subject and overwriting the previous subject.
-        // Instad, Should lookup the existing subject (if any), and ensure that the relation is at least as fresh as head.
-        if let Some(subject) = maybe_subject {
-            return Ok(Subject);
+        let mut shared = self.inner.shared.lock().unwrap();
+        if let Some(relevant_context_head) = shared.subject_heads.get(&subject_id) {
+            println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
+
+            head.apply( relevant_context_head, &self.inner.slab );
+
         }else{
-            subject = Subject::reconstitute(self,subject_id,head);
-            // TODO should this be inseretd a as
+            println!("# \\ No relevant head found in context");
         }
-        return Ok(subject);
+
+        match shared.get_subject_if_resident(&subject_id) {
+            Some(ref mut subject) => {
+                subject.apply_head(&head);
+
+                return Ok(subject.clone());
+            }
+            None =>{
+                let subject = Subject::reconstitute(self,head);
+                return Ok(subject);
+            }
+        }
 
     }
-    pub fn update_subject_head (&self, subject_id: SubjectId, head: &MemoRefHead){
+    pub fn apply_subject_head (&self, subject_id: &SubjectId, head: &MemoRefHead){
         //QUESTION: Should we be updating our query context here? arguably yes?
 
-        if let Ok(mut subject) = self.get_subject(subject_id) {
-            subject.update_head(head)
+        if let Some(mut subject) = self.inner.shared.lock().unwrap().get_subject_if_resident(subject_id) {
+            subject.apply_head(head)
         }
     }
 
@@ -201,6 +197,22 @@ impl Context{
         return true;
 
     }
+}
+
+impl ContextShared {
+    fn get_subject_if_resident (&mut self, subject_id: &SubjectId) -> Option<Subject> {
+
+        if let Some(weaksub) = self.subjects.get_mut(subject_id) {
+            if let Some(subject) = weaksub.upgrade() {
+                //NOTE: In theory we shouldn't need to apply the current context
+                //      to this subject, as it shouldddd have already happened
+                return Some(subject);
+            }
+        }
+
+        None
+    }
+
 }
 
 impl Drop for ContextShared {
