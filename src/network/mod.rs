@@ -27,8 +27,6 @@ pub struct Network {
     shared: Arc<NetworkShared>
 }
 
-pub struct NetworkAddr ();
-
 impl Network {
     pub fn new () -> Network {
 
