@@ -6,8 +6,9 @@ use std::sync::Arc;
 #[test]
 fn basic_eventual() {
 
-    let simulator = Arc::new(unbase::network::Simulator::new());
-    let net = unbase::Network::new( simulator.clone() );
+    let net = unbase::Network::new();
+    let simulator = unbase::network::transport::Simulator::new();
+    net.add_transport( Arc::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
@@ -31,7 +32,7 @@ fn basic_eventual() {
 
     assert!(rec_a1.is_ok(), "New subject should be created");
     let rec_a1 = rec_a1.unwrap();
-    
+
     assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
 
     assert!(slab_a.count_of_memorefs_resident() == 1, "Slab A should have 1 memorefs resident");

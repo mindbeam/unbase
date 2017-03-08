@@ -7,8 +7,9 @@ use std::sync::Arc;
 #[test]
 fn index_construction() {
 
-    let simulator = Arc::new(unbase::network::Simulator::new());
-    let net = unbase::Network::new( simulator.clone() );
+    let net = unbase::Network::new();
+    let simulator = unbase::network::transport::Simulator::new();
+    net.add_transport( Arc::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
     let context_a = slab_a.create_context();

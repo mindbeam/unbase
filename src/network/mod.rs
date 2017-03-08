@@ -1,46 +1,42 @@
 extern crate linked_hash_map;
 
-mod simulator;
-mod channel;
+pub mod transport;
 mod slabref;
 
-pub use self::simulator::{Simulator,XYZPoint,MinkowskiPoint};
 pub use self::slabref::SlabRef;
-pub use self::channel::{Transmitter, MinkowskiTransmitter};
+pub use self::transport::Transport;
+use self::transport::{TransmitterArgs,Transmitter};
 
 use std::sync::{Arc, Mutex};
 use std::fmt;
-use slab::{Slab,WeakSlab,SlabId,MemoOrigin};
-use memo::Memo;
-use transports::{Transport, SimulatorTransport};
+use slab::{Slab,WeakSlab,SlabId};
 
 struct NetworkInternals {
     next_slab_id: u32,
     slabs:     Vec<WeakSlab>,
-    slab_refs: Vec<SlabRef>
+    slab_refs: Vec<SlabRef>,
+    transports: Vec<Arc<Transport>>
 }
 
 pub struct NetworkShared {
     internals: Mutex<NetworkInternals>
-    //send_sync_handle: Arc<Mutex<()>>
-    //tx_thread: Option<JoinHandle<()>>,
 }
 
 #[derive(Clone)]
 pub struct Network {
-    shared: Arc<NetworkShared>,
-    transport: Arc<Transport>
+    shared: Arc<NetworkShared>
 }
 
 pub struct NetworkAddr ();
 
 impl Network {
-    pub fn new( simulator: Arc<Simulator> ) -> Network {
+    pub fn new () -> Network {
 
         let internals = NetworkInternals {
             next_slab_id: 0,
             slabs:     Vec::new(),
-            slab_refs: Vec::new()
+            slab_refs: Vec::new(),
+            transports: Vec::new()
         };
 
         let shared = NetworkShared {
@@ -48,17 +44,20 @@ impl Network {
         };
 
         let net = Network {
-            transport: Arc::new(SimulatorTransport::new(simulator)),
             shared: Arc::new(shared)
         };
 
         net
     }
+    pub fn add_transport (&self, transport: Arc<Transport> ) {
+        let mut internals = self.shared.internals.lock().unwrap();
+        internals.transports.push(transport);
+    }
     pub fn generate_slab_id(&self) -> u32 {
         let mut internals = self.shared.internals.lock().unwrap();
 
         let id = internals.next_slab_id;
-        
+
         internals.next_slab_id += 1;
 
         id
@@ -66,17 +65,21 @@ impl Network {
     pub fn get_slabref(&self, _slab_id: SlabId) -> Option<SlabRef> {
         unimplemented!();
     }
+    pub fn get_local_transmitter (&self, slab: &Slab) -> Arc<Transmitter> {
+        // We're just going to assume that we have an in-process transmitter, or freak out
+        // Should probably do this more intelligently
+
+        let internals = self.shared.internals.lock().unwrap();
+        let transport = internals.transports.iter().filter(|x| x.is_local() ).next().unwrap();
+
+        transport.make_transmitter( TransmitterArgs::Local(&slab) ).unwrap()
+    }
     pub fn register_slab(&self, slab: &Slab) -> SlabRef {
         println!("# register_slab {:?}", slab );
 
-        let tx = MinkowskiTransmitter::new(
-                        XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
-                        XYZPoint{ x: 1000, y: 1000, z: 1000 },
-                        self.transport.clone(),
-                        slab.weak()
-        );
+        // Probably won't use transports in quite the same way in the future
 
-        let slab_ref = SlabRef::new( &slab, Arc::new(tx) );
+        let slab_ref = SlabRef::new_from_slab( &slab, &self );
 
         let mut internals = self.shared.internals.lock().unwrap();
 

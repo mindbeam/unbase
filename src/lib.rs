@@ -1,4 +1,3 @@
-#![recursion_limit="128"]
 extern crate linked_hash_map;
 extern crate itertools;
 
@@ -13,7 +12,6 @@ pub mod context;
 pub mod error;
 pub mod index;
 pub mod memorefhead;
-pub mod transports;
 
 pub use network::Network;
 pub use slab::Slab;
