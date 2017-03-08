@@ -15,7 +15,7 @@ impl IndexFixed {
     pub fn new (context: &Context, depth: u8) -> IndexFixed {
         Self {
             context: context.clone(),
-            root: Subject::new( context, HashMap::new() ).unwrap(),
+            root: Subject::new( context, HashMap::new(), true ).unwrap(),
             depth: depth
         }
     }
@@ -60,7 +60,7 @@ impl IndexFixed {
                                 println!("]]] end of the line");
                                 node.set_relation(y as u8,subject.clone()); // TODO: should accept a borrow
                             }else{
-                                let new_node = Subject::new( &self.context, HashMap::new() ).unwrap();
+                                let new_node = Subject::new( &self.context, HashMap::new(), true ).unwrap();
                                 node.set_relation(y as u8,new_node.clone()); // TODO: should accept a borrow
                                 node = new_node;
                             }

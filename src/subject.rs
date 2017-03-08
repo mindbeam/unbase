@@ -30,7 +30,7 @@ pub struct SubjectShared {
 }
 
 impl Subject {
-    pub fn new ( context: &Context, vals: HashMap<String, String> ) -> Result<Subject,String> {
+    pub fn new ( context: &Context, vals: HashMap<String, String>, is_index: bool ) -> Result<Subject,String> {
 
         let slab : &Slab = context.get_slab();
         let subject_id = slab.generate_subject_id();
@@ -47,7 +47,6 @@ impl Subject {
             shared: Arc::new(Mutex::new(shared))
         };
 
-        context.insert_into_root_index( subject_id, &subject );
         context.subscribe_subject( &subject );
 
         slab.put_memos(MemoOrigin::Local, vec![
@@ -58,9 +57,20 @@ impl Subject {
             )
         ]);
 
+        // IMPORTANT: Need to wait to insert this into the index until _after_ the first memo
+        // has been issued, sent to the slab, and added to the subject head via the subscription mechanism.
+        
+        // TODO: Decide if we want to redundantly add this memo to the head ( directly, and again through slab subscription )
+
+        // HACK HACK HACK - this should not be a flag on the subject, but something in the payload I think
+        if !is_index {
+            context.insert_into_root_index( subject_id, &subject );
+        }
+
         Ok(subject)
     }
     pub fn reconstitute (context: &Context, head: MemoRefHead) -> Subject {
+
         let subject_id = head.get_first_subject_id( context.get_slab() ).unwrap();
 
         let shared = SubjectShared{
@@ -78,11 +88,11 @@ impl Subject {
 
         subject
     }
-    pub fn new_kv ( context: &Context, key: &str, value: &str) -> Result<Subject,String> {
+    pub fn new_kv ( context: &Context, key: &str, value: &str ) -> Result<Subject,String> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        Self::new( context, vals )
+        Self::new( context, vals, false )
     }
     pub fn set_kv (&self, key: &str, value: &str) -> bool {
         let mut vals = HashMap::new();
@@ -160,13 +170,13 @@ impl Subject {
     pub fn get_relation ( &self, key: u8 ) -> Result<Subject, RetrieveError> {
         println!("# Subject({}).get_relation({})",self.id,key);
 
-
         let shared = self.shared.lock().unwrap();
         let context = &shared.context;
 
         // TODO: Make error handling more robust
 
         for memo in shared.memo_iter() {
+
             if let Some((relations,materialized)) = memo.get_relations(){
                 println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
                 if let Some(r) = relations.get(&key) {
@@ -174,7 +184,9 @@ impl Subject {
                     // TODO: Should be adding the new head memo to the query context
                     //       and superseding the referenced head due to its inclusion in the context
 
-                    return context.get_subject_with_head(r.0,r.1.clone())
+                    let foo = context.get_subject_with_head(r.0,r.1.clone());
+
+                        return foo;
                 }else if materialized {
                     println!("\n# \t\\ Not Found (materialized)" );
                     return Err(RetrieveError::NotFound);

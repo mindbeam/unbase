@@ -1,6 +1,6 @@
 extern crate unbase;
 use unbase::subject::*;
-use unbase::index::fixed::IndexFixed;
+use unbase::index::IndexFixed;
 use std::collections::HashMap;
 
 #[test]
@@ -23,7 +23,7 @@ fn index_construction() {
     let mut vals = HashMap::new();
     vals.insert("record number".to_string(), i.to_string());
 
-    let record = Subject::new(&context_a, vals).unwrap();
+    let record = Subject::new(&context_a, vals, false).unwrap();
     index.insert(i, &record);
 
     assert_eq!( index.get(1234).unwrap().get_value("record number").unwrap(), "1234");
@@ -34,7 +34,7 @@ fn index_construction() {
         let mut vals = HashMap::new();
         vals.insert("record number".to_string(), i.to_string());
 
-        let record = Subject::new(&context_a, vals).unwrap();
+        let record = Subject::new(&context_a, vals, false).unwrap();
         index.insert(i, &record);
     }
 

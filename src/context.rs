@@ -52,9 +52,7 @@ impl Context{
         new_self
     }
     pub fn insert_into_root_index (&self, subject_id: SubjectId, subject: &Subject) {
-        println!("MARK11");
         if let Some(ref index) = *self.inner.root_index.lock().unwrap() {
-            println!("MARK22" );
             index.insert(subject_id,subject);
         }else{
             panic!("no root index")
@@ -106,27 +104,31 @@ impl Context{
             return Err(RetrieveError::InvalidMemoRefHead);
         }
 
-        let mut shared = self.inner.shared.lock().unwrap();
-        if let Some(relevant_context_head) = shared.subject_heads.get(&subject_id) {
-            println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
+        {
+            let mut shared = self.inner.shared.lock().unwrap();
 
-            head.apply( relevant_context_head, &self.inner.slab );
+            if let Some(relevant_context_head) = shared.subject_heads.get(&subject_id) {
+                println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
 
-        }else{
-            println!("# \\ No relevant head found in context");
+                head.apply( relevant_context_head, &self.inner.slab );
+
+            }else{
+                println!("# \\ No relevant head found in context");
+            }
+
+            match shared.get_subject_if_resident(&subject_id) {
+                Some(ref mut subject) => {
+                    subject.apply_head(&head);
+                    return Ok(subject.clone());
+                }
+                None =>{}
+            }
         }
 
-        match shared.get_subject_if_resident(&subject_id) {
-            Some(ref mut subject) => {
-                subject.apply_head(&head);
-
-                return Ok(subject.clone());
-            }
-            None =>{
-                let subject = Subject::reconstitute(self,head);
-                return Ok(subject);
-            }
-        }
+        // NOTE: Subject::reconstitute calls back to Context.subscribe_subject()
+        //       so we need to release the mutex prior to this
+        let subject = Subject::reconstitute(self,head);
+        return Ok(subject);
 
     }
     pub fn apply_subject_head (&self, subject_id: &SubjectId, head: &MemoRefHead){
