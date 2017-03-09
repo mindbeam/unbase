@@ -120,10 +120,16 @@ impl Memo {
         }
     }
     pub fn does_peering (&self) -> bool {
-        if let MemoBody::Edit(_) = self.inner.body {
-            true
-        }else{
-            false
+        match self.inner.body {
+            MemoBody::MemoRequest(_,_) => {
+                false
+            }
+            MemoBody::Peering(_,_,_) => {
+                false
+            }
+            _ => {
+                true
+            }
         }
     }
     pub fn descends (&self, memoref: &MemoRef, slab: &Slab) -> bool {
