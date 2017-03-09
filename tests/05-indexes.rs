@@ -42,6 +42,6 @@ fn index_construction() {
         assert_eq!( index.get(i).unwrap().get_value("record number").unwrap(), i.to_string() );
     }
 
-    assert_eq!( context_a.is_fully_materialized(), false );
-    context_a.fully_materialize();
+    //assert_eq!( context_a.is_fully_materialized(), false );
+    //context_a.fully_materialize();
 }

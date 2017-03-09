@@ -33,6 +33,9 @@ fn basic_eventual() {
 
     assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
 
+    // consolidation is necessary for eventual consistency to work
+    context_a.fully_consolidate();
+
     // These are going to be fairly variable now that we are using memo-based indexing
     // TODO: Find a better way to measure the intent here
 

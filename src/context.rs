@@ -1,5 +1,6 @@
 use std::fmt;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use slab::Slab;
 use memoref::MemoRef;
 use memorefhead::MemoRefHead;
@@ -11,7 +12,8 @@ use std::sync::{Mutex,Arc,Weak};
 
 pub struct ContextShared {
     subject_heads: HashMap<SubjectId, MemoRefHead>,
-    subjects: HashMap<SubjectId, WeakSubject>
+    subjects: HashMap<SubjectId, WeakSubject>,
+    subject_relation_map : HashMap<SubjectId,Vec<SubjectId>>
 }
 
 pub struct ContextInner {
@@ -38,7 +40,8 @@ impl Context{
                 root_index: Mutex::new(None),
                 shared: Mutex::new(ContextShared {
                     subject_heads: HashMap::new(),
-                    subjects: HashMap::new()
+                    subjects: HashMap::new(),
+                    subject_relation_map: HashMap::new()
                 })
             })
         };
@@ -67,8 +70,17 @@ impl Context{
             let subject_id = memoref.get_memo(&self.inner.slab).unwrap().subject_id;
 
             println!("# Context calling apply_memoref");
-            shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() ).apply_memoref(memoref, &self.inner.slab);
+            shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() ).apply_memoref(&memoref, &self.inner.slab);
         }
+    }
+    // specifically for created/updated subjects
+    pub fn subject_updated (&self, subject_id: &SubjectId, memorefs: &Vec<MemoRef>, head: &MemoRefHead){
+        let mut shared = self.inner.shared.lock().unwrap();
+
+        // Necessary bookkeeping for topological traversal
+        shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() ).apply_memorefs(&memorefs, &self.inner.slab);
+        shared.update_subject_relation_map(&self.inner.slab, subject_id, head)
+
     }
     pub fn get_slab (&self) -> &Slab {
         &self.inner.slab
@@ -134,8 +146,12 @@ impl Context{
     pub fn apply_subject_head (&self, subject_id: &SubjectId, head: &MemoRefHead){
         //QUESTION: Should we be updating our query context here? arguably yes?
 
-        if let Some(mut subject) = self.inner.shared.lock().unwrap().get_subject_if_resident(subject_id) {
-            subject.apply_head(head)
+        let mut shared = self.inner.shared.lock().unwrap();
+        // TODO: perform a topological sort on the subject ids of the context head
+        //       so we can do a single pass over the subjects in a context consolidation
+
+        if let Some(mut subject) = shared.get_subject_if_resident(subject_id) {
+            subject.apply_head(head);
         }
     }
 
@@ -164,28 +180,70 @@ impl Context{
             context: self.clone()
         }
     }
+    pub fn topo_subject_head_iter (&self) -> TopoContextSubjectHeadIter {
+        unimplemented!();
+        // TODO - decide between Kahn's and depth first
+    }
+
+    // Subject A -> B -> E
+    //          \-> C -> F
+    //          \-> D -> G
+    //
+    // Steps:
+    //  1. iterate over context subject heads, starting with leaves, working to the root
+    //     NOTE: This may not form a contiguous tree, as we're dealing with memos
+    //     which have been delivered from other slabs too, not just local edits
+    //     NOTE: We can actually have referential cycles here, because a subject
+    //     is not just a DAG of Memos, but rather the projection of a DAG *plus* whatever
+    //     is in our context. If we tried to continuously materialize such a structure,
+    //     it would generate an infinite number of memos - so we'll need to break cycles.
+    //  2. Materialize each subject head in ascending topological order
+    //  3. If any other context subject heads reference the subject head materialized
+    //     Issue a relation edit referencing it (ensuring that it gets added to the context)
+    //     and drop the materialized subject head from the context.
+    //  4. Continue until the list is exhausted, or a cycle is detected
+    //
+    // subject_relation_map:
+    // E: []
+    // B: [E]
+    // A: [B]
+    // etc
+
     pub fn fully_materialize (&self) {
-        // Iterate over subjects ( what about cross subject links? )
-        // Create said subject with the respective head
-        // project said subject into a keyframe memo
-        // what about partial keyframes?
 
+        let slab = self.get_slab();
 
-        // iterate over all subjects and ask them to fully materialize
-        // TODO: deconflict get_subject and get_subject_with_head ( this is broken )
-        // TODO: Figure out how to materialize Subject memos without incurring the overhead of subject creation/destruction
-        // TODO: ensure that materializing a given subject will cause it to update the context
-        // TODO: ensure that updating the context with subject A that references the head of subject B
-        //       causes subject B to be removed from the context.
-        // TODO: find a way to try to perform these in
-        //       referential order - child to parent. Maybe annotate the subject_heads with cross-subject descendent references?
+        // Iterate the contextualized subject heads in topological order
+        for (subject_id, head, ref_by, ref_to ) in self.topo_subject_head_iter() {
 
-        for (subject_id,head) in self.subject_head_iter() {
+            // retrieve the subject struct for each one
             if let Ok(ref mut subject) = self.get_subject_with_head(subject_id, head){
-                subject.fully_materialize()
+
+                // try to materialize it (create a memo that flattens known preceeding operations)
+                if let Some(materialized_head) = subject.fully_materialize( &slab ) {
+                    // OK we did compress and issue a new "Materialized" memo
+                    // ( it should really only be one Memo in the new MemoRefHead,
+                    // but assuming that would limit flexibility, and destandardize our handling)
+
+                    if ( ref_by.len() > 0 ){
+                        // OK, somebody is pointing to us, so lets issue an edit for them
+                        // to point to the new materialized memo for their relevant relations
+                        self.repoint_subject_relations(ref_by, materialized_head);
+
+                        // Now that we know they are pointing to the new materialized MemoRefHead,
+                        // and that the resident subject struct we have is already updated, we can
+                        // remove this subject MemoRefHead from the context head, because subsequent
+                        // index/graph traversals should find this updated parent.
+                        //
+                        // When trying to materialize/compress fully (not that we'll want to do this often),
+                        // this would continue all the way to the root index node, and we should be left
+                        // with a very small context head
+
+                        self.remove(subject_id) // should be removed from the context
+                    }
+                }
             }
         }
-
 
     }
     pub fn is_fully_materialized (&self) -> bool {
@@ -202,6 +260,25 @@ impl Context{
 }
 
 impl ContextShared {
+    fn update_subject_relation_map (&mut self, slab: &Slab, subject_id: &SubjectId, head: &MemoRefHead ) {
+        let relation_subject_ids = head.get_relation_subject_ids( slab );
+
+        match self.subject_relation_map.entry(*subject_id) {
+            Entry::Vacant(e) => {
+                if relation_subject_ids.len() > 0 {
+                    e.insert(relation_subject_ids);
+                }
+            }
+            Entry::Occupied(mut e) => {
+                if relation_subject_ids.len() > 0 {
+                    e.insert(relation_subject_ids);
+                }else{
+                    e.remove();
+                }
+            }
+        }
+
+    }
     fn get_subject_if_resident (&mut self, subject_id: &SubjectId) -> Option<Subject> {
 
         if let Some(weaksub) = self.subjects.get_mut(subject_id) {
@@ -290,5 +367,21 @@ impl Iterator for ContextSubjectHeadIter {
         }else{
             None
         }
+    }
+}
+
+pub struct TopoContextSubjectHeadIter{
+    context: Context,
+    subject_ids: Vec<SubjectId>
+}
+
+impl Iterator for TopoContextSubjectHeadIter {
+    type Item = (SubjectId, MemoRefHead);
+    fn next (&mut self) -> Option<(SubjectId, MemoRefHead)> {
+        unimplemented!()
+
+        // QUESTION: should we calculate the topo each time? or use subject_relation_map?
+        //           the latter _should_ be more efficient, but requires more dilligence
+        //           to maintain
     }
 }

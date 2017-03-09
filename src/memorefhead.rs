@@ -6,6 +6,7 @@ use memo::*;
 use memoref::*;
 use slab::*;
 use subject::SubjectId;
+use std::collections::HashMap;
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -23,7 +24,7 @@ impl MemoRefHead {
     pub fn from_memoref (memoref: MemoRef) -> Self {
         MemoRefHead( vec![memoref] )
     }
-    pub fn apply_memoref(&mut self, new: MemoRef, slab: &Slab ) -> bool {
+    pub fn apply_memoref(&mut self, new: &MemoRef, slab: &Slab ) -> bool {
         println!("# MemoRefHead({:?}).apply_memoref({})", self.memo_ids(), &new.id);
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
@@ -44,7 +45,7 @@ impl MemoRefHead {
             let mut remove = false;
             {
                 let ref mut existing = self.0[i];
-                if *existing == new {
+                if existing == new {
                     return false; // we already had this
 
                 } else if existing.descends(&new,&slab) {
@@ -83,7 +84,7 @@ impl MemoRefHead {
             // if the new memoref neither descends nor is descended
             // then it must be concurrent
 
-            self.0.push(new);
+            self.0.push(new.clone());
             applied = true; // The memoref was "applied" to the MemoRefHead
         }
 
@@ -97,6 +98,37 @@ impl MemoRefHead {
 
         applied
     }
+    pub fn get_relation_subject_ids (&self, slab: &Slab) -> Vec<SubjectId> {
+        let mut slot_subjects : HashMap<u8, SubjectId> = HashMap::new();
+
+        // TODO: how to handle relationship nullification?
+
+        for memo in self.causal_memo_iter(slab){
+            match memo.inner.body {
+                MemoBody::FullyMaterialized { v: _, ref r } => {
+
+                    for (slot,&(subject_id,_)) in r {
+                        slot_subjects.insert(*slot,subject_id);
+                    }
+                    break;
+                    // Materialized memo means we're done here
+                },
+                MemoBody::Relation(ref r) => {
+                    for (slot,&(subject_id,_)) in r.iter() {
+                        slot_subjects.insert(*slot,subject_id);
+                    }
+                },
+                _ => {}
+            }
+        }
+
+        let mut out : Vec<SubjectId> = slot_subjects.values().map(|v| *v).collect();
+        out.sort();
+        out.dedup();
+
+        out
+
+    }
     pub fn get_first_subject_id (&self, slab: &Slab) -> Option<SubjectId> {
         if let Some(memoref) = self.0.iter().next() {
             // TODO: Could stand to be much more robust here
@@ -105,14 +137,14 @@ impl MemoRefHead {
             None
         }
     }
-    pub fn apply_memorefs (&mut self, new_memorefs: Vec<MemoRef>, slab: &Slab) {
-        for new in new_memorefs{
+    pub fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &Slab) {
+        for new in new_memorefs.iter(){
             self.apply_memoref(new, slab);
         }
     }
     pub fn apply (&mut self, other: &MemoRefHead, slab: &Slab){
         for new in other.iter(){
-            self.apply_memoref(new.clone(), slab );
+            self.apply_memoref(new, slab );
         }
     }
     pub fn memo_ids (&self) -> Vec<MemoId> {
@@ -143,6 +175,19 @@ impl MemoRefHead {
             }else{
                 // TODO: do something more intelligent here
                 panic!("failed to retrieve memo")
+            }
+        }
+
+        true
+    }
+    pub fn fully_materialize( &self, slab: &Slab ) -> bool {
+        // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
+        //       as part of the list management. That way we won't have to incur the below computational effort.
+
+        for memo in self.causal_memo_iter(slab){
+            match memo.inner.body {
+                MemoBody::FullyMaterialized { v: _, r: _ } => {},
+                _                           => { return false }
             }
         }
 

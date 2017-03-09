@@ -36,37 +36,43 @@ impl Subject {
         let subject_id = slab.generate_subject_id();
         println!("# Subject({}).new()",subject_id);
 
-        let shared = SubjectShared{
+        let shared = Arc::new(Mutex::new(SubjectShared{
             id: subject_id,
             head: MemoRefHead::new(),
             context: context.clone()
-        };
+        }));
 
         let subject = Subject {
             id:      subject_id,
-            shared: Arc::new(Mutex::new(shared))
+            shared:  shared
         };
 
         context.subscribe_subject( &subject );
 
-        slab.put_memos(MemoOrigin::Local, vec![
+        let memorefs = slab.put_memos(MemoOrigin::Local, vec![
             Memo::new_basic_noparent(
                 slab.gen_memo_id(),
                 subject_id,
                 MemoBody::FullyMaterialized {v: vals, r: HashMap::new() } // TODO: accept relations
             )
-        ]);
+        ], false);
 
-        // IMPORTANT: Need to wait to insert this into the index until _after_ the first memo
-        // has been issued, sent to the slab, and added to the subject head via the subscription mechanism.
-        
-        // TODO: Decide if we want to redundantly add this memo to the head ( directly, and again through slab subscription )
+        {
+            let mut shared = subject.shared.lock().unwrap();
+            shared.head.apply_memorefs(&memorefs, &slab);
+            shared.context.subject_updated( &subject_id, &memorefs, &shared.head );
 
-        // HACK HACK HACK - this should not be a flag on the subject, but something in the payload I think
-        if !is_index {
-            context.insert_into_root_index( subject_id, &subject );
+
+            // IMPORTANT: Need to wait to insert this into the index until _after_ the first memo
+            // has been issued, sent to the slab, and added to the subject head via the subscription mechanism.
+
+            // TODO: Decide if we want to redundantly add this memo to the head ( directly, and again through slab subscription )
+
+            // HACK HACK HACK - this should not be a flag on the subject, but something in the payload I think
+            if !is_index {
+                context.insert_into_root_index( subject_id, &subject );
+            }
         }
-
         Ok(subject)
     }
     pub fn reconstitute (context: &Context, head: MemoRefHead) -> Subject {
@@ -99,25 +105,27 @@ impl Subject {
         vals.insert(key.to_string(), value.to_string());
 
         let slab;
-        let context;
-        let head;
+        let memos;
         {
             let shared = self.shared.lock().unwrap();
-            context = shared.context.clone();
-            slab = context.get_slab().clone();
-            head = shared.head.clone();
+            slab = shared.context.get_slab().clone();
+
+            memos = vec![
+                Memo::new_basic(
+                    slab.gen_memo_id(),
+                    self.id,
+                    shared.head.clone(),
+                    MemoBody::Edit(vals)
+                )
+            ];
         }
-        //println!("# Subject({}).set_kv({},{}) -> Starting head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
 
-        let memos = vec![
-            Memo::new_basic( slab.gen_memo_id(), self.id, head, MemoBody::Edit(vals) )
-        ];
+        let memorefs : Vec<MemoRef> = slab.put_memos(MemoOrigin::Local, memos, false);
 
-        let memorefs : Vec<MemoRef> = slab.put_memos(MemoOrigin::Local, memos );
-        context.add( memorefs );
-        //println!("# Subject({}).set_kv({},{}) -> Ending head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
+        let mut shared = self.shared.lock().unwrap();
+        shared.head.apply_memorefs(&memorefs, &slab);
+        shared.context.subject_updated( &self.id, &memorefs, &shared.head );
 
-        //println!("# Subject({}).set_kv({},{}) -> {:?}",self.id,key,value,self.shared.lock().unwrap().head );
         true
     }
     pub fn get_value ( &self, key: &str ) -> Option<String> {
@@ -143,29 +151,31 @@ impl Subject {
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
         let slab;
-        let context;
-        let head;
+        let memos;
         {
             let shared = self.shared.lock().unwrap();
-            context = shared.context.clone();
-            slab = context.get_slab().clone();
-            head = shared.head.clone();
+            slab = shared.context.get_slab().clone();
+
+            memos = vec![
+               Memo::new(
+                   slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
+                   self.id,
+                   shared.head.clone(),
+                   MemoBody::Relation(memoref_map)
+               )
+            ];
         }
 
-        let memos = vec![
-           Memo::new(
-               slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
-               self.id,
-               head,
-               MemoBody::Relation(memoref_map)
-           )
-        ];
+        let memorefs = slab.put_memos( MemoOrigin::Local, memos, false );
 
-        let memorefs = slab.put_memos( MemoOrigin::Local, memos );
-        context.add( memorefs );
 
-        //let memorefs = slab.put_memos( MemoOrigin::Local, memos );
-        //context.add( memorefs );
+        // TODO: determine conclusively whether it's possible for apply_memorefs
+        //       to result in a retrieval that retults in a context addition that
+        //       causes a deadlock
+        let mut shared = self.shared.lock().unwrap();
+        shared.head.apply_memorefs(&memorefs, &slab);
+        shared.context.subject_updated( &self.id, &memorefs, &shared.head );
+
     }
     pub fn get_relation ( &self, key: u8 ) -> Result<Subject, RetrieveError> {
         println!("# Subject({}).get_relation({})",self.id,key);
@@ -224,8 +234,11 @@ impl Subject {
             shared: Arc::downgrade(&self.shared)
         }
     }
-    pub fn fully_materialize (&mut self) {
-
+    pub fn is_fully_materialized (&self, slab: &Slab) -> bool {
+        self.shared.lock().unwrap().head.is_fully_materialized(slab)
+    }
+    pub fn fully_materialize (&mut self, slab: &Slab) -> bool {
+        self.shared.lock().unwrap().head.fully_materialize(slab)
     }
 }
 

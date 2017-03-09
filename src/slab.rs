@@ -123,7 +123,7 @@ impl Slab {
             MemoBody::FullyMaterialized {v: HashMap::new(), r: HashMap::new() } // TODO: accept relations
         );
 
-        let memorefs = self.put_memos(MemoOrigin::Local, vec![ memo.clone() ]);
+        let memorefs = self.put_memos(MemoOrigin::Local, vec![ memo.clone() ], true);
 
         MemoRefHead::from_memoref(memorefs[0].clone())
     }
@@ -148,11 +148,11 @@ impl Slab {
 
         (self.id as u64).rotate_left(32) | counters.last_memo_id as u64
     }
-    pub fn put_memos(&self, from: MemoOrigin, memos : Vec<Memo>) -> Vec<MemoRef> {
+    pub fn put_memos(&self, from: MemoOrigin, memos : Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
         if memos.len() == 0 { return Vec::new() }
         let mut shared = self.inner.shared.lock().unwrap();
 
-        shared.put_memos(from, memos)
+        shared.put_memos(from, memos, deliver_local)
     }
     pub fn count_of_memorefs_resident( &self ) -> u32 {
         let shared = self.inner.shared.lock().unwrap();
@@ -272,7 +272,7 @@ impl SlabShared {
             panic!("Invalid state - Missing my_ref")
         }
     }
-    pub fn put_memos<'a> (&mut self, from: MemoOrigin, memos: Vec<Memo>) -> Vec<MemoRef> {
+    pub fn put_memos<'a> (&mut self, from: MemoOrigin, memos: Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
         println!("# SlabShared({}).put_memos({:?},{:?})", self.id, from, mids);
 
@@ -383,9 +383,10 @@ impl SlabShared {
             }
 
             if memo.subject_id > 0 {
-                let mut head = subject_updates.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
-                head.apply_memoref(memoref.clone(), &my_slab);
-
+                if deliver_local {
+                    let mut head = subject_updates.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
+                    head.apply_memoref(&memoref, &my_slab);
+                }
                 //TODO: should we emit all memorefs, or just those with subject_ids?
                 memorefs.push(memoref);
             }
@@ -395,8 +396,10 @@ impl SlabShared {
         // TODO: test each memo for durability_score and emit accordingly
         self.emit_memos(&memorefs);
 
-        for (subject_id,head) in subject_updates {
-            self.dispatch_subject_head(subject_id, &head);
+        if deliver_local {
+            for (subject_id,head) in subject_updates {
+                self.dispatch_subject_head(subject_id, &head);
+            }
         }
 
         memorefs
