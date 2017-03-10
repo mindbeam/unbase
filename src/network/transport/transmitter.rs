@@ -10,7 +10,7 @@ pub trait DynamicDispatchTransmitter {
 enum TransmitterInternal {
     Local(), // TODO: How to use 
     Simulator(SimulatorTransmitter),
-    Dynamic(Box<DynamicDispatchTransmitter>)
+    Dynamic(Box<DynamicDispatchTransmitter + Send + Sync>)
 }
 
 pub struct Transmitter {
