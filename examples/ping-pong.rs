@@ -3,10 +3,9 @@ extern crate unbase;
 use unbase::subject::Subject;
 #[allow(unused_imports)]
 use unbase::error::*;
+use std::{thread, time};
 
 fn main() {
-
-    /* Uncomment this, and hunt around the other test cases for the bits you need
 
     let simulator = unbase::network::Simulator::new();
     let net = unbase::Network::new( &simulator );
@@ -17,9 +16,8 @@ fn main() {
     let context_a = slab_a.create_context();
     let context_b = slab_b.create_context();
 
-    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").unwrap();
+    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Meow").unwrap();
     let rec_id = rec_a1.id; // useful for cross-context retrieval
-    */
 
     // ************************************************************************
     // Your Mission, should you choose to accept it:
@@ -31,17 +29,62 @@ fn main() {
     // (This is expected to be implemented by April)
     // ************************************************************************
 
+    let half_sec = time::Duration::from_millis(500);
+    let ten_ms = time::Duration::from_millis(10);
+
     // spawn thread 1
+    let t1 = thread::spawn(move || {
         // use the original copy of the subject, or look it up by sub
-        // poll for edits
-        // set a value when a change is detected
+        let rec_a1 = context_a.get_subject( rec_id ).unwrap();
+
+        for _ in 1..5 {
+            // Hacky-polling approach for now, push notification coming sooooon!
+            loop {
+                if "Meow".to_string() == rec_a1.get_value("animal_sound").unwrap() {
+                    // set a value when a change is detected
+
+                    println!("[[[ Woof ]]]");
+                    rec_a1.set_kv("animal_sound","Woof");
+                    break;
+                }
+                thread::sleep(ten_ms);
+            }
+        }
+    });
+
+
     //
 
     // spawn thread 2
-        // same as above
-    //
+    let t2 = thread::spawn(move || {
+        // cheater cheater! ( not yet a blocking version of get_subject )
+        thread::sleep(ten_ms);
+
+        // Get a new copy of the same subject from context_b (requires communication)
+        let rec_b1 = context_b.get_subject( rec_id ).unwrap();
+
+        for _ in 1..5 {
+            // Hacky-polling approach for now, push notification coming sooooon!
+            loop {
+                if "Woof".to_string() == rec_b1.get_value("animal_sound").unwrap() {
+                    // set a value when a change is detected
+                    println!("[[[ Meow ]]]");
+                    rec_b1.set_kv("animal_sound","Meow");
+                    break;
+                }
+                thread::sleep(ten_ms);
+            }
+        }
+    });
+
+    for _ in 1..12 {
+        simulator.advance_clock(1);
+        thread::sleep(half_sec);
+    }
 
     // Remember, we're simulating the universe here, so we have to tell the universe to continuously move forward
 
+    t1.join().unwrap();
+    t2.join().unwrap();
 
 }
