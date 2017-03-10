@@ -1,9 +1,10 @@
 extern crate unbase;
+#[allow(unused_imports)]
 use unbase::subject::Subject;
+#[allow(unused_imports)]
 use unbase::error::*;
 
-#[test]
-fn ping_pong() {
+fn main() {
 
     /* Uncomment this, and hunt around the other test cases for the bits you need
 
