@@ -11,7 +11,6 @@ pub use self::transmitter::{Transmitter, DynamicDispatchTransmitter};
 use network::SlabRef;
 use slab::Slab;
 use memo::Memo;
-use std::sync::Arc;
 
 pub enum TransmitterArgs<'a>{
     Local(&'a Slab),
