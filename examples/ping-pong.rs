@@ -1,14 +1,12 @@
 extern crate unbase;
-#[allow(unused_imports)]
 use unbase::subject::Subject;
-#[allow(unused_imports)]
-use unbase::error::*;
 use std::{thread, time};
 
 fn main() {
 
-    let simulator = unbase::network::Simulator::new();
-    let net = unbase::Network::new( &simulator );
+    let simulator = unbase::network::transport::Simulator::new();
+    let net = unbase::Network::new();
+    net.add_transport( Box::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
@@ -20,13 +18,11 @@ fn main() {
     let rec_id = rec_a1.id; // useful for cross-context retrieval
 
     // ************************************************************************
-    // Your Mission, should you choose to accept it:
     // Create one record, then spawn two threads,
     // each of which makes an edit whenever it sees an edit
 
-    // NOTE: You will have to use polling for now to detect when the
-    // subject has changed, as push notification isn't implemented yet :)
-    // (This is expected to be implemented by April)
+    // NOTE: have to use polling for now to detect when the subject has changed
+    // because push notification (though planned) isn't implemented yet :)
     // ************************************************************************
 
     let half_sec = time::Duration::from_millis(500);
