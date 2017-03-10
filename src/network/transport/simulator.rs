@@ -139,7 +139,7 @@ pub struct SimulatorTransmitter{
 }
 
 impl SimulatorTransmitter {
-    fn send (&self, from: &SlabRef, memo: Memo){
+    pub fn send (&self, from: &SlabRef, memo: Memo){
         let ref q = self.source_point;
         let ref p = self.dest_point;
 
