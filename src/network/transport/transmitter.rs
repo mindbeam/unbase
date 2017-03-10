@@ -8,7 +8,7 @@ pub trait DynamicDispatchTransmitter {
 }
 
 enum TransmitterInternal {
-    Local(), // TODO: How to use 
+    Local(), // TODO: How to use
     Simulator(SimulatorTransmitter),
     Dynamic(Box<DynamicDispatchTransmitter + Send + Sync>)
 }
@@ -19,8 +19,10 @@ pub struct Transmitter {
 
 impl Transmitter {
     /// Create a new transmitter associated with a local slab.
-    pub fn new_local(slab: &Slab) -> Self {
-        unimplemented!()
+    pub fn new_local(_slab: &Slab) -> Self {
+        Self {
+            internal: TransmitterInternal::Local()
+        }
     }
     /// Create a new transmitter associated with a local simulator transmitter.
     pub fn new_simulated(sim_tx: SimulatorTransmitter) -> Self {
@@ -44,7 +46,7 @@ impl Transmitter {
             Simulator(ref tx) => {
                 tx.send(from, memo);
             }
-            Dynamic(ref tx) => {
+            Dynamic(ref _tx) => {
                 unimplemented!()
             }
         }

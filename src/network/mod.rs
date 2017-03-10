@@ -15,7 +15,7 @@ struct NetworkInternals {
     next_slab_id: u32,
     slabs:     Vec<WeakSlab>,
     slab_refs: Vec<SlabRef>,
-    transports: Vec<Arc<Transport>>
+    transports: Vec<Arc<Transport + Send + Sync>>
 }
 
 pub struct NetworkShared {
@@ -47,7 +47,7 @@ impl Network {
 
         net
     }
-    pub fn add_transport (&self, transport: Arc<Transport> ) {
+    pub fn add_transport (&self, transport: Arc<Transport + Send + Sync> ) {
         let mut internals = self.shared.internals.lock().unwrap();
         internals.transports.push(transport);
     }
