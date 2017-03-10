@@ -2,17 +2,9 @@
 use std::fmt;
 use super::*;
 use std::sync::{Arc,Mutex};
+use slab::*;
 use itertools::partition;
-
-#[derive(Clone)]
-pub struct Simulator {
-    shared: Arc<Mutex<SimulatorInternal>>,
-    speed_of_light: u64
-}
-struct SimulatorInternal {
-    clock: u64,
-    queue: Vec<SimEvent>
-}
+use memo::Memo;
 
 // Minkowski stuff: Still ridiculous, but necessary for our purposes.
 pub struct XYZPoint{
@@ -26,7 +18,6 @@ pub struct MinkowskiPoint {
     pub z: i64,
     pub t: u64
 }
-
 struct SimEvent {
     _source_point: MinkowskiPoint,
     dest_point:    MinkowskiPoint,
@@ -54,7 +45,18 @@ impl fmt::Debug for SimEvent{
     }
 }
 
+#[derive(Clone)]
+pub struct Simulator {
+    shared: Arc<Mutex<SimulatorInternal>>,
+    speed_of_light: u64
+}
+struct SimulatorInternal {
+    clock: u64,
+    queue: Vec<SimEvent>
+}
+
 impl Simulator {
+    // TODO: Potentially, make this return an Arc of itself.
     pub fn new () -> Self{
         Simulator {
             speed_of_light: 1, // 1 distance unit per time unit
@@ -66,36 +68,7 @@ impl Simulator {
             ))
         }
     }
-    pub fn send_memo (&self, sender: &Sender, from: &SlabRef, memo: Memo ){
-        let ref q = sender.source_point;
-        let ref p = sender.dest_point;
 
-        let source_point = MinkowskiPoint {
-            x: q.x,
-            y: q.y,
-            z: q.z,
-            t: self.get_clock()
-        };
-
-        let distance = (( (q.x - p.x)^2 + (q.y - p.y)^2 + (q.z - p.z)^2 ) as f64).sqrt();
-
-        let dest_point = MinkowskiPoint {
-            x: p.x,
-            y: p.y,
-            z: p.z,
-            t: source_point.t + ( distance as u64 * self.speed_of_light ) + 1 // add 1 to ensure nothing is instant
-        };
-
-        let evt = SimEvent {
-            _source_point: source_point,
-            dest_point: dest_point,
-            from: from.clone(),
-            dest: sender.dest.clone(),
-            memo: memo
-        };
-
-        self.add_event( evt );
-    }
     fn add_event(&self, event: SimEvent) {
         let mut shared = self.shared.lock().unwrap();
         shared.queue.push(event);
@@ -130,5 +103,70 @@ impl fmt::Debug for Simulator {
         fmt.debug_struct("Simulator")
             .field("queue", &shared.queue)
             .finish()
+    }
+}
+
+impl Transport for Simulator {
+    fn is_local (&self) -> bool {
+        true
+    }
+    fn make_transmitter (&self, args: TransmitterArgs ) -> Result<Transmitter,String> {
+        if let TransmitterArgs::Local(slab) = args {
+            let tx = SimulatorTransmitter{
+                source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
+                dest_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
+                simulator: self.clone(),
+                dest: slab.weak()
+            };
+
+            Ok(Transmitter::new_simulated(tx))
+        }else{
+            Err("This transport is incapable of handling remote addresses".to_string())
+        }
+
+    }
+}
+
+
+
+
+
+pub struct SimulatorTransmitter{
+    pub source_point: XYZPoint,
+    pub dest_point: XYZPoint,
+    pub simulator: Simulator,
+    pub dest: WeakSlab
+}
+
+impl SimulatorTransmitter {
+    pub fn send (&self, from: &SlabRef, memo: Memo){
+        let ref q = self.source_point;
+        let ref p = self.dest_point;
+
+        let source_point = MinkowskiPoint {
+            x: q.x,
+            y: q.y,
+            z: q.z,
+            t: self.simulator.get_clock()
+        };
+
+        let distance = (( (q.x - p.x)^2 + (q.y - p.y)^2 + (q.z - p.z)^2 ) as f64).sqrt();
+
+        let dest_point = MinkowskiPoint {
+            x: p.x,
+            y: p.y,
+            z: p.z,
+            t: source_point.t + ( distance as u64 * self.simulator.speed_of_light ) + 1 // add 1 to ensure nothing is instant
+        };
+
+        let evt = SimEvent {
+            _source_point: source_point,
+            dest_point: dest_point,
+            from: from.clone(),
+            dest: self.dest.clone(),
+            memo: memo
+        };
+
+        self.simulator.add_event( evt );
     }
 }

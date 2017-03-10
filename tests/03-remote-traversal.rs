@@ -1,12 +1,14 @@
 extern crate unbase;
 use unbase::subject::Subject;
 use std::{thread, time};
+use std::sync::Arc;
 
 #[test]
 fn remote_traversal() {
 
-    let simulator = unbase::network::Simulator::new();
-    let net = unbase::Network::new( &simulator );
+    let net = unbase::Network::new();
+    let simulator = unbase::network::transport::Simulator::new();
+    net.add_transport( Arc::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
