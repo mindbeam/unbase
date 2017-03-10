@@ -30,7 +30,7 @@ fn basic_eventual() {
 
     assert!(rec_a1.is_ok(), "New subject should be created");
     let rec_a1 = rec_a1.unwrap();
-    
+
     assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
 
     assert!(slab_a.count_of_memorefs_resident() == 1, "Slab A should have 1 memorefs resident");
@@ -83,67 +83,5 @@ fn basic_eventual() {
     // Nowwww it should have propagated
     assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Woof");
     assert_eq!(rec_a1.get_value("animal_type").unwrap(),    "Kanine");
-
-
-/*
-
-    let idx_node = Subject::new_kv(&context_b, "dummy","value").unwrap();
-    idx_node.set_relation( 0, rec_b1 );
-
-    println!("All rec_b1 MemoIds: {:?}", rec_b1_memoids);
-    slab_b.remotize_memo_ids( &rec_b1_memoids );
-
-    if let Some(record) = idx_node.get_relation(0) {
-        println!("Retrieved record: {} - {:?}", record.id, record.get_value("animal_sound") );
-    }
-
-    let rec_b2 = Subject::new_kv(&context_a, "animal_sound","Meow");
-    let rec_b3 = Subject::new_kv(&context_a, "animal_sound","Ribbit");
-
-    rec_b2.set_relation( 1, rec_b1 );
-    */
-
-    // TODO: drop the referenced memos, ensuring we only have the remote memorefs Present
-    // TODO: test relation changing/projection
-    // TODO: fix/test subject reconstitution for relationship traversal (it's duping now)
-    // TODO: build the index class using this primative
-    // TODO: figure out how to bootstrap subject index, given that the subject index
-    //       needs a (probably lesser) subject index to locate its index nodes
-
-    //rec_b1.drop();
-
-/*
-    // Time moves forward
-    net.deliver_all_memos();
-
-    let rec_b1 = context_b.get_subject( rec_a1.id );
-    assert!(rec_b1.is_ok(), "new subject should now be available on slab B");
-    let rec_b1 = rec_b1.unwrap();
-
-    assert!(rec_b1.get_value("animal_sound").unwrap() == "moo", "Transferred subject should be consistent");
-
-
-    // Time moves forward
-    net.deliver_all_memos();
-
-    let rec_c1 = context_c.get_subject( rec_a1.id );
-    assert!(rec_c1.is_ok(), "new subject should now be available on slab C");
-    let mut rec_c1 = rec_c1.unwrap();
-
-    assert!(rec_c1.get_value("animal_sound").unwrap() == "moo", "Transferred subject should be consistent");
-
-    // Time moves forward
-    net.deliver_all_memos();
-
-    assert!( rec_c1.set_kv("animal_sound", "woof"), "Change the value on slab C" );
-    assert!( rec_c1.get_value("animal_sound").unwrap() == "woof", "Updated subject should be consistent");
-
-    assert!( rec_a1.get_value("animal_sound").unwrap() == "moo", "Value should be unchanged on slab A" );
-
-    // Time moves forward
-    net.deliver_all_memos();
-
-    assert!( rec_a1.get_value("animal_sound").unwrap() == "woof", "Now the value should be changed on slab A" );
-*/
 
 }
