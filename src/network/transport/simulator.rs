@@ -56,7 +56,6 @@ struct SimulatorInternal {
 }
 
 impl Simulator {
-    // TODO: Potentially, make this return an Arc of itself.
     pub fn new () -> Self{
         Simulator {
             speed_of_light: 1, // 1 distance unit per time unit
