@@ -63,7 +63,7 @@ impl Network {
     pub fn get_slabref(&self, _slab_id: SlabId) -> Option<SlabRef> {
         unimplemented!();
     }
-    pub fn get_local_transmitter (&self, slab: &Slab) -> Arc<Transmitter> {
+    pub fn get_local_transmitter (&self, slab: &Slab) -> Transmitter {
         // We're just going to assume that we have an in-process transmitter, or freak out
         // Should probably do this more intelligently
 

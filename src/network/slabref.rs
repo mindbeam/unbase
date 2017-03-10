@@ -24,7 +24,7 @@ pub struct SlabRef {
 }
 struct SlabRefInner {
     slab_id: SlabId,
-    tx: Arc<Transmitter>,
+    tx: Transmitter,
     _slab: WeakSlab
 }
 

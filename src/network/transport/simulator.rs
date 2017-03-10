@@ -110,7 +110,7 @@ impl Transport for Simulator {
     fn is_local (&self) -> bool {
         true
     }
-    fn make_transmitter (&self, args: TransmitterArgs ) -> Result<Arc<Transmitter>,String> {
+    fn make_transmitter (&self, args: TransmitterArgs ) -> Result<Transmitter,String> {
         if let TransmitterArgs::Local(slab) = args {
             let tx = SimulatorTransmitter{
                 source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
@@ -119,7 +119,7 @@ impl Transport for Simulator {
                 dest: slab.weak()
             };
 
-            Ok(Arc::new(tx))
+            Ok(Transmitter::new_simulated(tx))
         }else{
             Err("This transport is incapable of handling remote addresses".to_string())
         }
@@ -138,7 +138,7 @@ pub struct SimulatorTransmitter{
     pub dest: WeakSlab
 }
 
-impl Transmitter for SimulatorTransmitter {
+impl SimulatorTransmitter {
     fn send (&self, from: &SlabRef, memo: Memo){
         let ref q = self.source_point;
         let ref p = self.dest_point;
