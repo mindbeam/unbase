@@ -1,3 +1,5 @@
+mod topo_subject_head_iter;
+
 use std::fmt;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
@@ -6,6 +8,7 @@ use memoref::MemoRef;
 use memorefhead::MemoRefHead;
 use error::RetrieveError;
 use index::IndexFixed;
+pub use self::topo_subject_head_iter::*;
 
 use subject::*;
 use std::sync::{Mutex,Arc,Weak};
@@ -180,9 +183,10 @@ impl Context{
             context: self.clone()
         }
     }
-    pub fn topo_subject_head_iter (&self) -> TopoContextSubjectHeadIter {
-        unimplemented!();
-        // TODO - decide between Kahn's and depth first
+    pub fn topo_subject_head_iter (&self) -> ContextTopoSubjectHeadIter {
+        ContextTopoSubjectHeadIter{
+            
+        }
     }
 
     // Subject A -> B -> E
@@ -208,7 +212,7 @@ impl Context{
     // B: [E]
     // A: [B]
     // etc
-
+/*
     pub fn fully_materialize (&self) {
 
         let slab = self.get_slab();
@@ -246,6 +250,7 @@ impl Context{
         }
 
     }
+    */
     pub fn is_fully_materialized (&self) -> bool {
 
         for (_,head) in self.subject_head_iter() {
@@ -370,12 +375,7 @@ impl Iterator for ContextSubjectHeadIter {
     }
 }
 
-pub struct TopoContextSubjectHeadIter{
-    context: Context,
-    subject_ids: Vec<SubjectId>
-}
-
-impl Iterator for TopoContextSubjectHeadIter {
+impl Iterator for ContextTopoSubjectHeadIter {
     type Item = (SubjectId, MemoRefHead);
     fn next (&mut self) -> Option<(SubjectId, MemoRefHead)> {
         unimplemented!()
