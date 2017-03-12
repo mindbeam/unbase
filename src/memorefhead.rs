@@ -144,7 +144,7 @@ impl MemoRefHead {
     }
     pub fn apply (&mut self, other: &MemoRefHead, slab: &Slab){
         for new in other.iter(){
-            self.apply_memoref(new, slab );
+            self.apply_memoref( new, slab );
         }
     }
     pub fn memo_ids (&self) -> Vec<MemoId> {

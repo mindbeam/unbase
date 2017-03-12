@@ -148,6 +148,11 @@ impl Slab {
 
         (self.id as u64).rotate_left(32) | counters.last_memo_id as u64
     }
+    // Convenience function for now, but may make sense to optimize this later
+    pub fn put_memo (&self, from: MemoOrigin, memo : Memo, deliver_local: bool ) -> MemoRef {
+        let mut memorefs = self.put_memos(from, vec![memo], deliver_local );
+        memorefs.pop().unwrap()
+    }
     pub fn put_memos(&self, from: MemoOrigin, memos : Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
         if memos.len() == 0 { return Vec::new() }
         let mut shared = self.inner.shared.lock().unwrap();

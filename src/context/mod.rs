@@ -76,15 +76,6 @@ impl Context{
             shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() ).apply_memoref(&memoref, &self.inner.slab);
         }
     }
-    // specifically for created/updated subjects
-    pub fn subject_updated (&self, subject_id: &SubjectId, memorefs: &Vec<MemoRef>, head: &MemoRefHead){
-        let mut shared = self.inner.shared.lock().unwrap();
-
-        // Necessary bookkeeping for topological traversal
-        shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() ).apply_memorefs(&memorefs, &self.inner.slab);
-        shared.update_subject_relation_map(&self.inner.slab, subject_id, head)
-
-    }
     pub fn get_slab (&self) -> &Slab {
         &self.inner.slab
     }
@@ -146,16 +137,64 @@ impl Context{
         return Ok(subject);
 
     }
+    // specifically for created/updated subjects
+    // Called by Subject::new, set_*
+    pub fn subject_updated (&self, subject_id: &SubjectId, head: &MemoRefHead){
+        let mut shared = self.inner.shared.lock().unwrap();
+
+        {
+            let my_subject_head = shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
+            my_subject_head.apply(head, &self.inner.slab);
+        }
+
+        // Necessary bookkeeping for topological traversal
+        shared.update_subject_relation_map(&self.inner.slab, subject_id, head)
+    }
+    // Called by the Slab whenever memos matching one of our subscriptions comes in
     pub fn apply_subject_head (&self, subject_id: &SubjectId, head: &MemoRefHead){
-        //QUESTION: Should we be updating our query context here? arguably yes?
+
+        // NOTE: In all liklihood, there is significant room to optimize this.
+        //       We're applying heads to heads redundantly
+
+        //QUESTION: Should we be updating our query context here?
+        //          not sure if this should happen implicitly or require explicit context exchange
+        //          I think there's a pretty strong argument for implicit, but I want to think
+        //          about this a bit more before I say yes for certain.
+        //
+        //ANSWER:   It occurs to me that we're only getting subject heads from the slab which we expressly
+        //          subscribed to, so this strengthens the case quite a bit
+
 
         let mut shared = self.inner.shared.lock().unwrap();
-        // TODO: perform a topological sort on the subject ids of the context head
-        //       so we can do a single pass over the subjects in a context consolidation
 
         if let Some(mut subject) = shared.get_subject_if_resident(subject_id) {
             subject.apply_head(head);
         }
+
+        // TODO: It probably makes sense to stop playing telephone between the context and the subject
+        //       And simply use an Arc<Mutex<MemoRefHead>> which is shared between the subject and the context
+        //       We both have it around the same time really. To do otherwise would be silly
+        //       The main question is: what threading model do we want to optimize for?
+        //       Will the context usually / always be in the same thread as the subjects?
+        //       If so, then switch to Rc and screw this Arc<Mutex<>> business
+        //       If not, then this really makes me wonder about whether the clone of the MemoRefHead
+        //       and the duplicate work of merging it twice might actually make sense vs having to cross
+        //       the thread bountary to retrieve the data we want ( probably not, but asking anway)
+
+
+        let my_subject_head2;
+
+        {
+            let my_subject_head = shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
+            my_subject_head.apply(&head, &self.inner.slab);
+
+            // HACK for below in the interest of expedience
+            my_subject_head2 = my_subject_head.clone();
+        }
+
+        // Necessary bookkeeping for topological traversal
+        shared.update_subject_relation_map(&self.inner.slab, subject_id, &my_subject_head2)
+
     }
 
     pub fn cmp (&self, other: &Self) -> bool{
@@ -170,23 +209,8 @@ impl Context{
             inner: Arc::downgrade(&self.inner)
         }
     }
-    pub fn subject_head_iter (&self) -> ContextSubjectHeadIter {
-        // TODO: Do this in a less ridiculous way,
-        //       and move it into ContextSubjectHeadIter::new
-        let subject_ids : Vec<SubjectId>;
-        {
-            let shared = self.inner.shared.lock().unwrap();
-            subject_ids = shared.subject_heads.keys().map(|k| k.to_owned()).collect();
-        }
-        ContextSubjectHeadIter {
-            subject_ids: subject_ids,
-            context: self.clone()
-        }
-    }
-    pub fn topo_subject_head_iter (&self) -> ContextTopoSubjectHeadIter {
-        ContextTopoSubjectHeadIter{
-            
-        }
+    pub fn topo_subject_head_iter (&self) -> TopoSubjectHeadIter {
+        TopoSubjectHeadIter::new( &self )
     }
 
     // Subject A -> B -> E
@@ -253,7 +277,7 @@ impl Context{
     */
     pub fn is_fully_materialized (&self) -> bool {
 
-        for (_,head) in self.subject_head_iter() {
+        for (_,head) in self.topo_subject_head_iter() {
             if ! head.is_fully_materialized(&self.inner.slab) {
                 return false
             }
@@ -347,41 +371,5 @@ impl WeakContext {
         }
 
 
-    }
-}
-
-pub struct ContextSubjectHeadIter{
-    context: Context,
-    subject_ids: Vec<SubjectId>
-}
-
-impl Iterator for ContextSubjectHeadIter {
-    type Item = (SubjectId, MemoRefHead);
-    fn next (&mut self) -> Option<(SubjectId, MemoRefHead)> {
-
-        //NOTE: Some pretttyy shenanegous stuff here, but taking the
-        //      low road for now in the interest of time. Playing
-        //      stupid games to try to avoid a deadlock with the slab
-        //      inserting new memos mid-iteration via update_subject_head
-        if let Some(subject_id) = self.subject_ids.pop() {
-            if let Some(head) = self.context.inner.shared.lock().unwrap().subject_heads.get(&subject_id) {
-                Some((subject_id,head.clone()))
-            }else{
-                None
-            }
-        }else{
-            None
-        }
-    }
-}
-
-impl Iterator for ContextTopoSubjectHeadIter {
-    type Item = (SubjectId, MemoRefHead);
-    fn next (&mut self) -> Option<(SubjectId, MemoRefHead)> {
-        unimplemented!()
-
-        // QUESTION: should we calculate the topo each time? or use subject_relation_map?
-        //           the latter _should_ be more efficient, but requires more dilligence
-        //           to maintain
     }
 }

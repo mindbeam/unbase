@@ -58,10 +58,10 @@ impl IndexFixed {
                             if exponent == 0 {
                                 // BUG: move this clause up
                                 println!("]]] end of the line");
-                                node.set_relation(y as u8,subject.clone()); // TODO: should accept a borrow
+                                node.set_relation(y as u8,&subject);
                             }else{
                                 let new_node = Subject::new( &self.context, HashMap::new(), true ).unwrap();
-                                node.set_relation(y as u8,new_node.clone()); // TODO: should accept a borrow
+                                node.set_relation(y as u8,&new_node);
                                 node = new_node;
                             }
                         }

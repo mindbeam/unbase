@@ -1,7 +1,6 @@
 use std::fmt;
 use std::collections::HashMap;
 use memo::*;
-use memoref::MemoRef;
 use memorefhead::*;
 use context::Context;
 use error::*;
@@ -49,18 +48,18 @@ impl Subject {
 
         context.subscribe_subject( &subject );
 
-        let memorefs = slab.put_memos(MemoOrigin::Local, vec![
+        let memoref = slab.put_memo(MemoOrigin::Local,
             Memo::new_basic_noparent(
                 slab.gen_memo_id(),
                 subject_id,
                 MemoBody::FullyMaterialized {v: vals, r: HashMap::new() } // TODO: accept relations
             )
-        ], false);
+        , false);
 
         {
             let mut shared = subject.shared.lock().unwrap();
-            shared.head.apply_memorefs(&memorefs, &slab);
-            shared.context.subject_updated( &subject_id, &memorefs, &shared.head );
+            shared.head.apply_memoref(&memoref, &slab);
+            shared.context.subject_updated( &subject_id, &shared.head );
 
 
             // IMPORTANT: Need to wait to insert this into the index until _after_ the first memo
@@ -94,6 +93,9 @@ impl Subject {
 
         subject
     }
+    pub fn new_blank ( context: &Context ) -> Result<Subject,String> {
+        Self::new( context, HashMap::new(), false )
+    }
     pub fn new_kv ( context: &Context, key: &str, value: &str ) -> Result<Subject,String> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
@@ -105,26 +107,24 @@ impl Subject {
         vals.insert(key.to_string(), value.to_string());
 
         let slab;
-        let memos;
+        let memo;
         {
             let shared = self.shared.lock().unwrap();
             slab = shared.context.get_slab().clone();
 
-            memos = vec![
-                Memo::new_basic(
-                    slab.gen_memo_id(),
-                    self.id,
-                    shared.head.clone(),
-                    MemoBody::Edit(vals)
-                )
-            ];
+            memo = Memo::new_basic(
+                slab.gen_memo_id(),
+                self.id,
+                shared.head.clone(),
+                MemoBody::Edit(vals)
+            );
         }
 
-        let memorefs : Vec<MemoRef> = slab.put_memos(MemoOrigin::Local, memos, false);
+        let memoref = slab.put_memo(MemoOrigin::Local, memo, false);
 
         let mut shared = self.shared.lock().unwrap();
-        shared.head.apply_memorefs(&memorefs, &slab);
-        shared.context.subject_updated( &self.id, &memorefs, &shared.head );
+        shared.head.apply_memoref(&memoref, &slab);
+        shared.context.subject_updated( &self.id, &shared.head );
 
         true
     }
@@ -145,36 +145,34 @@ impl Subject {
         }
         None
     }
-    pub fn set_relation (&self, key: u8, relation: Self) {
+    pub fn set_relation (&self, key: u8, relation: &Self) {
         println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
         let mut memoref_map : HashMap<u8, (SubjectId,MemoRefHead)> = HashMap::new();
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
         let slab;
-        let memos;
+        let memo;
         {
             let shared = self.shared.lock().unwrap();
             slab = shared.context.get_slab().clone();
 
-            memos = vec![
-               Memo::new(
-                   slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
-                   self.id,
-                   shared.head.clone(),
-                   MemoBody::Relation(memoref_map)
-               )
-            ];
+            memo = Memo::new(
+                slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
+                self.id,
+                shared.head.clone(),
+                MemoBody::Relation(memoref_map)
+            );
         }
 
-        let memorefs = slab.put_memos( MemoOrigin::Local, memos, false );
+        let memoref = slab.put_memo( MemoOrigin::Local, memo, false );
 
 
         // TODO: determine conclusively whether it's possible for apply_memorefs
         //       to result in a retrieval that retults in a context addition that
         //       causes a deadlock
         let mut shared = self.shared.lock().unwrap();
-        shared.head.apply_memorefs(&memorefs, &slab);
-        shared.context.subject_updated( &self.id, &memorefs, &shared.head );
+        shared.head.apply_memoref(&memoref, &slab);
+        shared.context.subject_updated( &self.id, &shared.head );
 
     }
     pub fn get_relation ( &self, key: u8 ) -> Result<Subject, RetrieveError> {
