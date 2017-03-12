@@ -5,14 +5,24 @@ use std::collections::VecDeque;
 use memo::*;
 use memoref::*;
 use slab::*;
-use subject::SubjectId;
+use subject::*;
 use std::collections::HashMap;
+use context::*;
+use error::*;
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
 // This "head" is rather like a git HEAD, insofar as it is intended to contain only the youngest
 // descendents of a given causal chain. It provides mechanisms for applying memorefs, or applying
 // other MemoRefHeads such that the mutated list may be pruned as appropriate given the above.
+
+
+pub type RelationSlotId = u8;
+
+/*pub struct SlotRelationLink {
+    slot:       RelationSlotId,
+    subject_id: Option<SubjectId>
+}*/
 
 #[derive(Clone)]
 pub struct MemoRefHead (Vec<MemoRef>);
@@ -98,45 +108,6 @@ impl MemoRefHead {
 
         applied
     }
-    pub fn get_relation_subject_ids (&self, slab: &Slab) -> Vec<SubjectId> {
-        let mut slot_subjects : HashMap<u8, SubjectId> = HashMap::new();
-
-        // TODO: how to handle relationship nullification?
-
-        for memo in self.causal_memo_iter(slab){
-            match memo.inner.body {
-                MemoBody::FullyMaterialized { v: _, ref r } => {
-
-                    for (slot,&(subject_id,_)) in r {
-                        slot_subjects.insert(*slot,subject_id);
-                    }
-                    break;
-                    // Materialized memo means we're done here
-                },
-                MemoBody::Relation(ref r) => {
-                    for (slot,&(subject_id,_)) in r.iter() {
-                        slot_subjects.insert(*slot,subject_id);
-                    }
-                },
-                _ => {}
-            }
-        }
-
-        let mut out : Vec<SubjectId> = slot_subjects.values().map(|v| *v).collect();
-        out.sort();
-        out.dedup();
-
-        out
-
-    }
-    pub fn get_first_subject_id (&self, slab: &Slab) -> Option<SubjectId> {
-        if let Some(memoref) = self.0.iter().next() {
-            // TODO: Could stand to be much more robust here
-            Some(memoref.get_memo(slab).unwrap().inner.subject_id)
-        }else{
-            None
-        }
-    }
     pub fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &Slab) {
         for new in new_memorefs.iter(){
             self.apply_memoref(new, slab);
@@ -149,6 +120,14 @@ impl MemoRefHead {
     }
     pub fn memo_ids (&self) -> Vec<MemoId> {
         self.0.iter().map(|m| m.id).collect()
+    }
+    pub fn first_subject_id (&self, slab: &Slab) -> Option<SubjectId> {
+        if let Some(memoref) = self.0.iter().next() {
+            // TODO: Could stand to be much more robust here
+            Some(memoref.get_memo(slab).unwrap().inner.subject_id)
+        }else{
+            None
+        }
     }
     pub fn to_vecdeque (&self) -> VecDeque<MemoRef> {
         VecDeque::from(self.0.clone())
@@ -180,7 +159,7 @@ impl MemoRefHead {
 
         true
     }
-    pub fn fully_materialize( &self, slab: &Slab ) -> bool {
+    /*pub fn fully_materialize( &self, slab: &Slab ) {
         // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
         //       as part of the list management. That way we won't have to incur the below computational effort.
 
@@ -192,6 +171,76 @@ impl MemoRefHead {
         }
 
         true
+    }*/
+
+    // Kind of a brute force way to do this
+    // TODO: Consider calculating deltas during memoref application,
+    //       and use that to perform a minimum cost subject_head_link edit
+    pub fn get_relation_links (&self, slab: &Slab) -> &[SubjectId] {
+        let mut relation_links : [RelationSlotId; SUBJECT_MAX_RELATIONS as usize];
+
+        // TODO: how to handle relationship nullification?
+        for memo in self.causal_memo_iter(slab){
+            match memo.inner.body {
+                MemoBody::FullyMaterialized { v: _, ref r } => {
+
+                    for (slot,&(subject_id,_)) in r {
+                        relation_links[ slot ] = subject_id;
+                    }
+                    break;
+                    // Materialized memo means we're done here
+                },
+                MemoBody::Relation(ref r) => {
+                    for (slot,&(subject_id,_)) in r.iter() {
+                        relation_links[ slot ] = subject_id;
+                    }
+                },
+                _ => {}
+            }
+        }
+
+        relation_links
+
+    }
+
+    pub fn get_value ( &self, context: &Context, key: &str ) -> Option<String> {
+
+        //TODO: consider creating a consolidated projection routine for most/all uses
+        for memo in self.causal_memo_iter(context.get_slab()) {
+
+            println!("# \t\\ Considering Memo {}", memo.id );
+            if let Some((values, materialized)) = memo.get_values() {
+                if let Some(v) = values.get(key) {
+                    return Some(v.clone());
+                }else if materialized {
+                    return None; //end of the line here
+                }
+            }
+        }
+        None
+    }
+    pub fn get_relation ( &self, context: &Context, key: u8 ) -> Result<&(SubjectId,Self), RetrieveError> {
+        // TODO: Make error handling more robust
+
+        for memo in self.causal_memo_iter( context.get_slab() ) {
+
+            if let Some((relations,materialized)) = memo.get_relations(){
+                println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
+                if let Some(r) = relations.get(&key) {
+                    // BUG: the parent->child was formed prior to the revision of the child.
+                    // TODO: Should be adding the new head memo to the query context
+                    //       and superseding the referenced head due to its inclusion in the context
+
+                    return Ok(r);
+                }else if materialized {
+                    println!("\n# \t\\ Not Found (materialized)" );
+                    return Err(RetrieveError::NotFound);
+                }
+            }
+        }
+
+        println!("\n# \t\\ Not Found" );
+        Err(RetrieveError::NotFound)
     }
 }
 

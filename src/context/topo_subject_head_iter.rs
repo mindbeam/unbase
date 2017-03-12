@@ -1,38 +1,40 @@
 
 use super::*;
 
+struct BidirectionalRef {
+    parents: Vec<(SubjectId, u8)>,
+    children: Vec<(u8, SubjectId)>
+}
+
 pub struct TopoSubjectHeadIter {
     context: Context,
     slab: Slab,
-    subject_ids: Vec<SubjectId>
+    head_links: HeadLinks
 }
 
+// An iterator specifically for the subject heads in our context
+// This is not for all subjects which are loaded necessarily
+// This means that the subject heads may be disjointed, but a
+// topological search is essential to the compaction behaving correctly
 impl TopoSubjectHeadIter {
     pub fn new (context: &Context) -> TopoSubjectHeadIter {
-        
-        // TODO: Do this in a less ridiculous way,
-        //       and move it into ContextSubjectHeadIter::new
-        let subject_ids : Vec<SubjectId>;
-        {
-            let shared = context.inner.shared.lock().unwrap();
-            subject_ids = shared.subject_heads.keys().map(|k| k.to_owned()).collect();
-        }
+
+        let slab = context.get_slab().clone();
+        let shared = context.inner.shared.lock().unwrap();
+
         TopoSubjectHeadIter {
-            subject_ids: subject_ids,
+            head_links: shared.resident_head_links.clone(),
             context: context.clone(),
             slab: context.get_slab().clone()
         }
+        
     }
 }
 
 impl Iterator for TopoSubjectHeadIter {
     type Item = (SubjectId, MemoRefHead);
-    fn next (&mut self) -> Option<(SubjectId, MemoRefHead)> {
+    fn next (&mut self) -> Option<(MemoRefHead,Vec<SubjectId>,Vec<SubjectId>)> {
 
-        //NOTE: Some pretttyy shenanegous stuff here, but taking the
-        //      low road for now in the interest of time. Playing
-        //      stupid games to try to avoid a deadlock with the slab
-        //      inserting new memos mid-iteration via update_subject_head
         if let Some(subject_id) = self.subject_ids.pop() {
             if let Some(head) = self.context.inner.shared.lock().unwrap().subject_heads.get(&subject_id) {
                 Some((subject_id,head.clone()))
@@ -42,5 +44,11 @@ impl Iterator for TopoSubjectHeadIter {
         }else{
             None
         }
+    }
+}
+impl DoubleEndedIterator for TopoSubjectHeadIter {
+    fn next_back (&mut self) -> Option<(SubjectId, MemoRefHead)> {
+        // temporary
+        Some((1,MemoRefHead::new()))
     }
 }

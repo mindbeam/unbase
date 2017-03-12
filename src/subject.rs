@@ -76,7 +76,7 @@ impl Subject {
     }
     pub fn reconstitute (context: &Context, head: MemoRefHead) -> Subject {
 
-        let subject_id = head.get_first_subject_id( context.get_slab() ).unwrap();
+        let subject_id = head.first_subject_id( context.get_slab() ).unwrap();
 
         let shared = SubjectShared{
             id: subject_id,
@@ -131,19 +131,8 @@ impl Subject {
     pub fn get_value ( &self, key: &str ) -> Option<String> {
         println!("# Subject({}).get_value({})",self.id,key);
 
-        //TODO: consider creating a consolidated projection routine for most/all uses
-        for memo in self.memo_iter() {
-
-            println!("# \t\\ Considering Memo {}", memo.id );
-            if let Some((values, materialized)) = memo.get_values() {
-                if let Some(v) = values.get(key) {
-                    return Some(v.clone());
-                }else if materialized {
-                    return None; //end of the line here
-                }
-            }
-        }
-        None
+        let shared = self.shared.lock().unwrap();
+        shared.head.get_value(shared.context, key)
     }
     pub fn set_relation (&self, key: u8, relation: &Self) {
         println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
@@ -177,6 +166,9 @@ impl Subject {
     }
     pub fn get_relation ( &self, key: u8 ) -> Result<Subject, RetrieveError> {
         println!("# Subject({}).get_relation({})",self.id,key);
+
+        let shared = self.shared.lock().unwrap();
+        shared.head.get_value(key);
 
         let shared = self.shared.lock().unwrap();
         let context = &shared.context;

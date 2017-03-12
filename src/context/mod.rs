@@ -1,4 +1,5 @@
 mod topo_subject_head_iter;
+mod subject_head_links;
 
 use std::fmt;
 use std::collections::HashMap;
@@ -9,14 +10,21 @@ use memorefhead::MemoRefHead;
 use error::RetrieveError;
 use index::IndexFixed;
 pub use self::topo_subject_head_iter::*;
+use self::subject_head_links::*;
 
 use subject::*;
 use std::sync::{Mutex,Arc,Weak};
 
 pub struct ContextShared {
+    //This is for consistency model enforcement
     subject_heads: HashMap<SubjectId, MemoRefHead>,
-    subjects: HashMap<SubjectId, WeakSubject>,
-    subject_relation_map : HashMap<SubjectId,Vec<SubjectId>>
+
+    //This is for compaction of the subject_heads
+    subject_head_links : SubjectHeadLinks,
+
+    //This is for active subjects / subject subscription management
+    subjects: HashMap<SubjectId, WeakSubject>
+
 }
 
 pub struct ContextInner {
@@ -148,7 +156,7 @@ impl Context{
         }
 
         // Necessary bookkeeping for topological traversal
-        shared.update_subject_relation_map(&self.inner.slab, subject_id, head)
+        shared.subject_head_links.update( &self.inner.slab, subject_id, head );
     }
     // Called by the Slab whenever memos matching one of our subscriptions comes in
     pub fn apply_subject_head (&self, subject_id: &SubjectId, head: &MemoRefHead){
@@ -193,7 +201,7 @@ impl Context{
         }
 
         // Necessary bookkeeping for topological traversal
-        shared.update_subject_relation_map(&self.inner.slab, subject_id, &my_subject_head2)
+        shared.head_links.update( &self.inner.slab, subject_id, &my_subject_head2 )
 
     }
 
@@ -236,45 +244,40 @@ impl Context{
     // B: [E]
     // A: [B]
     // etc
-/*
-    pub fn fully_materialize (&self) {
+
+    pub fn fully_compress (&self) {
 
         let slab = self.get_slab();
 
-        // Iterate the contextualized subject heads in topological order
-        for (subject_id, head, ref_by, ref_to ) in self.topo_subject_head_iter() {
+        // Iterate the contextualized subject heads in reverse topological order
+        for (head, ref_by, ref_to) in self.topo_subject_head_iter().rev() {
+            // Materialization not really necessary for compression ( I think )
+            // try to materialize it (create a memo that flattens known preceeding operations)
+            // head.fully_materialize( &slab );
 
-            // retrieve the subject struct for each one
-            if let Ok(ref mut subject) = self.get_subject_with_head(subject_id, head){
+            // OK we did compress and issue a new "Materialized" memo
+            // ( it should really only be one Memo in the new MemoRefHead,
+            // but assuming that would limit flexibility, and destandardize our handling)
 
-                // try to materialize it (create a memo that flattens known preceeding operations)
-                if let Some(materialized_head) = subject.fully_materialize( &slab ) {
-                    // OK we did compress and issue a new "Materialized" memo
-                    // ( it should really only be one Memo in the new MemoRefHead,
-                    // but assuming that would limit flexibility, and destandardize our handling)
+            if ref_by.len() > 0 {
+                // OK, somebody is pointing to us, so lets issue an edit for them
+                // to point to the new materialized memo for their relevant relations
+                self.repoint_subject_relations(ref_by, materialized_head);
 
-                    if ( ref_by.len() > 0 ){
-                        // OK, somebody is pointing to us, so lets issue an edit for them
-                        // to point to the new materialized memo for their relevant relations
-                        self.repoint_subject_relations(ref_by, materialized_head);
+                // Now that we know they are pointing to the new materialized MemoRefHead,
+                // and that the resident subject struct we have is already updated, we can
+                // remove this subject MemoRefHead from the context head, because subsequent
+                // index/graph traversals should find this updated parent.
+                //
+                // When trying to materialize/compress fully (not that we'll want to do this often),
+                // this would continue all the way to the root index node, and we should be left
+                // with a very small context head
 
-                        // Now that we know they are pointing to the new materialized MemoRefHead,
-                        // and that the resident subject struct we have is already updated, we can
-                        // remove this subject MemoRefHead from the context head, because subsequent
-                        // index/graph traversals should find this updated parent.
-                        //
-                        // When trying to materialize/compress fully (not that we'll want to do this often),
-                        // this would continue all the way to the root index node, and we should be left
-                        // with a very small context head
-
-                        self.remove(subject_id) // should be removed from the context
-                    }
-                }
+                self.remove(subject) // should be removed from the context
             }
         }
 
     }
-    */
     pub fn is_fully_materialized (&self) -> bool {
 
         for (_,head) in self.topo_subject_head_iter() {
@@ -289,25 +292,6 @@ impl Context{
 }
 
 impl ContextShared {
-    fn update_subject_relation_map (&mut self, slab: &Slab, subject_id: &SubjectId, head: &MemoRefHead ) {
-        let relation_subject_ids = head.get_relation_subject_ids( slab );
-
-        match self.subject_relation_map.entry(*subject_id) {
-            Entry::Vacant(e) => {
-                if relation_subject_ids.len() > 0 {
-                    e.insert(relation_subject_ids);
-                }
-            }
-            Entry::Occupied(mut e) => {
-                if relation_subject_ids.len() > 0 {
-                    e.insert(relation_subject_ids);
-                }else{
-                    e.remove();
-                }
-            }
-        }
-
-    }
     fn get_subject_if_resident (&mut self, subject_id: &SubjectId) -> Option<Subject> {
 
         if let Some(weaksub) = self.subjects.get_mut(subject_id) {
