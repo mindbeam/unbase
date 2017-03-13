@@ -414,7 +414,7 @@ impl SlabShared {
         if let Some(subscribers) = self.subject_subscriptions.get( &subject_id ) {
             for weakcontext in subscribers {
                 if let Some(context) = weakcontext.upgrade() {
-                    context.apply_subject_head( &subject_id, head );
+                    context.apply_subject_head( subject_id, head );
                 }
 
             }

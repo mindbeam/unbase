@@ -1,15 +1,14 @@
-mod subject_head_iter;
+//mod subject_graph;
+//mod topo_subject_head_iter;
 
 use std::fmt;
 use std::collections::HashMap;
-use std::collections::hash_map::Entry;
 use slab::Slab;
 use memoref::MemoRef;
 use memorefhead::MemoRefHead;
 use error::RetrieveError;
 use index::IndexFixed;
-pub use self::subject_head_iter::*;
-use self::subject_graph::*;
+//use self::subject_graph::*;
 
 use subject::*;
 use std::sync::{Mutex,Arc,Weak};
@@ -19,7 +18,7 @@ pub struct ContextShared {
     subject_heads: HashMap<SubjectId, MemoRefHead>,
 
     //This is for compaction of the subject_heads
-    subject_graph : SubjectGraph,
+    //subject_graph : SubjectGraph,
 
     //This is for active subjects / subject subscription management
     subjects: HashMap<SubjectId, WeakSubject>
@@ -50,8 +49,8 @@ impl Context{
                 root_index: Mutex::new(None),
                 shared: Mutex::new(ContextShared {
                     subject_heads: HashMap::new(),
+                    //subject_graph: SubjectGraph::new(),
                     subjects: HashMap::new(),
-                    subject_relation_map: HashMap::new()
                 })
             })
         };
@@ -129,7 +128,7 @@ impl Context{
                 println!("# \\ No relevant head found in context");
             }
 
-            match shared.get_subject_if_resident(&subject_id) {
+            match shared.get_subject_if_resident(subject_id) {
                 Some(ref mut subject) => {
                     subject.apply_head(&head);
                     return Ok(subject.clone());
@@ -146,18 +145,18 @@ impl Context{
     }
     // specifically for created/updated subjects
     // Called by Subject::new, set_*
-    pub fn subject_updated (&self, subject_id: &SubjectId, head: &MemoRefHead){
+    pub fn subject_updated (&self, subject_id: SubjectId, head: &MemoRefHead){
         let mut shared = self.inner.shared.lock().unwrap();
 
-        let my_subject_head = shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
+        let my_subject_head = shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() );
         my_subject_head.apply(head, &self.inner.slab);
 
         // Necessary bookkeeping for topological traversal
-        shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links());
+        //shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links( &self.inner.slab ));
 
     }
     // Called by the Slab whenever memos matching one of our subscriptions comes in
-    pub fn apply_subject_head (&self, subject_id: &SubjectId, head: &MemoRefHead){
+    pub fn apply_subject_head (&self, subject_id: SubjectId, head: &MemoRefHead){
 
         // NOTE: In all liklihood, there is significant room to optimize this.
         //       We're applying heads to heads redundantly
@@ -188,12 +187,12 @@ impl Context{
         //       the thread bountary to retrieve the data we want ( probably not, but asking anway)
 
 
-        let my_subject_head = shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
+        let my_subject_head = shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() );
         my_subject_head.apply(&head, &self.inner.slab);
 
         // Necessary bookkeeping for topological traversal
         // TODO: determine if it makes sense to calculate only the relationship diffs to minimize cost
-        shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links());
+        //shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links( &self.inner.slab ));
 
     }
 
@@ -214,9 +213,6 @@ impl Context{
     pub fn topo_subject_head_iter (&self) -> TopoSubjectHeadIter {
         TopoSubjectHeadIter::new( &self )
     }*/
-    pub fn subject_head_iter (&self) -> SubjectHeadIter {
-        SubjectHeadIter::new( &self )
-    }
 
     // Subject A -> B -> E
     //          \-> C -> F
@@ -278,7 +274,7 @@ impl Context{
     */
     pub fn is_fully_materialized (&self) -> bool {
 
-        for (_,head) in self.subject_head_iter() {
+        for (_,head) in self.inner.shared.lock().unwrap().subject_heads.iter() {
             if ! head.is_fully_materialized(&self.inner.slab) {
                 return false
             }
@@ -290,9 +286,9 @@ impl Context{
 }
 
 impl ContextShared {
-    fn get_subject_if_resident (&mut self, subject_id: &SubjectId) -> Option<Subject> {
+    fn get_subject_if_resident (&mut self, subject_id: SubjectId) -> Option<Subject> {
 
-        if let Some(weaksub) = self.subjects.get_mut(subject_id) {
+        if let Some(weaksub) = self.subjects.get_mut(&subject_id) {
             if let Some(subject) = weaksub.upgrade() {
                 //NOTE: In theory we shouldn't need to apply the current context
                 //      to this subject, as it shouldddd have already happened

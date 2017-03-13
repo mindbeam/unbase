@@ -75,7 +75,7 @@ impl SubjectGraph {
         }
 
     }
-    fn set_backlink (&self, child_id: &SubjectId, slot: &RelationSlotId, parent_id: &SubjectId ) {
+    fn set_backlink (&mut self, child_id: &SubjectId, slot: &RelationSlotId, parent_id: &SubjectId ) {
         if *child_id == 0 {
             return;
         }
@@ -94,28 +94,37 @@ impl SubjectGraph {
         child_vertex.in_degree = child_vertex.parents.len();
 
     }
-    fn remove_backlink (&self, child_id: &SubjectId, slot: &RelationSlotId, parent_id: &SubjectId ) {
+    fn remove_backlink (&mut self, child_id: &SubjectId, slot: &RelationSlotId, parent_id: &SubjectId ) {
         if *child_id == 0 {
             return;
         }
 
         match self.vertices.entry(*child_id){
-            Entry::Occupied(e) => {
-                let child_vertex = e.get_mut();
-                child_vertex.parents.retain(|l| { l.parent_id != *parent_id && l.parent_slot != *slot });
+            Entry::Occupied(mut e) => {
 
-                if child_vertex.parents.len() == 0 {
+                let mut do_remove : bool = false;
+                {
+                    let child_vertex = e.get_mut();
+                    child_vertex.parents.retain(|l| { l.parent_id != *parent_id && l.parent_slot != *slot });
+
+                    if child_vertex.parents.len() == 0 {
+                        do_remove = true;
+                    }else{
+                        child_vertex.in_degree = child_vertex.parents.len();
+                    }
+                }
+                if do_remove {
                     e.remove();
-                }else{
-                    child_vertex.in_degree = child_vertex.parents.len();
                 }
             }
+            _ => {}
         }
     }
     // vertices sorted by in degree
-    pub fn lowest_indegree_vertex (&self) -> Vec<&SubjectVertex> {
-        let mut vertices : Vec<&SubjectVertex> = self.vertices.values().collect();
-        vertices.sort_by(|a, b| a.in_degree.cmp(&b.in_degree) );
-        vertices[0]
+    pub fn least_indegree_vertex (&self) -> Option<&SubjectVertex> {
+        unimplemented!();
+        //let mut vertices : Vec<&SubjectVertex> = self.vertices.values().collect();
+        //vertices.sort_by(|a, b| a.in_degree.cmp(&b.in_degree) );
+        //vertices.get(0)
     }
 }

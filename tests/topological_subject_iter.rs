@@ -30,8 +30,8 @@ fn acyclic() {
     record5.set_relation(0,&record2);
     record6.set_relation(0,&record5);
 
-    for (subject_id,mrh) in context_a.topo_subject_head_iter(){
-        println!("Subject {} MRH {:?}", subject_id, mrh );
-    }
+    //for (subject_id,mrh) in context_a.topo_subject_head_iter(){
+    //    println!("Subject {} MRH {:?}", subject_id, mrh );
+    //}
 
 }

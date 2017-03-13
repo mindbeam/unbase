@@ -59,7 +59,7 @@ impl Subject {
         {
             let mut shared = subject.shared.lock().unwrap();
             shared.head.apply_memoref(&memoref, &slab);
-            shared.context.subject_updated( &subject_id, &shared.head );
+            shared.context.subject_updated( subject_id, &shared.head );
 
 
             // IMPORTANT: Need to wait to insert this into the index until _after_ the first memo
@@ -113,7 +113,7 @@ impl Subject {
 
         let shared = self.shared.lock().unwrap();
         match shared.head.project_relation(&shared.context, key) {
-            Ok(&(subject_id,head)) => shared.context.get_subject_with_head(subject_id,head),
+            Ok((subject_id, head)) => shared.context.get_subject_with_head(subject_id,head),
             Err(e)   => Err(e)
 
         }
@@ -140,7 +140,7 @@ impl Subject {
 
         let mut shared = self.shared.lock().unwrap();
         shared.head.apply_memoref(&memoref, &slab);
-        shared.context.subject_updated( &self.id, &shared.head );
+        shared.context.subject_updated( self.id, &shared.head );
 
         true
     }
@@ -171,7 +171,7 @@ impl Subject {
         //       causes a deadlock
         let mut shared = self.shared.lock().unwrap();
         shared.head.apply_memoref(&memoref, &slab);
-        shared.context.subject_updated( &self.id, &shared.head );
+        shared.context.subject_updated( self.id, &shared.head );
 
     }
     // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
@@ -203,7 +203,7 @@ impl Subject {
     pub fn is_fully_materialized (&self, slab: &Slab) -> bool {
         self.shared.lock().unwrap().head.is_fully_materialized(slab)
     }
-    pub fn fully_materialize (&mut self, slab: &Slab) -> bool {
+    pub fn fully_materialize (&mut self, _slab: &Slab) -> bool {
         unimplemented!();
         //self.shared.lock().unwrap().head.fully_materialize(slab)
     }

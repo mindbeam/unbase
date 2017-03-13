@@ -8,7 +8,6 @@ use memo::*;
 use memoref::*;
 use slab::*;
 use subject::*;
-use std::collections::HashMap;
 use context::*;
 use error::*;
 

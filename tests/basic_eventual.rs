@@ -71,12 +71,12 @@ fn basic_eventual() {
     assert_eq!(rec_c1.get_value("animal_sound").unwrap(), "Moo");
 
 
-    rec_b1.set_kv("animal_type","Bovine");
+    rec_b1.set_value("animal_type","Bovine");
     assert_eq!(rec_b1.get_value("animal_type").unwrap(), "Bovine");
     assert_eq!(rec_b1.get_value("animal_sound").unwrap(),   "Moo");
 
-    rec_b1.set_kv("animal_sound","Woof");
-    rec_b1.set_kv("animal_type","Kanine");
+    rec_b1.set_value("animal_sound","Woof");
+    rec_b1.set_value("animal_type","Kanine");
     assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Woof");
     assert_eq!(rec_b1.get_value("animal_type").unwrap(),  "Kanine");
 
@@ -141,7 +141,7 @@ fn basic_eventual() {
     // Time moves forward
     net.deliver_all_memos();
 
-    assert!( rec_c1.set_kv("animal_sound", "woof"), "Change the value on slab C" );
+    assert!( rec_c1.set_value("animal_sound", "woof"), "Change the value on slab C" );
     assert!( rec_c1.get_value("animal_sound").unwrap() == "woof", "Updated subject should be consistent");
 
     assert!( rec_a1.get_value("animal_sound").unwrap() == "moo", "Value should be unchanged on slab A" );

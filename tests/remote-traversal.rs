@@ -16,8 +16,8 @@ fn remote_traversal() {
 
     let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").unwrap();
 
-    rec_a1.set_kv("animal_sound","Woof");
-    rec_a1.set_kv("animal_sound","Meow");
+    rec_a1.set_value("animal_sound","Woof");
+    rec_a1.set_value("animal_sound","Meow");
 
     simulator.advance_clock(1); // Now it should have propagated to slab B
 

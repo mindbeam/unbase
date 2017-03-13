@@ -18,8 +18,8 @@ impl MemoRefHead {
     // Kind of a brute force way to do this
     // TODO: Consider calculating deltas during memoref application,
     //       and use that to perform a minimum cost subject_head_link edit
-    pub fn project_all_relation_links (&self, slab: &Slab) -> &[SubjectId] {
-        let mut relation_links : [RelationSlotId; SUBJECT_MAX_RELATIONS] = [0; SUBJECT_MAX_RELATIONS];
+    pub fn project_all_relation_links (&self, slab: &Slab) -> [SubjectId; SUBJECT_MAX_RELATIONS] {
+        let mut relation_links : [SubjectId; SUBJECT_MAX_RELATIONS] = [0; SUBJECT_MAX_RELATIONS];
 
         // TODO: how to handle relationship nullification?
         for memo in self.causal_memo_iter(slab){
@@ -27,14 +27,14 @@ impl MemoRefHead {
                 MemoBody::FullyMaterialized { v: _, ref r } => {
 
                     for (slot,&(subject_id,_)) in r {
-                        relation_links[ slot ] = subject_id;
+                        relation_links[ *slot as usize ] = subject_id as SubjectId;
                     }
                     break;
                     // Materialized memo means we're done here
                 },
                 MemoBody::Relation(ref r) => {
                     for (slot,&(subject_id,_)) in r.iter() {
-                        relation_links[ slot ] = subject_id;
+                        relation_links[ *slot as usize ] = subject_id as SubjectId;
                     }
                 },
                 _ => {}
@@ -42,7 +42,6 @@ impl MemoRefHead {
         }
 
         relation_links
-
     }
 
     pub fn project_value ( &self, context: &Context, key: &str ) -> Option<String> {
@@ -61,19 +60,19 @@ impl MemoRefHead {
         }
         None
     }
-    pub fn project_relation ( &self, context: &Context, key: u8 ) -> Result<&(SubjectId,Self), RetrieveError> {
+    pub fn project_relation ( &self, context: &Context, key: u8 ) -> Result<(SubjectId,Self), RetrieveError> {
         // TODO: Make error handling more robust
 
         for memo in self.causal_memo_iter( context.get_slab() ) {
 
             if let Some((relations,materialized)) = memo.get_relations(){
                 println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
-                if let Some(r) = relations.get(&key) {
+                if let Some(&(subject_id, ref head)) = relations.get(&key) {
                     // BUG: the parent->child was formed prior to the revision of the child.
                     // TODO: Should be adding the new head memo to the query context
                     //       and superseding the referenced head due to its inclusion in the context
 
-                    return Ok(r);
+                    return Ok((subject_id,head.clone()));
                 }else if materialized {
                     println!("\n# \t\\ Not Found (materialized)" );
                     return Err(RetrieveError::NotFound);
