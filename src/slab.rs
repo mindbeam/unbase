@@ -117,10 +117,13 @@ impl Slab {
     }
     pub fn generate_root_index_seed(&self) -> MemoRefHead {
 
+        let mut values = HashMap::new();
+        values.insert("tier".to_string(),0.to_string());
+
         let memo = Memo::new_basic_noparent(
             self.gen_memo_id(),
             self.generate_subject_id(),
-            MemoBody::FullyMaterialized {v: HashMap::new(), r: HashMap::new() } // TODO: accept relations
+            MemoBody::FullyMaterialized {v: values, r: HashMap::new() } // TODO: accept relations
         );
 
         let memorefs = self.put_memos(MemoOrigin::Local, vec![ memo.clone() ], true);
@@ -206,6 +209,7 @@ impl Slab {
         return;
     }
     pub fn unsubscribe_subject (&self,  subject_id: u64, context: &Context ){
+        println!("# Slab({}).unsubscribe_subject({})", self.id, subject_id);
 
         let mut shared = self.inner.shared.lock().unwrap();
 
@@ -279,7 +283,7 @@ impl SlabShared {
     }
     pub fn put_memos<'a> (&mut self, from: MemoOrigin, memos: Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
-        println!("# SlabShared({}).put_memos({:?},{:?})", self.id, from, mids);
+        println!("# SlabShared({}).put_memos({:?},{:?},{:?})", self.id, from, mids, deliver_local);
 
         // TODO: Evaluate more efficient ways to group these memos by subject
 

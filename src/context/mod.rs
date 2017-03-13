@@ -93,13 +93,27 @@ impl Context{
         self.inner.slab.subscribe_subject(subject.id, self);
     }
     pub fn unsubscribe_subject (&self, subject_id: SubjectId ){
+        println!("# Context.unsubscribe_subject({})", subject_id);
 
+    /*
+    BUG/TODO: Temporarily disabled unsubscription
+    1. Because it was causing deadlocks on the context AND slab mutexes
+       when the thread in the test case happened to drop the subject
+       when we were busy doing apply_subject_head, which locks context,
+       and is called by slab – so clearly this is untenable
+    2. It was always sort of a hack that the subject was managing subscriptions
+       in this way anyways. Lets put together a more final version of the subscriptions
+       before we bother with fixing unsubscription
+       
         {
-
             let mut shared = self.inner.shared.lock().unwrap();
             shared.subjects.remove( &subject_id );
         }
+
         self.inner.slab.unsubscribe_subject(subject_id, self);
+        println!("# Context.unsubscribe_subject({}) - FINISHED", subject_id);
+        */
+
     }
     pub fn get_subject_by_id (&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
 
@@ -169,31 +183,36 @@ impl Context{
         //ANSWER:   It occurs to me that we're only getting subject heads from the slab which we expressly
         //          subscribed to, so this strengthens the case quite a bit
 
+        // Have to make sure the subject we retrieve
+        // doesn't go out of scope while we're locked, or we'll deadlock
+        let _maybe_subject : Option<Subject>;
 
-        let mut shared = self.inner.shared.lock().unwrap();
+        {
+            let mut shared = self.inner.shared.lock().unwrap();
 
-        if let Some(mut subject) = shared.get_subject_if_resident(subject_id) {
-            subject.apply_head(head);
+            if let Some(mut subject) = shared.get_subject_if_resident(subject_id) {
+                subject.apply_head(head);
+
+                _maybe_subject = Some(subject);
+            }
+
+            // TODO: It probably makes sense to stop playing telephone between the context and the subject
+            //       And simply use an Arc<Mutex<MemoRefHead>> which is shared between the subject and the context
+            //       We both have it around the same time really. To do otherwise would be silly
+            //       The main question is: what threading model do we want to optimize for?
+            //       Will the context usually / always be in the same thread as the subjects?
+            //       If so, then switch to Rc and screw this Arc<Mutex<>> business
+            //       If not, then this really makes me wonder about whether the clone of the MemoRefHead
+            //       and the duplicate work of merging it twice might actually make sense vs having to cross
+            //       the thread bountary to retrieve the data we want ( probably not, but asking anway)
+
+            let my_subject_head = shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() );
+            my_subject_head.apply(&head, &self.inner.slab);
+
+            // Necessary bookkeeping for topological traversal
+            // TODO: determine if it makes sense to calculate only the relationship diffs to minimize cost
+            //shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links( &self.inner.slab ));
         }
-
-        // TODO: It probably makes sense to stop playing telephone between the context and the subject
-        //       And simply use an Arc<Mutex<MemoRefHead>> which is shared between the subject and the context
-        //       We both have it around the same time really. To do otherwise would be silly
-        //       The main question is: what threading model do we want to optimize for?
-        //       Will the context usually / always be in the same thread as the subjects?
-        //       If so, then switch to Rc and screw this Arc<Mutex<>> business
-        //       If not, then this really makes me wonder about whether the clone of the MemoRefHead
-        //       and the duplicate work of merging it twice might actually make sense vs having to cross
-        //       the thread bountary to retrieve the data we want ( probably not, but asking anway)
-
-
-        let my_subject_head = shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() );
-        my_subject_head.apply(&head, &self.inner.slab);
-
-        // Necessary bookkeeping for topological traversal
-        // TODO: determine if it makes sense to calculate only the relationship diffs to minimize cost
-        //shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links( &self.inner.slab ));
-
     }
 
     pub fn cmp (&self, other: &Self) -> bool{

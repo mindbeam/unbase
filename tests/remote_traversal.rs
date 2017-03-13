@@ -28,7 +28,9 @@ fn remote_traversal() {
     simulator.advance_clock(1);
 
     let handle = thread::spawn(move || {
+
         assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Meow");
+
     });
 
     // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model

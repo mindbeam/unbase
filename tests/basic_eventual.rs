@@ -52,6 +52,11 @@ fn basic_eventual() {
     //assert!(slab_b.count_of_memorefs_resident() == 2, "Slab B should have 2 memorefs resident");
     //assert!(slab_c.count_of_memorefs_resident() == 2, "Slab C should have 2 memorefs resident");
 
+    // HERE - in the case of eventual consistency, it might take several
+    // seconds for this to convey – not just a single clock tick
+    // We've made the index artificially chatty for now, but this will
+    // change to a timeout-based process once context::subject_graph is working
+
     let rec_b1 = context_b.get_subject_by_id( rec_a1.id );
     let rec_c1 = context_c.get_subject_by_id( rec_a1.id );
 

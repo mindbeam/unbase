@@ -60,17 +60,15 @@ impl Subject {
             let mut shared = subject.shared.lock().unwrap();
             shared.head.apply_memoref(&memoref, &slab);
             shared.context.subject_updated( subject_id, &shared.head );
+        }
 
+        // IMPORTANT: Need to wait to insert this into the index until _after_ the first memo
+        // has been issued, sent to the slab, and added to the subject head via the subscription mechanism.
 
-            // IMPORTANT: Need to wait to insert this into the index until _after_ the first memo
-            // has been issued, sent to the slab, and added to the subject head via the subscription mechanism.
-
-            // TODO: Decide if we want to redundantly add this memo to the head ( directly, and again through slab subscription )
-
-            // HACK HACK HACK - this should not be a flag on the subject, but something in the payload I think
-            if !is_index {
-                context.insert_into_root_index( subject_id, &subject );
-            }
+        // HACK HACK HACK - this should not be a flag on the subject, but something in the payload I think
+        if !is_index {
+            // NOTE: important that we do this after the subject.shared.lock is released
+            context.insert_into_root_index( subject_id, &subject );
         }
         Ok(subject)
     }
