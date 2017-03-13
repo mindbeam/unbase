@@ -30,7 +30,7 @@ impl SimEvent {
     pub fn deliver (self) {
         println!("# SimEvent.deliver {} to Slab {}", &self.memo.id, self.dest.id );
         if let Some(slab) = self.dest.upgrade() {
-            slab.put_memos(MemoOrigin::Remote(&self.from), vec![self.memo]);
+            slab.put_memos(MemoOrigin::Remote(&self.from), vec![self.memo], true);
         }
         // we all have to learn to deal with loss sometime
     }
