@@ -9,7 +9,7 @@ use std::sync::{Arc,Mutex,Weak};
 
 pub type SubjectId     = u64;
 pub type SubjectField  = String;
-pub const SUBJECT_MAX_RELATIONS : u16 = 256;
+pub const SUBJECT_MAX_RELATIONS : usize = 256;
 
 #[derive(Clone)]
 pub struct Subject {
@@ -102,7 +102,23 @@ impl Subject {
 
         Self::new( context, vals, false )
     }
-    pub fn set_kv (&self, key: &str, value: &str) -> bool {
+    pub fn get_value ( &self, key: &str ) -> Option<String> {
+        println!("# Subject({}).get_value({})",self.id,key);
+
+        let shared = self.shared.lock().unwrap();
+        shared.head.project_value(&shared.context, key)
+    }
+    pub fn get_relation ( &self, key: u8 ) -> Result<Subject, RetrieveError> {
+        println!("# Subject({}).get_relation({})",self.id,key);
+
+        let shared = self.shared.lock().unwrap();
+        match shared.head.project_relation(&shared.context, key) {
+            Ok(&(subject_id,head)) => shared.context.get_subject_with_head(subject_id,head),
+            Err(e)   => Err(e)
+
+        }
+    }
+    pub fn set_value (&self, key: &str, value: &str) -> bool {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
@@ -127,12 +143,6 @@ impl Subject {
         shared.context.subject_updated( &self.id, &shared.head );
 
         true
-    }
-    pub fn get_value ( &self, key: &str ) -> Option<String> {
-        println!("# Subject({}).get_value({})",self.id,key);
-
-        let shared = self.shared.lock().unwrap();
-        shared.head.get_value(shared.context, key)
     }
     pub fn set_relation (&self, key: u8, relation: &Self) {
         println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
@@ -164,39 +174,7 @@ impl Subject {
         shared.context.subject_updated( &self.id, &shared.head );
 
     }
-    pub fn get_relation ( &self, key: u8 ) -> Result<Subject, RetrieveError> {
-        println!("# Subject({}).get_relation({})",self.id,key);
-
-        let shared = self.shared.lock().unwrap();
-        shared.head.get_value(key);
-
-        let shared = self.shared.lock().unwrap();
-        let context = &shared.context;
-
-        // TODO: Make error handling more robust
-
-        for memo in shared.memo_iter() {
-
-            if let Some((relations,materialized)) = memo.get_relations(){
-                println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
-                if let Some(r) = relations.get(&key) {
-                    // BUG: the parent->child was formed prior to the revision of the child.
-                    // TODO: Should be adding the new head memo to the query context
-                    //       and superseding the referenced head due to its inclusion in the context
-
-                    let foo = context.get_subject_with_head(r.0,r.1.clone());
-
-                        return foo;
-                }else if materialized {
-                    println!("\n# \t\\ Not Found (materialized)" );
-                    return Err(RetrieveError::NotFound);
-                }
-            }
-        }
-
-        println!("\n# \t\\ Not Found" );
-        Err(RetrieveError::NotFound)
-    }
+    // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
     pub fn apply_head (&mut self, new: &MemoRefHead){
         println!("# Subject({}).apply_head({:?})", &self.id, new.memo_ids() );
 
@@ -212,11 +190,9 @@ impl Subject {
     }
     pub fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
         println!("# Subject({}).get_all_memo_ids()",self.id);
+        let slab = self.shared.lock().unwrap().context.get_slab().clone();
 
-        self.memo_iter().map(|m| m.id).collect()
-    }
-    fn memo_iter (&self) -> CausalMemoIter {
-        self.shared.lock().unwrap().memo_iter()
+        self.get_head().causal_memo_iter( &slab ).map(|m| m.id).collect()
     }
     pub fn weak (&self) -> WeakSubject {
         WeakSubject {
@@ -228,13 +204,8 @@ impl Subject {
         self.shared.lock().unwrap().head.is_fully_materialized(slab)
     }
     pub fn fully_materialize (&mut self, slab: &Slab) -> bool {
-        self.shared.lock().unwrap().head.fully_materialize(slab)
-    }
-}
-
-impl SubjectShared {
-    pub fn memo_iter(&self) -> CausalMemoIter {
-        self.head.causal_memo_iter(self.context.get_slab())
+        unimplemented!();
+        //self.shared.lock().unwrap().head.fully_materialize(slab)
     }
 }
 

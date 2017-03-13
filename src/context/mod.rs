@@ -1,5 +1,4 @@
-mod topo_subject_head_iter;
-mod subject_head_links;
+mod subject_head_iter;
 
 use std::fmt;
 use std::collections::HashMap;
@@ -9,8 +8,8 @@ use memoref::MemoRef;
 use memorefhead::MemoRefHead;
 use error::RetrieveError;
 use index::IndexFixed;
-pub use self::topo_subject_head_iter::*;
-use self::subject_head_links::*;
+pub use self::subject_head_iter::*;
+use self::subject_graph::*;
 
 use subject::*;
 use std::sync::{Mutex,Arc,Weak};
@@ -20,7 +19,7 @@ pub struct ContextShared {
     subject_heads: HashMap<SubjectId, MemoRefHead>,
 
     //This is for compaction of the subject_heads
-    subject_head_links : SubjectHeadLinks,
+    subject_graph : SubjectGraph,
 
     //This is for active subjects / subject subscription management
     subjects: HashMap<SubjectId, WeakSubject>
@@ -150,13 +149,12 @@ impl Context{
     pub fn subject_updated (&self, subject_id: &SubjectId, head: &MemoRefHead){
         let mut shared = self.inner.shared.lock().unwrap();
 
-        {
-            let my_subject_head = shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
-            my_subject_head.apply(head, &self.inner.slab);
-        }
+        let my_subject_head = shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
+        my_subject_head.apply(head, &self.inner.slab);
 
         // Necessary bookkeeping for topological traversal
-        shared.subject_head_links.update( &self.inner.slab, subject_id, head );
+        shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links());
+
     }
     // Called by the Slab whenever memos matching one of our subscriptions comes in
     pub fn apply_subject_head (&self, subject_id: &SubjectId, head: &MemoRefHead){
@@ -190,18 +188,12 @@ impl Context{
         //       the thread bountary to retrieve the data we want ( probably not, but asking anway)
 
 
-        let my_subject_head2;
-
-        {
-            let my_subject_head = shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
-            my_subject_head.apply(&head, &self.inner.slab);
-
-            // HACK for below in the interest of expedience
-            my_subject_head2 = my_subject_head.clone();
-        }
+        let my_subject_head = shared.subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
+        my_subject_head.apply(&head, &self.inner.slab);
 
         // Necessary bookkeeping for topological traversal
-        shared.head_links.update( &self.inner.slab, subject_id, &my_subject_head2 )
+        // TODO: determine if it makes sense to calculate only the relationship diffs to minimize cost
+        shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links());
 
     }
 
@@ -217,8 +209,13 @@ impl Context{
             inner: Arc::downgrade(&self.inner)
         }
     }
+    /*
+    Putting this on hold for now
     pub fn topo_subject_head_iter (&self) -> TopoSubjectHeadIter {
         TopoSubjectHeadIter::new( &self )
+    }*/
+    pub fn subject_head_iter (&self) -> SubjectHeadIter {
+        SubjectHeadIter::new( &self )
     }
 
     // Subject A -> B -> E
@@ -244,7 +241,7 @@ impl Context{
     // B: [E]
     // A: [B]
     // etc
-
+/*
     pub fn fully_compress (&self) {
 
         let slab = self.get_slab();
@@ -278,9 +275,10 @@ impl Context{
         }
 
     }
+    */
     pub fn is_fully_materialized (&self) -> bool {
 
-        for (_,head) in self.topo_subject_head_iter() {
+        for (_,head) in self.subject_head_iter() {
             if ! head.is_fully_materialized(&self.inner.slab) {
                 return false
             }
