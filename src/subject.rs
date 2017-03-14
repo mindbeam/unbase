@@ -1,16 +1,15 @@
 use std::fmt;
 use std::collections::HashMap;
-use std::collections::VecDeque;
 use memo::*;
-use memoref::MemoRef;
-use memorefhead::MemoRefHead;
+use memorefhead::*;
 use context::Context;
+use error::*;
 use slab::*;
 use std::sync::{Arc,Mutex,Weak};
 
 pub type SubjectId     = u64;
 pub type SubjectField  = String;
-pub const SUBJECT_MAX_RELATIONS : u16 = 256;
+pub const SUBJECT_MAX_RELATIONS : usize = 256;
 
 #[derive(Clone)]
 pub struct Subject {
@@ -30,32 +29,53 @@ pub struct SubjectShared {
 }
 
 impl Subject {
-    pub fn new ( context: &Context, vals: HashMap<String, String> ) -> Result<Subject,String> {
+    pub fn new ( context: &Context, vals: HashMap<String, String>, is_index: bool ) -> Result<Subject,String> {
 
         let slab : &Slab = context.get_slab();
         let subject_id = slab.generate_subject_id();
         println!("# Subject({}).new()",subject_id);
 
-        let shared = SubjectShared{
+        let shared = Arc::new(Mutex::new(SubjectShared{
             id: subject_id,
             head: MemoRefHead::new(),
             context: context.clone()
-        };
+        }));
 
         let subject = Subject {
             id:      subject_id,
-            shared: Arc::new(Mutex::new(shared))
+            shared:  shared
         };
 
         context.subscribe_subject( &subject );
 
-        slab.put_memos(MemoOrigin::Local, vec![
-            Memo::new_basic_noparent( slab.gen_memo_id(), subject_id, MemoBody::Edit(vals) )
-        ]);
+        let memoref = slab.put_memo(MemoOrigin::Local,
+            Memo::new_basic_noparent(
+                slab.gen_memo_id(),
+                subject_id,
+                MemoBody::FullyMaterialized {v: vals, r: HashMap::new() } // TODO: accept relations
+            )
+        , false);
 
+        {
+            let mut shared = subject.shared.lock().unwrap();
+            shared.head.apply_memoref(&memoref, &slab);
+            shared.context.subject_updated( subject_id, &shared.head );
+        }
+
+        // IMPORTANT: Need to wait to insert this into the index until _after_ the first memo
+        // has been issued, sent to the slab, and added to the subject head via the subscription mechanism.
+
+        // HACK HACK HACK - this should not be a flag on the subject, but something in the payload I think
+        if !is_index {
+            // NOTE: important that we do this after the subject.shared.lock is released
+            context.insert_into_root_index( subject_id, &subject );
+        }
         Ok(subject)
     }
-    pub fn reconstitute (context: &Context, subject_id: SubjectId, head: MemoRefHead) -> Subject {
+    pub fn reconstitute (context: &Context, head: MemoRefHead) -> Subject {
+
+        let subject_id = head.first_subject_id( context.get_slab() ).unwrap();
+
         let shared = SubjectShared{
             id: subject_id,
             head: head,
@@ -71,112 +91,90 @@ impl Subject {
 
         subject
     }
-    pub fn new_kv ( context: &Context, key: &str, value: &str) -> Result<Subject,String> {
+    pub fn new_blank ( context: &Context ) -> Result<Subject,String> {
+        Self::new( context, HashMap::new(), false )
+    }
+    pub fn new_kv ( context: &Context, key: &str, value: &str ) -> Result<Subject,String> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        Self::new( context, vals )
+        Self::new( context, vals, false )
     }
-    pub fn set_kv (&self, key: &str, value: &str) -> bool {
+    pub fn get_value ( &self, key: &str ) -> Option<String> {
+        println!("# Subject({}).get_value({})",self.id,key);
+
+        let shared = self.shared.lock().unwrap();
+        shared.head.project_value(&shared.context, key)
+    }
+    pub fn get_relation ( &self, key: u8 ) -> Result<Subject, RetrieveError> {
+        println!("# Subject({}).get_relation({})",self.id,key);
+
+        let shared = self.shared.lock().unwrap();
+        match shared.head.project_relation(&shared.context, key) {
+            Ok((subject_id, head)) => shared.context.get_subject_with_head(subject_id,head),
+            Err(e)   => Err(e)
+
+        }
+    }
+    pub fn set_value (&self, key: &str, value: &str) -> bool {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
         let slab;
-        let context;
-        let head;
+        let memo;
         {
             let shared = self.shared.lock().unwrap();
-            context = shared.context.clone();
-            slab = context.get_slab().clone();
-            head = shared.head.clone();
+            slab = shared.context.get_slab().clone();
+
+            memo = Memo::new_basic(
+                slab.gen_memo_id(),
+                self.id,
+                shared.head.clone(),
+                MemoBody::Edit(vals)
+            );
         }
-        //println!("# Subject({}).set_kv({},{}) -> Starting head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
 
-        let memos = vec![
-            Memo::new_basic( slab.gen_memo_id(), self.id, head, MemoBody::Edit(vals) )
-        ];
+        let memoref = slab.put_memo(MemoOrigin::Local, memo, false);
 
-        let memorefs : Vec<MemoRef> = slab.put_memos(MemoOrigin::Local, memos );
-        context.add( memorefs );
-        //println!("# Subject({}).set_kv({},{}) -> Ending head.len {}",self.id,key,value,self.shared.lock().unwrap().head.len() );
+        let mut shared = self.shared.lock().unwrap();
+        shared.head.apply_memoref(&memoref, &slab);
+        shared.context.subject_updated( self.id, &shared.head );
 
-        //println!("# Subject({}).set_kv({},{}) -> {:?}",self.id,key,value,self.shared.lock().unwrap().head );
         true
     }
-    pub fn get_value ( &self, key: &str ) -> Option<String> {
-        println!("# Subject({}).get_value({})",self.id,key);
-        for memo in self.memo_iter() {
-
-            println!("# \t\\ Considering Memo {}", memo.id );
-            let values = memo.get_values();
-            if let Some(v) = values.get(key) {
-                return Some(v.clone());
-            }
-        }
-        None
-    }
-    pub fn set_relation (&self, key: u8, relation: Self) {
+    pub fn set_relation (&self, key: u8, relation: &Self) {
         println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
         let mut memoref_map : HashMap<u8, (SubjectId,MemoRefHead)> = HashMap::new();
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
         let slab;
-        let context;
-        let head;
+        let memo;
         {
             let shared = self.shared.lock().unwrap();
-            context = shared.context.clone();
-            slab = context.get_slab().clone();
-            head = shared.head.clone();
+            slab = shared.context.get_slab().clone();
+
+            memo = Memo::new(
+                slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
+                self.id,
+                shared.head.clone(),
+                MemoBody::Relation(memoref_map)
+            );
         }
 
-        let memos = vec![
-           Memo::new(
-               slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
-               self.id,
-               head,
-               MemoBody::Relation(memoref_map)
-           )
-        ];
+        let memoref = slab.put_memo( MemoOrigin::Local, memo, false );
 
-        let memorefs = slab.put_memos( MemoOrigin::Local, memos );
-        context.add( memorefs );
 
-        //let memorefs = slab.put_memos( MemoOrigin::Local, memos );
-        //context.add( memorefs );
+        // TODO: determine conclusively whether it's possible for apply_memorefs
+        //       to result in a retrieval that retults in a context addition that
+        //       causes a deadlock
+        let mut shared = self.shared.lock().unwrap();
+        shared.head.apply_memoref(&memoref, &slab);
+        shared.context.subject_updated( self.id, &shared.head );
+
     }
-    pub fn get_relation ( &self, key: u8 ) -> Option<Subject> {
-        println!("# Subject({}).get_relation({})",self.id,key);
-
-
-        let shared = self.shared.lock().unwrap();
-        let context = &shared.context;
-
-        for memo in shared.memo_iter() {
-            let relations : HashMap<u8, (SubjectId, MemoRefHead)> = memo.get_relations();
-
-            println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
-            if let Some(r) = relations.get(&key) {
-                // BUG: the parent->child was formed prior to the revision of the child.
-                // TODO: Should be adding the new head memo to the query context
-                //       and superseding the referenced head due to its inclusion in the context
-
-                if let Ok(relation) = context.get_subject_with_head(r.0,r.1.clone()) {
-                    println!("# \t\\ Found {}", relation.id );
-                    return Some(relation)
-                }else{
-                    println!("# \t\\ Retrieval Error" );
-                    return None;
-                    //return Err("subject retrieval error")
-                }
-            }
-        }
-
-        println!("\n# \t\\ Not Found" );
-        None
-    }
-    pub fn update_head (&mut self, new: &MemoRefHead){
-        println!("# Subject({}).update_head({:?})", &self.id, new.memo_ids() );
+    // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
+    pub fn apply_head (&mut self, new: &MemoRefHead){
+        println!("# Subject({}).apply_head({:?})", &self.id, new.memo_ids() );
 
         let mut shared = self.shared.lock().unwrap();
         let slab = shared.context.get_slab().clone(); // TODO: find a way to get rid of this clone
@@ -190,12 +188,9 @@ impl Subject {
     }
     pub fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
         println!("# Subject({}).get_all_memo_ids()",self.id);
+        let slab = self.shared.lock().unwrap().context.get_slab().clone();
 
-        self.memo_iter().map(|m| m.id).collect()
-    }
-    fn memo_iter (&self) -> SubjectMemoIter {
-        let shared = self.shared.lock().unwrap();
-        shared.memo_iter()
+        self.get_head().causal_memo_iter( &slab ).map(|m| m.id).collect()
     }
     pub fn weak (&self) -> WeakSubject {
         WeakSubject {
@@ -203,64 +198,12 @@ impl Subject {
             shared: Arc::downgrade(&self.shared)
         }
     }
-}
-
-pub struct SubjectMemoIter {
-    queue: VecDeque<MemoRef>,
-    slab:  Slab
-}
-
-/*
-  Plausible Memo Structure:
-          /- E -> C -\
-     G ->              -> B -> A
-head ^    \- F -> D -/
-     Desired iterator sequence: G, E, C, F, D, B, A ( Why? )
-     Consider:                  [G], [E,C], [F,D], [B], [A]
-     Arguably this should not be an iterator at all, but rather a recursive function
-     Going with the iterator for now in the interest of simplicity
-*/
-impl SubjectMemoIter {
-    pub fn from_head ( head: &MemoRefHead, slab: &Slab) -> Self {
-        println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
-
-        SubjectMemoIter {
-            queue: head.to_vecdeque(),
-            slab:  slab.clone()
-        }
+    pub fn is_fully_materialized (&self, slab: &Slab) -> bool {
+        self.shared.lock().unwrap().head.is_fully_materialized(slab)
     }
-}
-impl Iterator for SubjectMemoIter {
-    type Item = Memo;
-
-    fn next (&mut self) -> Option<Memo> {
-        // iterate over head memos
-        // Unnecessarly complex because we're not always dealing with MemoRefs
-        // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>
-
-        // TODO: Stop traversal when we come across a Keyframe memo
-        if let Some(memoref) = self.queue.pop_front() {
-            // this is wrong - Will result in G, E, F, C, D, B, A
-
-            match memoref.get_memo( &self.slab ){
-                Ok(memo) => {
-                    self.queue.append(&mut memo.get_parent_head().to_vecdeque());
-                    return Some(memo)
-                },
-                Err(err) => {
-                    panic!(err);
-                }
-            }
-            //TODO: memoref.get_memo needs to be able to fail
-        }
-
-        return None;
-    }
-}
-
-impl SubjectShared {
-    pub fn memo_iter (&self) -> SubjectMemoIter {
-        SubjectMemoIter::from_head( &self.head, self.context.get_slab() )
+    pub fn fully_materialize (&mut self, _slab: &Slab) -> bool {
+        unimplemented!();
+        //self.shared.lock().unwrap().head.fully_materialize(slab)
     }
 }
 

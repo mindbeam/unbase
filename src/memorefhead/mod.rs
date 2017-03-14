@@ -1,3 +1,5 @@
+mod projection;
+
 use std::mem;
 use std::fmt;
 use std::slice;
@@ -5,6 +7,23 @@ use std::collections::VecDeque;
 use memo::*;
 use memoref::*;
 use slab::*;
+use subject::*;
+use context::*;
+use error::*;
+
+// MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
+//
+// This "head" is rather like a git HEAD, insofar as it is intended to contain only the youngest
+// descendents of a given causal chain. It provides mechanisms for applying memorefs, or applying
+// other MemoRefHeads such that the mutated list may be pruned as appropriate given the above.
+
+
+pub type RelationSlotId = u8;
+
+/*pub struct SlotRelationLink {
+    slot:       RelationSlotId,
+    subject_id: Option<SubjectId>
+}*/
 
 #[derive(Clone)]
 pub struct MemoRefHead (Vec<MemoRef>);
@@ -16,7 +35,7 @@ impl MemoRefHead {
     pub fn from_memoref (memoref: MemoRef) -> Self {
         MemoRefHead( vec![memoref] )
     }
-    pub fn apply_memoref(&mut self, new: MemoRef, slab: &Slab ) -> bool {
+    pub fn apply_memoref(&mut self, new: &MemoRef, slab: &Slab ) -> bool {
         println!("# MemoRefHead({:?}).apply_memoref({})", self.memo_ids(), &new.id);
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
@@ -37,7 +56,7 @@ impl MemoRefHead {
             let mut remove = false;
             {
                 let ref mut existing = self.0[i];
-                if *existing == new {
+                if existing == new {
                     return false; // we already had this
 
                 } else if existing.descends(&new,&slab) {
@@ -76,7 +95,7 @@ impl MemoRefHead {
             // if the new memoref neither descends nor is descended
             // then it must be concurrent
 
-            self.0.push(new);
+            self.0.push(new.clone());
             applied = true; // The memoref was "applied" to the MemoRefHead
         }
 
@@ -90,18 +109,26 @@ impl MemoRefHead {
 
         applied
     }
-    pub fn apply_memorefs (&mut self, new_memorefs: Vec<MemoRef>, slab: &Slab) {
-        for new in new_memorefs{
+    pub fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &Slab) {
+        for new in new_memorefs.iter(){
             self.apply_memoref(new, slab);
         }
     }
     pub fn apply (&mut self, other: &MemoRefHead, slab: &Slab){
         for new in other.iter(){
-            self.apply_memoref(new.clone(), slab );
+            self.apply_memoref( new, slab );
         }
     }
     pub fn memo_ids (&self) -> Vec<MemoId> {
         self.0.iter().map(|m| m.id).collect()
+    }
+    pub fn first_subject_id (&self, slab: &Slab) -> Option<SubjectId> {
+        if let Some(memoref) = self.0.iter().next() {
+            // TODO: Could stand to be much more robust here
+            Some(memoref.get_memo(slab).unwrap().inner.subject_id)
+        }else{
+            None
+        }
     }
     pub fn to_vecdeque (&self) -> VecDeque<MemoRef> {
         VecDeque::from(self.0.clone())
@@ -112,6 +139,27 @@ impl MemoRefHead {
     pub fn iter (&self) -> slice::Iter<MemoRef> {
         self.0.iter()
     }
+    pub fn causal_memo_iter(&self, slab: &Slab ) -> CausalMemoIter {
+        CausalMemoIter::from_head( &self, slab )
+    }
+    pub fn is_fully_materialized(&self, slab: &Slab ) -> bool {
+        // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
+        //       as part of the list management. That way we won't have to incur the below computational effort.
+
+        for memoref in self.iter(){
+            if let Ok(memo) = memoref.get_memo(slab) {
+                match memo.inner.body {
+                    MemoBody::FullyMaterialized { v: _, r: _ } => {},
+                    _                           => { return false }
+                }
+            }else{
+                // TODO: do something more intelligent here
+                panic!("failed to retrieve memo")
+            }
+        }
+
+        true
+    }
 }
 
 impl fmt::Debug for MemoRefHead{
@@ -120,5 +168,59 @@ impl fmt::Debug for MemoRefHead{
         fmt.debug_struct("MemoRefHead")
            .field("memo_ids", &self.memo_ids() )
            .finish()
+    }
+}
+
+
+pub struct CausalMemoIter {
+    queue: VecDeque<MemoRef>,
+    slab:  Slab
+}
+
+/*
+  Plausible Memo Structure:
+          /- E -> C -\
+     G ->              -> B -> A
+head ^    \- F -> D -/
+     Desired iterator sequence: G, E, C, F, D, B, A ( Why? )
+     Consider:                  [G], [E,C], [F,D], [B], [A]
+     Arguably this should not be an iterator at all, but rather a recursive function
+     Going with the iterator for now in the interest of simplicity
+*/
+impl CausalMemoIter {
+    pub fn from_head ( head: &MemoRefHead, slab: &Slab) -> Self {
+        println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
+
+        CausalMemoIter {
+            queue: head.to_vecdeque(),
+            slab:  slab.clone()
+        }
+    }
+}
+impl Iterator for CausalMemoIter {
+    type Item = Memo;
+
+    fn next (&mut self) -> Option<Memo> {
+        // iterate over head memos
+        // Unnecessarly complex because we're not always dealing with MemoRefs
+        // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>
+
+        // TODO: Stop traversal when we come across a Keyframe memo
+        if let Some(memoref) = self.queue.pop_front() {
+            // this is wrong - Will result in G, E, F, C, D, B, A
+
+            match memoref.get_memo( &self.slab ){
+                Ok(memo) => {
+                    self.queue.append(&mut memo.get_parent_head().to_vecdeque());
+                    return Some(memo)
+                },
+                Err(err) => {
+                    panic!(err);
+                }
+            }
+            //TODO: memoref.get_memo needs to be able to fail
+        }
+
+        return None;
     }
 }
