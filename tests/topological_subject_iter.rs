@@ -1,7 +1,5 @@
 extern crate unbase;
 use unbase::subject::*;
-use unbase::index::IndexFixed;
-use std::collections::HashMap;
 
 #[test]
 fn acyclic() {
@@ -12,11 +10,6 @@ fn acyclic() {
 
     let slab_a = unbase::Slab::new(&net);
     let context_a = slab_a.create_context();
-
-    // First lets do a single index test
-    let i = 1234;
-    let mut vals = HashMap::new();
-    vals.insert("record number".to_string(), i.to_string());
 
     let record1 = Subject::new_blank(&context_a).unwrap();
     let record2 = Subject::new_blank(&context_a).unwrap();
