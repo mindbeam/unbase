@@ -5,6 +5,7 @@ use std::sync::{Arc,Mutex};
 use slab::*;
 use itertools::partition;
 use memo::Memo;
+use network::*;
 
 // Minkowski stuff: Still ridiculous, but necessary for our purposes.
 pub struct XYZPoint{
@@ -124,6 +125,10 @@ impl Transport for Simulator {
             Err("This transport is incapable of handling remote addresses".to_string())
         }
 
+    }
+
+    fn bind_network(&self, _net: &Network) {
+        //nothing to see here folks
     }
 }
 

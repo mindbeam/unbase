@@ -4,11 +4,12 @@
 
 mod transmitter;
 mod simulator;
+mod udp;
 
 pub use self::simulator::Simulator;
 pub use self::transmitter::{Transmitter, DynamicDispatchTransmitter};
 
-use network::SlabRef;
+use network::*;
 use slab::Slab;
 use memo::Memo;
 
@@ -20,4 +21,5 @@ pub enum TransmitterArgs<'a>{
 pub trait Transport {
     fn make_transmitter(  &self, args: TransmitterArgs  ) -> Result<Transmitter,String>;
     fn is_local        (  &self ) -> bool;
+    fn bind_network    (  &self, &Network );
 }

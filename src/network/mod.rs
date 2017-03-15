@@ -7,7 +7,7 @@ pub use self::slabref::SlabRef;
 pub use self::transport::Transport;
 use self::transport::{TransmitterArgs,Transmitter};
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Weak, Mutex};
 use std::fmt;
 use slab::{Slab,WeakSlab,SlabId};
 use memorefhead::MemoRefHead;
@@ -27,6 +27,9 @@ pub struct NetworkShared {
 #[derive(Clone)]
 pub struct Network {
     shared: Arc<NetworkShared>
+}
+pub struct WeakNetwork {
+    shared: Weak<NetworkShared>
 }
 
 impl Network {
@@ -50,8 +53,14 @@ impl Network {
 
         net
     }
+    pub fn weak (&self) -> WeakNetwork {
+        WeakNetwork {
+            shared: Arc::downgrade(&self.shared)
+        }
+    }
     pub fn add_transport (&self, transport: Box<Transport + Send + Sync> ) {
         let mut internals = self.shared.internals.lock().unwrap();
+        transport.bind_network(self);
         internals.transports.push(transport);
     }
     pub fn generate_slab_id(&self) -> u32 {
@@ -165,5 +174,14 @@ impl fmt::Debug for Network {
 impl Drop for NetworkInternals {
     fn drop(&mut self) {
         println!("# > Dropping NetworkInternals");
+    }
+}
+
+impl WeakNetwork {
+    pub fn upgrade (&self) -> Option<Network> {
+        match self.shared.upgrade() {
+            Some(s) => Some( Network { shared: s } ),
+            None    => None
+        }
     }
 }
