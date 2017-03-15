@@ -1,5 +1,6 @@
 use std::net::UdpSocket;
 use std::{thread, time};
+use std::str;
 
 use std::fmt;
 use super::*;
@@ -13,7 +14,7 @@ pub struct Transport_UDP {
 }
 struct Transport_UDP_Internal {
     socket: Arc<UdpSocket>,
-    rcv_thread: Option<thread::JoinHandle<Result<(),u32>>>
+    rcv_thread: Option<thread::JoinHandle<()>>
 }
 
 impl Transport_UDP {
@@ -60,18 +61,21 @@ impl Transport for Transport_UDP {
 
         let socket = shared.socket.clone();
         let weak_net = net.weak();
-        shared.rcv_thread = thread::spawn(move || {
+        let handle : thread::JoinHandle<()> = thread::spawn(move || {
+            let mut buf = [0; 65536];
+
             loop {
                 println!("INSIDE UDP THREAD");
-                let mut buf = [0; 10];
-                let (amt, src) = try!(socket.recv_from(&mut buf));
-                if let Some(net) = weak_net.upgrade() {
-                    println!("GOT DATAGRAM ({}, {}, {:?})", amt, src, buf );
+                let (amt, src) = socket.recv_from(&mut buf).unwrap();
+                if let Some(_net) = weak_net.upgrade() {
+                    println!("GOT DATAGRAM ({}, {}, {:?})", amt, src, str::from_utf8(&buf[0..amt]).unwrap() );
                 }else{
                     break;
                 }
             };
         });
+        shared.rcv_thread = Some(handle);
+
 
     }
 }

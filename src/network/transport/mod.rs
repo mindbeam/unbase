@@ -6,6 +6,7 @@ mod transmitter;
 mod simulator;
 mod udp;
 
+pub use self::udp::Transport_UDP;
 pub use self::simulator::Simulator;
 pub use self::transmitter::{Transmitter, DynamicDispatchTransmitter};
 
