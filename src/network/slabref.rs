@@ -16,6 +16,7 @@ use super::{Network,Transmitter};
 use slab::{Slab,WeakSlab,SlabId};
 use memo::Memo;
 use std::sync::Arc;
+use serde::ser::*;
 
 #[derive(Clone)]
 pub struct SlabRef {
@@ -62,5 +63,16 @@ impl fmt::Debug for SlabRef {
         fmt.debug_struct("SlabRef")
             .field("slab_id", &self.inner.slab_id)
             .finish()
+    }
+}
+impl Serialize for SlabRef {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(2))?;
+        seq.serialize_element(&self.slab_id.to_string());
+        seq.serialize_element(&"127.0.0.1:12345".to_string());
+        seq.end()
+
     }
 }

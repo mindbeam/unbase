@@ -20,7 +20,7 @@ fn serialize() {
 
 
     //let limit = bincode::SizeLimit::Bounded(20);
-    let memo = record.get_head().to_vec()[0].get_memo(&slab_a).unwrap();
+    let memo = &record.get_head().to_vec()[0];//.get_memo(&slab_a).unwrap();
 
     let encoded = serde_json::to_string(&memo).unwrap();
     //let decoded = serde_json::from_str(&encoded).unwrap();

@@ -6,6 +6,7 @@ use memorefhead::MemoRefHead;
 use std::sync::{Arc,Mutex};
 use std::fmt;
 use std::error::Error;
+use serde::ser::*;
 
 #[derive(Clone)]
 pub struct MemoRef {
@@ -13,7 +14,7 @@ pub struct MemoRef {
     pub subject_id: Option<SubjectId>,
     shared: Arc<Mutex<MemoRefShared>>
 }
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 struct MemoPeer {
     slabref: SlabRef,
     status: PeeringStatus
@@ -212,5 +213,30 @@ impl fmt::Debug for MemoRef{
            .field("peers", &shared.peers)
            .field("ptr", &shared.ptr)
            .finish()
+    }
+}
+
+impl Serialize for MemoRef {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let shared = &self.shared.lock().unwrap();
+        let mut struc = serializer.serialize_struct("MemoRef", 3)?;
+        struc.serialize_field("id", &self.id)?;
+        struc.serialize_field("s", &self.subject_id)?;
+        struc.serialize_field("t", &shared.ptr)?;
+        struc.serialize_field("p", &shared.peers)?;
+        struc.end()
+    }
+}
+
+impl Serialize for MemoRefPtr {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        match self {
+            Remote   => serializer.serialize_bool(false),
+            Resident => serializer.serialize_bool(true),
+        }
     }
 }

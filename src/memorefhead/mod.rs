@@ -4,6 +4,8 @@ use std::mem;
 use std::fmt;
 use std::slice;
 use std::collections::VecDeque;
+use serde::ser::*;
+
 use memo::*;
 use memoref::*;
 use slab::*;
@@ -25,7 +27,7 @@ pub type RelationSlotId = u8;
     subject_id: Option<SubjectId>
 }*/
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct MemoRefHead (Vec<MemoRef>);
 
 impl MemoRefHead {
@@ -173,7 +175,6 @@ impl fmt::Debug for MemoRefHead{
            .finish()
     }
 }
-
 
 pub struct CausalMemoIter {
     queue: VecDeque<MemoRef>,
