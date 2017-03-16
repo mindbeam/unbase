@@ -5,6 +5,8 @@
 use std::collections::HashMap;
 use std::{fmt};
 use std::sync::Arc;
+use serde::ser::*;
+
 use subject::{SubjectId};
 use memoref::*;
 use memorefhead::*;
@@ -155,6 +157,41 @@ impl Memo {
     }
 }
 
+/*pub struct Memo {
+    pub id: u64,
+    pub subject_id: u64,
+    pub inner: Arc<MemoInner>
+}
+pub struct MemoInner {
+    pub id: u64,
+    pub subject_id: u64,
+    parents: MemoRefHead,
+    pub body: MemoBody
+}
+*/
+impl Serialize for Memo {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(2))?;
+        seq.serialize_element( &self.id )?;
+        seq.serialize_element( &self.subject_id )?;
+        seq.end()
+
+    }
+}
+/*
+impl Serialize for MemoBody {
+    pub enum MemoBody{
+        Relation(HashMap<u8,(SubjectId,MemoRefHead)>),
+        Edit(HashMap<String, String>),
+        FullyMaterialized     { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
+        PartiallyMaterialized { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
+        Peering(MemoId,SlabRef,PeeringStatus),
+        MemoRequest(Vec<MemoId>,SlabRef)
+    }
+}
+*/
 /*
 function Memo(slab,memo_id,record_id,peerings,parents,precursors,vals) {
     var me = this;

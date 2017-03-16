@@ -130,6 +130,9 @@ impl MemoRefHead {
             None
         }
     }
+    pub fn to_vec (&self) -> Vec<MemoRef> {
+        self.0.clone()
+    }
     pub fn to_vecdeque (&self) -> VecDeque<MemoRef> {
         VecDeque::from(self.0.clone())
     }
