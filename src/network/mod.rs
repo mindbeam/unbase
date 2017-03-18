@@ -84,6 +84,15 @@ impl Network {
 
         transport.make_transmitter( TransmitterArgs::Local(&slab) ).unwrap()
     }
+    pub fn get_remote_transmitter (&self, slab: &Slab) -> Transmitter {
+        // We're just going to assume that we have an in-process transmitter, or freak out
+        // Should probably do this more intelligently
+
+        let internals = self.shared.internals.lock().unwrap();
+        let transport = internals.transports.iter().filter(|x| x.is_local() ).next().unwrap();
+
+        transport.make_transmitter( TransmitterArgs::Local(&slab) ).unwrap()
+    }
     pub fn register_slab(&self, slab: &Slab) -> SlabRef {
         println!("# register_slab {:?}", slab );
 

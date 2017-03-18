@@ -235,8 +235,8 @@ impl Serialize for MemoRefPtr {
         where S: Serializer
     {
         match self {
-            Remote   => serializer.serialize_bool(false),
-            Resident => serializer.serialize_bool(true),
+            &MemoRefPtr::Remote      => serializer.serialize_bool(false),
+            &MemoRefPtr::Resident(_) => serializer.serialize_bool(true),
         }
     }
 }

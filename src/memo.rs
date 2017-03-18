@@ -27,6 +27,7 @@ pub enum PeeringStatus{
 #[derive(Debug, Serialize)]
 #[serde(deny_unknown_fields)]
 pub enum MemoBody{
+    SlabAddress(SlabAddress)
     Relation(HashMap<u8,(SubjectId,MemoRefHead)>),
     Edit(HashMap<String, String>),
     FullyMaterialized     { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },

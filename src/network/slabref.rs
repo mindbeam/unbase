@@ -70,8 +70,8 @@ impl Serialize for SlabRef {
         where S: Serializer
     {
         let mut seq = serializer.serialize_seq(Some(2))?;
-        seq.serialize_element(&self.slab_id.to_string());
-        seq.serialize_element(&"127.0.0.1:12345".to_string());
+        seq.serialize_element(&self.slab_id.to_string())?;
+        seq.serialize_element(&"127.0.0.1:12345".to_string())?;
         seq.end()
 
     }
