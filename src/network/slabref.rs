@@ -12,7 +12,7 @@
 
 
 use std::fmt;
-use super::{Network,Transmitter};
+use super::*;
 use slab::{Slab,WeakSlab,SlabId};
 use memo::Memo;
 use std::sync::Arc;
@@ -21,21 +21,27 @@ use serde::ser::*;
 #[derive(Clone)]
 pub struct SlabRef {
     pub slab_id: SlabId,
+    pub address: TransportAddress,
     inner: Arc<SlabRefInner>
 }
 struct SlabRefInner {
     slab_id: SlabId,
-    tx: Transmitter,
-    _slab: WeakSlab
+    tx: Transmitter
 }
 
 impl SlabRef{
-    pub fn new_from_memo ( _memo: &Memo, _net: &Network ) -> SlabRef {
-        // We just received a memo talking about the presence of a remote slab
-        // I assume we'll hear about this from a memo somehow
-        // Owing largely due to the fact that everything is a Memo :p
+    pub fn new_from_presence ( presence: &SlabPresence, net: &Network ) -> SlabRef {
 
-        unimplemented!();
+        let tx = net.get_remote_transmitter( presence.slab_id, presence.transport_address );
+
+        SlabRef {
+            slab_id: presence.slab_id,
+            address: presence.transport_address,
+            inner: Arc::new (SlabRefInner {
+                slab_id: presence.slab_id,
+                tx: tx
+            })
+        }
     }
     pub fn new_from_slab ( slab: &Slab, net: &Network ) -> SlabRef {
 
@@ -44,10 +50,10 @@ impl SlabRef{
 
         SlabRef {
             slab_id: slab.id,
+            address: TransportAddress::Local,
             inner: Arc::new (SlabRefInner {
                 slab_id: slab.id,
-                tx: tx,
-                _slab: slab.weak() // for future use when we're actually communicating to resident slabs directly
+                tx: tx
             })
         }
     }

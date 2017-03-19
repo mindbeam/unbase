@@ -4,19 +4,24 @@ version = "0.0.0"
 authors = ["Daniel Norman <daniel@gudtech.com>"]
 description = "Unbase is an open-source concept for a causal, coordination-free distributed data-persistence and application framework. It is fundamentally reactive, fault tolerant, and decentralized."
 license = "Apache-2.0"
+#build = "build.rs"
 exclude = [
     "docs/*",
     "jekyll-docs-template/*",
     "old/*",
-    "simulation/*"
+    "simulation/*",
+    "schema/*"
 ]
 
 [dependencies]
 linked-hash-map = "0.3.0"
 sha2 = "0.4.0"
 itertools = "0.5.9"
-serde = "0.9"
-serde_derive = "0.9"
-serde_json = "0.9"
+serde = "0.9.11"
+serde_derive = "0.9.11"
+serde_json = "0.9.9"
 
 [features]
+
+#[build-dependencies]
+#capnpc = "0.8"

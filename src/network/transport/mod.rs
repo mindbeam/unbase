@@ -6,32 +6,45 @@ mod transmitter;
 mod simulator;
 mod udp;
 
-pub use self::udp::TransportUDP;
+pub use self::udp::*;
 pub use self::simulator::Simulator;
 pub use self::transmitter::{Transmitter, DynamicDispatchTransmitter};
 
 use network::*;
 use slab::Slab;
 use memo::Memo;
+use serde::ser::*;
 
+#[derive(Debug, Serialize, Deserialize)]
 pub enum SlabAnticipatedLifetime{
     Ephmeral,
     Session,
     Long,
-    VeryLong
+    VeryLong,
+    Unknown
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum TransportAddress{
-    UDP(String)
+    Local,
+    UDP(TransportAddressUDP),
+    UDT,
+    WebRTP,
+    SCMP,
+    Bluetooth,
+    ShamefulTCP // SHAME! SHAME! SHAME! ( yes, I _really_ want to discourage people from using TCP )
 }
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SlabPresence{
-    slab_id: SlabId,
-    transport_address: TransportAddress,
-    anticipated_lifetime: SlabAnticipatedLifetime
+    pub slab_id: SlabId,
+    pub transport_address: TransportAddress,
+    pub anticipated_lifetime: SlabAnticipatedLifetime
 }
 
 pub enum TransmitterArgs<'a>{
     Local(&'a Slab),
-    Remote(&'a String)
+    Remote(&'a SlabId, TransportAddress)
 }
 
 pub trait Transport {

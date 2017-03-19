@@ -1,10 +1,11 @@
 extern crate unbase;
 use unbase::subject::*;
+use unbase::network::envelope::*;
 
 #[macro_use]
 extern crate serde;
-extern crate serde_derive;
-extern crate serde_json;
+extern crate bincode;
+
 
 #[test]
 fn serialize() {
@@ -20,6 +21,7 @@ fn serialize() {
 
 
     //let limit = bincode::SizeLimit::Bounded(20);
+
     let memo = &record.get_head().to_vec()[0];//.get_memo(&slab_a).unwrap();
 
     let encoded = serde_json::to_string(&memo).unwrap();

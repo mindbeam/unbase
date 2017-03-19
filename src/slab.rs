@@ -173,20 +173,6 @@ impl Slab {
         let mut shared = self.inner.shared.lock().unwrap();
         shared.peer_refs.push(new_peer_ref);
     }
-    pub fn _add_peer_from_memo (&self, slab_id: SlabId ) {
-        // TODO - switch peer-injection to use Memos
-        //        Identify resident / nonresident Slab
-
-        let mut shared = self.inner.shared.lock().unwrap();
-
-        // check with the network to see if there's an existing slabref
-        // This is important for
-        //   A. procuring Resident slabrefs, which are otherwise not obtainable
-        //   B. sharing slabrefs when possible to increase efficiency
-        if let Some(peer_slabref) =  shared.net.get_slabref( slab_id ) {
-            shared.peer_refs.push(peer_slabref);
-        }
-    }
     pub fn peer_slab_count (&self) -> usize {
         let shared = self.inner.shared.lock().unwrap();
         shared.peer_refs.len()
@@ -326,6 +312,10 @@ impl SlabShared {
 
             match memo.inner.body {
                 // This Memo is a peering status update for another memo
+                MemoBody::SlabPresence( presence ) => {
+                    let slabref = SlabRef::new_from_presence( &presence, &self.net );
+                    my_slab.inject_peer_slabref( slabref );
+                }
                 MemoBody::Peering(memo_id, ref slabref, ref status) => {
                     // Don't peer with yourself
                     if slabref.slab_id != my_ref.slab_id {

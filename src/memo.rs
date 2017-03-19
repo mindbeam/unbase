@@ -10,24 +10,24 @@ use serde::ser::*;
 use subject::{SubjectId};
 use memoref::*;
 use memorefhead::*;
-use network::SlabRef;
+use network::{SlabRef,SlabPresence};
 use slab::Slab;
 
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
 
 
-#[derive(Debug,Clone,PartialEq,Serialize)]
+#[derive(Debug,Clone,PartialEq,Serialize, Deserialize)]
 pub enum PeeringStatus{
     Resident,
     Participating,
     NonParticipating
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum MemoBody{
-    SlabAddress(SlabAddress)
+    SlabPresence(SlabPresence),
     Relation(HashMap<u8,(SubjectId,MemoRefHead)>),
     Edit(HashMap<String, String>),
     FullyMaterialized     { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
@@ -171,7 +171,7 @@ pub struct MemoInner {
     pub body: MemoBody
 }
 */
-impl Serialize for Memo {
+/* impl Serialize for Memo {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
@@ -183,18 +183,21 @@ impl Serialize for Memo {
         seq.end()
 
     }
-}
-/*impl Serialize for MemoBody {
+}*/
+
+impl Serialize for Memo {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        let mut seq = serializer.serialize_seq(Some(2))?;
+        let mut seq = serializer.serialize_seq(Some(1))?;
         seq.serialize_element( &self.id )?;
         seq.serialize_element( &self.subject_id )?;
+        seq.serialize_element( &self.inner.parents )?;
+        seq.serialize_element( &self.inner.body )?;
         seq.end()
 
     }
-}*/
+}
 /*
 impl Serialize for MemoBody {
     pub enum MemoBody{

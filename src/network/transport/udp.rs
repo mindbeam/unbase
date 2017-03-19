@@ -7,62 +7,99 @@ use super::*;
 use std::sync::mpsc;
 use std::sync::{Arc,Mutex};
 use slab::*;
-use memo::Memo;
+use memo::*;
 use std::collections::BTreeMap;
+
+use serde_json;// {serialize as bin_serialize, deserialize as bin_deserialize};
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Packet {
+    from_slab_id: SlabId,
+    memo: Memo
+}
 
 #[derive(Clone)]
 pub struct TransportUDP {
     shared: Arc<Mutex<TransportUDPInternal>>,
-    tx_channel: Arc<mpsc::Sender<Memo>>
+    // TEMPORARY - TODO: remove Arc<Mutex<>> here and instead make transmitters Send but not sync
+    tx_channel: Arc<Mutex<mpsc::Sender<(TransportAddressUDP,Packet)>>>
 }
 struct TransportUDPInternal {
     socket: Arc<UdpSocket>,
     tx_thread: Option<thread::JoinHandle<()>>,
     rx_thread: Option<thread::JoinHandle<()>>,
+    network: Option<WeakNetwork>,
+    address: TransportAddressUDP
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct TransportAddressUDP {
     address: String
 }
 
 impl TransportUDP {
-    // TODO: Potentially, make this return an Arc of itself.
     pub fn new (address: String) -> Self{
         let socket = Arc::new( UdpSocket::bind(address.clone()).unwrap() );
 
         let (tx_thread,tx_channel) = Self::setup_tx_thread(socket.clone());
 
         TransportUDP {
-            tx_channel: Arc::new(tx_channel),
+            tx_channel: Arc::new(Mutex::new(tx_channel)),
             shared: Arc::new(Mutex::new(
                 TransportUDPInternal {
                     socket: socket,
                     rx_thread: None,
                     tx_thread: Some(tx_thread),
-                    address: address
+                    network: None,
+                    address: TransportAddressUDP{ address : address }
                 }
             ))
         }
     }
 
-    fn setup_tx_thread (socket: Arc<UdpSocket>) -> (thread::JoinHandle<()>,mpsc::Sender<Memo>){
-        let (tx_channel, rx_channel) = mpsc::channel::<Memo>();
+    fn setup_tx_thread (socket: Arc<UdpSocket>) -> (thread::JoinHandle<()>,mpsc::Sender<(TransportAddressUDP, Memo)>){
+        let (tx_channel, rx_channel) = mpsc::channel::<(TransportAddressUDP,Memo)>();
 
         let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
             //let mut buf = [0; 65536];
 
             loop {
-                let envelope = rx_channel.recv().unwrap();
+                let (to_address, packet) = rx_channel.recv().unwrap();
+                println!("GOT MEMO TO TRANSMIT");
+                let b = serde_json::to_vec(&packet).unwrap();
 
-                let dest = envelope.dest.clone();
-                for packet in envelope.packet_iter() {
-                    socket.send_to(packet, &dest)?;
-                }
+                //HACK: we're trusting that each memo is smaller than 64k
+                socket.send_to(&b, &to_address.address).expect("Failed to send");
+                println!("SENT UDP PACKET");
             };
+
+            123
         });
 
         (tx_thread, tx_channel)
     }
-    pub fn seed_address (&self, address: String){
+    pub fn seed_address_from_string (&self, address: String){
+        let net = self.shared.lock().unwrap().network.unwrap().upgrade().unwrap();
 
-        self.send(hello, address);
+        for slab in net.get_slabs() {
+            let presence = SlabPresence {
+                slab_id: slab.id,
+                transport_address: TransportAddress::UDP(TransportAddressUDP { address }),
+                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+            };
+
+            let hello = Memo::new_basic_noparent(
+                slab.gen_memo_id(),
+                0,
+                MemoBody::SlabPresence(presence)
+            );
+
+            self.send(hello, self.shared.lock().unwrap().address);
+        }
+    }
+    pub fn send (&self, memo: Memo, address : TransportAddressUDP) {
+        // HACK HACK HACK lose the mutex here
+        self.tx_channel.lock().unwrap().send( (address, memo) );
     }
 }
 
@@ -71,16 +108,20 @@ impl Transport for TransportUDP {
         false
     }
     fn make_transmitter (&self, args: TransmitterArgs ) -> Result<Transmitter,String> {
-        if let TransmitterArgs::Remote(address) = args {
-            let tx = TransmitterUDP{
-                slab_id: 0,
-                address: address.to_owned(),
-                socket: self.shared.lock().unwrap().socket.clone(),
-            };
+        if let TransmitterArgs::Remote(slab_id, address) = args {
+            if let TransportAddress::UDP(udp_address) = address {
+                let tx = TransmitterUDP{
+                    slab_id: *slab_id,
+                    address: udp_address,
+                    tx_channel: self.tx_channel.clone(),
+                };
 
-            Ok(Transmitter::new(Box::new(tx)))
+                Ok(Transmitter::new( Box::new(tx) ))
+            }else{
+                Err("declined".to_string())
+            }
         }else{
-            Err("This transport is incapable of handling remote addresses".to_string())
+            Err("This transport is incapable of handling local addresses".to_string())
         }
 
     }
@@ -92,20 +133,36 @@ impl Transport for TransportUDP {
         }
 
         let rx_socket = shared.socket.clone();
+        //let dispatcher = TransportUDPDispatcher::new(net.clone());
 
-        let dispatcher = TransportUDPDispatcher::new(net.clone());
-
+        let net_weak = net.weak();
         let rx_handle : thread::JoinHandle<()> = thread::spawn(move || {
             let mut buf = [0; 65536];
 
             loop {
-                println!("INSIDE UDP THREAD");
                 let (amt, src) = rx_socket.recv_from(&mut buf).unwrap();
-                dispatcher.got_packet( &amt, &src );
+                println!("GOT UDP PACKET");
+
+                if let Some(net) = net_weak.upgrade() {
+                    //let (slab_id, memo) =
+                    let foo = serde_json::from_slice( &buf[0..amt] ).unwrap();
+
+                    let presence =  SlabPresence{
+                        slab_id: slab_id,
+                        transport_address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
+                        anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                    };
+                    let from = net.assert_slabref_from_presence(presence);
+
+                    if let Some(slab) = net.get_slab(slab_id) {
+                        slab.put_memos(MemoOrigin::Remote(&from), vec![memo], true);
+                    }
+                }
             };
         });
 
         shared.rx_thread = Some(rx_handle);
+        shared.network = Some(net.weak());
 
     }
 
@@ -114,7 +171,7 @@ impl Transport for TransportUDP {
 impl Drop for TransportUDP{
     fn drop(&mut self) {
         let mut shared = self.shared.lock().unwrap();
-        println!("# TransportUDP({}).drop", shared.address);
+        println!("# TransportUDP({:?}).drop", shared.address);
         let mut tx_thread = None;
         let mut rx_thread = None;
         mem::swap(&mut tx_thread,&mut shared.tx_thread);
@@ -127,21 +184,27 @@ impl Drop for TransportUDP{
 
 pub struct TransmitterUDP{
     pub slab_id: SlabId,
-    address: String,
-    socket: Arc<UdpSocket>
+    address: TransportAddressUDP,
+    // HACK HACK HACK - lose the Arc<Mutex<>> here by making transmitter Send, but not Sync
+    tx_channel: Arc<Mutex<mpsc::Sender<(TransportAddressUDP,Packet)>>>
 }
 impl DynamicDispatchTransmitter for TransmitterUDP {
     fn send (&self, from: &SlabRef, memo: Memo) {
-        unimplemented!()
+
+        let packet = Packet {
+            from_slab_id: from.slab_id,
+            memo: memo
+        };
+        
+        self.tx_channel.lock().unwrap().send((self.address, packet));
     }
 }
 
 
-
+/*
 struct TransportUDPDispatcher{
     net: WeakNet,
     slabmap: HashMap<SlabId, Slab>,
-    active_envelopes: BTreeMap<(Source,EnvelopeId),Envelope>
 }
 
 impl TransportUDPDispatcher{
@@ -193,3 +256,4 @@ impl TransportUDPDispatcher{
         }
     }
 }
+*/
