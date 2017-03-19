@@ -1,7 +1,15 @@
 [package]
 name = "unbase"
-version = "0.1.0"
+version = "0.0.0"
 authors = ["Daniel Norman <daniel@gudtech.com>"]
+description = "Unbase is an open-source concept for a causal, coordination-free distributed data-persistence and application framework. It is fundamentally reactive, fault tolerant, and decentralized."
+license = "Apache-2.0"
+exclude = [
+    "docs/*",
+    "jekyll-docs-template/*",
+    "old/*",
+    "simulation/*"
+]
 
 [dependencies]
 linked-hash-map = "0.3.0"
