@@ -1,3 +1,4 @@
+pub mod serde;
 mod projection;
 
 use std::mem;
@@ -22,17 +23,15 @@ use error::*;
 
 pub type RelationSlotId = u8;
 
-/*pub struct SlotRelationLink {
-    slot:       RelationSlotId,
-    subject_id: Option<SubjectId>
-}*/
-
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize)]
 pub struct MemoRefHead (Vec<MemoRef>);
 
 impl MemoRefHead {
     pub fn new () -> Self {
         MemoRefHead( Vec::with_capacity(5) )
+    }
+    pub fn new_from_vec ( vec: Vec<MemoRef> ) -> Self {
+        MemoRefHead( vec )
     }
     pub fn from_memoref (memoref: MemoRef) -> Self {
         MemoRefHead( vec![memoref] )

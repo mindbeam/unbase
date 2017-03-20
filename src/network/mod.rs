@@ -1,7 +1,8 @@
 extern crate linked_hash_map;
 
 pub mod transport;
-mod slabref;
+pub mod slabref;
+mod packet;
 
 pub use self::slabref::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
 pub use self::transport::{Transport};
@@ -80,11 +81,11 @@ impl Network {
         let mut internals = self.shared.internals.lock().unwrap();
         internals.get_slab(slab_id)
     }
-    pub fn assert_slabref_from_presence(&self, presence: SlabPresence) -> SlabRef {
+    pub fn assert_slabref_from_presence(&self, presence: &SlabPresence) -> SlabRef {
 
         {
             let mut internals = self.shared.internals.lock().unwrap();
-            match internals.slab_refs.iter().find(|r| r.presence == presence ) {
+            match internals.slab_refs.iter().find(|r| r.presence == *presence ) {
                 Some(slabref) => {
                     //TODO: should we update the slabref if the address is different?
                     //      or should we find/make a new slabref because its different?
@@ -94,7 +95,7 @@ impl Network {
             }
         }
 
-        let slabref = SlabRef::new_from_presence(&presence, &self);
+        let slabref = SlabRef::new_from_presence(presence.clone(), &self);
         self.shared.internals.lock().unwrap().slab_refs.push(slabref.clone());
         return slabref;
     }

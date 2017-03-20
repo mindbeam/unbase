@@ -1,5 +1,5 @@
 
-mod serde;
+pub mod serde;
 use memo::*;
 use slab::*;
 use network::*;
@@ -17,7 +17,7 @@ pub struct MemoRef {
     pub subject_id: Option<SubjectId>,
     pub shared: Arc<Mutex<MemoRefShared>>
 }
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 struct MemoPeer {
     slabref: SlabRef,
     status: PeeringStatus

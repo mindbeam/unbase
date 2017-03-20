@@ -1,7 +1,7 @@
 /* Memo
  * A memo is an immutable message.
 */
-mod serde;
+pub mod serde;
 
 use std::collections::HashMap;
 use std::{fmt};
@@ -19,15 +19,14 @@ use slab::Slab;
 pub type MemoId = u64;
 
 
-#[derive(Debug,Clone,PartialEq,Serialize, Deserialize)]
+#[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
 pub enum PeeringStatus{
     Resident,
     Participating,
     NonParticipating
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug)]
 pub enum MemoBody{
     SlabPresence(SlabPresence),
     Relation(HashMap<u8,(SubjectId,MemoRefHead)>),

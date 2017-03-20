@@ -10,7 +10,7 @@
     SlabRef can continue to serve its purpose without material change.
 */
 
-mod serde;
+pub mod serde;
 
 use std::fmt;
 use super::*;

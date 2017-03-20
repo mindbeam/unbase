@@ -15,48 +15,49 @@ impl Serialize for SlabRef {
 
     }
 }
-impl Deserialize for SlabRef {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+
+
+pub struct SlabRefSeed<'a> { net: &'a Network }
+struct SlabRefVisitor<'a> { net: &'a Network }
+impl<'a> DeserializeSeed for SlabRefSeed<'a> {
+    type Value = SlabRef;
+
+    fn deserialize<D> (self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
-        struct SlabRefVisitor;
-        impl Visitor for SlabRefVisitor {
-            type Value = SlabRef;
+        deserializer.deserialize_seq( SlabRefVisitor{ net: self.net } )
+    }
+}
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-               formatter.write_str("struct SlabRef")
-            }
+impl<'a> Visitor for SlabRefVisitor<'a> {
+    type Value = SlabRef;
 
-            fn visit_seq<V>(self, mut visitor: V) -> Result<SlabRef, V::Error>
-               where V: SeqVisitor
-            {
-               let id: SlabId = match visitor.visit()? {
-                   Some(value) => value,
-                   None => {
-                       return Err(de::Error::invalid_length(0, &self));
-                   }
-               };
-               let address: TransportAddress = match visitor.visit()? {
-                   Some(value) => value,
-                   None => {
-                       return Err(de::Error::invalid_length(1, &self));
-                   }
-               };
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+       formatter.write_str("struct SlabRef")
+    }
 
-               let presence = SlabPresence {
-                   slab_id: id,
-                   transport_address: address,
-                   anticipated_lifetime: SlabAnticipatedLifetime::Unknown
-               };
+    fn visit_seq<V> (self, mut visitor: V) -> Result<SlabRef, V::Error>
+        where V: SeqVisitor
+    {
+       let id: SlabId = match visitor.visit()? {
+           Some(value) => value,
+           None => {
+               return Err(de::Error::invalid_length(0, &self));
+           }
+       };
+       let address: TransportAddress = match visitor.visit()? {
+           Some(value) => value,
+           None => {
+               return Err(de::Error::invalid_length(1, &self));
+           }
+       };
 
-               // Ooof, looks like we need a deserialization wrapper
-               Ok(SlabRef::new_from_presence(presence, network))
-            }
-        }
+       let presence = SlabPresence {
+           slab_id: id,
+           transport_address: address,
+           anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+       };
 
-
-        const FIELDS: &'static [&'static str] = &["secs", "nanos"];
-        deserializer.deserialize_struct("Duration", FIELDS, SlabRefVisitor)
-
+       Ok( self.net.assert_slabref_from_presence(&presence) )
     }
 }

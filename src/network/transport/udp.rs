@@ -9,15 +9,12 @@ use std::sync::{Arc,Mutex};
 use slab::MemoOrigin;
 use memo::*;
 use std::collections::BTreeMap;
+use super::packet::*;
+
+use serde::de::*;
+use super::packet::serde::PacketSeed;
 
 use serde_json;// {serialize as bin_serialize, deserialize as bin_deserialize};
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Packet {
-    to_slab_id: SlabId,
-    from_slab_id: SlabId,
-    memo: Memo
-}
 
 #[derive(Clone)]
 pub struct TransportUDP {
@@ -155,15 +152,21 @@ impl Transport for TransportUDP {
                 println!("GOT UDP PACKET");
 
                 if let Some(net) = net_weak.upgrade() {
-                    //let (slab_id, memo) =
-                    let packet : Packet = serde_json::from_slice( &buf[0..amt] ).unwrap();
 
+                    //TODO: create a protocol encode/decode module and abstract away the serde stuff
+                    //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
+                    let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
+                    let packet_seed : PacketSeed = PacketSeed{ net: &net };
+                    let packet : Packet = packet_seed.deserialize(&mut deserializer).unwrap();
+
+                    // TODO: create packet.get_presence ?
                     let presence =  SlabPresence{
                         slab_id: packet.from_slab_id,
                         transport_address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
                         anticipated_lifetime: SlabAnticipatedLifetime::Unknown
                     };
-                    let from = net.assert_slabref_from_presence(presence);
+
+                    let from = net.assert_slabref_from_presence(&presence);
 
                     if let Some(slab) = net.get_slab(packet.to_slab_id) {
                         slab.put_memos(MemoOrigin::Remote(&from), vec![packet.memo], true);
