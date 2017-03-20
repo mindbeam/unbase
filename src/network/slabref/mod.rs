@@ -10,6 +10,7 @@
     SlabRef can continue to serve its purpose without material change.
 */
 
+mod serde;
 
 use std::fmt;
 use super::*;
@@ -18,10 +19,26 @@ use memo::Memo;
 use std::sync::Arc;
 use serde::ser::*;
 
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub enum SlabAnticipatedLifetime{
+    Ephmeral,
+    Session,
+    Long,
+    VeryLong,
+    Unknown
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct SlabPresence{
+    pub slab_id: SlabId,
+    pub transport_address: TransportAddress,
+    pub anticipated_lifetime: SlabAnticipatedLifetime
+}
+
 #[derive(Clone)]
 pub struct SlabRef {
     pub slab_id: SlabId,
-    pub address: TransportAddress,
+    pub presence: SlabPresence,
     inner: Arc<SlabRefInner>
 }
 struct SlabRefInner {
@@ -30,13 +47,13 @@ struct SlabRefInner {
 }
 
 impl SlabRef{
-    pub fn new_from_presence ( presence: &SlabPresence, net: &Network ) -> SlabRef {
+    pub fn new_from_presence ( presence: SlabPresence, net: &Network ) -> SlabRef {
 
         let tx = net.get_remote_transmitter( presence.slab_id, presence.transport_address );
 
         SlabRef {
             slab_id: presence.slab_id,
-            address: presence.transport_address,
+            presence: presence,
             inner: Arc::new (SlabRefInner {
                 slab_id: presence.slab_id,
                 tx: tx
@@ -50,7 +67,11 @@ impl SlabRef{
 
         SlabRef {
             slab_id: slab.id,
-            address: TransportAddress::Local,
+            presence: SlabPresence{
+                slab_id: slab.id,
+                transport_address: TransportAddress::Local,
+                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+            },
             inner: Arc::new (SlabRefInner {
                 slab_id: slab.id,
                 tx: tx
@@ -69,16 +90,5 @@ impl fmt::Debug for SlabRef {
         fmt.debug_struct("SlabRef")
             .field("slab_id", &self.inner.slab_id)
             .finish()
-    }
-}
-impl Serialize for SlabRef {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        let mut seq = serializer.serialize_seq(Some(2))?;
-        seq.serialize_element(&self.slab_id.to_string())?;
-        seq.serialize_element(&"127.0.0.1:12345".to_string())?;
-        seq.end()
-
     }
 }

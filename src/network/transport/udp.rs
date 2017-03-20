@@ -6,7 +6,7 @@ use std::mem;
 use super::*;
 use std::sync::mpsc;
 use std::sync::{Arc,Mutex};
-use slab::*;
+use slab::MemoOrigin;
 use memo::*;
 use std::collections::BTreeMap;
 
@@ -14,6 +14,7 @@ use serde_json;// {serialize as bin_serialize, deserialize as bin_deserialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Packet {
+    to_slab_id: SlabId,
     from_slab_id: SlabId,
     memo: Memo
 }
@@ -57,8 +58,8 @@ impl TransportUDP {
         }
     }
 
-    fn setup_tx_thread (socket: Arc<UdpSocket>) -> (thread::JoinHandle<()>,mpsc::Sender<(TransportAddressUDP, Memo)>){
-        let (tx_channel, rx_channel) = mpsc::channel::<(TransportAddressUDP,Memo)>();
+    fn setup_tx_thread (socket: Arc<UdpSocket>) -> (thread::JoinHandle<()>,mpsc::Sender<(TransportAddressUDP, Packet)>){
+        let (tx_channel, rx_channel) = mpsc::channel::<(TransportAddressUDP,Packet)>();
 
         let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
             //let mut buf = [0; 65536];
@@ -94,12 +95,22 @@ impl TransportUDP {
                 MemoBody::SlabPresence(presence)
             );
 
-            self.send(hello, self.shared.lock().unwrap().address);
+            self.send(
+                &slab.get_ref(),
+                0,
+                hello,
+                self.shared.lock().unwrap().address
+            );
         }
     }
-    pub fn send (&self, memo: Memo, address : TransportAddressUDP) {
+    pub fn send (&self, from: &SlabRef, to_slab_id: SlabId, memo: Memo, address : TransportAddressUDP) {
+        let packet = Packet{
+            to_slab_id: to_slab_id,
+            from_slab_id: from.slab_id,
+            memo: memo
+        };
         // HACK HACK HACK lose the mutex here
-        self.tx_channel.lock().unwrap().send( (address, memo) );
+        self.tx_channel.lock().unwrap().send( (address, packet) );
     }
 }
 
@@ -145,17 +156,17 @@ impl Transport for TransportUDP {
 
                 if let Some(net) = net_weak.upgrade() {
                     //let (slab_id, memo) =
-                    let foo = serde_json::from_slice( &buf[0..amt] ).unwrap();
+                    let packet : Packet = serde_json::from_slice( &buf[0..amt] ).unwrap();
 
                     let presence =  SlabPresence{
-                        slab_id: slab_id,
+                        slab_id: packet.from_slab_id,
                         transport_address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
                         anticipated_lifetime: SlabAnticipatedLifetime::Unknown
                     };
                     let from = net.assert_slabref_from_presence(presence);
 
-                    if let Some(slab) = net.get_slab(slab_id) {
-                        slab.put_memos(MemoOrigin::Remote(&from), vec![memo], true);
+                    if let Some(slab) = net.get_slab(packet.to_slab_id) {
+                        slab.put_memos(MemoOrigin::Remote(&from), vec![packet.memo], true);
                     }
                 }
             };
@@ -192,10 +203,11 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
     fn send (&self, from: &SlabRef, memo: Memo) {
 
         let packet = Packet {
+            to_slab_id: self.slab_id,
             from_slab_id: from.slab_id,
             memo: memo
         };
-        
+
         self.tx_channel.lock().unwrap().send((self.address, packet));
     }
 }

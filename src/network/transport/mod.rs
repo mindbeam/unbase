@@ -15,15 +15,6 @@ use slab::Slab;
 use memo::Memo;
 use serde::ser::*;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub enum SlabAnticipatedLifetime{
-    Ephmeral,
-    Session,
-    Long,
-    VeryLong,
-    Unknown
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum TransportAddress{
     Local,
@@ -33,13 +24,6 @@ pub enum TransportAddress{
     SCMP,
     Bluetooth,
     ShamefulTCP // SHAME! SHAME! SHAME! ( yes, I _really_ want to discourage people from using TCP )
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SlabPresence{
-    pub slab_id: SlabId,
-    pub transport_address: TransportAddress,
-    pub anticipated_lifetime: SlabAnticipatedLifetime
 }
 
 pub enum TransmitterArgs<'a>{

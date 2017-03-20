@@ -1,3 +1,5 @@
+
+mod serde;
 use memo::*;
 use slab::*;
 use network::*;
@@ -8,21 +10,22 @@ use std::fmt;
 use std::error::Error;
 use serde::ser::*;
 
+
 #[derive(Clone)]
 pub struct MemoRef {
     pub id:    MemoId,
     pub subject_id: Option<SubjectId>,
-    shared: Arc<Mutex<MemoRefShared>>
+    pub shared: Arc<Mutex<MemoRefShared>>
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct MemoPeer {
     slabref: SlabRef,
     status: PeeringStatus
 }
 #[derive(Debug)]
 struct MemoRefShared {
-    peers: Vec<MemoPeer>,
-    ptr:   MemoRefPtr
+    pub peers: Vec<MemoPeer>,
+    pub ptr:   MemoRefPtr
 }
 #[derive(Debug)]
 pub enum MemoRefPtr {
@@ -213,30 +216,5 @@ impl fmt::Debug for MemoRef{
            .field("peers", &shared.peers)
            .field("ptr", &shared.ptr)
            .finish()
-    }
-}
-
-impl Serialize for MemoRef {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        let shared = &self.shared.lock().unwrap();
-        let mut struc = serializer.serialize_struct("MemoRef", 3)?;
-        struc.serialize_field("id", &self.id)?;
-        struc.serialize_field("s", &self.subject_id)?;
-        struc.serialize_field("t", &shared.ptr)?;
-        struc.serialize_field("p", &shared.peers)?;
-        struc.end()
-    }
-}
-
-impl Serialize for MemoRefPtr {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        match self {
-            &MemoRefPtr::Remote      => serializer.serialize_bool(false),
-            &MemoRefPtr::Resident(_) => serializer.serialize_bool(true),
-        }
     }
 }

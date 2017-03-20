@@ -3,8 +3,8 @@ extern crate linked_hash_map;
 pub mod transport;
 mod slabref;
 
-pub use self::slabref::SlabRef;
-pub use self::transport::{Transport, SlabPresence};
+pub use self::slabref::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
+pub use self::transport::{Transport};
 use self::transport::*;
 
 use std::sync::{Arc, Weak, Mutex};
@@ -84,7 +84,7 @@ impl Network {
 
         {
             let mut internals = self.shared.internals.lock().unwrap();
-            match internals.slab_refs.iter().find(|r| r.slab_id == presence.slab_id && r.address == presence.transport_address ) {
+            match internals.slab_refs.iter().find(|r| r.presence == presence ) {
                 Some(slabref) => {
                     //TODO: should we update the slabref if the address is different?
                     //      or should we find/make a new slabref because its different?

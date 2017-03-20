@@ -27,7 +27,7 @@ pub type RelationSlotId = u8;
     subject_id: Option<SubjectId>
 }*/
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct MemoRefHead (Vec<MemoRef>);
 
 impl MemoRefHead {
