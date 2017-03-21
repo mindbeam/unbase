@@ -3,19 +3,18 @@ use network::*;
 use memoref::serde::*;
 use super::*;
 
-pub struct MemoRefHeadSeed<'a> { net: &'a Network }
-struct MemoRefHeadVisitor<'a> { net: &'a Network }
+pub struct MemoRefHeadSeed<'a> { pub net: &'a Network }
 
 impl<'a> DeserializeSeed for MemoRefHeadSeed<'a> {
     type Value = MemoRefHead;
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
-        deserializer.deserialize_seq(MemoRefHeadVisitor{ net: self.net })
+        deserializer.deserialize_seq(self)
     }
 }
 
-impl<'a> Visitor for MemoRefHeadVisitor<'a> {
+impl<'a> Visitor for MemoRefHeadSeed<'a> {
     type Value = MemoRefHead;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

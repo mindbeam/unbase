@@ -17,19 +17,18 @@ impl Serialize for SlabRef {
 }
 
 
-pub struct SlabRefSeed<'a> { net: &'a Network }
-struct SlabRefVisitor<'a> { net: &'a Network }
+pub struct SlabRefSeed<'a> { pub net: &'a Network }
 impl<'a> DeserializeSeed for SlabRefSeed<'a> {
     type Value = SlabRef;
 
     fn deserialize<D> (self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
-        deserializer.deserialize_seq( SlabRefVisitor{ net: self.net } )
+        deserializer.deserialize_seq( self )
     }
 }
 
-impl<'a> Visitor for SlabRefVisitor<'a> {
+impl<'a> Visitor for SlabRefSeed<'a> {
     type Value = SlabRef;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

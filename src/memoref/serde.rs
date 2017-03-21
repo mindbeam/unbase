@@ -22,19 +22,18 @@ impl Serialize for MemoRef {
     }
 }
 
-pub struct MemoRefSeed<'a> { net: &'a Network }
-struct MemoRefVisitor<'a> { net: &'a Network }
+pub struct MemoRefSeed<'a> { pub net: &'a Network }
 
 impl<'a> DeserializeSeed for MemoRefSeed<'a> {
     type Value = MemoRef;
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
-        deserializer.deserialize_seq(MemoRefVisitor{ net: self.net })
+        deserializer.deserialize_seq(self)
     }
 }
 
-impl<'a> Visitor for MemoRefVisitor<'a> {
+impl<'a> Visitor for MemoRefSeed<'a> {
     type Value = MemoRef;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

@@ -7,8 +7,7 @@ use serde::*;
 use serde::ser::*;
 use serde::de::*;
 
-pub struct PacketSeed <'a>{ net: &'a Network }
-struct PacketVisitor<'a>{ net: &'a Network }
+pub struct PacketSeed <'a>{ pub net: &'a Network }
 
 impl<'a> DeserializeSeed for PacketSeed<'a>{
     type Value = Packet;
@@ -16,11 +15,11 @@ impl<'a> DeserializeSeed for PacketSeed<'a>{
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
-        deserializer.deserialize_seq( PacketVisitor{ net: self.net } )
+        deserializer.deserialize_seq( self )
     }
 }
 
-impl<'a> Visitor for PacketVisitor<'a> {
+impl<'a> Visitor for PacketSeed<'a> {
     type Value = Packet;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

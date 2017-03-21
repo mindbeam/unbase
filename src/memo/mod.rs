@@ -26,7 +26,7 @@ pub enum PeeringStatus{
     NonParticipating
 }
 
-#[derive(Debug)]
+#[derive(Debug,Serialize)]
 pub enum MemoBody{
     SlabPresence(SlabPresence),
     Relation(HashMap<u8,(SubjectId,MemoRefHead)>),
