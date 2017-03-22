@@ -24,7 +24,7 @@ pub enum PeeringStatus{
     NonParticipating
 }
 
-#[derive(Debug,Serialize)]
+#[derive(Debug,Serialize,PartialEq)]
 pub enum MemoBody{
     SlabPresence(SlabPresence),
     Relation(HashMap<u8,(SubjectId,MemoRefHead)>),
@@ -37,12 +37,13 @@ pub enum MemoBody{
 
 // All portions of this struct should be immutable
 
-#[derive(Clone)]
+#[derive(Clone,PartialEq)]
 pub struct Memo {
     pub id: u64,
     pub subject_id: u64,
     pub inner: Arc<MemoInner>
 }
+#[derive(PartialEq)]
 pub struct MemoInner {
     pub id: u64,
     pub subject_id: u64,

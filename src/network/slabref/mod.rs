@@ -84,6 +84,13 @@ impl SlabRef{
     }
 }
 
+impl PartialEq for SlabRef {
+    fn eq(&self, other: &SlabRef) -> bool {
+        // When comparing equality, we can skip the transmitter
+        self.slab_id == other.slab_id && self.presence == other.presence
+    }
+}
+
 impl fmt::Debug for SlabRef {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SlabRef")

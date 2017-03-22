@@ -2,10 +2,11 @@ extern crate linked_hash_map;
 
 pub mod transport;
 pub mod slabref;
-mod packet;
+pub mod packet;
 
 pub use self::slabref::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
 pub use self::transport::{Transport};
+pub use self::packet::Packet;
 use self::transport::*;
 
 use std::sync::{Arc, Weak, Mutex};

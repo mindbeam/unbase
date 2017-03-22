@@ -2,7 +2,7 @@ extern crate unbase;
 
 use std::{thread, time};
 
-#[test]
+//#[test]
 fn test_udp() {
 
     let net1 = unbase::Network::new();
@@ -17,7 +17,7 @@ fn test_udp() {
         udp2.seed_address_from_string( "127.0.0.1:12345".to_string() );
 
         thread::sleep( time::Duration::from_secs(50) );
-    }
+    });
 
     t2.join();
 }

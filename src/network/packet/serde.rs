@@ -4,7 +4,21 @@ use super::super::*;
 use memo::serde::MemoSeed;
 
 use serde::*;
+use serde::ser::*;
 use serde::de::*;
+
+impl Serialize for Packet {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(3))?;
+        seq.serialize_element( &self.from_slab_id )?;
+        seq.serialize_element( &self.to_slab_id )?;
+        seq.serialize_element( &self.memo )?;
+        seq.end()
+
+    }
+}
 
 pub struct PacketSeed <'a>{ pub net: &'a Network }
 
