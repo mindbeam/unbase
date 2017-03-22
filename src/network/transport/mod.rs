@@ -13,7 +13,6 @@ pub use self::transmitter::{Transmitter, DynamicDispatchTransmitter};
 use network::*;
 use slab::Slab;
 use memo::Memo;
-use serde::ser::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum TransportAddress{

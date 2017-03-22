@@ -8,7 +8,7 @@ use std::sync::mpsc;
 use std::sync::{Arc,Mutex};
 use slab::MemoOrigin;
 use memo::*;
-use std::collections::BTreeMap;
+// use std::collections::BTreeMap;
 use super::packet::*;
 
 use serde::de::*;
@@ -70,34 +70,35 @@ impl TransportUDP {
                 socket.send_to(&b, &to_address.address).expect("Failed to send");
                 println!("SENT UDP PACKET");
             };
-
-            123
         });
 
         (tx_thread, tx_channel)
     }
     pub fn seed_address_from_string (&self, address: String){
-        let net = self.shared.lock().unwrap().network.unwrap().upgrade().unwrap();
+        let shared = self.shared.lock().unwrap();
+        if let Some(ref net) = shared.network {
+            let net = net.upgrade().unwrap();
 
-        for slab in net.get_slabs() {
-            let presence = SlabPresence {
-                slab_id: slab.id,
-                transport_address: TransportAddress::UDP(TransportAddressUDP { address }),
-                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
-            };
+            for slab in net.get_slabs() {
+                let presence = SlabPresence {
+                    slab_id: slab.id,
+                    transport_address: TransportAddress::UDP(TransportAddressUDP { address: address.clone() }),
+                    anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                };
 
-            let hello = Memo::new_basic_noparent(
-                slab.gen_memo_id(),
-                0,
-                MemoBody::SlabPresence(presence)
-            );
+                let hello = Memo::new_basic_noparent(
+                    slab.gen_memo_id(),
+                    0,
+                    MemoBody::SlabPresence(presence)
+                );
 
-            self.send(
-                &slab.get_ref(),
-                0,
-                hello,
-                self.shared.lock().unwrap().address
-            );
+                self.send(
+                    &slab.get_ref(),
+                    0,
+                    hello,
+                    self.shared.lock().unwrap().address.clone()
+                );
+            }
         }
     }
     pub fn send (&self, from: &SlabRef, to_slab_id: SlabId, memo: Memo, address : TransportAddressUDP) {
@@ -107,7 +108,7 @@ impl TransportUDP {
             memo: memo
         };
         // HACK HACK HACK lose the mutex here
-        self.tx_channel.lock().unwrap().send( (address, packet) );
+        self.tx_channel.lock().unwrap().send( (address, packet) ).unwrap();
     }
 }
 
@@ -151,13 +152,16 @@ impl Transport for TransportUDP {
                 let (amt, src) = rx_socket.recv_from(&mut buf).unwrap();
                 println!("GOT UDP PACKET");
 
-                if let Some(net) = net_weak.upgrade() {
+                if let Some(mut net) = net_weak.upgrade() {
 
                     //TODO: create a protocol encode/decode module and abstract away the serde stuff
                     //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
                     let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
-                    let packet_seed : PacketSeed = PacketSeed{ net: &net };
-                    let packet : Packet = packet_seed.deserialize(&mut deserializer).unwrap();
+                    let packet : Packet;
+                    {
+                        let packet_seed : PacketSeed = PacketSeed{ net: &net };
+                        packet = packet_seed.deserialize(&mut deserializer).unwrap();
+                    }
 
                     // TODO: create packet.get_presence ?
                     let presence =  SlabPresence{
@@ -211,7 +215,7 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
             memo: memo
         };
 
-        self.tx_channel.lock().unwrap().send((self.address, packet));
+        self.tx_channel.lock().unwrap().send((self.address.clone(), packet)).unwrap();
     }
 }
 

@@ -5,7 +5,6 @@ use std::mem;
 use std::fmt;
 use std::slice;
 use std::collections::VecDeque;
-use serde::ser::*;
 
 use memo::*;
 use memoref::*;

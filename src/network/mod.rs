@@ -84,7 +84,7 @@ impl Network {
     pub fn assert_slabref_from_presence(&self, presence: &SlabPresence) -> SlabRef {
 
         {
-            let mut internals = self.shared.internals.lock().unwrap();
+            let internals = self.shared.internals.lock().unwrap();
             match internals.slab_refs.iter().find(|r| r.presence == *presence ) {
                 Some(slabref) => {
                     //TODO: should we update the slabref if the address is different?
@@ -95,7 +95,7 @@ impl Network {
             }
         }
 
-        let slabref = SlabRef::new_from_presence(presence.clone(), &self);
+        let slabref = SlabRef::new_from_presence(&presence, &self);
         self.shared.internals.lock().unwrap().slab_refs.push(slabref.clone());
         return slabref;
     }
@@ -108,17 +108,17 @@ impl Network {
 
         transport.make_transmitter( TransmitterArgs::Local(&slab) ).unwrap()
     }
-    pub fn get_remote_transmitter (&self, slab_id: SlabId, address: TransportAddress) -> Transmitter {
+    pub fn get_remote_transmitter (&self, presence: &SlabPresence ) -> Transmitter {
         // We're just going to assume that we have an in-process transmitter, or freak out
         // Should probably do this more intelligently
 
         let internals = self.shared.internals.lock().unwrap();
 
-        match address {
+        match presence.transport_address {
             TransportAddress::UDP(_) => {
                 // HACK
                 if let Some(transport) = internals.transports.iter().find(|x| !x.is_local() ){
-                    return transport.make_transmitter( TransmitterArgs::Remote(&slab_id, address) ).unwrap()
+                    return transport.make_transmitter( TransmitterArgs::Remote(&presence.slab_id, presence.transport_address.clone()) ).unwrap()
                 }
             }
             _ => {}

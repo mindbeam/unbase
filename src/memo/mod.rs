@@ -6,8 +6,6 @@ pub mod serde;
 use std::collections::HashMap;
 use std::{fmt};
 use std::sync::Arc;
-use serde::ser::*;
-use serde::de::*;
 
 use subject::{SubjectId};
 use memoref::*;

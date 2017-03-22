@@ -2,7 +2,6 @@ use super::*;
 use serde::*;
 use serde::ser::*;
 use serde::de::*;
-use memoref::*;
 use network::slabref::serde::*;
 
 impl Serialize for MemoRef {
@@ -14,8 +13,8 @@ impl Serialize for MemoRef {
         seq.serialize_element(&self.id)?;
         seq.serialize_element(&self.subject_id)?;
         match &shared.ptr {
-            &MemoRefPtr::Remote      => seq.serialize_element(&false),
-            &MemoRefPtr::Resident(_) => seq.serialize_element(&true),
+            &MemoRefPtr::Remote      => seq.serialize_element(&false)?,
+            &MemoRefPtr::Resident(_) => seq.serialize_element(&true)?,
         };
         seq.serialize_element(&shared.peers)?;
         seq.end()

@@ -312,7 +312,7 @@ impl SlabShared {
 
             match memo.inner.body {
                 // This Memo is a peering status update for another memo
-                MemoBody::SlabPresence( presence ) => {
+                MemoBody::SlabPresence( ref presence ) => {
                     let slabref = SlabRef::new_from_presence( presence, &self.net );
                     my_slab.inject_peer_slabref( slabref );
                 }

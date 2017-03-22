@@ -4,7 +4,6 @@ use super::super::*;
 use memo::serde::MemoSeed;
 
 use serde::*;
-use serde::ser::*;
 use serde::de::*;
 
 pub struct PacketSeed <'a>{ pub net: &'a Network }

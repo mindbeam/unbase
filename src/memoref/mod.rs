@@ -8,17 +8,16 @@ use memorefhead::MemoRefHead;
 use std::sync::{Arc,Mutex};
 use std::fmt;
 use std::error::Error;
-use serde::ser::*;
 
 
 #[derive(Clone)]
 pub struct MemoRef {
     pub id:    MemoId,
     pub subject_id: Option<SubjectId>,
-    pub shared: Arc<Mutex<MemoRefShared>>
+    shared: Arc<Mutex<MemoRefShared>>
 }
 #[derive(Debug, Serialize)]
-struct MemoPeer {
+pub struct MemoPeer {
     slabref: SlabRef,
     status: PeeringStatus
 }

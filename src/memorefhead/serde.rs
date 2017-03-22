@@ -1,3 +1,4 @@
+use serde::*;
 use serde::de::*;
 use network::*;
 use memoref::serde::*;
@@ -52,7 +53,7 @@ impl Visitor for RelationSlotIdSeed {
        formatter.write_str("RelationSlotId")
     }
     fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
-        where E: Error
+        where E: de::Error
     {
         Ok(value as Self::Value)
     }

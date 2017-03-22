@@ -14,10 +14,9 @@ pub mod serde;
 
 use std::fmt;
 use super::*;
-use slab::{Slab,WeakSlab,SlabId};
+use slab::{Slab,SlabId};
 use memo::Memo;
 use std::sync::Arc;
-use serde::ser::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum SlabAnticipatedLifetime{
@@ -47,13 +46,13 @@ struct SlabRefInner {
 }
 
 impl SlabRef{
-    pub fn new_from_presence ( presence: SlabPresence, net: &Network ) -> SlabRef {
+    pub fn new_from_presence ( presence: &SlabPresence, net: &Network ) -> SlabRef {
 
-        let tx = net.get_remote_transmitter( presence.slab_id, presence.transport_address );
+        let tx = net.get_remote_transmitter( presence );
 
         SlabRef {
             slab_id: presence.slab_id,
-            presence: presence,
+            presence: presence.clone(),
             inner: Arc::new (SlabRefInner {
                 slab_id: presence.slab_id,
                 tx: tx

@@ -2,7 +2,6 @@ use serde::*;
 use serde::ser::*;
 use serde::de::*;
 use super::*;
-use subject::*;
 
 impl Serialize for SlabRef {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

@@ -3,10 +3,8 @@ use serde::*;
 use serde::ser::*;
 use serde::de::*;
 use super::*;
-use memo::*;
 use std::fmt;
 use network::Network;
-use memoref::serde::*;
 use memorefhead::serde::*;
 
 impl Serialize for Memo {
@@ -86,7 +84,6 @@ impl<'a> Visitor for MemoSeed<'a>{
 */
 
 pub struct MemoBodySeed<'a> { net: &'a Network }
-pub struct MemoBodyVariantSeed<'a> { net: &'a Network }
 
 enum MemoBodyVariant {
     SlabPresence,
@@ -127,8 +124,9 @@ impl<'a> Visitor for MemoBodySeed<'a> {
     {
 
         match try!(visitor.visit_variant()) {
-            (MemoBodyVariant::SlabPresence, variant) => variant.visit_newtype().map(Ok)?, //(MBSlabPresenceVisitor{net: self.net })
+            (MemoBodyVariant::SlabPresence, variant) => variant.visit_newtype().map(MemoBody::SlabPresence),
             (MemoBodyVariant::Relation,     variant) => variant.visit_newtype_seed(MBRelationSeed{ net: self.net }).map(Ok)?,
+            _ => panic!("meow")
         //    (MemoBodyVariant::Edit, variant) => variant.visit_newtype().map(MemoBody::Edit),
         //    (MemoBodyVariant::FullyMaterialized, variant) => variant.visit_newtype().map(MemoBody::FullyMaterialized),
         //    (MemoBodyVariant::PartiallyMaterialized, variant) => variant.visit_newtype().map(MemoBody::PartiallyMaterialized),
