@@ -6,6 +6,7 @@ use super::*;
 use std::fmt;
 use network::Network;
 use memorefhead::serde::*;
+use network::slabref::serde::*;
 
 impl Serialize for Memo {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -241,7 +242,7 @@ impl<'a> Visitor for MBFullyMaterializedSeed<'a> {
     type Value = MemoBody;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("MemoBody::Relation")
+        formatter.write_str("MemoBody::FullyMaterialized")
     }
     fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
         where Visitor: MapVisitor,
@@ -263,8 +264,6 @@ impl<'a> Visitor for MBFullyMaterializedSeed<'a> {
         }
     }
 }
-
-
 
 struct SubjectMRHSeed<'a> { net: &'a Network }
 impl<'a> DeserializeSeed for SubjectMRHSeed<'a> {
@@ -303,5 +302,49 @@ impl<'a> Visitor for SubjectMRHSeed<'a> {
         };
 
         Ok((subject_id,mrh))
+    }
+}
+
+
+struct MBPeeringSeed<'a> { net: &'a Network }
+
+impl<'a> DeserializeSeed for MBPeeringSeed<'a> {
+    type Value = MemoBody;
+
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+        where D: Deserializer
+    {
+        deserializer.deserialize(self)
+    }
+}
+impl<'a> Visitor for MBPeeringSeed<'a> {
+    type Value = MemoBody;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("MemoBody::Peering")
+    }
+    fn visit_seq<V> (self, mut visitor: V) -> Result<MemoBody, V::Error>
+        where V: SeqVisitor
+    {
+       let memo_id: MemoId = match visitor.visit()? {
+           Some(value) => value,
+           None => {
+               return Err(de::Error::invalid_length(0, &self));
+           }
+       };
+       let slab_ref: SlabRef = match visitor.visit_seed(SlabRefSeed{ net: self.net })? {
+           Some(value) => value,
+           None => {
+               return Err(de::Error::invalid_length(1, &self));
+           }
+       };
+       let peering_status: PeeringStatus = match visitor.visit()? {
+           Some(value) => value,
+           None => {
+               return Err(de::Error::invalid_length(2, &self));
+           }
+       };
+
+       Ok(MemoBody::Peering( memo_id, slab_ref, peering_status ))
     }
 }

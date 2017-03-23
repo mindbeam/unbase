@@ -7,9 +7,8 @@ impl Serialize for SlabRef {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        let mut seq = serializer.serialize_seq(Some(2))?;
-        seq.serialize_element(&self.slab_id.to_string())?;
-        seq.serialize_element(&"127.0.0.1:12345".to_string())?;
+        let mut seq = serializer.serialize_seq(Some(1))?;
+        seq.serialize_element(&self.presence)?;
         seq.end()
 
     }
@@ -37,25 +36,26 @@ impl<'a> Visitor for SlabRefSeed<'a> {
     fn visit_seq<V> (self, mut visitor: V) -> Result<SlabRef, V::Error>
         where V: SeqVisitor
     {
-       let id: SlabId = match visitor.visit()? {
+      /* let id: SlabId = match visitor.visit()? {
+           Some(value) => value,
+           None => {
+               return Err(de::Error::invalid_length(0, &self));
+           }
+       };*/
+       let presence: SlabPresence = match visitor.visit()? {
            Some(value) => value,
            None => {
                return Err(de::Error::invalid_length(0, &self));
            }
        };
-       let address: TransportAddress = match visitor.visit()? {
-           Some(value) => value,
-           None => {
-               return Err(de::Error::invalid_length(1, &self));
-           }
-       };
 
-       let presence = SlabPresence {
+      /* let presence = SlabPresence {
            slab_id: id,
            transport_address: address,
            anticipated_lifetime: SlabAnticipatedLifetime::Unknown
-       };
+       };*/
 
+       println!("MARK SERDE");
        Ok( self.net.assert_slabref_from_presence(&presence) )
     }
 }

@@ -17,6 +17,7 @@ use super::*;
 use slab::{Slab,SlabId};
 use memo::Memo;
 use std::sync::Arc;
+use super::transport;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum SlabAnticipatedLifetime{
@@ -49,8 +50,18 @@ struct SlabRefInner {
 impl SlabRef{
     pub fn new_from_presence ( presence: &SlabPresence, net: &Network ) -> SlabRef {
 
+        match presence.transport_address {
+            TransportAddress::Simulator  => {
+                panic!("Invalid - Cannot create simulator slabref from presence")
+            }
+            TransportAddress::Local      => {
+                panic!("Invalid - Cannot create local slabref from presence")
+            }
+            _ => { }
+        };
+
         let args = TransmitterArgs::Remote( &presence.slab_id, &presence.transport_address );
-        let tx = net.get_transmitter( args ).expect("net.get_transmitter");
+        let tx = net.get_transmitter( args ).expect("new_from_presence net.get_transmitter");
         let maybe_local_return_address = net.get_return_address( &presence.transport_address );
 
         SlabRef {
@@ -65,7 +76,7 @@ impl SlabRef{
     }
     pub fn new_from_slab ( slab: &Slab, net: &Network ) -> SlabRef {
 
-        let tx = net.get_transmitter( TransmitterArgs::Local(&slab) ).expect("net.get_transmitter");
+        let tx = net.get_transmitter( TransmitterArgs::Local(&slab) ).expect("new_from_slab net.get_transmitter");
 
         SlabRef {
             slab_id: slab.id,

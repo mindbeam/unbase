@@ -89,6 +89,7 @@ impl Network {
     pub fn distribute_memos(&self, from_presence: &SlabPresence, packet: Packet ) {
         println!("Network.distribute_memos");
         // TODO: optimize this. redundant mutex locking inside, weak slab upgrades, etc
+
         let from = self.assert_slabref_from_presence(from_presence);
         let memoorigin = MemoOrigin::Remote(&from);
 
@@ -123,7 +124,7 @@ impl Network {
                 _ =>{}
             }
         }
-
+        
         let slabref = SlabRef::new_from_presence(&presence, &self);
         self.shared.internals.lock().unwrap().slab_refs.push(slabref.clone());
         return slabref;
@@ -131,8 +132,13 @@ impl Network {
     pub fn get_transmitter (&self, args: TransmitterArgs ) -> Option<Transmitter> {
 
         let internals = self.shared.internals.lock().unwrap();
+        println!("MARK A {:?}", args );
         for transport in internals.transports.iter() {
+            println!("MARK B");
+
             if let Some(transmitter) = transport.make_transmitter( &args ) {
+                println!("MARK C" );
+
                 return Some(transmitter);
             }
         }

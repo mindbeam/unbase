@@ -27,6 +27,7 @@ pub enum TransportAddress{
     ShamefulTCP // SHAME! SHAME! SHAME! ( yes, I _really_ want to discourage people from using TCP )
 }
 
+#[derive(Debug)]
 pub enum TransmitterArgs<'a>{
     Local(&'a Slab),
     Remote(&'a SlabId, &'a TransportAddress)
