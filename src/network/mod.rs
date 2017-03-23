@@ -22,7 +22,7 @@ struct NetworkInternals {
     root_index_seed: Option<MemoRefHead>
 }
 
-pub struct NetworkShared {
+struct NetworkShared {
     internals: Mutex<NetworkInternals>
 }
 
@@ -54,6 +54,10 @@ impl Network {
         };
 
         net
+    }
+    pub fn hack_set_next_slab_id(&self, id: SlabId ){
+        let mut internals = self.shared.internals.lock().unwrap();
+        internals.next_slab_id = id;
     }
     pub fn weak (&self) -> WeakNetwork {
         WeakNetwork {
@@ -105,11 +109,20 @@ impl Network {
         // Should probably do this more intelligently
 
         let internals = self.shared.internals.lock().unwrap();
-        let transport = internals.transports.iter().filter(|x| x.is_local() ).next().unwrap();
+        let transport = internals.transports.iter().filter(|x| x.is_local() ).next().expect("get_local_transmitter found no local transports");
 
         transport.make_transmitter( TransmitterArgs::Local(&slab) ).unwrap()
     }
     pub fn get_remote_transmitter (&self, presence: &SlabPresence ) -> Transmitter {
+
+        if let Some(transport) = self.get_remote_transport( presence ) {
+            transport.make_transmitter( TransmitterArgs::Remote(&presence.slab_id, presence.transport_address.clone()) ).expect("hack, should be handling this better")
+        }else{
+            panic!("TODO: should be handling this with a result");
+        }
+
+    }
+    pub fn get_remote_transport<'a>( &self, presence: &SlabPresence ) -> Option<&'a Box<Transport+Send+Sync>> {
         // We're just going to assume that we have an in-process transmitter, or freak out
         // Should probably do this more intelligently
 
@@ -118,8 +131,10 @@ impl Network {
         match presence.transport_address {
             TransportAddress::UDP(_) => {
                 // HACK
-                if let Some(transport) = internals.transports.iter().find(|x| !x.is_local() ){
-                    return transport.make_transmitter( TransmitterArgs::Remote(&presence.slab_id, presence.transport_address.clone()) ).unwrap()
+                if let Some(ref transport) = internals.transports.iter().find(|x| !x.is_local() ){
+                    //return Some( transport.clone() );
+                    return Some(transport);
+                    //let transmitter = transport.make_transmitter( TransmitterArgs::Remote(&presence.slab_id, presence.transport_address.clone()) ).unwrap()
                 }
             }
             _ => {}

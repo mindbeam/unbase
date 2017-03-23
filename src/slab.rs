@@ -12,6 +12,7 @@ use subject::SubjectId;
 use memoref::MemoRef;
 use memorefhead::*;
 use context::{Context,WeakContext};
+use network::slabref::{SlabPresence,SlabAnticipatedLifetime};
 
 
 /* Initial plan:
@@ -315,6 +316,22 @@ impl SlabShared {
                 MemoBody::SlabPresence( ref presence ) => {
                     let slabref = SlabRef::new_from_presence( presence, &self.net );
                     my_slab.inject_peer_slabref( slabref );
+
+                    if let Some(transport) = self.net.get_remote_transport( presence ) {
+                        let my_presence = SlabPresence {
+                            slab_id: my_slab.id,
+                            transport_address: transport.return_address(),
+                            anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                        };
+
+                        let hello = Memo::new_basic(
+                            my_slab.gen_memo_id(),
+                            0,
+                            MemoRefHead::from_memoref(memoref),
+                            MemoBody::SlabPresence( my_presence )
+                        );
+                    }
+
                 }
                 MemoBody::Peering(memo_id, ref slabref, ref status) => {
                     // Don't peer with yourself

@@ -3,6 +3,7 @@
 //! `Transmitter`s which can be used to send `Memo`s.
 
 mod transmitter;
+//mod local_direct;
 mod simulator;
 mod udp;
 
@@ -16,6 +17,7 @@ use memo::Memo;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum TransportAddress{
+    Simulator,
     Local,
     UDP(TransportAddressUDP),
     UDT,
@@ -34,4 +36,5 @@ pub trait Transport {
     fn make_transmitter(  &self, args: TransmitterArgs  ) -> Result<Transmitter,String>;
     fn is_local        (  &self ) -> bool;
     fn bind_network    (  &self, &Network );
+    fn return_address  ( &self ) -> TransportAddress;
 }

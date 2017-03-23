@@ -37,7 +37,7 @@ pub struct TransportAddressUDP {
 
 impl TransportUDP {
     pub fn new (address: String) -> Self{
-        let socket = Arc::new( UdpSocket::bind(address.clone()).unwrap() );
+        let socket = Arc::new( UdpSocket::bind(address.clone()).expect("UdpSocket::bind") );
 
         let (tx_thread,tx_channel) = Self::setup_tx_thread(socket.clone());
 
@@ -60,46 +60,63 @@ impl TransportUDP {
 
         let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
             //let mut buf = [0; 65536];
-
+            println!("Started TX Thread");
             loop {
-                let (to_address, packet) = rx_channel.recv().unwrap();
-                println!("GOT MEMO TO TRANSMIT");
-                let b = serde_json::to_vec(&packet).unwrap();
 
-                //HACK: we're trusting that each memo is smaller than 64k
-                socket.send_to(&b, &to_address.address).expect("Failed to send");
-                println!("SENT UDP PACKET");
+                if let Ok((to_address, packet)) = rx_channel.recv() {
+                    println!("GOT MEMO TO TRANSMIT");
+                    let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
+
+                    //HACK: we're trusting that each memo is smaller than 64k
+                    socket.send_to(&b, &to_address.address).expect("Failed to send");
+                    println!("SENT UDP PACKET");
+                }else{
+                    break;
+                }
             };
-        });
+    });
 
         (tx_thread, tx_channel)
     }
-    pub fn seed_address_from_string (&self, address: String){
-        let shared = self.shared.lock().unwrap();
-        if let Some(ref net) = shared.network {
-            let net = net.upgrade().unwrap();
+    pub fn seed_address_from_string (&self, address: String) {
 
-            for slab in net.get_slabs() {
-                let presence = SlabPresence {
-                    slab_id: slab.id,
-                    transport_address: TransportAddress::UDP(TransportAddressUDP { address: address.clone() }),
-                    anticipated_lifetime: SlabAnticipatedLifetime::Unknown
-                };
-
-                let hello = Memo::new_basic_noparent(
-                    slab.gen_memo_id(),
-                    0,
-                    MemoBody::SlabPresence(presence)
-                );
-
-                self.send(
-                    &slab.get_ref(),
-                    0,
-                    hello,
-                    self.shared.lock().unwrap().address.clone()
-                );
+        println!("TransportUDP.seed_address_from_string({})", address );
+        let net;
+        {
+            let shared = self.shared.lock().expect("TransportUDP.shared.lock");
+            println!("TransportUDP.seed_address_from_string - MARK 2" );
+            if let Some(ref n) = shared.network {
+                net = n.upgrade().expect("Network upgrade");
+            }else{
+                panic!("Attempt to use uninitialized transport");
             }
+        };
+        println!("TransportUDP.seed_address_from_string - MARK 3" );
+
+        for slab in net.get_slabs() {
+
+            println!("TransportUDP.seed_address_from_string - MARK 5" );
+            let presence = SlabPresence {
+                slab_id: slab.id,
+                transport_address: TransportAddress::UDP(TransportAddressUDP { address: address.clone() }),
+                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+            };
+
+            let hello = Memo::new_basic_noparent(
+                slab.gen_memo_id(),
+                0,
+                MemoBody::SlabPresence(presence)
+            );
+
+            self.send(
+                &slab.get_ref(),
+                0,
+                hello,
+                self.shared.lock().unwrap().address.clone()
+            );
         }
+
+                    println!("TransportUDP.seed_address_from_string - MARK 6" );
     }
     pub fn send (&self, from: &SlabRef, to_slab_id: SlabId, memo: Memo, address : TransportAddressUDP) {
         let packet = Packet{
@@ -107,6 +124,8 @@ impl TransportUDP {
             from_slab_id: from.slab_id,
             memo: memo
         };
+
+        println!("TransportUDP.send({:?})", packet );
         // HACK HACK HACK lose the mutex here
         self.tx_channel.lock().unwrap().send( (address, packet) ).unwrap();
     }
@@ -183,9 +202,14 @@ impl Transport for TransportUDP {
         shared.network = Some(net.weak());
 
     }
+    fn return_address(&self) -> TransportAddress {
+        let mut shared = self.shared.lock().unwrap();
+        TransportAddress::UDP(shared.address.clone())
+    }
 
 }
 
+/*
 impl Drop for TransportUDP{
     fn drop(&mut self) {
         let mut shared = self.shared.lock().unwrap();
@@ -199,6 +223,7 @@ impl Drop for TransportUDP{
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
     }
 }
+*/
 
 pub struct TransmitterUDP{
     pub slab_id: SlabId,

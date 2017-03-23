@@ -130,6 +130,9 @@ impl Transport for Simulator {
     fn bind_network(&self, _net: &Network) {
         //nothing to see here folks
     }
+    fn return_address(&self) -> TransportAddress {
+        TransportAddress::Simulator
+    }
 }
 
 
