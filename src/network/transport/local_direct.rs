@@ -30,7 +30,7 @@ impl Transport for LocalDirect {
     fn is_local (&self) -> bool {
         true
     }
-    fn make_transmitter (&self, args: TransmitterArgs ) -> Result<Transmitter,String> {
+    fn make_transmitter (&self, args: TransmitterArgs ) -> Option<Transmitter> {
         if let TransmitterArgs::Local(slab) = args {
             let (tx_channel, rx_channel) = mpsc::channel::<(SlabId,Memo)>();
 
@@ -47,14 +47,23 @@ impl Transport for LocalDirect {
                 }
             });
 
-            Ok(Transmitter::new_local(tx_channel))
+            //self.shared.lock().unwrap().tx_threads
+            Some(Transmitter::new_local(tx_channel))
         }else{
-            Err("This transport is incapable of handling remote addresses".to_string())
+            None
         }
 
     }
 
     fn bind_network(&self, _net: &Network) {
         //nothing to see here folks
+    }
+
+    fn get_return_address  ( &self, address: &TransportAddress ) -> Option<TransportAddress> {
+        if let TransportAddress::Local = *address {
+            Some(TransportAddress::Local)
+        }else{
+            None
+        }
     }
 }

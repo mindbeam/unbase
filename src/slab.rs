@@ -127,7 +127,7 @@ impl Slab {
             MemoBody::FullyMaterialized {v: values, r: HashMap::new() } // TODO: accept relations
         );
 
-        let memorefs = self.put_memos(MemoOrigin::Local, vec![ memo.clone() ], true);
+        let memorefs = self.put_memos(&MemoOrigin::Local, vec![ memo.clone() ], true);
 
         MemoRefHead::from_memoref(memorefs[0].clone())
     }
@@ -153,11 +153,11 @@ impl Slab {
         (self.id as u64).rotate_left(32) | counters.last_memo_id as u64
     }
     // Convenience function for now, but may make sense to optimize this later
-    pub fn put_memo (&self, from: MemoOrigin, memo : Memo, deliver_local: bool ) -> MemoRef {
+    pub fn put_memo (&self, from: &MemoOrigin, memo : Memo, deliver_local: bool ) -> MemoRef {
         let mut memorefs = self.put_memos(from, vec![memo], deliver_local );
         memorefs.pop().unwrap()
     }
-    pub fn put_memos(&self, from: MemoOrigin, memos : Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
+    pub fn put_memos(&self, from: &MemoOrigin, memos : Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
         if memos.len() == 0 { return Vec::new() }
         let mut shared = self.inner.shared.lock().unwrap();
 
@@ -167,12 +167,12 @@ impl Slab {
         let shared = self.inner.shared.lock().unwrap();
         shared.memorefs_by_id.len() as u32
     }
-    pub fn inject_peer_slabref (&self, new_peer_ref: SlabRef ) {
+    pub fn inject_peer_slabref (&self, new_peer_ref: SlabRef ) -> bool {
         // We don't have to figure it out, it's just being given to us
         // What luxury!
 
         let mut shared = self.inner.shared.lock().unwrap();
-        shared.peer_refs.push(new_peer_ref);
+        shared.inject_peer_slabref(new_peer_ref)
     }
     pub fn peer_slab_count (&self) -> usize {
         let shared = self.inner.shared.lock().unwrap();
@@ -268,7 +268,7 @@ impl SlabShared {
             panic!("Invalid state - Missing my_ref")
         }
     }
-    pub fn put_memos<'a> (&mut self, from: MemoOrigin, memos: Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
+    pub fn put_memos<'a> (&mut self, from: &MemoOrigin, memos: Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
         println!("# SlabShared({}).put_memos({:?},{:?},{:?})", self.id, from, mids, deliver_local);
 
@@ -310,26 +310,41 @@ impl SlabShared {
                 },
                 Entry::Vacant(_) => {}
             };
-
+            println!("MARK1" );
             match memo.inner.body {
                 // This Memo is a peering status update for another memo
                 MemoBody::SlabPresence( ref presence ) => {
+                println!("MARK2" );
                     let slabref = SlabRef::new_from_presence( presence, &self.net );
-                    my_slab.inject_peer_slabref( slabref );
+                    println!("MARK3" );
 
-                    if let Some(transport) = self.net.get_remote_transport( presence ) {
-                        let my_presence = SlabPresence {
-                            slab_id: my_slab.id,
-                            transport_address: transport.return_address(),
-                            anticipated_lifetime: SlabAnticipatedLifetime::Unknown
-                        };
+                    self.inject_peer_slabref( slabref );
 
-                        let hello = Memo::new_basic(
-                            my_slab.gen_memo_id(),
-                            0,
-                            MemoRefHead::from_memoref(memoref),
-                            MemoBody::SlabPresence( my_presence )
-                        );
+                    println!("MARK4" );
+                    println!("Slab({}) got MemoBody::SlabPresence", self.id );
+
+                    println!("MARK5" );
+                    // TODO: should we be telling the origin slabref, or the presence slabref that we're here?
+                    //       these will usually be the same, but not always
+
+                    if let MemoOrigin::Remote(origin_slabref) = *from {
+                        // Get the address that the remote slab would recogize
+                        if let &Some(ref my_local_address) = origin_slabref.get_local_return_address() {
+                            let my_presence = SlabPresence {
+                                slab_id: my_slab.id,
+                                transport_address: my_local_address.clone(),
+                                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                            };
+
+                            let my_presence_memo = Memo::new_basic(
+                                my_slab.gen_memo_id(),
+                                0,
+                                MemoRefHead::from_memoref(memoref.clone()),
+                                MemoBody::SlabPresence( my_presence )
+                            );
+
+                            origin_slabref.send_memo( &my_ref, my_presence_memo );
+                        }
                     }
 
                 }
@@ -380,7 +395,7 @@ impl SlabShared {
                 // That we received the memo means that the sender didn't think we had it
                 // Whether or not we had it already, lets tell them we have it now.
                 // It's useful for them to know we have it, and it'll help them STFU
-                if let MemoOrigin::Remote(origin_slabref) = from {
+                if let MemoOrigin::Remote(origin_slabref) = *from {
                     // TODO: Don't assume that receiving it from origin_slabref means we should assume it to be resident there
                     // Should EITHER: Ensure that a peering memo is co-delivered, OR ensure the memo is delivered with PeeringStatus
                     // memoref.update_peer(origin_slabref, &PeeringStatus::Resident);
@@ -451,6 +466,15 @@ impl SlabShared {
 
     }
 
+    fn inject_peer_slabref (&mut self, new_peer_ref: SlabRef ) -> bool {
+        // QUESTION: why does this require a double deref?
+        if let Some(_) = self.peer_refs.iter().find(|sr| **sr == new_peer_ref) {
+            false
+        }else{
+            self.peer_refs.push(new_peer_ref);
+            true
+        }
+    }
     fn check_peering_target( &self, _memo: &Memo ) -> u8 {
         5
     }

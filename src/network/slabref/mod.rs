@@ -42,27 +42,30 @@ pub struct SlabRef {
 }
 struct SlabRefInner {
     slab_id: SlabId,
+    local_return_address: Option<TransportAddress>,
     tx: Transmitter
 }
 
 impl SlabRef{
     pub fn new_from_presence ( presence: &SlabPresence, net: &Network ) -> SlabRef {
 
-        let tx = net.get_remote_transmitter( presence );
+        let args = TransmitterArgs::Remote( &presence.slab_id, &presence.transport_address );
+        let tx = net.get_transmitter( args ).expect("net.get_transmitter");
+        let maybe_local_return_address = net.get_return_address( &presence.transport_address );
 
         SlabRef {
             slab_id: presence.slab_id,
             presence: presence.clone(),
             inner: Arc::new (SlabRefInner {
                 slab_id: presence.slab_id,
+                local_return_address: maybe_local_return_address,
                 tx: tx
             })
         }
     }
     pub fn new_from_slab ( slab: &Slab, net: &Network ) -> SlabRef {
 
-        // TODO: Think about how a serialized slabref will create it's transmitters
-        let tx = net.get_local_transmitter( &slab );
+        let tx = net.get_transmitter( TransmitterArgs::Local(&slab) ).expect("net.get_transmitter");
 
         SlabRef {
             slab_id: slab.id,
@@ -73,6 +76,7 @@ impl SlabRef{
             },
             inner: Arc::new (SlabRefInner {
                 slab_id: slab.id,
+                local_return_address: Some(TransportAddress::Local),
                 tx: tx
             })
         }
@@ -81,6 +85,10 @@ impl SlabRef{
     pub fn send_memo (&self, from: &SlabRef, memo: Memo) {
         println!("# SlabRef({}).send_memo({})", self.slab_id, memo.id );
         self.inner.tx.send(from, memo);
+    }
+
+    pub fn get_local_return_address(&self) -> &Option<TransportAddress> {
+        &self.inner.local_return_address
     }
 }
 

@@ -35,9 +35,9 @@ fn test_udp() {
 
         udp2.seed_address_from_string( "127.0.0.1:12345".to_string() );
 
-        thread::sleep( time::Duration::from_secs(.1) );
+        thread::sleep( time::Duration::from_millis(500) );
 
-        
+
     });
 
     //t1.join().expect("thread1.join");

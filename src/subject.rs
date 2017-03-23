@@ -48,7 +48,7 @@ impl Subject {
 
         context.subscribe_subject( &subject );
 
-        let memoref = slab.put_memo(MemoOrigin::Local,
+        let memoref = slab.put_memo(&MemoOrigin::Local,
             Memo::new_basic_noparent(
                 slab.gen_memo_id(),
                 subject_id,
@@ -134,7 +134,7 @@ impl Subject {
             );
         }
 
-        let memoref = slab.put_memo(MemoOrigin::Local, memo, false);
+        let memoref = slab.put_memo(&MemoOrigin::Local, memo, false);
 
         let mut shared = self.shared.lock().unwrap();
         shared.head.apply_memoref(&memoref, &slab);
@@ -161,7 +161,7 @@ impl Subject {
             );
         }
 
-        let memoref = slab.put_memo( MemoOrigin::Local, memo, false );
+        let memoref = slab.put_memo( &MemoOrigin::Local, memo, false );
 
 
         // TODO: determine conclusively whether it's possible for apply_memorefs

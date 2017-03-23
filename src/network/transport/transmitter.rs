@@ -49,8 +49,8 @@ impl Transmitter {
             Simulator(ref tx) => {
                 tx.send(from, memo);
             }
-            Dynamic(ref _tx) => {
-               unimplemented!()
+            Dynamic(ref tx) => {
+                tx.send(from,memo)
             }
         }
     }

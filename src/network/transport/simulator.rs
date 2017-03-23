@@ -31,7 +31,7 @@ impl SimEvent {
     pub fn deliver (self) {
         println!("# SimEvent.deliver {} to Slab {}", &self.memo.id, self.dest.id );
         if let Some(slab) = self.dest.upgrade() {
-            slab.put_memos(MemoOrigin::Remote(&self.from), vec![self.memo], true);
+            slab.put_memos(&MemoOrigin::Remote(&self.from), vec![self.memo], true);
         }
         // we all have to learn to deal with loss sometime
     }
@@ -111,8 +111,9 @@ impl Transport for Simulator {
     fn is_local (&self) -> bool {
         true
     }
-    fn make_transmitter (&self, args: TransmitterArgs ) -> Result<Transmitter,String> {
-        if let TransmitterArgs::Local(slab) = args {
+    fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+        if let TransmitterArgs::Local(ref slab) = *args {
+
             let tx = SimulatorTransmitter{
                 source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
                 dest_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
@@ -120,18 +121,21 @@ impl Transport for Simulator {
                 dest: slab.weak()
             };
 
-            Ok(Transmitter::new_simulated(tx))
+            Some(Transmitter::new_simulated(tx))
         }else{
-            Err("This transport is incapable of handling remote addresses".to_string())
+            None
         }
 
     }
-
     fn bind_network(&self, _net: &Network) {
         //nothing to see here folks
     }
-    fn return_address(&self) -> TransportAddress {
-        TransportAddress::Simulator
+    fn get_return_address  ( &self, address: &TransportAddress ) -> Option<TransportAddress> {
+        if let TransportAddress::Local = *address {
+            Some(TransportAddress::Local)
+        }else{
+            None
+        }
     }
 }
 

@@ -155,10 +155,11 @@ impl<'a> Visitor for MemoBodySeed<'a> {
             (MBVariant::Relation,          variant) => variant.visit_newtype_seed(RelationMRHSeed{ net: self.net }).map(MemoBody::Relation),
             (MBVariant::Edit,              variant) => variant.visit_newtype().map(MemoBody::Edit),
             (MBVariant::FullyMaterialized, variant) => variant.visit_newtype_seed(MBFullyMaterializedSeed{ net: self.net }),
-            _ => panic!("meow")
         //    (MBVariant::PartiallyMaterialized, variant) => variant.visit_newtype().map(MemoBody::PartiallyMaterialized),
-        //    (MBVariant::Peering, variant) => variant.visit_newtype().map(MemoBody::Peering),
+            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ net: self.net }),
         //    (MBVariant::MemoRequest, variant) => variant.visit_newtype().map(MemoBody::MemoRequest),
+            _ => panic!("meow")
+
         }
     }
 }
@@ -242,27 +243,6 @@ impl<'a> Visitor for MBFullyMaterializedSeed<'a> {
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("MemoBody::Relation")
     }
-/*
-    fn visit_seq<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
-        where Visitor: SeqVisitor,
-    {
-        let relations = match visitor.visit_seed(RelationMRHSeed{ net: self.net })? {
-            Some(value) => value,
-            None => {
-                return Err(de::Error::invalid_length(0, &self));
-            }
-        };
-
-        let values = match visitor.visit()? {
-            Some(value) => value,
-            None => {
-                return Err(de::Error::invalid_length(1, &self));
-            }
-        };
-
-        Ok(MemoBody::FullyMaterialized{ r: relations, v: values })
-    }
-*/
     fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
         where Visitor: MapVisitor,
     {

@@ -29,12 +29,16 @@ pub enum TransportAddress{
 
 pub enum TransmitterArgs<'a>{
     Local(&'a Slab),
-    Remote(&'a SlabId, TransportAddress)
+    Remote(&'a SlabId, &'a TransportAddress)
 }
 
 pub trait Transport {
-    fn make_transmitter(  &self, args: TransmitterArgs  ) -> Result<Transmitter,String>;
+    fn make_transmitter(  &self, args: &TransmitterArgs  ) -> Option<Transmitter>;
     fn is_local        (  &self ) -> bool;
     fn bind_network    (  &self, &Network );
-    fn return_address  ( &self ) -> TransportAddress;
+    fn get_return_address  ( &self, &TransportAddress ) -> Option<TransportAddress>;
+}
+
+impl TransportAddress {
+
 }

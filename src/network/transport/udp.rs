@@ -69,7 +69,7 @@ impl TransportUDP {
 
                     //HACK: we're trusting that each memo is smaller than 64k
                     socket.send_to(&b, &to_address.address).expect("Failed to send");
-                    println!("SENT UDP PACKET");
+                    println!("SENT UDP PACKET ({}) {:?}", &to_address.address, String::from_utf8(b));
                 }else{
                     break;
                 }
@@ -78,45 +78,45 @@ impl TransportUDP {
 
         (tx_thread, tx_channel)
     }
-    pub fn seed_address_from_string (&self, address: String) {
+    pub fn seed_address_from_string (&self, address_string: String) {
 
-        println!("TransportUDP.seed_address_from_string({})", address );
+        let to_address = TransportAddressUDP{ address: address_string };
+
         let net;
+        let my_address;
         {
             let shared = self.shared.lock().expect("TransportUDP.shared.lock");
-            println!("TransportUDP.seed_address_from_string - MARK 2" );
+            my_address = shared.address.clone();
+
             if let Some(ref n) = shared.network {
                 net = n.upgrade().expect("Network upgrade");
             }else{
                 panic!("Attempt to use uninitialized transport");
             }
         };
-        println!("TransportUDP.seed_address_from_string - MARK 3" );
 
-        for slab in net.get_slabs() {
+        for my_slab in net.get_all_local_slabs() {
 
-            println!("TransportUDP.seed_address_from_string - MARK 5" );
             let presence = SlabPresence {
-                slab_id: slab.id,
-                transport_address: TransportAddress::UDP(TransportAddressUDP { address: address.clone() }),
+                slab_id: my_slab.id,
+                transport_address: TransportAddress::UDP( my_address.clone() ),
                 anticipated_lifetime: SlabAnticipatedLifetime::Unknown
             };
 
             let hello = Memo::new_basic_noparent(
-                slab.gen_memo_id(),
+                my_slab.gen_memo_id(),
                 0,
                 MemoBody::SlabPresence(presence)
             );
 
             self.send(
-                &slab.get_ref(),
+                &my_slab.get_ref(),
                 0,
                 hello,
-                self.shared.lock().unwrap().address.clone()
+                to_address.clone()
             );
         }
 
-                    println!("TransportUDP.seed_address_from_string - MARK 6" );
     }
     pub fn send (&self, from: &SlabRef, to_slab_id: SlabId, memo: Memo, address : TransportAddressUDP) {
         let packet = Packet{
@@ -135,23 +135,24 @@ impl Transport for TransportUDP {
     fn is_local (&self) -> bool {
         false
     }
-    fn make_transmitter (&self, args: TransmitterArgs ) -> Result<Transmitter,String> {
-        if let TransmitterArgs::Remote(slab_id, address) = args {
-            if let TransportAddress::UDP(udp_address) = address {
+    fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+
+        if let &TransmitterArgs::Remote(slab_id,address) = args {
+            if let &TransportAddress::UDP(ref udp_address) = address {
+
                 let tx = TransmitterUDP{
                     slab_id: *slab_id,
-                    address: udp_address,
+                    address: udp_address.clone(),
                     tx_channel: self.tx_channel.clone(),
                 };
 
-                Ok(Transmitter::new( Box::new(tx) ))
+                Some(Transmitter::new( Box::new(tx) ))
             }else{
-                Err("declined".to_string())
+                None
             }
         }else{
-            Err("This transport is incapable of handling local addresses".to_string())
+            None
         }
-
     }
 
     fn bind_network(&self, net: &Network) {
@@ -171,7 +172,8 @@ impl Transport for TransportUDP {
                 let (amt, src) = rx_socket.recv_from(&mut buf).unwrap();
                 println!("GOT UDP PACKET");
 
-                if let Some(mut net) = net_weak.upgrade() {
+                if let Some(net) = net_weak.upgrade() {
+                    println!("GOT UDP PACKET - 1");
 
                     //TODO: create a protocol encode/decode module and abstract away the serde stuff
                     //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
@@ -181,19 +183,19 @@ impl Transport for TransportUDP {
                         let packet_seed : PacketSeed = PacketSeed{ net: &net };
                         packet = packet_seed.deserialize(&mut deserializer).unwrap();
                     }
+                    println!("GOT UDP PACKET - 2");
 
                     // TODO: create packet.get_presence ?
-                    let presence =  SlabPresence{
+                    // TODO: cache this
+                    let from_presence =  SlabPresence{
                         slab_id: packet.from_slab_id,
                         transport_address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
                         anticipated_lifetime: SlabAnticipatedLifetime::Unknown
                     };
+                    println!("GOT UDP PACKET - 3");
 
-                    let from = net.assert_slabref_from_presence(&presence);
+                    net.distribute_memos(&from_presence, packet);
 
-                    if let Some(slab) = net.get_slab(packet.to_slab_id) {
-                        slab.put_memos(MemoOrigin::Remote(&from), vec![packet.memo], true);
-                    }
                 }
             };
         });
@@ -202,11 +204,14 @@ impl Transport for TransportUDP {
         shared.network = Some(net.weak());
 
     }
-    fn return_address(&self) -> TransportAddress {
-        let mut shared = self.shared.lock().unwrap();
-        TransportAddress::UDP(shared.address.clone())
+    fn get_return_address  ( &self, address: &TransportAddress ) -> Option<TransportAddress> {
+        if let TransportAddress::UDP(_) = *address {
+            let shared = self.shared.lock().unwrap();
+            Some(TransportAddress::UDP(shared.address.clone()))
+        }else{
+            None
+        }
     }
-
 }
 
 /*

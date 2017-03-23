@@ -11,7 +11,7 @@ use self::transport::*;
 
 use std::sync::{Arc, Weak, Mutex};
 use std::fmt;
-use slab::{Slab,WeakSlab,SlabId};
+use slab::{Slab,WeakSlab,SlabId,MemoOrigin};
 use memorefhead::MemoRefHead;
 
 struct NetworkInternals {
@@ -78,13 +78,37 @@ impl Network {
 
         id
     }
-    pub fn get_slabs(&self) -> Vec<Slab> {
+    pub fn get_all_local_slabs(&self) -> Vec<Slab> {
         let mut internals = self.shared.internals.lock().unwrap();
-        internals.get_slabs()
+        internals.get_all_local_slabs()
     }
     pub fn get_slab (&mut self, slab_id: SlabId ) -> Option<Slab> {
         let mut internals = self.shared.internals.lock().unwrap();
         internals.get_slab(slab_id)
+    }
+    pub fn distribute_memos(&self, from_presence: &SlabPresence, packet: Packet ) {
+        println!("Network.distribute_memos");
+        // TODO: optimize this. redundant mutex locking inside, weak slab upgrades, etc
+        let from = self.assert_slabref_from_presence(from_presence);
+        let memoorigin = MemoOrigin::Remote(&from);
+
+        let mut send_slabs = Vec::new();
+        {
+            let internals = self.shared.internals.lock().unwrap();
+
+            for weak_slab in internals.slabs.iter(){
+                if packet.to_slab_id == 0 || weak_slab.id == packet.to_slab_id {
+                    if let Some(slab) = weak_slab.upgrade() {
+                        send_slabs.push(slab);
+                    }
+                }
+            }
+        }
+        // can't have the lock open any time we're putting memos
+        // because some internal logic needs to access the network struct
+        for slab in send_slabs {
+            slab.put_memos( &memoorigin,vec![packet.memo.clone()], true);
+        }
     }
     pub fn assert_slabref_from_presence(&self, presence: &SlabPresence) -> SlabRef {
 
@@ -104,43 +128,30 @@ impl Network {
         self.shared.internals.lock().unwrap().slab_refs.push(slabref.clone());
         return slabref;
     }
-    pub fn get_local_transmitter (&self, slab: &Slab) -> Transmitter {
-        // We're just going to assume that we have an in-process transmitter, or freak out
-        // Should probably do this more intelligently
+    pub fn get_transmitter (&self, args: TransmitterArgs ) -> Option<Transmitter> {
 
         let internals = self.shared.internals.lock().unwrap();
-        let transport = internals.transports.iter().filter(|x| x.is_local() ).next().expect("get_local_transmitter found no local transports");
-
-        transport.make_transmitter( TransmitterArgs::Local(&slab) ).unwrap()
-    }
-    pub fn get_remote_transmitter (&self, presence: &SlabPresence ) -> Transmitter {
-
-        if let Some(transport) = self.get_remote_transport( presence ) {
-            transport.make_transmitter( TransmitterArgs::Remote(&presence.slab_id, presence.transport_address.clone()) ).expect("hack, should be handling this better")
-        }else{
-            panic!("TODO: should be handling this with a result");
-        }
-
-    }
-    pub fn get_remote_transport<'a>( &self, presence: &SlabPresence ) -> Option<&'a Box<Transport+Send+Sync>> {
-        // We're just going to assume that we have an in-process transmitter, or freak out
-        // Should probably do this more intelligently
-
-        let internals = self.shared.internals.lock().unwrap();
-
-        match presence.transport_address {
-            TransportAddress::UDP(_) => {
-                // HACK
-                if let Some(ref transport) = internals.transports.iter().find(|x| !x.is_local() ){
-                    //return Some( transport.clone() );
-                    return Some(transport);
-                    //let transmitter = transport.make_transmitter( TransmitterArgs::Remote(&presence.slab_id, presence.transport_address.clone()) ).unwrap()
-                }
+        for transport in internals.transports.iter() {
+            if let Some(transmitter) = transport.make_transmitter( &args ) {
+                return Some(transmitter);
             }
-            _ => {}
         }
+        None
 
-        panic!("Failed to get remote transmitter");
+    }
+    pub fn get_return_address<'a>( &self, address: &TransportAddress ) -> Option<TransportAddress> {
+        // We're just going to assume that we have an in-process transmitter, or freak out
+        // Should probably do this more intelligently
+
+        let internals = self.shared.internals.lock().unwrap();
+        for transport in internals.transports.iter() {
+
+            if let Some(return_address) = transport.get_return_address( address ) {
+                return Some(return_address);
+            }
+
+        }
+        None
     }
     pub fn register_slab(&self, slab: &Slab) -> SlabRef {
         println!("# register_slab {:?}", slab );
@@ -151,7 +162,7 @@ impl Network {
 
         let mut internals = self.shared.internals.lock().unwrap();
 
-        for prev_slab in internals.get_slabs() {
+        for prev_slab in internals.get_all_local_slabs() {
             prev_slab.inject_peer_slabref( slab_ref.clone() );
         }
         for prev_slab_ref in internals.get_slab_refs() {
@@ -192,7 +203,7 @@ impl NetworkInternals {
 
         return None;
     }
-    fn get_slabs (&mut self) -> Vec<Slab> {
+    fn get_all_local_slabs (&mut self) -> Vec<Slab> {
         // TODO: convert this into a iter generator that automatically expunges missing slabs.
         let mut res: Vec<Slab> = Vec::with_capacity(self.slabs.len());
         //let mut missing : Vec<usize> = Vec::new();
