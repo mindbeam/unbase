@@ -169,8 +169,9 @@ impl fmt::Debug for MemoRefHead{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 
         fmt.debug_struct("MemoRefHead")
-           .field("memo_ids", &self.memo_ids() )
-           .finish()
+            //.field("memo_refs", &self.0 )
+            .field("memo_ids", &self.memo_ids() )
+            .finish()
     }
 }
 

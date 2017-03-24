@@ -142,7 +142,7 @@ impl MemoRef {
                 slab.gen_memo_id(),
                 0,
                 MemoRefHead::from_memoref(self.clone()),
-                MemoBody::Peering(self.id,slabref.clone(),PeeringStatus::Resident)
+                MemoBody::Peering(self.id, slabref.presence.clone(), PeeringStatus::Resident)
             );
 
             for peer in shared.peers.iter() {
@@ -166,7 +166,7 @@ impl MemoRef {
                 slab.gen_memo_id(),
                 0,
                 MemoRefHead::from_memoref(self.clone()),
-                MemoBody::Peering(self.id,slabref.clone(),PeeringStatus::Participating)
+                MemoBody::Peering(self.id, slabref.presence.clone() ,PeeringStatus::Participating)
             );
 
             for peer in shared.peers.iter() {

@@ -31,7 +31,7 @@ pub enum MemoBody{
     Edit(HashMap<String, String>),
     FullyMaterialized     { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
     PartiallyMaterialized { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
-    Peering(MemoId,SlabRef,PeeringStatus),
+    Peering(MemoId,SlabPresence,PeeringStatus),
     MemoRequest(Vec<MemoId>,SlabRef)
 }
 

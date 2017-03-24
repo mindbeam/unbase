@@ -7,6 +7,12 @@ impl Serialize for SlabRef {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
+        if let TransportAddress::Local = self.presence.transport_address {
+            use std::{thread,time};
+            thread::sleep( time::Duration::from_secs(2) );
+            panic!("Illegal to serialize TransportAddress::Local");
+        }
+
         let mut seq = serializer.serialize_seq(Some(1))?;
         seq.serialize_element(&self.presence)?;
         seq.end()
@@ -22,6 +28,7 @@ impl<'a> DeserializeSeed for SlabRefSeed<'a> {
     fn deserialize<D> (self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
+
         deserializer.deserialize_seq( self )
     }
 }
@@ -55,7 +62,6 @@ impl<'a> Visitor for SlabRefSeed<'a> {
            anticipated_lifetime: SlabAnticipatedLifetime::Unknown
        };*/
 
-       println!("MARK SERDE");
        Ok( self.net.assert_slabref_from_presence(&presence) )
     }
 }

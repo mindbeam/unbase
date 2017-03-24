@@ -332,7 +332,7 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
                return Err(de::Error::invalid_length(0, &self));
            }
        };
-       let slab_ref: SlabRef = match visitor.visit_seed(SlabRefSeed{ net: self.net })? {
+       let presence: SlabPresence = match visitor.visit()? {
            Some(value) => value,
            None => {
                return Err(de::Error::invalid_length(1, &self));
@@ -345,6 +345,6 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
            }
        };
 
-       Ok(MemoBody::Peering( memo_id, slab_ref, peering_status ))
+       Ok(MemoBody::Peering( memo_id, presence, peering_status ))
     }
 }

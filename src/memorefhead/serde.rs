@@ -32,7 +32,7 @@ impl<'a> Visitor for MemoRefHeadSeed<'a> {
             memorefs.push(memopeer);
         };
 
-        Ok( MemoRefHead(memorefs) )
+        Ok(MemoRefHead(memorefs))
     }
 }
 

@@ -124,7 +124,7 @@ impl Network {
                 _ =>{}
             }
         }
-        
+
         let slabref = SlabRef::new_from_presence(&presence, &self);
         self.shared.internals.lock().unwrap().slab_refs.push(slabref.clone());
         return slabref;
@@ -132,13 +132,9 @@ impl Network {
     pub fn get_transmitter (&self, args: TransmitterArgs ) -> Option<Transmitter> {
 
         let internals = self.shared.internals.lock().unwrap();
-        println!("MARK A {:?}", args );
         for transport in internals.transports.iter() {
-            println!("MARK B");
 
             if let Some(transmitter) = transport.make_transmitter( &args ) {
-                println!("MARK C" );
-
                 return Some(transmitter);
             }
         }

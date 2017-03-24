@@ -114,6 +114,8 @@ impl fmt::Debug for SlabRef {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SlabRef")
             .field("slab_id", &self.inner.slab_id)
+            .field("transport_address", &self.presence.transport_address)
+            .field("anticipated_lifetime", &self.presence.anticipated_lifetime)
             .finish()
     }
 }

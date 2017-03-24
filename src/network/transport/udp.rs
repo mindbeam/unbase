@@ -60,16 +60,14 @@ impl TransportUDP {
 
         let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
             //let mut buf = [0; 65536];
-            println!("Started TX Thread");
             loop {
 
                 if let Ok((to_address, packet)) = rx_channel.recv() {
-                    println!("GOT MEMO TO TRANSMIT");
                     let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
 
                     //HACK: we're trusting that each memo is smaller than 64k
                     socket.send_to(&b, &to_address.address).expect("Failed to send");
-                    println!("SENT UDP PACKET ({}) {:?}", &to_address.address, String::from_utf8(b));
+                    //println!("SENT UDP PACKET ({}) {:?}", &to_address.address, String::from_utf8(b));
                 }else{
                     break;
                 }
@@ -126,6 +124,7 @@ impl TransportUDP {
         };
 
         println!("TransportUDP.send({:?})", packet );
+
         // HACK HACK HACK lose the mutex here
         self.tx_channel.lock().unwrap().send( (address, packet) ).unwrap();
     }
@@ -170,10 +169,8 @@ impl Transport for TransportUDP {
 
             loop {
                 let (amt, src) = rx_socket.recv_from(&mut buf).unwrap();
-                println!("GOT UDP PACKET");
 
                 if let Some(net) = net_weak.upgrade() {
-                    println!("GOT UDP PACKET - 1");
 
                     //TODO: create a protocol encode/decode module and abstract away the serde stuff
                     //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
@@ -183,7 +180,6 @@ impl Transport for TransportUDP {
                         let packet_seed : PacketSeed = PacketSeed{ net: &net };
                         packet = packet_seed.deserialize(&mut deserializer).unwrap();
                     }
-                    println!("GOT UDP PACKET - 2");
 
                     // TODO: create packet.get_presence ?
                     // TODO: cache this
@@ -192,7 +188,6 @@ impl Transport for TransportUDP {
                         transport_address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
                         anticipated_lifetime: SlabAnticipatedLifetime::Unknown
                     };
-                    println!("GOT UDP PACKET - 3");
 
                     net.distribute_memos(&from_presence, packet);
 
@@ -214,7 +209,6 @@ impl Transport for TransportUDP {
     }
 }
 
-/*
 impl Drop for TransportUDP{
     fn drop(&mut self) {
         let mut shared = self.shared.lock().unwrap();
@@ -223,12 +217,13 @@ impl Drop for TransportUDP{
         let mut rx_thread = None;
         mem::swap(&mut tx_thread,&mut shared.tx_thread);
         mem::swap(&mut rx_thread,&mut shared.rx_thread);
-        tx_thread.unwrap().join().unwrap();
-        rx_thread.unwrap().join().unwrap();
+
+        //TODO: uncomment this. Getting a Poisonerror presently
+        //tx_thread.unwrap().join().unwrap();
+        //rx_thread.unwrap().join().unwrap();
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
     }
 }
-*/
 
 pub struct TransmitterUDP{
     pub slab_id: SlabId,
@@ -244,6 +239,10 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
             from_slab_id: from.slab_id,
             memo: memo
         };
+
+        // useful for debugging
+        //let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
+        //println!("SERIALIZE {:?}", String::from_utf8(b));
 
         self.tx_channel.lock().unwrap().send((self.address.clone(), packet)).unwrap();
     }
