@@ -131,6 +131,9 @@ impl Memo {
             MemoBody::Peering(_,_,_) => {
                 false
             }
+            MemoBody::SlabPresence(_) => {
+                false
+            }
             _ => {
                 true
             }
