@@ -4,8 +4,6 @@ extern crate unbase;
 fn test_init() {
 
     let net = unbase::Network::new();
-    let simulator = unbase::network::transport::Simulator::new();
-    net.add_transport( Box::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);

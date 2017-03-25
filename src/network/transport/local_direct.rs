@@ -41,6 +41,7 @@ impl Transport for LocalDirect {
                 loop {
 
                     if let Ok((from_slab, memo)) = rx_channel.recv() {
+                        println!("CHANNEL RCV {:?}", memo);
                         my_slab.put_memos( &MemoOrigin::Local, vec![memo], true );
                     }else{
                         break;
@@ -58,9 +59,8 @@ impl Transport for LocalDirect {
 
     }
 
-    fn bind_network(&self, _net: &Network) {
-        //nothing to see here folks
-    }
+    fn bind_network(&self, _net: &Network) {}
+    fn unbind_network(&self, _net: &Network) {}
 
     fn get_return_address  ( &self, address: &TransportAddress ) -> Option<TransportAddress> {
         if let TransportAddress::Local = *address {

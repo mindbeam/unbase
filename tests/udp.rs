@@ -11,10 +11,6 @@ fn test_udp() {
         let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
         net1.add_transport( Box::new(udp1.clone()) );
 
-        // TODO: automatically create a LocalDirect Transport
-        let simulator1 = unbase::network::transport::Simulator::new();
-        net1.add_transport( Box::new(simulator1.clone()) );
-
         let slab_a = unbase::Slab::new(&net1);
 
     //    thread::sleep( time::Duration::from_secs(5) );
@@ -26,10 +22,6 @@ fn test_udp() {
 
         let udp2 = unbase::network::transport::TransportUDP::new("127.0.0.1:1337".to_string());
         net2.add_transport( Box::new(udp2.clone()) );
-
-        // TODO: automatically create a LocalDirect Transport
-        let simulator2 = unbase::network::transport::Simulator::new();
-        net2.add_transport( Box::new(simulator2.clone()) );
 
         let slab_b = unbase::Slab::new(&net2);
 

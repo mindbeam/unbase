@@ -7,9 +7,6 @@ use unbase::network::Transport;
 fn basic_record_retrieval() {
 
     let net = unbase::Network::new();
-    let simulator = unbase::network::transport::Simulator::new();
-    net.add_transport( Box::new(simulator.clone()) );
-
     let slab_a = unbase::Slab::new(&net);
     let context_a = slab_a.create_context();
 
@@ -26,12 +23,11 @@ fn basic_record_retrieval() {
     assert!(record_retrieved.is_ok(), "Failed to retrieve record")
 
 }
-
 #[test]
-fn basic_record_retrieval_dynamic_dispatch() {
+fn basic_record_retrieval_simulator() {
 
     let net = unbase::Network::new();
-    let simulator = unbase::network::transport::Simulator::new_with_false_remotes();
+    let simulator = unbase::network::transport::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);

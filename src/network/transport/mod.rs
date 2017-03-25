@@ -9,6 +9,7 @@ mod udp;
 
 pub use self::udp::*;
 pub use self::simulator::Simulator;
+pub use self::local_direct::LocalDirect;
 pub use self::transmitter::{Transmitter, DynamicDispatchTransmitter};
 
 use network::*;
@@ -37,6 +38,7 @@ pub trait Transport {
     fn make_transmitter(  &self, args: &TransmitterArgs  ) -> Option<Transmitter>;
     fn is_local        (  &self ) -> bool;
     fn bind_network    (  &self, &Network );
+    fn unbind_network  (  &self, &Network );
     fn get_return_address  ( &self, &TransportAddress ) -> Option<TransportAddress>;
 }
 

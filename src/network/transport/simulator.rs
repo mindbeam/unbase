@@ -50,7 +50,6 @@ impl fmt::Debug for SimEvent{
 pub struct Simulator {
     shared: Arc<Mutex<SimulatorInternal>>,
     speed_of_light: u64,
-    make_false_remotes: bool,
 }
 struct SimulatorInternal {
     clock: u64,
@@ -58,15 +57,8 @@ struct SimulatorInternal {
 }
 
 impl Simulator {
-    pub fn new() -> Self {
-        Self::new_internal(false) // By default, use efficient transports
-    }
-    pub fn new_with_false_remotes() -> Self {
-        Self::new_internal(true)
-    }
-    fn new_internal (make_false_remotes: bool) -> Self{
+    pub fn new() -> Self{
         Simulator {
-            make_false_remotes: make_false_remotes,
             speed_of_light: 1, // 1 distance unit per time unit
             shared: Arc::new(Mutex::new(
                 SimulatorInternal {
@@ -126,19 +118,14 @@ impl Transport for Simulator {
                 simulator: self.clone(),
                 dest: slab.weak()
             };
-            if self.make_false_remotes {
-                Some(Transmitter::new(Box::new(tx)))
-            } else {
-                Some(Transmitter::new_simulated(tx))
-            }
+            Some(Transmitter::new(Box::new(tx)))
         }else{
             None
         }
 
     }
-    fn bind_network(&self, _net: &Network) {
-        //nothing to see here folks
-    }
+    fn bind_network(&self, _net: &Network) {}
+    fn unbind_network(&self, _net: &Network) {}
     fn get_return_address  ( &self, address: &TransportAddress ) -> Option<TransportAddress> {
         if let TransportAddress::Local = *address {
             Some(TransportAddress::Local)
@@ -189,11 +176,5 @@ impl DynamicDispatchTransmitter for SimulatorTransmitter {
         };
 
         self.simulator.add_event( evt );
-    }
-}
-
-impl SimulatorTransmitter {
-    pub fn send(&self, from: &SlabRef, memo: Memo) {
-        <SimulatorTransmitter as DynamicDispatchTransmitter>::send(&self, from, memo)
     }
 }

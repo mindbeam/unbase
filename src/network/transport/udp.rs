@@ -154,6 +154,8 @@ impl Transport for TransportUDP {
     }
 
     fn bind_network(&self, net: &Network) {
+        println!("UDP BIND" );
+
         let mut shared = self.shared.lock().unwrap();
         if let Some(_) = (*shared).rx_thread {
             panic!("already bound to network");
@@ -197,6 +199,10 @@ impl Transport for TransportUDP {
         shared.rx_thread = Some(rx_handle);
         shared.network = Some(net.weak());
 
+    }
+
+    fn unbind_network(&self, _net: &Network) {
+        unimplemented!()
     }
     fn get_return_address  ( &self, address: &TransportAddress ) -> Option<TransportAddress> {
         if let TransportAddress::UDP(_) = *address {

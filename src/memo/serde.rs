@@ -156,7 +156,7 @@ impl<'a> Visitor for MemoBodySeed<'a> {
             (MBVariant::Edit,              variant) => variant.visit_newtype().map(MemoBody::Edit),
             (MBVariant::FullyMaterialized, variant) => variant.visit_newtype_seed(MBFullyMaterializedSeed{ net: self.net }),
         //    (MBVariant::PartiallyMaterialized, variant) => variant.visit_newtype().map(MemoBody::PartiallyMaterialized),
-            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ net: self.net }),
+            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ _net: self.net }),
         //    (MBVariant::MemoRequest, variant) => variant.visit_newtype().map(MemoBody::MemoRequest),
             _ => panic!("meow")
 
@@ -304,8 +304,8 @@ impl<'a> Visitor for SubjectMRHSeed<'a> {
     }
 }
 
-
-struct MBPeeringSeed<'a> { net: &'a Network }
+// TODO convert this to a non-seed deserializer
+struct MBPeeringSeed<'a> { _net: &'a Network }
 
 impl<'a> DeserializeSeed for MBPeeringSeed<'a> {
     type Value = MemoBody;

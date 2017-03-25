@@ -53,6 +53,9 @@ impl Network {
             shared: Arc::new(shared)
         };
 
+        let localdirect = self::transport::LocalDirect::new();
+        net.add_transport(Box::new(localdirect));
+
         net
     }
     pub fn hack_set_next_slab_id(&self, id: SlabId ){
@@ -66,6 +69,16 @@ impl Network {
     }
     pub fn add_transport (&self, transport: Box<Transport + Send + Sync> ) {
         let mut internals = self.shared.internals.lock().unwrap();
+
+        if transport.is_local() {
+            // Can only have one is_local transport at a time
+            if let Some(removed) = internals.transports.iter_mut().position(|t| t.is_local())
+                .map(|e| internals.transports.remove(e)) {
+                    println!("Unbinding local transport");
+                    removed.unbind_network(self);
+            }
+        }
+
         transport.bind_network(self);
         internals.transports.push(transport);
     }
@@ -133,7 +146,7 @@ impl Network {
 
         let internals = self.shared.internals.lock().unwrap();
         for transport in internals.transports.iter() {
-
+            println!("Considering transport" );
             if let Some(transmitter) = transport.make_transmitter( &args ) {
                 return Some(transmitter);
             }
