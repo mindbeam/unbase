@@ -3,7 +3,7 @@
 //! `Transmitter`s which can be used to send `Memo`s.
 
 mod transmitter;
-//mod local_direct;
+mod local_direct;
 mod simulator;
 mod udp;
 

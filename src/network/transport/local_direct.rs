@@ -30,8 +30,8 @@ impl Transport for LocalDirect {
     fn is_local (&self) -> bool {
         true
     }
-    fn make_transmitter (&self, args: TransmitterArgs ) -> Option<Transmitter> {
-        if let TransmitterArgs::Local(slab) = args {
+    fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+        if let &TransmitterArgs::Local(ref slab) = args {
             let (tx_channel, rx_channel) = mpsc::channel::<(SlabId,Memo)>();
 
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
@@ -40,15 +40,14 @@ impl Transport for LocalDirect {
                 loop {
 
                     if let Ok((from_slab, memo)) = rx_channel.recv() {
-                        slab.put_memos( MemoOrigin::Local, vec![memo], true );
+                        slab.put_memos( &MemoOrigin::Local, vec![memo], true );
                     }else{
                         break;
                     }
                 }
             });
 
-            //self.shared.lock().unwrap().tx_threads
-            Some(Transmitter::new_local(tx_channel))
+            Some(Transmitter::new_local(tx_channel, tx_thread))
         }else{
             None
         }

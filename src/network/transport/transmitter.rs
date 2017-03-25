@@ -2,6 +2,7 @@
 use std::sync::mpsc;
 use super::*;
 use super::simulator::SimulatorTransmitter;
+use std::thread;
 
 /// A trait for transmitters to implement
 pub trait DynamicDispatchTransmitter {
@@ -10,7 +11,7 @@ pub trait DynamicDispatchTransmitter {
 }
 
 enum TransmitterInternal {
-    Local(), //mpsc::Sender<(SlabId,Memo)>), // TODO: How to use
+    Local(mpsc::Sender<(SlabId,Memo)>, thread::JoinHandle<()>),
     Simulator(SimulatorTransmitter),
     Dynamic(Box<DynamicDispatchTransmitter + Send + Sync>)
 }
@@ -21,11 +22,10 @@ pub struct Transmitter {
 
 impl Transmitter {
     /// Create a new transmitter associated with a local slab.
-    pub fn new_local(){//_tx: mpsc::Sender<(SlabId,Memo)> ) -> Self {
-        unimplemented!()
-        //Self {
-            //internal: TransmitterInternal::Local( tx )
-        //}
+    pub fn new_local( tx: mpsc::Sender<(SlabId,Memo)>, thread: thread::JoinHandle<()> ) -> Self {
+        Self {
+            internal: TransmitterInternal::Local( tx, thread )
+        }
     }
     /// Create a new transmitter associated with a local simulator transmitter.
     pub fn new_simulated(sim_tx: SimulatorTransmitter) -> Self {
@@ -43,8 +43,8 @@ impl Transmitter {
     pub fn send(&self, from: &SlabRef, memo: Memo) {
         use self::TransmitterInternal::*;
         match self.internal {
-            Local() => {
-                //tx.send((from.slab_id,memo)).expect("local transmitter send")
+            Local(tx,_) => {
+                tx.send((from.slab_id,memo)).expect("local transmitter send")
             }
             Simulator(ref tx) => {
                 tx.send(from, memo);
