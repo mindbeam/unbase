@@ -49,7 +49,8 @@ impl fmt::Debug for SimEvent{
 #[derive(Clone)]
 pub struct Simulator {
     shared: Arc<Mutex<SimulatorInternal>>,
-    speed_of_light: u64
+    speed_of_light: u64,
+    make_false_remotes: bool,
 }
 struct SimulatorInternal {
     clock: u64,
@@ -57,9 +58,15 @@ struct SimulatorInternal {
 }
 
 impl Simulator {
-    // TODO: Potentially, make this return an Arc of itself.
-    pub fn new () -> Self{
+    pub fn new() -> Self {
+        Self::new_internal(false) // By default, use efficient transports
+    }
+    pub fn new_with_false_remotes() -> Self {
+        Self::new_internal(true)
+    }
+    fn new_internal (make_false_remotes: bool) -> Self{
         Simulator {
+            make_false_remotes: make_false_remotes,
             speed_of_light: 1, // 1 distance unit per time unit
             shared: Arc::new(Mutex::new(
                 SimulatorInternal {
@@ -113,15 +120,17 @@ impl Transport for Simulator {
     }
     fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
         if let TransmitterArgs::Local(ref slab) = *args {
-
             let tx = SimulatorTransmitter{
                 source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
                 dest_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
                 simulator: self.clone(),
                 dest: slab.weak()
             };
-
-            Some(Transmitter::new_simulated(tx))
+            if self.make_false_remotes {
+                Some(Transmitter::new(Box::new(tx)))
+            } else {
+                Some(Transmitter::new_simulated(tx))
+            }
         }else{
             None
         }
@@ -150,8 +159,8 @@ pub struct SimulatorTransmitter{
     pub dest: WeakSlab
 }
 
-impl SimulatorTransmitter {
-    pub fn send (&self, from: &SlabRef, memo: Memo){
+impl DynamicDispatchTransmitter for SimulatorTransmitter {
+    fn send (&self, from: &SlabRef, memo: Memo){
         let ref q = self.source_point;
         let ref p = self.dest_point;
 
@@ -180,5 +189,11 @@ impl SimulatorTransmitter {
         };
 
         self.simulator.add_event( evt );
+    }
+}
+
+impl SimulatorTransmitter {
+    pub fn send(&self, from: &SlabRef, memo: Memo) {
+        <SimulatorTransmitter as DynamicDispatchTransmitter>::send(&self, from, memo)
     }
 }
