@@ -6,7 +6,6 @@ use std::mem;
 use super::*;
 use std::sync::mpsc;
 use std::sync::{Arc,Mutex};
-use slab::MemoOrigin;
 use memo::*;
 // use std::collections::BTreeMap;
 use super::packet::*;

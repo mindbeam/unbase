@@ -17,7 +17,6 @@ use super::*;
 use slab::{Slab,SlabId};
 use memo::Memo;
 use std::sync::Arc;
-use super::transport;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum SlabAnticipatedLifetime{

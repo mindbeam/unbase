@@ -31,7 +31,8 @@ impl Transport for LocalDirect {
         true
     }
     fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
-        if let &TransmitterArgs::Local(ref slab) = args {
+        if let &TransmitterArgs::Local(slab) = args {
+            let my_slab = slab.clone();
             let (tx_channel, rx_channel) = mpsc::channel::<(SlabId,Memo)>();
 
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
@@ -40,14 +41,17 @@ impl Transport for LocalDirect {
                 loop {
 
                     if let Ok((from_slab, memo)) = rx_channel.recv() {
-                        slab.put_memos( &MemoOrigin::Local, vec![memo], true );
+                        my_slab.put_memos( &MemoOrigin::Local, vec![memo], true );
                     }else{
                         break;
                     }
                 }
             });
 
-            Some(Transmitter::new_local(tx_channel, tx_thread))
+            // TODO: Remove the mutex here. Consider moving transmitter out of slabref.
+            //       Instead, have relevant parties request a transmitter clone from the network
+            self.shared.lock().unwrap().tx_threads.push(tx_thread);
+            Some(Transmitter::new_local(Mutex::new(tx_channel)))
         }else{
             None
         }
@@ -63,6 +67,15 @@ impl Transport for LocalDirect {
             Some(TransportAddress::Local)
         }else{
             None
+        }
+    }
+}
+
+impl Drop for LocalDirect {
+    fn drop (&mut self) {
+        let mut shared = self.shared.lock().unwrap();
+        for thread in shared.tx_threads.drain(..) {
+            thread.join().unwrap();
         }
     }
 }

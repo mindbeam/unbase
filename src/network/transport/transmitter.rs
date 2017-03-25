@@ -11,7 +11,7 @@ pub trait DynamicDispatchTransmitter {
 }
 
 enum TransmitterInternal {
-    Local(mpsc::Sender<(SlabId,Memo)>, thread::JoinHandle<()>),
+    Local(Mutex<mpsc::Sender<(SlabId,Memo)>>),
     Simulator(SimulatorTransmitter),
     Dynamic(Box<DynamicDispatchTransmitter + Send + Sync>)
 }
@@ -22,9 +22,9 @@ pub struct Transmitter {
 
 impl Transmitter {
     /// Create a new transmitter associated with a local slab.
-    pub fn new_local( tx: mpsc::Sender<(SlabId,Memo)>, thread: thread::JoinHandle<()> ) -> Self {
+    pub fn new_local( tx: Mutex<mpsc::Sender<(SlabId,Memo)>> ) -> Self {
         Self {
-            internal: TransmitterInternal::Local( tx, thread )
+            internal: TransmitterInternal::Local( tx )
         }
     }
     /// Create a new transmitter associated with a local simulator transmitter.
@@ -43,8 +43,8 @@ impl Transmitter {
     pub fn send(&self, from: &SlabRef, memo: Memo) {
         use self::TransmitterInternal::*;
         match self.internal {
-            Local(tx,_) => {
-                tx.send((from.slab_id,memo)).expect("local transmitter send")
+            Local(ref tx) => {
+                tx.lock().unwrap().send((from.slab_id,memo)).expect("local transmitter send")
             }
             Simulator(ref tx) => {
                 tx.send(from, memo);

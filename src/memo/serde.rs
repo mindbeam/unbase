@@ -6,7 +6,6 @@ use super::*;
 use std::fmt;
 use network::Network;
 use memorefhead::serde::*;
-use network::slabref::serde::*;
 
 impl Serialize for Memo {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
