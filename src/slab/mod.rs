@@ -14,6 +14,7 @@ use memorefhead::*;
 use context::{Context,WeakContext};
 use network::slabref::{SlabPresence,SlabAnticipatedLifetime};
 
+mod memohandling;
 
 /* Initial plan:
  * Initially use Mutex-managed internal struct to manage slab storage
@@ -33,6 +34,7 @@ struct SlabShared{
     memorefs_by_id: HashMap<MemoId,MemoRef>,
     memo_wait_channels: HashMap<MemoId,Vec<mpsc::Sender<Memo>>>,
     subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
+    memos_received: u64,
 
     my_slab: Option<WeakSlab>,
     my_ref: Option<SlabRef>,
@@ -58,8 +60,8 @@ pub struct WeakSlab{
 
 #[derive(Debug)]
 pub enum MemoOrigin<'a>{
-    Local,
-    Remote(&'a SlabRef)
+    Same,
+    Other(&'a SlabRef)
 }
 
 impl Slab {
@@ -71,6 +73,7 @@ impl Slab {
             memorefs_by_id:        HashMap::new(),
             memo_wait_channels:    HashMap::new(),
             subject_subscriptions: HashMap::new(),
+            memos_received: 0,
             my_slab: None,
             my_ref: None,
             peer_refs: Vec::new(),
@@ -127,7 +130,7 @@ impl Slab {
             MemoBody::FullyMaterialized {v: values, r: HashMap::new() } // TODO: accept relations
         );
 
-        let memorefs = self.put_memos(&MemoOrigin::Local, vec![ memo.clone() ], true);
+        let memorefs = self.put_memos(&MemoOrigin::Same, vec![ memo.clone() ], true);
 
         MemoRefHead::from_memoref(memorefs[0].clone())
     }
@@ -163,9 +166,17 @@ impl Slab {
 
         shared.put_memos(from, memos, deliver_local)
     }
+    pub fn put_memo_from_other_local_slab(&self, from_slab_id: SlabId, memo: Memo ){
+        let mut shared = self.inner.shared.lock().unwrap();
+        shared.put_memo_from_other_local_slab(from_slab_id, memo);
+    }
     pub fn count_of_memorefs_resident( &self ) -> u32 {
         let shared = self.inner.shared.lock().unwrap();
         shared.memorefs_by_id.len() as u32
+    }
+    pub fn count_of_memos_received( &self ) -> u64 {
+        let shared = self.inner.shared.lock().unwrap();
+        shared.memos_received
     }
     pub fn inject_peer_slabref (&self, new_peer_ref: SlabRef ) -> bool {
         // We don't have to figure it out, it's just being given to us
@@ -268,12 +279,30 @@ impl SlabShared {
             panic!("Invalid state - Missing my_ref")
         }
     }
-    pub fn put_memos<'a> (&mut self, from: &MemoOrigin, memos: Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
+    pub fn put_memo_from_other_local_slab(&mut self, from_slab_id: SlabId, memo: Memo){
+
+        //TODO: optimize the slabref retrieval
+        //      probably makes sense to issue transmitters per each origin, rather than sharing them.
+        //      could use the same send channel. This would also
+        let origin_slabref : &SlabRef = match self.peer_refs.iter().find(|x| x.slab_id == from_slab_id ) {
+            Some(ref peer) => peer,
+            None => {
+                if let Some(ref peer) = self.net.get_slabref(from_slab_id) {
+                    self.peer_refs.insert(0,*peer.clone());
+                    &peer
+                }else{
+                    panic!("sanity error - should be able to retrieve the slabref for a local slab id")
+                }
+            }
+        };
+
+        self.put_memos( MemoOrigin::Other(origin_slabref), vec![memo] );
+    }
+    pub fn put_memos<'a> (&mut self, memo_origin: &MemoOrigin, memos: Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
-        println!("# SlabShared({}).put_memos({:?},{:?},{:?})", self.id, from, mids, deliver_local);
+        println!("# SlabShared({}).put_memos({:?},{:?},{:?})", self.id, memo_origin, mids, deliver_local);
 
         // TODO: Evaluate more efficient ways to group these memos by subject
-
         let mut subject_updates : HashMap<SubjectId, MemoRefHead> = HashMap::new();
         let mut memorefs = Vec::with_capacity( memos.len() );
 
@@ -282,6 +311,8 @@ impl SlabShared {
         let my_ref = my_slab.get_ref().clone();
 
         for memo in memos {
+
+            self.memos_received += 1;
 
             println!("# \\ Memo Type {:?}", memo.inner.body );
             // Store the memoref - avoid creating duplicates
@@ -299,127 +330,18 @@ impl SlabShared {
                 }
             };
 
-            match self.memo_wait_channels.entry(memo.id) {
-                Entry::Occupied(o) => {
-                    for channel in o.get() {
-                        // we don't care if it worked or not.
-                        // if the channel is closed, we're scrubbing it anyway
-                        channel.send(memo.clone()).ok();
-                    }
-                    o.remove();
-                },
-                Entry::Vacant(_) => {}
-            };
-
-            match memo.inner.body {
-                // This Memo is a peering status update for another memo
-                MemoBody::SlabPresence( ref presence ) => {
-                    let slabref = SlabRef::new_from_presence( presence, &self.net );
-
-                    if self.inject_peer_slabref( slabref ) {
-
-
-                        // TODO: should we be telling the origin slabref, or the presence slabref that we're here?
-                        //       these will usually be the same, but not always
-
-                        if let MemoOrigin::Remote(origin_slabref) = *from {
-                            // Get the address that the remote slab would recogize
-                            if let &Some(ref my_local_address) = origin_slabref.get_local_return_address() {
-                                let my_presence = SlabPresence {
-                                    slab_id: my_slab.id,
-                                    transport_address: my_local_address.clone(),
-                                    anticipated_lifetime: SlabAnticipatedLifetime::Unknown
-                                };
-
-                                let my_presence_memo = Memo::new_basic(
-                                    my_slab.gen_memo_id(),
-                                    0,
-                                    MemoRefHead::from_memoref(memoref.clone()),
-                                    MemoBody::SlabPresence( my_presence )
-                                );
-
-                                origin_slabref.send_memo( &my_ref, my_presence_memo );
-                            }
-                        }
-                    }
+            match memo_origin {
+                &MemoOrigin::Same => {
+                    //
                 }
-                MemoBody::Peering(memo_id, ref presence, ref status) => {
-                    // Don't peer with yourself
-                    if presence.slab_id != my_ref.slab_id {
-                        // TODO: Determine when this memo is superseded/stale, punt update
-                        let peered_memoref = self.memorefs_by_id.entry(memo_id).or_insert_with(|| MemoRef::new_remote(memo_id));
-
-                        peered_memoref.update_peer( &self.net.assert_slabref_from_presence( presence ), status);
-                    }
-                },
-                MemoBody::MemoRequest(ref desired_memo_ids, ref requesting_slabref ) => {
-
-                    if requesting_slabref.slab_id != my_ref.slab_id {
-                        for desired_memo_id in desired_memo_ids {
-                            if let Some(desired_memoref) = self.memorefs_by_id.get(&desired_memo_id) {
-                                if let Some(desired_memo) = desired_memoref.get_memo_if_resident() {
-                                    requesting_slabref.send_memo(&my_ref, desired_memo)
-                                } else {
-                                    // Somebody asked me for a memo I don't have
-                                    // It would be neighborly to tell them I don't have it
-                                    let peering_memo = Memo::new(
-                                        my_slab.gen_memo_id(), 0,
-                                        MemoRefHead::from_memoref(memoref.clone()),
-                                        MemoBody::Peering( memo.id, my_ref.presence.clone(), PeeringStatus::Participating)
-                                    );
-                                    requesting_slabref.send_memo(&my_ref, peering_memo)
-                                }
-                            }else{
-                                let peering_memo = Memo::new(
-                                    my_slab.gen_memo_id(), 0,
-                                    MemoRefHead::from_memoref(memoref.clone()),
-                                    MemoBody::Peering( memo.id, my_ref.presence.clone(), PeeringStatus::NonParticipating)
-                                );
-                                requesting_slabref.send_memo(&my_ref, peering_memo)
-                            }
-                        }
-                    }
-                }
-                //MemoBody::Relation(ref relations) => {
-                //
-                //},
-                _ => {}
-            }
-            // Peering memos don't get peering memos, but Edit memos do
-            // Abstracting this, because there might be more types that don't do peering
-            if memo.does_peering() {
-                // That we received the memo means that the sender didn't think we had it
-                // Whether or not we had it already, lets tell them we have it now.
-                // It's useful for them to know we have it, and it'll help them STFU
-                if let MemoOrigin::Remote(origin_slabref) = *from {
-                    // TODO: Don't assume that receiving it from origin_slabref means we should assume it to be resident there
-                    // Should EITHER: Ensure that a peering memo is co-delivered, OR ensure the memo is delivered with PeeringStatus
-                    // memoref.update_peer(origin_slabref, &PeeringStatus::Resident);
-
-                    // TODO: determine if peering memo should:
-                    //    A. use parents at all
-                    //    B. and if so, what should be should we be using them for?
-                    //    C. Should we be sing that to determine the peered memo instead of the payload?
-                    //println!("MEOW {}, {:?}", my_ref );
-                    if let &Some(ref my_return_address) = origin_slabref.get_local_return_address() {
-                        let peering_memo = Memo::new(
-                            my_slab.gen_memo_id(), 0,
-                            MemoRefHead::from_memoref(memoref.clone()),
-                            MemoBody::Peering(
-                                memo.id,
-                                SlabPresence {
-                                    slab_id:  self.id,
-                                    transport_address: my_return_address.clone(),
-                                    anticipated_lifetime: SlabAnticipatedLifetime::Unknown
-                                },
-                                PeeringStatus::Resident
-                            )
-                        );
-                        origin_slabref.send_memo( &my_ref, peering_memo );
-                    }
+                &MemoOrigin::Other(origin_slabref) => {
+                    self.check_memo_waiters(&memo);
+                    self.handle_memo_from_other_slab(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
+                    self.do_peering_for_memo(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
                 }
             }
 
+            // Gather memos by subject
             if memo.subject_id > 0 {
                 if deliver_local {
                     let mut head = subject_updates.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
@@ -430,8 +352,6 @@ impl SlabShared {
             }
         }
 
-
-        // TODO: test each memo for durability_score and emit accordingly
         self.emit_memos(&memorefs);
 
         if deliver_local {
@@ -452,25 +372,6 @@ impl SlabShared {
 
             }
         }
-    }
-    pub fn emit_memos(&self, memorefs: &Vec<MemoRef>) {
-
-        // TODO - configurably auto-deliver these memos
-        //        punting for now, because we want the test suite to monkey with delivery
-
-
-        let my_ref : &SlabRef = self.get_my_ref();
-        for memoref in memorefs.iter() {
-            if let Some(memo) = memoref.get_memo_if_resident() {
-                let needs_peers = self.check_peering_target(&memo);
-
-                for peer_ref in self.peer_refs.iter().filter(|x| !memoref.is_peered_with_slabref(x) ).take( needs_peers as usize ) {
-                    println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", my_ref.slab_id, memo.id, peer_ref.slab_id );
-                    peer_ref.send_memo( my_ref, memo.clone() );
-                }
-            }
-        }
-
     }
 
     fn inject_peer_slabref (&mut self, new_peer_ref: SlabRef ) -> bool {

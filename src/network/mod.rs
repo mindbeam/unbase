@@ -99,12 +99,16 @@ impl Network {
         let mut internals = self.shared.internals.lock().unwrap();
         internals.get_slab(slab_id)
     }
+    pub fn get_slabref (&mut self, slab_id: SlabId ) -> Option<&SlabRef> {
+        let mut internals = self.shared.internals.lock().unwrap();
+        internals.slab_refs.iter().find(|x| x.slab_id == slab_id )
+    }
     pub fn distribute_memos(&self, from_presence: &SlabPresence, packet: Packet ) {
         println!("Network.distribute_memos");
         // TODO: optimize this. redundant mutex locking inside, weak slab upgrades, etc
 
         let from = self.assert_slabref_from_presence(from_presence);
-        let memoorigin = MemoOrigin::Remote(&from);
+        let memoorigin = MemoOrigin::Other(&from);
 
         let mut send_slabs = Vec::new();
         {

@@ -31,8 +31,8 @@ pub struct SubjectShared {
 impl Subject {
     pub fn new ( context: &Context, vals: HashMap<String, String>, is_index: bool ) -> Result<Subject,String> {
 
-        let slab : &Slab = context.get_slab();
-        let subject_id = slab.generate_subject_id();
+        let my_slab : &Slab = context.get_slab();
+        let subject_id = my_slab.generate_subject_id();
         println!("# Subject({}).new()",subject_id);
 
         let shared = Arc::new(Mutex::new(SubjectShared{
@@ -48,9 +48,9 @@ impl Subject {
 
         context.subscribe_subject( &subject );
 
-        let memoref = slab.put_memo(&MemoOrigin::Local,
+        let memoref = my_slab.put_memo(&MemoOrigin::Same,
             Memo::new_basic_noparent(
-                slab.gen_memo_id(),
+                my_slab.gen_memo_id(),
                 subject_id,
                 MemoBody::FullyMaterialized {v: vals, r: HashMap::new() } // TODO: accept relations
             )
@@ -58,7 +58,7 @@ impl Subject {
 
         {
             let mut shared = subject.shared.lock().unwrap();
-            shared.head.apply_memoref(&memoref, &slab);
+            shared.head.apply_memoref(&memoref, &my_slab);
             shared.context.subject_updated( subject_id, &shared.head );
         }
 
@@ -120,24 +120,24 @@ impl Subject {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        let slab;
+        let my_slab;
         let memo;
         {
             let shared = self.shared.lock().unwrap();
-            slab = shared.context.get_slab().clone();
+            my_slab = shared.context.get_slab().clone();
 
             memo = Memo::new_basic(
-                slab.gen_memo_id(),
+                my_slab.gen_memo_id(),
                 self.id,
                 shared.head.clone(),
                 MemoBody::Edit(vals)
             );
         }
 
-        let memoref = slab.put_memo(&MemoOrigin::Local, memo, false);
+        let memoref = my_slab.put_memo(&MemoOrigin::Same, memo, false);
 
         let mut shared = self.shared.lock().unwrap();
-        shared.head.apply_memoref(&memoref, &slab);
+        shared.head.apply_memoref(&memoref, &my_slab);
         shared.context.subject_updated( self.id, &shared.head );
 
         true
