@@ -286,7 +286,7 @@ impl TransportUDPDispatcher{
                     }
                 };
 
-                slab.put_memos( MemoOrigin::Remote, envelope.yield_memos(), true );
+                slab.put_memos( MemoOrigin::Other, envelope.yield_memos() );
                 if envelope.is_completed() {
                     self.slabmap.remove()
                 }

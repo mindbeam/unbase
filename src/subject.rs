@@ -48,13 +48,13 @@ impl Subject {
 
         context.subscribe_subject( &subject );
 
-        let memoref = my_slab.put_memo(&MemoOrigin::Same,
+        let memoref = my_slab.put_memo(&MemoOrigin::SameSlab,
             Memo::new_basic_noparent(
                 my_slab.gen_memo_id(),
                 subject_id,
                 MemoBody::FullyMaterialized {v: vals, r: HashMap::new() } // TODO: accept relations
             )
-        , false);
+        );
 
         {
             let mut shared = subject.shared.lock().unwrap();
@@ -134,7 +134,7 @@ impl Subject {
             );
         }
 
-        let memoref = my_slab.put_memo(&MemoOrigin::Same, memo, false);
+        let memoref = my_slab.put_memo(&MemoOrigin::SameSlab, memo);
 
         let mut shared = self.shared.lock().unwrap();
         shared.head.apply_memoref(&memoref, &my_slab);
@@ -161,7 +161,7 @@ impl Subject {
             );
         }
 
-        let memoref = slab.put_memo( &MemoOrigin::Local, memo, false );
+        let memoref = slab.put_memo( &MemoOrigin::SameSlab, memo );
 
 
         // TODO: determine conclusively whether it's possible for apply_memorefs

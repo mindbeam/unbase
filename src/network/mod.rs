@@ -108,13 +108,14 @@ impl Network {
         // TODO: optimize this. redundant mutex locking inside, weak slab upgrades, etc
 
         let from = self.assert_slabref_from_presence(from_presence);
-        let memoorigin = MemoOrigin::Other(&from);
 
         let mut send_slabs = Vec::new();
         {
             let internals = self.shared.internals.lock().unwrap();
 
             for weak_slab in internals.slabs.iter(){
+                // slab_id 0 means any/all slabs present
+                // otherwise it's destined to a specific slab
                 if packet.to_slab_id == 0 || weak_slab.id == packet.to_slab_id {
                     if let Some(slab) = weak_slab.upgrade() {
                         send_slabs.push(slab);
@@ -124,8 +125,10 @@ impl Network {
         }
         // can't have the lock open any time we're putting memos
         // because some internal logic needs to access the network struct
+
+        let memoorigin = MemoOrigin::OtherSlab(&from);
         for slab in send_slabs {
-            slab.put_memos( &memoorigin,vec![packet.memo.clone()], true);
+            slab.put_memos( &memoorigin,vec![packet.memo.clone()]);
         }
     }
     pub fn assert_slabref_from_presence(&self, presence: &SlabPresence) -> SlabRef {

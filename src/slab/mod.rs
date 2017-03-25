@@ -60,8 +60,8 @@ pub struct WeakSlab{
 
 #[derive(Debug)]
 pub enum MemoOrigin<'a>{
-    Same,
-    Other(&'a SlabRef)
+    SameSlab,
+    OtherSlab(&'a SlabRef)
 }
 
 impl Slab {
@@ -130,7 +130,7 @@ impl Slab {
             MemoBody::FullyMaterialized {v: values, r: HashMap::new() } // TODO: accept relations
         );
 
-        let memorefs = self.put_memos(&MemoOrigin::Same, vec![ memo.clone() ], true);
+        let memorefs = self.put_memos(&MemoOrigin::SameSlab, vec![ memo.clone() ]);
 
         MemoRefHead::from_memoref(memorefs[0].clone())
     }
@@ -156,15 +156,15 @@ impl Slab {
         (self.id as u64).rotate_left(32) | counters.last_memo_id as u64
     }
     // Convenience function for now, but may make sense to optimize this later
-    pub fn put_memo (&self, from: &MemoOrigin, memo : Memo, deliver_local: bool ) -> MemoRef {
-        let mut memorefs = self.put_memos(from, vec![memo], deliver_local );
+    pub fn put_memo (&self, memo_origin: &MemoOrigin, memo : Memo ) -> MemoRef {
+        let mut memorefs = self.put_memos(memo_origin, vec![memo] );
         memorefs.pop().unwrap()
     }
-    pub fn put_memos(&self, from: &MemoOrigin, memos : Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
+    pub fn put_memos(&self, memo_origin: &MemoOrigin, memos : Vec<Memo> ) -> Vec<MemoRef> {
         if memos.len() == 0 { return Vec::new() }
         let mut shared = self.inner.shared.lock().unwrap();
 
-        shared.put_memos(from, memos, deliver_local)
+        shared.put_memos(memo_origin, memos)
     }
     pub fn put_memo_from_other_local_slab(&self, from_slab_id: SlabId, memo: Memo ){
         let mut shared = self.inner.shared.lock().unwrap();
@@ -284,6 +284,7 @@ impl SlabShared {
         //TODO: optimize the slabref retrieval
         //      probably makes sense to issue transmitters per each origin, rather than sharing them.
         //      could use the same send channel. This would also
+        
         let origin_slabref : &SlabRef = match self.peer_refs.iter().find(|x| x.slab_id == from_slab_id ) {
             Some(ref peer) => peer,
             None => {
@@ -296,11 +297,11 @@ impl SlabShared {
             }
         };
 
-        self.put_memos( MemoOrigin::Other(origin_slabref), vec![memo] );
+        self.put_memos( &MemoOrigin::OtherSlab(origin_slabref), vec![memo] );
     }
-    pub fn put_memos<'a> (&mut self, memo_origin: &MemoOrigin, memos: Vec<Memo>, deliver_local: bool ) -> Vec<MemoRef> {
+    pub fn put_memos<'a> (&mut self, memo_origin: &MemoOrigin, memos: Vec<Memo> ) -> Vec<MemoRef> {
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
-        println!("# SlabShared({}).put_memos({:?},{:?},{:?})", self.id, memo_origin, mids, deliver_local);
+        println!("# SlabShared({}).put_memos({:?},{:?})", self.id, memo_origin, mids );
 
         // TODO: Evaluate more efficient ways to group these memos by subject
         let mut subject_updates : HashMap<SubjectId, MemoRefHead> = HashMap::new();
@@ -331,33 +332,29 @@ impl SlabShared {
             };
 
             match memo_origin {
-                &MemoOrigin::Same => {
+                &MemoOrigin::SameSlab => {
                     //
                 }
-                &MemoOrigin::Other(origin_slabref) => {
+                &MemoOrigin::OtherSlab(origin_slabref) => {
                     self.check_memo_waiters(&memo);
                     self.handle_memo_from_other_slab(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
                     self.do_peering_for_memo(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
-                }
-            }
 
-            // Gather memos by subject
-            if memo.subject_id > 0 {
-                if deliver_local {
-                    let mut head = subject_updates.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
-                    head.apply_memoref(&memoref, &my_slab);
+                    if memo.subject_id > 0 {
+                        let mut head = subject_updates.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
+                        head.apply_memoref(&memoref, &my_slab);
+                    }
                 }
-                //TODO: should we emit all memorefs, or just those with subject_ids?
-                memorefs.push(memoref);
-            }
+            };
+
+            //TODO: should we emit all memorefs, or just those with subject_ids?
+            memorefs.push(memoref);
         }
 
         self.emit_memos(&memorefs);
 
-        if deliver_local {
-            for (subject_id,head) in subject_updates {
-                self.dispatch_subject_head(subject_id, &head);
-            }
+        for (subject_id,head) in subject_updates {
+            self.dispatch_subject_head(subject_id, &head);
         }
 
         memorefs
