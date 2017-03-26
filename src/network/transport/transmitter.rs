@@ -1,6 +1,7 @@
 
 use std::sync::mpsc;
 use super::*;
+use memo::PeeringStatus;
 
 /// A trait for transmitters to implement
 pub trait DynamicDispatchTransmitter {
@@ -9,7 +10,7 @@ pub trait DynamicDispatchTransmitter {
 }
 
 enum TransmitterInternal {
-    Local(Mutex<mpsc::Sender<(SlabId,Memo)>>),
+    Local(Mutex<mpsc::Sender<(SlabRef,PeeringStatus,Memo)>>),
     Dynamic(Box<DynamicDispatchTransmitter + Send + Sync>)
 }
 
@@ -19,7 +20,7 @@ pub struct Transmitter {
 
 impl Transmitter {
     /// Create a new transmitter associated with a local slab.
-    pub fn new_local( tx: Mutex<mpsc::Sender<(SlabId,Memo)>> ) -> Self {
+    pub fn new_local( tx: Mutex<mpsc::Sender<(SlabRef,PeeringStatus,Memo)>> ) -> Self {
         Self {
             internal: TransmitterInternal::Local( tx )
         }
@@ -35,8 +36,10 @@ impl Transmitter {
         use self::TransmitterInternal::*;
         match self.internal {
             Local(ref tx) => {
-                println!("CHANNEL SEND from {}, {:?}", from.slab_id, memo);
-                tx.lock().unwrap().send((from.slab_id,memo)).expect("local transmitter send")
+                //println!("CHANNEL SEND from {}, {:?}", from.slab_id, memo);
+                // TODO - stop assuming that this is resident on the sending slab just because we're sending it
+                // TODO - lose the stupid lock on the transmitter
+                tx.lock().unwrap().send((from.clone(),PeeringStatus::Resident,memo)).expect("local transmitter send")
             }
             Dynamic(ref tx) => {
                 tx.send(from,memo)

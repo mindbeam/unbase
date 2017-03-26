@@ -1,7 +1,5 @@
 extern crate unbase;
 use unbase::subject::*;
-use unbase::network::transport::TransmitterArgs;
-use unbase::network::Transport;
 
 #[test]
 fn basic_record_retrieval() {

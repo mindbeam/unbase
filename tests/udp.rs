@@ -2,7 +2,7 @@ extern crate unbase;
 
 use std::{thread, time};
 
-#[test]
+//#[test]
 fn test_udp() {
 
     //let t1 = thread::spawn(|| {

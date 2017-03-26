@@ -35,6 +35,7 @@ struct SlabShared{
     memo_wait_channels: HashMap<MemoId,Vec<mpsc::Sender<Memo>>>,
     subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
     memos_received: u64,
+    memos_redundantly_received: u64,
 
     my_slab: Option<WeakSlab>,
     my_ref: Option<SlabRef>,
@@ -61,7 +62,7 @@ pub struct WeakSlab{
 #[derive(Debug)]
 pub enum MemoOrigin<'a>{
     SameSlab,
-    OtherSlab(&'a SlabRef)
+    OtherSlab(&'a SlabRef, PeeringStatus)
 }
 
 impl Slab {
@@ -74,6 +75,7 @@ impl Slab {
             memo_wait_channels:    HashMap::new(),
             subject_subscriptions: HashMap::new(),
             memos_received: 0,
+            memos_redundantly_received: 0,
             my_slab: None,
             my_ref: None,
             peer_refs: Vec::new(),
@@ -166,10 +168,10 @@ impl Slab {
 
         shared.put_memos(memo_origin, memos)
     }
-    pub fn put_memo_from_other_local_slab(&self, from_slab_id: SlabId, memo: Memo ){
+    /*pub fn put_memo_from_other_local_slab(&self, from_slab_id: SlabId, memo: Memo ){
         let mut shared = self.inner.shared.lock().unwrap();
         shared.put_memo_from_other_local_slab(from_slab_id, memo);
-    }
+    }*/
     pub fn count_of_memorefs_resident( &self ) -> u32 {
         let shared = self.inner.shared.lock().unwrap();
         shared.memorefs_by_id.len() as u32
@@ -177,6 +179,10 @@ impl Slab {
     pub fn count_of_memos_received( &self ) -> u64 {
         let shared = self.inner.shared.lock().unwrap();
         shared.memos_received
+    }
+    pub fn count_of_memos_reduntantly_received( &self ) -> u64 {
+        let shared = self.inner.shared.lock().unwrap();
+        shared.memos_redundantly_received
     }
     pub fn inject_peer_slabref (&self, new_peer_ref: SlabRef ) -> bool {
         // We don't have to figure it out, it's just being given to us
@@ -279,17 +285,18 @@ impl SlabShared {
             panic!("Invalid state - Missing my_ref")
         }
     }
-    pub fn put_memo_from_other_local_slab(&mut self, from_slab_id: SlabId, memo: Memo){
+    /*pub fn put_memo_from_other_local_slab(&mut self, from_slab_id: SlabId, memo: Memo){
 
         //TODO: optimize the slabref retrieval
         //      probably makes sense to issue transmitters per each origin, rather than sharing them.
         //      could use the same send channel. This would also
-        
+
         let origin_slabref : &SlabRef = match self.peer_refs.iter().find(|x| x.slab_id == from_slab_id ) {
             Some(ref peer) => peer,
             None => {
-                if let Some(ref peer) = self.net.get_slabref(from_slab_id) {
-                    self.peer_refs.insert(0,*peer.clone());
+                if let Some(ref slab) = self.net.get_slab(from_slab_id) {
+                    let peer = slab.get_ref();
+                    self.peer_refs.insert(0,peer.clone());
                     &peer
                 }else{
                     panic!("sanity error - should be able to retrieve the slabref for a local slab id")
@@ -298,7 +305,7 @@ impl SlabShared {
         };
 
         self.put_memos( &MemoOrigin::OtherSlab(origin_slabref), vec![memo] );
-    }
+    }*/
     pub fn put_memos<'a> (&mut self, memo_origin: &MemoOrigin, memos: Vec<Memo> ) -> Vec<MemoRef> {
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
         println!("# SlabShared({}).put_memos({:?},{:?})", self.id, memo_origin, mids );
@@ -314,7 +321,6 @@ impl SlabShared {
         for memo in memos {
 
             self.memos_received += 1;
-
             println!("# \\ Memo Type {:?}", memo.inner.body );
             // Store the memoref - avoid creating duplicates
             let memoref = match self.memorefs_by_id.entry(memo.id) {
@@ -323,7 +329,9 @@ impl SlabShared {
                 }
                 Entry::Occupied(o) => {
                     let mr = o.get();
-                    mr.residentize(&my_slab, &memo);
+                    if !mr.residentize(&my_slab, &memo) {
+                        self.memos_redundantly_received += 1;
+                    }
                     // TODO: consider whether all of the below code should be short circuited
                     //       in the case that we already have this memo resident
 
@@ -335,9 +343,12 @@ impl SlabShared {
                 &MemoOrigin::SameSlab => {
                     //
                 }
-                &MemoOrigin::OtherSlab(origin_slabref) => {
+                &MemoOrigin::OtherSlab(origin_slabref,ref origin_peering_status) => {
                     self.check_memo_waiters(&memo);
                     self.handle_memo_from_other_slab(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
+
+                    memoref.update_peer(origin_slabref, origin_peering_status.clone());
+
                     self.do_peering_for_memo(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
 
                     if memo.subject_id > 0 {
@@ -380,8 +391,16 @@ impl SlabShared {
             true
         }
     }
-    fn check_peering_target( &self, _memo: &Memo ) -> u8 {
-        5
+    fn check_peering_target( &self, memo: &Memo ) -> u8 {
+        if memo.does_peering() {
+            5
+        }else{
+            // This is necessary to prevent memo routing loops for now, as
+            // memoref.is_peered_with_slabref() obviously doesn't work for non-peered memos
+            // something here should change when we switch to gossip/plumtree, but
+            // I'm not sufficiently clear on that at the time of this writing
+            0
+        }
     }
 /*    pub fn memo_durability_score( &self, _memo: &Memo ) -> u8 {
         // TODO: devise durability_score algo

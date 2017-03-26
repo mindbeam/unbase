@@ -1,5 +1,7 @@
 extern crate unbase;
 
+use std::{thread, time};
+
 #[test]
 fn test_init() {
 
@@ -26,6 +28,30 @@ fn test_init() {
     let _context_a = slab_a.create_context();
     let _context_b = slab_b.create_context();
     let _context_c = slab_c.create_context();
+
+}
+
+#[test]
+fn avoid_unnecessary_chatter() {
+
+    let net = unbase::Network::new();
+
+    let slab_a = unbase::Slab::new(&net);
+    let slab_b = unbase::Slab::new(&net);
+
+    let _context_a = slab_a.create_context();
+    let _context_b = slab_b.create_context();
+
+    thread::sleep(time::Duration::from_millis(100));
+
+    println!("Slab A MemoRefs present {}", slab_a.count_of_memorefs_resident() );
+    println!("Slab A MemoRefs present {}", slab_b.count_of_memorefs_resident() );
+
+    println!("Slab A Memos received {}", slab_a.count_of_memos_received() );
+    println!("Slab B Memos received {}", slab_a.count_of_memos_received() );
+
+    assert!( slab_a.count_of_memos_reduntantly_received() == 0, "Redundant memos received" );
+    assert!( slab_b.count_of_memos_reduntantly_received() == 0, "Redundant memos received" );
 
 }
 

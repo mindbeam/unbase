@@ -21,7 +21,8 @@ pub type MemoId = u64;
 pub enum PeeringStatus{
     Resident,
     Participating,
-    NonParticipating
+    NonParticipating,
+    Unknown
 }
 
 #[derive(Debug,Serialize,PartialEq)]

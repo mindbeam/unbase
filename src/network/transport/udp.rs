@@ -119,6 +119,7 @@ impl TransportUDP {
         let packet = Packet{
             to_slab_id: to_slab_id,
             from_slab_id: from.slab_id,
+            from_slab_peering_status: PeeringStatus::Resident, // TODO - stop assuming that it's actually resident in the sending slab
             memo: memo
         };
 
@@ -242,6 +243,7 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
         let packet = Packet {
             to_slab_id: self.slab_id,
             from_slab_id: from.slab_id,
+            from_slab_peering_status: PeeringStatus::Resident, //TODO: stop assuming this is resident just because we're sending it
             memo: memo
         };
 

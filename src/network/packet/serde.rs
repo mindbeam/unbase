@@ -13,6 +13,7 @@ impl Serialize for Packet {
     {
         let mut seq = serializer.serialize_seq(Some(3))?;
         seq.serialize_element( &self.from_slab_id )?;
+        seq.serialize_element( &self.from_slab_peering_status )?;
         seq.serialize_element( &self.to_slab_id )?;
         seq.serialize_element( &self.memo )?;
         seq.end()
@@ -48,22 +49,29 @@ impl<'a> Visitor for PacketSeed<'a> {
                return Err(de::Error::invalid_length(0, &self));
            }
        };
-       let to_slab_id: SlabId = match visitor.visit()? {
+       let from_slab_peering_status: PeeringStatus = match visitor.visit()?{
            Some(value) => value,
            None => {
                return Err(de::Error::invalid_length(1, &self));
            }
        };
-       let memo: Memo = match visitor.visit_seed( MemoSeed { net: self.net } )? {
+       let to_slab_id: SlabId = match visitor.visit()? {
            Some(value) => value,
            None => {
                return Err(de::Error::invalid_length(2, &self));
+           }
+       };
+       let memo: Memo = match visitor.visit_seed( MemoSeed { net: self.net } )? {
+           Some(value) => value,
+           None => {
+               return Err(de::Error::invalid_length(3, &self));
            }
        };
 
        Ok(Packet{
            from_slab_id: from_slab_id,
            to_slab_id:   to_slab_id,
+           from_slab_peering_status: from_slab_peering_status,
            memo:         memo
        })
    }

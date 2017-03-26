@@ -99,10 +99,6 @@ impl Network {
         let mut internals = self.shared.internals.lock().unwrap();
         internals.get_slab(slab_id)
     }
-    pub fn get_slabref (&mut self, slab_id: SlabId ) -> Option<&SlabRef> {
-        let mut internals = self.shared.internals.lock().unwrap();
-        internals.slab_refs.iter().find(|x| x.slab_id == slab_id )
-    }
     pub fn distribute_memos(&self, from_presence: &SlabPresence, packet: Packet ) {
         println!("Network.distribute_memos");
         // TODO: optimize this. redundant mutex locking inside, weak slab upgrades, etc
@@ -126,7 +122,7 @@ impl Network {
         // can't have the lock open any time we're putting memos
         // because some internal logic needs to access the network struct
 
-        let memoorigin = MemoOrigin::OtherSlab(&from);
+        let memoorigin = MemoOrigin::OtherSlab(&from,packet.from_slab_peering_status);
         for slab in send_slabs {
             slab.put_memos( &memoorigin,vec![packet.memo.clone()]);
         }
@@ -153,7 +149,6 @@ impl Network {
 
         let internals = self.shared.internals.lock().unwrap();
         for transport in internals.transports.iter() {
-            println!("Considering transport" );
             if let Some(transmitter) = transport.make_transmitter( &args ) {
                 return Some(transmitter);
             }

@@ -1,7 +1,7 @@
 use super::*;
 
 impl SlabShared {
-    pub fn check_memo_waiters (&self, memo: &Memo) {
+    pub fn check_memo_waiters ( &mut self, memo: &Memo) {
         match self.memo_wait_channels.entry(memo.id) {
             Entry::Occupied(o) => {
                 for channel in o.get() {
@@ -52,7 +52,7 @@ impl SlabShared {
                     // TODO: Determine when this memo is superseded/stale, punt update
                     let peered_memoref = self.memorefs_by_id.entry(memo_id).or_insert_with(|| MemoRef::new_remote(memo_id));
 
-                    peered_memoref.update_peer( &self.net.assert_slabref_from_presence( presence ), status);
+                    peered_memoref.update_peer( &self.net.assert_slabref_from_presence( presence ), status.clone());
                 }
             },
             MemoBody::MemoRequest(ref desired_memo_ids, ref requesting_slabref ) => {
@@ -94,10 +94,6 @@ impl SlabShared {
             // Whether or not we had it already, lets tell them we have it now.
             // It's useful for them to know we have it, and it'll help them STFU
 
-            // TODO: Don't assume that receiving it from origin_slabref means we should assume it to be resident there
-            // Should EITHER: Ensure that a peering memo is co-delivered, OR ensure the memo is delivered with PeeringStatus
-            // memoref.update_peer(origin_slabref, &PeeringStatus::Resident);
-
             // TODO: determine if peering memo should:
             //    A. use parents at all
             //    B. and if so, what should be should we be using them for?
@@ -124,6 +120,9 @@ impl SlabShared {
     }
 
     pub fn emit_memos(&self, memorefs: &Vec<MemoRef>) {
+        // Emit memos for durability and notification purposes
+        // At present, some memos like peering and slab presence are emitted manually.
+        // TODO: This will almost certainly have to change once gossip/plumtree functionality is added
 
         // TODO: test each memo for durability_score and emit accordingly
         let my_ref : &SlabRef = self.get_my_ref();

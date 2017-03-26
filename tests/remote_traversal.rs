@@ -28,6 +28,8 @@ fn remote_traversal_simulated() {
 
     simulator.advance_clock(1);
 
+    // Thread is necessary to prevent retrieval deadlock, as the simulator is controlled in this thead
+    // This should be reconsidered when the simulator is reworked per https://github.com/unbase/unbase/issues/6
     let handle = thread::spawn(move || {
 
         assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Meow");
@@ -46,32 +48,13 @@ fn remote_traversal_simulated() {
 
 }
 
-
-
 #[test]
-fn avoid_unnecessary_chatter() {
-
-    let net = unbase::Network::new();
-
-    let slab_a = unbase::Slab::new(&net);
-    let slab_b = unbase::Slab::new(&net);
-
-    let _context_a = slab_a.create_context();
-    let _context_b = slab_b.create_context();
-
-    thread::sleep(time::Duration::from_millis(100));
-
-    println!("Slab A MemoRefs present {}", slab_a.count_of_memorefs_resident() );
-    println!("Slab A MemoRefs present {}", slab_b.count_of_memorefs_resident() );
-
-    println!("Slab A Memos received {}", slab_a.count_of_memos_received() );
-    println!("Slab B Memos received {}", slab_a.count_of_memos_received() );
-
-}
-
 fn remote_traversal_nondeterministic() {
 
+
     let net = unbase::Network::new();
+    // Automatically uses LocalDirect, which should be much faster than the simulator, but is also nondeterministic.
+    // This will be used in production for slabs that cohabitate the same process
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
@@ -79,25 +62,26 @@ fn remote_traversal_nondeterministic() {
     let context_a = slab_a.create_context();
     let _context_b = slab_b.create_context();
 
-    //let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").unwrap();
+    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").unwrap();
 
-    //rec_a1.set_value("animal_sound","Woof");
-    //rec_a1.set_value("animal_sound","Meow");
+    rec_a1.set_value("animal_sound","Woof");
+    rec_a1.set_value("animal_sound","Meow");
 
-    thread::sleep(time::Duration::from_millis(5000));
+    thread::sleep(time::Duration::from_millis(50));
 
-    //slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() );
+    slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() );
 
-    //thread::sleep(time::Duration::from_millis(5000));
+    thread::sleep(time::Duration::from_millis(50));
 
-    //let handle = thread::spawn(move || {
 
-        //assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Meow");
+    let handle = thread::spawn(move || {
 
-    //});
+        assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Meow");
 
-    //thread::sleep(time::Duration::from_millis(5000));
+    });
 
-    //handle.join().unwrap();
+    thread::sleep(time::Duration::from_millis(50));
+
+    handle.join().unwrap();
 
 }

@@ -5,7 +5,7 @@ extern crate serde_json;
 
 use serde::de::*;
 use unbase::subject::Subject;
-use unbase::memo::Memo;
+use unbase::memo::{Memo,PeeringStatus};
 use unbase::slab::Slab;
 use unbase::network::{Network,Packet};
 use unbase::network::packet::serde::PacketSeed;
@@ -41,6 +41,7 @@ fn check_roundtrip(record: &Subject, net: &Network, slab: &Slab){
     let packet = Packet{
         to_slab_id: 1,
         from_slab_id: 0,
+        from_slab_peering_status: PeeringStatus::Resident,
         memo: memo.clone()
     };
 

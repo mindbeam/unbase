@@ -74,9 +74,11 @@ impl MemoRef {
     pub fn is_peered_with_slabref(&self, slabref: &SlabRef) -> bool {
         let shared = self.shared.lock().unwrap();
 
-        shared.peers.iter().any(|peer| {
-            (peer.slabref.slab_id == slabref.slab_id) && peer.status != PeeringStatus::NonParticipating
-        })
+        let status = shared.peers.iter().any(|peer| {
+            (peer.slabref.slab_id == slabref.slab_id && peer.status != PeeringStatus::NonParticipating)
+        });
+
+        status
     }
     pub fn get_memo (&self, slab: &Slab) -> Result<Memo, String> {
         // This seems pretty crude, but using channels for now in the interest of expediency
@@ -124,7 +126,7 @@ impl MemoRef {
 
         false
     }
-    pub fn residentize(&self, slab: &Slab, memo: &Memo) {
+    pub fn residentize(&self, slab: &Slab, memo: &Memo) -> bool {
         println!("# MemoRef({}).residentize()", self.id);
 
         let mut shared = self.shared.lock().unwrap();
@@ -149,6 +151,11 @@ impl MemoRef {
                 peer.slabref.send_memo( &slabref, peering_memo.clone() );
             }
 
+            // residentized
+            true
+        }else{
+            // already resident
+            false
         }
     }
     pub fn remotize(&self, slab: &Slab ) {
@@ -176,7 +183,7 @@ impl MemoRef {
 
         shared.ptr = MemoRefPtr::Remote;
     }
-    pub fn update_peer (&self, slabref: &SlabRef, status: &PeeringStatus){
+    pub fn update_peer (&self, slabref: &SlabRef, status: PeeringStatus){
 
         let mut shared = self.shared.lock().unwrap();
 

@@ -33,16 +33,17 @@ impl Transport for LocalDirect {
     fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
         if let &TransmitterArgs::Local(rcv_slab) = args {
             let rcv_slab = rcv_slab.clone();
-            let (tx_channel, rx_channel) = mpsc::channel::<(SlabId,Memo)>();
+            let (tx_channel, rx_channel) = mpsc::channel::<(SlabRef,PeeringStatus,Memo)>();
 
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
                 //let mut buf = [0; 65536];
-                println!("Started TX Thread");
+                //println!("Started TX Thread");
                 loop {
 
-                    if let Ok((from_slab_id, memo)) = rx_channel.recv() {
-                        println!("CHANNEL RCV {:?}", memo);
-                        rcv_slab.put_memo_from_other_local_slab( from_slab_id, memo );
+                    if let Ok((from_slabref, from_slab_peering_status, memo)) = rx_channel.recv() {
+                        //println!("CHANNEL RCV {:?}", memo);
+
+                        rcv_slab.put_memo(&MemoOrigin::OtherSlab(&from_slabref,from_slab_peering_status), memo);
                     }else{
                         break;
                     }
