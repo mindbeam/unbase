@@ -6,6 +6,7 @@ use super::*;
 use std::fmt;
 use network::Network;
 use memorefhead::serde::*;
+use util::serde::*;
 
 impl Serialize for Memo {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -24,10 +25,10 @@ impl Serialize for Memo {
 
 /*
     SlabPresence(SlabPresence),
-    Relation(HashMap<u8,(SubjectId,MemoRefHead)>),
+    Relation(HashMap<RelationSlotId,(SubjectId,MemoRefHead)>),
     Edit(HashMap<String, String>),
-    FullyMaterialized     { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
-    PartiallyMaterialized { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
+    FullyMaterialized     { v: HashMap<String, String>, r: HashMap<RelationSlotId,(SubjectId,MemoRefHead)> },
+    PartiallyMaterialized { v: HashMap<String, String>, r: HashMap<RelationSlotId,(SubjectId,MemoRefHead)> },
     Peering(MemoId,SlabRef,PeeringStatus),
     MemoRequest(Vec<MemoId>,SlabRef)
 */
@@ -151,7 +152,7 @@ impl<'a> Visitor for MemoBodySeed<'a> {
     {
 
         match try!(visitor.visit_variant()) {
-            (MBVariant::SlabPresence,      variant) => variant.visit_newtype().map(MemoBody::SlabPresence),
+            (MBVariant::SlabPresence,      variant) => variant.visit_newtype_seed(MBSlabPresenceSeed{ net: self.net }),
             (MBVariant::Relation,          variant) => variant.visit_newtype_seed(RelationMRHSeed{ net: self.net }).map(MemoBody::Relation),
             (MBVariant::Edit,              variant) => variant.visit_newtype().map(MemoBody::Edit),
             (MBVariant::FullyMaterialized, variant) => variant.visit_newtype_seed(MBFullyMaterializedSeed{ net: self.net }),
@@ -197,7 +198,7 @@ impl Visitor for MBVariantVisitor
 
 struct RelationMRHSeed<'a> { net: &'a Network }
 impl<'a> DeserializeSeed for RelationMRHSeed<'a> {
-    type Value = HashMap<u8,(SubjectId,MemoRefHead)>;
+    type Value = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
 
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
@@ -207,7 +208,7 @@ impl<'a> DeserializeSeed for RelationMRHSeed<'a> {
 }
 
 impl<'a> Visitor for RelationMRHSeed<'a> {
-    type Value = HashMap<u8,(SubjectId,MemoRefHead)>;
+    type Value = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("MemoBody::Relation")
@@ -223,6 +224,44 @@ impl<'a> Visitor for RelationMRHSeed<'a> {
         }
 
         Ok(values)
+    }
+}
+
+struct MBSlabPresenceSeed <'a> { net: &'a Network }
+impl<'a> DeserializeSeed for MBSlabPresenceSeed<'a> {
+    type Value = MemoBody;
+
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+        where D: Deserializer
+    {
+        deserializer.deserialize(self)
+    }
+}
+
+impl<'a> Visitor for MBSlabPresenceSeed<'a> {
+    type Value = MemoBody;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("MemoBody::SlabPresence")
+    }
+    fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
+        where Visitor: MapVisitor,
+    {
+
+        let mut presence  = None;
+        let mut root_index_seed : Option<Option<MemoRefHead>>   = None;
+        while let Some(key) = visitor.visit_key()? {
+            match key {
+                'p' => presence        = visitor.visit_value()?,
+                'r' => root_index_seed = Some(visitor.visit_value_seed(OptionSeed(MemoRefHeadSeed{ net: self.net }))?),
+                _   => {}
+            }
+        }
+        if presence.is_some() &&root_index_seed.is_some() {
+            Ok(MemoBody::SlabPresence{ p: presence.unwrap(), r: root_index_seed.unwrap() })
+        }else{
+            Err(de::Error::invalid_length(0, &self))
+        }
     }
 }
 

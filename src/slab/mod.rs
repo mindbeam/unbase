@@ -63,6 +63,8 @@ pub struct WeakSlab{
 pub enum MemoOrigin<'a>{
     SameSlab,
     OtherSlab(&'a SlabRef, PeeringStatus)
+    // TODO: consider bifurcation into OtherSlabTrusted, OtherSlabUntrusted
+    //       in cases where we want to reduce computational complexity by foregoing verification
 }
 
 impl Slab {
@@ -121,22 +123,7 @@ impl Slab {
         let my_ref : SlabRef = self.inner.my_ref.lock().unwrap().clone().unwrap();
         my_ref
     }
-    pub fn generate_root_index_seed(&self) -> MemoRefHead {
-
-        let mut values = HashMap::new();
-        values.insert("tier".to_string(),0.to_string());
-
-        let memo = Memo::new_basic_noparent(
-            self.gen_memo_id(),
-            self.generate_subject_id(),
-            MemoBody::FullyMaterialized {v: values, r: HashMap::new() } // TODO: accept relations
-        );
-
-        let memorefs = self.put_memos(&MemoOrigin::SameSlab, vec![ memo.clone() ]);
-
-        MemoRefHead::from_memoref(memorefs[0].clone())
-    }
-    pub fn get_root_index_seed (&self) -> MemoRefHead {
+    pub fn get_root_index_seed (&self) -> Option<MemoRefHead> {
         let net;
         {
             let shared = self.inner.shared.lock().unwrap();
@@ -285,27 +272,9 @@ impl SlabShared {
             panic!("Invalid state - Missing my_ref")
         }
     }
-    /*pub fn put_memo_from_other_local_slab(&mut self, from_slab_id: SlabId, memo: Memo){
-
-        //TODO: optimize the slabref retrieval
-        //      probably makes sense to issue transmitters per each origin, rather than sharing them.
-        //      could use the same send channel. This would also
-
-        let origin_slabref : &SlabRef = match self.peer_refs.iter().find(|x| x.slab_id == from_slab_id ) {
-            Some(ref peer) => peer,
-            None => {
-                if let Some(ref slab) = self.net.get_slab(from_slab_id) {
-                    let peer = slab.get_ref();
-                    self.peer_refs.insert(0,peer.clone());
-                    &peer
-                }else{
-                    panic!("sanity error - should be able to retrieve the slabref for a local slab id")
-                }
-            }
-        };
-
-        self.put_memos( &MemoOrigin::OtherSlab(origin_slabref), vec![memo] );
-    }*/
+    pub fn get_root_index_seed (&self) -> Option<MemoRefHead> {
+        self.net.get_root_index_seed( &self.get_my_slab() )
+    }
     pub fn put_memos<'a> (&mut self, memo_origin: &MemoOrigin, memos: Vec<Memo> ) -> Vec<MemoRef> {
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
         println!("# SlabShared({}).put_memos({:?},{:?})", self.id, memo_origin, mids );

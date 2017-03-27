@@ -5,7 +5,7 @@ use std::{thread, time};
 #[test]
 fn test_init() {
 
-    let net = unbase::Network::new();
+    let net = unbase::Network::create_new_system();
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
@@ -34,7 +34,7 @@ fn test_init() {
 #[test]
 fn avoid_unnecessary_chatter() {
 
-    let net = unbase::Network::new();
+    let net = unbase::Network::create_new_system();
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);

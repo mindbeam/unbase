@@ -60,7 +60,7 @@ impl MemoRefHead {
         }
         None
     }
-    pub fn project_relation ( &self, context: &Context, key: u8 ) -> Result<(SubjectId,Self), RetrieveError> {
+    pub fn project_relation ( &self, context: &Context, key: RelationSlotId ) -> Result<(SubjectId,Self), RetrieveError> {
         // TODO: Make error handling more robust
 
         for memo in self.causal_memo_iter( context.get_slab() ) {

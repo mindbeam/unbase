@@ -3,6 +3,7 @@ use serde::*;
 use serde::ser::*;
 use serde::de::*;
 use network::slabref::serde::*;
+use util::serde::VecSeed;
 
 impl Serialize for MemoRef {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -17,6 +18,16 @@ impl Serialize for MemoRef {
             &MemoRefPtr::Resident(_) => seq.serialize_element(&true)?,
         };
         seq.serialize_element(&shared.peers)?;
+        seq.end()
+    }
+}
+impl Serialize for MemoPeer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(2))?;
+        seq.serialize_element(&self.slabref)?;
+        seq.serialize_element(&self.status)?;
         seq.end()
     }
 }
@@ -60,7 +71,8 @@ impl<'a> Visitor for MemoRefSeed<'a> {
                return Err(de::Error::invalid_length(2, &self));
            }
         };
-        let peers: Vec<MemoPeer> = match visitor.visit_seed( MemoPeerVecSeed{ net: self.net })? {
+
+        let peers: Vec<MemoPeer> = match visitor.visit_seed( VecSeed( MemoPeerSeed{ net: self.net } ) )? {
            Some(value) => value,
            None => {
                return Err(de::Error::invalid_length(3, &self));
@@ -85,25 +97,24 @@ impl<'a> Visitor for MemoRefSeed<'a> {
     }
 }
 
+#[derive(Clone)]
 pub struct MemoPeerSeed<'a> { net: &'a Network }
-struct MemoPeerVisitor<'a> { net: &'a Network }
 
 impl<'a> DeserializeSeed for MemoPeerSeed<'a> {
     type Value = MemoPeer;
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
-        deserializer.deserialize_seq(MemoPeerVisitor{ net: self.net })
+        deserializer.deserialize_seq(self)
     }
 }
 
-impl<'a> Visitor for MemoPeerVisitor<'a> {
+impl<'a> Visitor for MemoPeerSeed<'a> {
     type Value = MemoPeer;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-       formatter.write_str("struct MemoRef")
+       formatter.write_str("struct MemoPeer")
     }
-
     fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
        where V: SeqVisitor
     {
@@ -124,38 +135,5 @@ impl<'a> Visitor for MemoPeerVisitor<'a> {
            slabref: slabref,
            status: status
        })
-    }
-}
-
-pub struct MemoPeerVecSeed<'a> { net: &'a Network }
-struct MemoPeerVecVisitor<'a> { net: &'a Network }
-
-impl<'a> DeserializeSeed for MemoPeerVecSeed<'a> {
-    type Value = Vec<MemoPeer>;
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-        where D: Deserializer
-    {
-        deserializer.deserialize_seq(MemoPeerVecVisitor{ net: self.net })
-    }
-}
-
-impl<'a> Visitor for MemoPeerVecVisitor<'a> {
-    type Value = Vec<MemoPeer>;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-       formatter.write_str("Sequence of MemoPeers")
-    }
-
-    fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
-       where V: SeqVisitor
-    {
-
-        let mut memopeers : Vec<MemoPeer> = Vec::new();
-
-        while let Some(memopeer) = visitor.visit_seed( MemoPeerSeed{ net: self.net })? {
-            memopeers.push(memopeer);
-        };
-
-        Ok(memopeers)
     }
 }

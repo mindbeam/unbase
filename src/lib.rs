@@ -16,6 +16,7 @@ pub mod context;
 pub mod error;
 pub mod index;
 pub mod memorefhead;
+pub mod util;
 
 pub use network::Network;
 pub use slab::Slab;

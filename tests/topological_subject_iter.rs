@@ -4,7 +4,7 @@ use unbase::subject::*;
 #[test]
 fn acyclic() {
 
-    let net = unbase::Network::new();
+    let net = unbase::Network::create_new_system();
     let simulator = unbase::network::transport::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 

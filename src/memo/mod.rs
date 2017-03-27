@@ -27,11 +27,11 @@ pub enum PeeringStatus{
 
 #[derive(Debug,Serialize,PartialEq)]
 pub enum MemoBody{
-    SlabPresence(SlabPresence),
-    Relation(HashMap<u8,(SubjectId,MemoRefHead)>),
+    SlabPresence{ p: SlabPresence, r: Option<MemoRefHead> }, // TODO: split out root_index_seed conveyance to another memobody type
+    Relation(HashMap<RelationSlotId,(SubjectId,MemoRefHead)>),
     Edit(HashMap<String, String>),
-    FullyMaterialized     { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
-    PartiallyMaterialized { v: HashMap<String, String>, r: HashMap<u8,(SubjectId,MemoRefHead)> },
+    FullyMaterialized     { v: HashMap<String, String>, r: HashMap<RelationSlotId,(SubjectId,MemoRefHead)> },
+    PartiallyMaterialized { v: HashMap<String, String>, r: HashMap<RelationSlotId,(SubjectId,MemoRefHead)> },
     Peering(MemoId,SlabPresence,PeeringStatus),
     MemoRequest(Vec<MemoId>,SlabRef)
 }
@@ -114,7 +114,7 @@ impl Memo {
             _   => None
         }
     }
-    pub fn get_relations (&self) -> Option<(HashMap<u8, (SubjectId, MemoRefHead)>,bool)> {
+    pub fn get_relations (&self) -> Option<(HashMap<RelationSlotId, (SubjectId, MemoRefHead)>,bool)> {
 
         match self.inner.body {
             MemoBody::Relation(ref r)
@@ -132,7 +132,7 @@ impl Memo {
             MemoBody::Peering(_,_,_) => {
                 false
             }
-            MemoBody::SlabPresence(_) => {
+            MemoBody::SlabPresence{p:_, r:_} => {
                 false
             }
             _ => {

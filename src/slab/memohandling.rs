@@ -19,29 +19,43 @@ impl SlabShared {
 
         match memo.inner.body {
             // This Memo is a peering status update for another memo
-            MemoBody::SlabPresence( ref presence ) => {
-                let mentioned_slabref = SlabRef::new_from_presence( presence, &self.net );
+            MemoBody::SlabPresence{ p: ref presence, r: ref opt_root_index_seed } => {
+                let should_process;
 
-                if self.inject_peer_slabref( mentioned_slabref ) {
-                    // TODO: should we be telling the origin slabref, or the presence slabref that we're here?
-                    //       these will usually be the same, but not always
+                match opt_root_index_seed{
+                    &Some(ref root_index_seed) => {
+                        should_process = self.net.apply_root_index_seed( &presence, root_index_seed );
+                    }
+                    &None => {
+                        should_process = true;
+                    }
+                }
 
-                    // Get the address that the remote slab would recogize
-                    if let &Some(ref my_local_address) = origin_slabref.get_local_return_address() {
-                        let my_presence = SlabPresence {
-                            slab_id: my_slab.id,
-                            transport_address: my_local_address.clone(),
-                            anticipated_lifetime: SlabAnticipatedLifetime::Unknown
-                        };
+                if should_process {
 
-                        let my_presence_memo = Memo::new_basic(
-                            my_slab.gen_memo_id(),
-                            0,
-                            MemoRefHead::from_memoref(memoref.clone()),
-                            MemoBody::SlabPresence( my_presence )
-                        );
+                    let mentioned_slabref = SlabRef::new_from_presence( presence, &self.net );
 
-                        origin_slabref.send_memo( &my_ref, my_presence_memo );
+                    if self.inject_peer_slabref( mentioned_slabref ) {
+                        // TODO: should we be telling the origin slabref, or the presence slabref that we're here?
+                        //       these will usually be the same, but not always
+
+                        // Get the address that the remote slab would recogize
+                        if let &Some(ref my_local_address) = origin_slabref.get_local_return_address() {
+                            let my_presence = SlabPresence {
+                                slab_id: my_slab.id,
+                                transport_address: my_local_address.clone(),
+                                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                            };
+
+                            let my_presence_memo = Memo::new_basic(
+                                my_slab.gen_memo_id(),
+                                0,
+                                MemoRefHead::from_memoref(memoref.clone()),
+                                MemoBody::SlabPresence{ p: my_presence, r: self.get_root_index_seed() }
+                            );
+
+                            origin_slabref.send_memo( &my_ref, my_presence_memo );
+                        }
                     }
                 }
             }

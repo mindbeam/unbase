@@ -103,7 +103,7 @@ impl TransportUDP {
             let hello = Memo::new_basic_noparent(
                 my_slab.gen_memo_id(),
                 0,
-                MemoBody::SlabPresence(presence)
+                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed(&my_slab) }
             );
 
             self.send(
@@ -176,22 +176,33 @@ impl Transport for TransportUDP {
 
                     //TODO: create a protocol encode/decode module and abstract away the serde stuff
                     //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
-                    let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
-                    let packet : Packet;
-                    {
-                        let packet_seed : PacketSeed = PacketSeed{ net: &net };
-                        packet = packet_seed.deserialize(&mut deserializer).unwrap();
-                    }
+                    println!("DESERIALIZE {}", String::from_utf8(buf.to_vec()).unwrap());
 
-                    // TODO: create packet.get_presence ?
-                    // TODO: cache this
-                    let from_presence =  SlabPresence{
-                        slab_id: packet.from_slab_id,
-                        transport_address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
-                        anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                    let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
+
+                    let maybe_packet = {
+                        let packet_seed : PacketSeed = PacketSeed{ net: &net };
+                        packet_seed.deserialize(&mut deserializer)
                     };
 
-                    net.distribute_memos(&from_presence, packet);
+                    match maybe_packet {
+                        Ok(packet) => {
+                            // TODO: create packet.get_presence ?
+                            // TODO: cache this
+                            let from_presence =  SlabPresence{
+                                slab_id: packet.from_slab_id,
+                                transport_address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
+                                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                            };
+
+                            net.distribute_memos(&from_presence, packet);
+                        },
+                        Err(e) =>{
+                            println!("DESERIALIZE ERROR {}", e);
+                        }
+                    }
+
+
 
                 }
             };
@@ -247,68 +258,9 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
             memo: memo
         };
 
-        // useful for debugging
-        //let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
-        //println!("SERIALIZE {:?}", String::from_utf8(b));
+        let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
+        println!("UDP SEND {}", String::from_utf8(b).unwrap() );
 
         self.tx_channel.lock().unwrap().send((self.address.clone(), packet)).unwrap();
     }
 }
-
-
-/*
-struct TransportUDPDispatcher{
-    net: WeakNet,
-    slabmap: HashMap<SlabId, Slab>,
-}
-
-impl TransportUDPDispatcher{
-    pub fn got_packet(&mut self, buf: &str, source: &str) {
-        if let packet = serde_json::from_str(buf) {
-
-            let envelope = self.active_envelopes.entry((source,packet.envelope_id))
-                .or_insert( Envelope::new(source, packet.envelope_id) );
-            envelope.add_packet( packet );
-
-            if ( envelope.is_dispatchable() ){
-                let slab = match self.slabmap.entry( envelope.slab_id ) {
-                    Entry::Occupied(e) => {
-                        e.get().clone()
-                    }
-                    Entry::Vacant(e) => {
-                        match net.upgrade().unwrap().get_slab( envelope.slab_id ) {
-                            Some(slab) => {
-                                e.set(slab)
-                            }
-                            None => {
-                                self.active_envelopes.delete();
-                                return;
-                            }
-                        }
-                    }
-                };
-
-                slab.put_memos( MemoOrigin::Other, envelope.yield_memos() );
-                if envelope.is_completed() {
-                    self.slabmap.remove()
-                }
-            }
-
-        }
-
-        // deserialize packet
-        // assemble envelope
-        // ask envelope for dest slabs
-        // dispatch envelope memos to each dest slab we can find
-        self.got_packet()
-
-
-        if let Some(_net) = weak_net.upgrade() {
-            println!("GOT DATAGRAM ({}, {}, {:?})", amt, src, str::from_utf8(&buf[0..amt]).unwrap() );
-
-        }else{
-            break;
-        }
-    }
-}
-*/

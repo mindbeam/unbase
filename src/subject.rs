@@ -106,7 +106,7 @@ impl Subject {
         let shared = self.shared.lock().unwrap();
         shared.head.project_value(&shared.context, key)
     }
-    pub fn get_relation ( &self, key: u8 ) -> Result<Subject, RetrieveError> {
+    pub fn get_relation ( &self, key: RelationSlotId ) -> Result<Subject, RetrieveError> {
         println!("# Subject({}).get_relation({})",self.id,key);
 
         let shared = self.shared.lock().unwrap();
@@ -142,9 +142,9 @@ impl Subject {
 
         true
     }
-    pub fn set_relation (&self, key: u8, relation: &Self) {
+    pub fn set_relation (&self, key: RelationSlotId, relation: &Self) {
         println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
-        let mut memoref_map : HashMap<u8, (SubjectId,MemoRefHead)> = HashMap::new();
+        let mut memoref_map : HashMap<RelationSlotId, (SubjectId,MemoRefHead)> = HashMap::new();
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
         let slab;

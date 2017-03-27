@@ -8,6 +8,7 @@ pub use self::slabref::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
 pub use self::transport::{Transport};
 pub use self::packet::Packet;
 use self::transport::*;
+use util::system_creator::SystemCreator;
 
 use std::sync::{Arc, Weak, Mutex};
 use std::fmt;
@@ -19,7 +20,8 @@ struct NetworkInternals {
     slabs:     Vec<WeakSlab>,
     slab_refs: Vec<SlabRef>,
     transports: Vec<Box<Transport + Send + Sync>>,
-    root_index_seed: Option<MemoRefHead>
+    root_index_seed: Option<MemoRefHead>,
+    create_new_system: bool
 }
 
 struct NetworkShared {
@@ -35,14 +37,25 @@ pub struct WeakNetwork {
 }
 
 impl Network {
+    /// Create a new network struct
+    /// In production, this is the one you want
     pub fn new () -> Network {
+        Self::new_inner(false)
+    }
+    /// In test cases, you want to create a wholly new unbase system.
+    /// You should not be using this in production, except the *first* time ever for that system
+    pub fn create_new_system () -> Network {
+        Self::new_inner(true)
+    }
+    fn new_inner (create_new_system: bool) -> Network {
 
         let internals = NetworkInternals {
             next_slab_id: 0,
             slabs:     Vec::new(),
             slab_refs: Vec::new(),
             transports: Vec::new(),
-            root_index_seed: None
+            root_index_seed: None,
+            create_new_system: create_new_system
         };
 
         let shared = NetworkShared {
@@ -192,20 +205,52 @@ impl Network {
         slab_ref
     }
 
-    pub fn get_root_index_seed(&self, slab: &Slab) -> MemoRefHead {
+    pub fn get_root_index_seed(&self, slab: &Slab) -> Option<MemoRefHead> {
 
         let mut internals = self.shared.internals.lock().unwrap();
 
         match internals.root_index_seed {
             Some(ref s) => {
-                return s.clone()
+                return Some(s.clone())
             }
             None => {}
         }
 
-        let seed = slab.generate_root_index_seed();
-        internals.root_index_seed = Some(seed.clone());
-        seed
+        if internals.create_new_system {
+            // I'm a new system, so I can do this!
+            let seed = SystemCreator::generate_root_index_seed( &slab );
+            internals.root_index_seed = Some(seed.clone());
+            return Some(seed);
+        }else{
+            None
+        }
+    }
+
+    /// When we receive a root_index_seed from a peer slab that's already attached to a system,
+    /// we need to apply it in order to "join" the same system
+    ///
+    /// TODO: how do we decide if we want to accept this?
+    ///       do we just take any system seed that is sent to us when unseeded?
+    ///       Probably good enough for Alpha, but obviously not good enough for Beta
+    pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &MemoRefHead ) -> bool {
+        let mut internals = self.shared.internals.lock().unwrap();
+
+        match internals.root_index_seed {
+            Some(_) => {
+                // TODO: scrutinize the received root_index_seed to see if our existing seed descends it, or it descends ours
+                //       if neither is the case ( apply currently allows this ) then reject the root_index_seed and return false
+                //       this is use to determine if the SlabPresence should be blackholed or not
+
+                // let did_apply : bool = internals.root_index_seed.apply_disallow_diverse_root(  root_index_seed )
+                // did_apply
+
+                true // be lenient for now. Not ok for Alpha
+            }
+            None => {
+                internals.root_index_seed = Some(root_index_seed.clone());
+                true
+            }
+        }
     }
 }
 

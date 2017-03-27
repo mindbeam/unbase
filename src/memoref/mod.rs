@@ -16,7 +16,7 @@ pub struct MemoRef {
     pub subject_id: Option<SubjectId>,
     shared: Arc<Mutex<MemoRefShared>>
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct MemoPeer {
     slabref: SlabRef,
     status: PeeringStatus

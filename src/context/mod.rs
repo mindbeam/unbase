@@ -55,7 +55,7 @@ impl Context{
             })
         };
 
-        let index = IndexFixed::new_from_memorefhead(&new_self, 5, slab.get_root_index_seed() );
+        let index = IndexFixed::new_from_memorefhead(&new_self, 5, slab.get_root_index_seed().expect("Uninitialized slab") );
 
         {
             *new_self.inner.root_index.lock().unwrap() = Some(index);
@@ -104,7 +104,7 @@ impl Context{
     2. It was always sort of a hack that the subject was managing subscriptions
        in this way anyways. Lets put together a more final version of the subscriptions
        before we bother with fixing unsubscription
-       
+
         {
             let mut shared = self.inner.shared.lock().unwrap();
             shared.subjects.remove( &subject_id );

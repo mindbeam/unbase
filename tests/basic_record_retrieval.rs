@@ -4,7 +4,7 @@ use unbase::subject::*;
 #[test]
 fn basic_record_retrieval() {
 
-    let net = unbase::Network::new();
+    let net = unbase::Network::create_new_system();
     let slab_a = unbase::Slab::new(&net);
     let context_a = slab_a.create_context();
 
@@ -24,7 +24,7 @@ fn basic_record_retrieval() {
 #[test]
 fn basic_record_retrieval_simulator() {
 
-    let net = unbase::Network::new();
+    let net = unbase::Network::create_new_system();
     let simulator = unbase::network::transport::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 

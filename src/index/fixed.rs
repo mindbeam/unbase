@@ -1,6 +1,6 @@
 use context::Context;
 use subject::*;
-use memorefhead::MemoRefHead;
+use memorefhead::{MemoRefHead,RelationSlotId};
 use error::RetrieveError;
 use std::collections::HashMap;
 
@@ -47,14 +47,14 @@ impl IndexFixed {
         // allow for SUBJECT_MAX_RELATIONS <> 256. Values like 128, 512, 1024 may not be entirely ridiculous
         let exponent : u32 = (self.depth as u32 - 1) - tier as u32;
         let x = SUBJECT_MAX_RELATIONS.pow(exponent as u32);
-        let y = ((key / (x as u64)) % SUBJECT_MAX_RELATIONS as u64) as u8;
+        let y = ((key / (x as u64)) % SUBJECT_MAX_RELATIONS as u64) as RelationSlotId;
 
         println!("Tier {}, {}, {}", tier, x, y );
 
         if exponent == 0 {
             // BUG: move this clause up
             println!("]]] end of the line");
-            node.set_relation(y as u8,&subject);
+            node.set_relation(y as RelationSlotId,&subject);
         }else{
             match node.get_relation(y) {
                 Ok(n) => {
@@ -68,7 +68,7 @@ impl IndexFixed {
                     values.insert("tier".to_string(),tier.to_string());
 
                     let new_node = Subject::new( &self.context, values, true ).unwrap();
-                    node.set_relation(y as u8,&new_node);
+                    node.set_relation(y,&new_node);
 
                     self.recurse_set(tier+1, key, &new_node, subject);
 
@@ -94,12 +94,12 @@ impl IndexFixed {
         for tier in 0..self.depth {
             let exponent = (self.depth - 1) - tier;
             let x = max.pow(exponent as u32);
-            let y = ((key / (x as u64)) % max) as u8;
+            let y = ((key / (x as u64)) % max) as RelationSlotId;
             println!("Tier {}, {}, {}", tier, x, y );
 
             if exponent == 0 {
                 println!("]]] end of the line");
-                return node.get_relation(y as u8);
+                return node.get_relation(y as RelationSlotId);
 
             }else{
                 if let Ok(n) = node.get_relation(y){
