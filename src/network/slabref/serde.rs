@@ -7,7 +7,7 @@ impl Serialize for SlabRef {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        if let TransportAddress::Local = self.presence.transport_address {
+        if let TransportAddress::Local = self.presence.address {
             use std::{thread,time};
             thread::sleep( time::Duration::from_secs(2) );
             panic!("Illegal to serialize TransportAddress::Local");

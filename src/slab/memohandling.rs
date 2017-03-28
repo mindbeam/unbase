@@ -43,8 +43,8 @@ impl SlabShared {
                         if let &Some(ref my_local_address) = origin_slabref.get_local_return_address() {
                             let my_presence = SlabPresence {
                                 slab_id: my_slab.id,
-                                transport_address: my_local_address.clone(),
-                                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                                address: my_local_address.clone(),
+                                lifetime: SlabAnticipatedLifetime::Unknown
                             };
 
                             let my_presence_memo = Memo::new_basic(
@@ -121,8 +121,8 @@ impl SlabShared {
                         memo.id,
                         SlabPresence {
                             slab_id:  self.id,
-                            transport_address: my_return_address.clone(),
-                            anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                            address: my_return_address.clone(),
+                            lifetime: SlabAnticipatedLifetime::Unknown
                         },
                         PeeringStatus::Resident
                     )

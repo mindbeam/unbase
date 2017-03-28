@@ -43,5 +43,14 @@ pub trait Transport {
 }
 
 impl TransportAddress {
+    pub fn to_string (&self) -> String {
 
+        use self::TransportAddress::*;
+        match self {
+            &Simulator   => "Simulator".to_string(),
+            &Local       => "Local".to_string(),
+            &UDP(ref a)  => a.to_string(),
+            _            => "UNKNOWN".to_string(),
+        }
+    }
 }

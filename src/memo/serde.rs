@@ -178,7 +178,7 @@ impl Visitor for MBVariantVisitor
     type Value = MBVariant;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-       formatter.write_str("RelationSlotId")
+       formatter.write_str("MemoBody Variant")
     }
     fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
         where E: de::Error
@@ -217,10 +217,11 @@ impl<'a> Visitor for RelationMRHSeed<'a> {
     fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
         where Visitor: MapVisitor,
     {
-        let mut values = HashMap::new();
+        let mut values : Self::Value = HashMap::new();
 
-        while let Some((slot, (subject_id,mrh))) = try!(visitor.visit_seed(RelationSlotIdSeed, SubjectMRHSeed{ net: self.net })) {
-            values.insert(slot, (subject_id,mrh));
+        while let Some(slot) = visitor.visit_key()? {
+             let (subject_id ,mrh ) = visitor.visit_value_seed(SubjectMRHSeed{ net: self.net })?;
+             values.insert(slot, (subject_id,mrh));
         }
 
         Ok(values)

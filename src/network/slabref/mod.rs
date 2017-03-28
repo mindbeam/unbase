@@ -27,11 +27,11 @@ pub enum SlabAnticipatedLifetime{
     Unknown
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct SlabPresence{
     pub slab_id: SlabId,
-    pub transport_address: TransportAddress,
-    pub anticipated_lifetime: SlabAnticipatedLifetime
+    pub address: TransportAddress,
+    pub lifetime: SlabAnticipatedLifetime
 }
 
 #[derive(Clone)]
@@ -49,7 +49,7 @@ struct SlabRefInner {
 impl SlabRef{
     pub fn new_from_presence ( presence: &SlabPresence, net: &Network ) -> SlabRef {
 
-        match presence.transport_address {
+        match presence.address {
             TransportAddress::Simulator  => {
                 panic!("Invalid - Cannot create simulator slabref from presence")
             }
@@ -59,9 +59,9 @@ impl SlabRef{
             _ => { }
         };
 
-        let args = TransmitterArgs::Remote( &presence.slab_id, &presence.transport_address );
+        let args = TransmitterArgs::Remote( &presence.slab_id, &presence.address );
         let tx = net.get_transmitter( args ).expect("new_from_presence net.get_transmitter");
-        let maybe_local_return_address = net.get_return_address( &presence.transport_address );
+        let maybe_local_return_address = net.get_return_address( &presence.address );
 
         SlabRef {
             slab_id: presence.slab_id,
@@ -81,8 +81,8 @@ impl SlabRef{
             slab_id: slab.id,
             presence: SlabPresence{
                 slab_id: slab.id,
-                transport_address: TransportAddress::Local,
-                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                address: TransportAddress::Local,
+                lifetime: SlabAnticipatedLifetime::Unknown
             },
             inner: Arc::new (SlabRefInner {
                 slab_id: slab.id,
@@ -113,8 +113,17 @@ impl fmt::Debug for SlabRef {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SlabRef")
             .field("slab_id", &self.inner.slab_id)
-            .field("transport_address", &self.presence.transport_address)
-            .field("anticipated_lifetime", &self.presence.anticipated_lifetime)
+            .field("transport_address", &self.presence.address)
+            .field("anticipated_lifetime", &self.presence.lifetime)
+            .finish()
+    }
+}
+impl fmt::Debug for SlabPresence {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("SlabPresence")
+            .field("slab_id", &self.slab_id)
+            .field("address", &self.address.to_string() )
+            .field("lifetime", &self.lifetime)
             .finish()
     }
 }

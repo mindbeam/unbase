@@ -33,6 +33,11 @@ struct TransportUDPInternal {
 pub struct TransportAddressUDP {
     address: String
 }
+impl TransportAddressUDP {
+    pub fn to_string (&self) -> String {
+        "udp:".to_string() + &self.address
+    }
+}
 
 impl TransportUDP {
     pub fn new (address: String) -> Self{
@@ -96,8 +101,8 @@ impl TransportUDP {
 
             let presence = SlabPresence {
                 slab_id: my_slab.id,
-                transport_address: TransportAddress::UDP( my_address.clone() ),
-                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                address: TransportAddress::UDP( my_address.clone() ),
+                lifetime: SlabAnticipatedLifetime::Unknown
             };
 
             let hello = Memo::new_basic_noparent(
@@ -155,7 +160,6 @@ impl Transport for TransportUDP {
     }
 
     fn bind_network(&self, net: &Network) {
-        println!("UDP BIND" );
 
         let mut shared = self.shared.lock().unwrap();
         if let Some(_) = (*shared).rx_thread {
@@ -176,8 +180,7 @@ impl Transport for TransportUDP {
 
                     //TODO: create a protocol encode/decode module and abstract away the serde stuff
                     //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
-                    println!("DESERIALIZE {}", String::from_utf8(buf.to_vec()).unwrap());
-
+                    //println!("DESERIALIZE {}", String::from_utf8(buf.to_vec()).unwrap());
                     let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
 
                     let maybe_packet = {
@@ -191,10 +194,10 @@ impl Transport for TransportUDP {
                             // TODO: cache this
                             let from_presence =  SlabPresence{
                                 slab_id: packet.from_slab_id,
-                                transport_address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
-                                anticipated_lifetime: SlabAnticipatedLifetime::Unknown
+                                address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
+                                lifetime: SlabAnticipatedLifetime::Unknown
                             };
-
+                            println!("GOT {:?}", packet);
                             net.distribute_memos(&from_presence, packet);
                         },
                         Err(e) =>{
@@ -258,8 +261,8 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
             memo: memo
         };
 
-        let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
-        println!("UDP SEND {}", String::from_utf8(b).unwrap() );
+        //let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
+        //println!("UDP SEND {}", String::from_utf8(b).unwrap() );
 
         self.tx_channel.lock().unwrap().send((self.address.clone(), packet)).unwrap();
     }

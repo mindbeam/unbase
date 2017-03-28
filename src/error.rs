@@ -4,5 +4,6 @@ pub enum RetrieveError {
     NotFoundByDeadline,
     AccessDenied,
     InvalidMemoRefHead,
-    IndexNotInitialized
+    IndexNotInitialized,
+    SlabError
 }

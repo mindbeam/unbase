@@ -7,7 +7,7 @@ use subject::*;
 use memorefhead::MemoRefHead;
 use std::sync::{Arc,Mutex};
 use std::fmt;
-use std::error::Error;
+use error::RetrieveError;
 
 
 #[derive(Clone)]
@@ -80,37 +80,55 @@ impl MemoRef {
 
         status
     }
-    pub fn get_memo (&self, slab: &Slab) -> Result<Memo, String> {
+    pub fn get_memo (&self, slab: &Slab) -> Result<Memo,RetrieveError> {
         // This seems pretty crude, but using channels for now in the interest of expediency
         let channel;
-
         {
             let shared = self.shared.lock().unwrap();
             if let MemoRefPtr::Resident(ref memo) = shared.ptr {
                 return Ok(memo.clone());
             }
 
-            let slabref = slab.get_ref();
-            let request_memo = Memo::new_basic(
-                slab.gen_memo_id(),
-                0,
-                MemoRefHead::new(), // TODO: how should this be parented?
-                MemoBody::MemoRequest(vec![self.id],slabref.clone())
-            );
-
-            channel = slab.memo_wait_channel(self.id);
-
-            for peer in shared.peers.iter().take(5) {
-                peer.slabref.send_memo( &slabref, request_memo.clone() );
+            if shared.send_memo_requests( &self.id, &slab ) > 0 {
+                channel = slab.memo_wait_channel(self.id);
+            }else{
+                return Err(RetrieveError::NotFound)
             }
         }
 
+
         // By sending the memo itself through the channel
         // we guarantee that there's no funny business with request / remotize timing
-        match channel.recv() {
-            Ok(memo)       => Ok(memo),
-            Err(rcv_error) => Err(rcv_error.description().to_string()) // HACK
+
+
+        use std::time;
+        let timeout = time::Duration::from_millis(2000);
+
+        for _ in 1..3 {
+
+            match channel.recv_timeout(timeout) {
+                Ok(memo)       =>{
+                    return Ok(memo)
+                }
+                Err(rcv_error) => {
+                    use std::sync::mpsc::RecvTimeoutError::*;
+                    match rcv_error {
+                        Timeout => {
+                        }
+                        Disconnected => {
+                            return Err(RetrieveError::SlabError)
+                        }
+                    }
+                }
+            }
+
+            if self.shared.lock().unwrap().send_memo_requests( &self.id, &slab ) == 0 {
+                return Err(RetrieveError::NotFound)
+            }
+
         }
+
+        Err(RetrieveError::NotFoundByDeadline)
 
     }
     pub fn descends (&self, memoref: &MemoRef, slab: &Slab) -> bool {
@@ -222,5 +240,26 @@ impl fmt::Debug for MemoRef{
            .field("peers", &shared.peers)
            .field("ptr", &shared.ptr)
            .finish()
+    }
+}
+
+
+impl MemoRefShared {
+    fn send_memo_requests (&self, my_memo_id: &MemoId, slab: &Slab) -> u8 {
+        let slabref = slab.get_ref();
+        let request_memo = Memo::new_basic(
+            slab.gen_memo_id(),
+            0,
+            MemoRefHead::new(), // TODO: how should this be parented?
+            MemoBody::MemoRequest(vec![my_memo_id.clone()],slabref.clone())
+        );
+
+        let mut sent = 0u8;
+        for peer in self.peers.iter().take(5) {
+            peer.slabref.send_memo( &slabref, request_memo.clone() );
+            sent += 1;
+        }
+
+        sent
     }
 }

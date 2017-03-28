@@ -35,26 +35,3 @@ impl<'a> Visitor for MemoRefHeadSeed<'a> {
         Ok(MemoRefHead(memorefs))
     }
 }
-
-pub struct RelationSlotIdSeed;
-impl DeserializeSeed for RelationSlotIdSeed {
-    type Value = RelationSlotId;
-    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-        where D: Deserializer
-    {
-        deserializer.deserialize(self)
-    }
-}
-
-impl Visitor for RelationSlotIdSeed {
-    type Value = RelationSlotId;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-       formatter.write_str("RelationSlotId")
-    }
-    fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
-        where E: de::Error
-    {
-        Ok(value as Self::Value)
-    }
-}
