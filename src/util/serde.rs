@@ -1,5 +1,6 @@
 use std::fmt;
 use serde::de::*;
+use network::transport::DynamicDispatchTransmitter;
 
 pub struct VecSeed<S>(pub S);
 

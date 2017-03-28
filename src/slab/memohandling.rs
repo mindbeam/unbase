@@ -22,8 +22,15 @@ impl SlabShared {
             MemoBody::SlabPresence{ p: ref presence, r: ref opt_root_index_seed } => {
                 let should_process;
 
-                match opt_root_index_seed{
+
+                match opt_root_index_seed {
                     &Some(ref root_index_seed) => {
+
+                        // HACK - this should be done inside the deserialize
+                        for memoref in root_index_seed.iter() {
+                            memoref.update_peer(origin_slabref, PeeringStatus::Resident);
+                        }
+
                         should_process = self.net.apply_root_index_seed( &presence, root_index_seed );
                     }
                     &None => {

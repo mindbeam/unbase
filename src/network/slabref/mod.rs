@@ -113,8 +113,8 @@ impl fmt::Debug for SlabRef {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SlabRef")
             .field("slab_id", &self.inner.slab_id)
-            .field("transport_address", &self.presence.address)
-            .field("anticipated_lifetime", &self.presence.lifetime)
+            .field("address", &self.presence.address.to_string())
+            .field("lifetime", &self.presence.lifetime)
             .finish()
     }
 }

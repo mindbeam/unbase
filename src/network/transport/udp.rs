@@ -261,8 +261,14 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
             memo: memo
         };
 
+
+        println!("UDP QUEUE FOR SEND {:?}", &packet);
+
+        //use util::serde::SerializeHelper;
+        //let helper = SerializeHelper{ transmitter: self };
+        //wrapper = SerializeWrapper<Packet>
         //let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
-        //println!("UDP SEND {}", String::from_utf8(b).unwrap() );
+        //println!("UDP QUEUE FOR SEND SERIALIZED {}", String::from_utf8(b).unwrap() );
 
         self.tx_channel.lock().unwrap().send((self.address.clone(), packet)).unwrap();
     }

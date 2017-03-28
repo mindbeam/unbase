@@ -104,7 +104,7 @@ impl MemoRef {
         use std::time;
         let timeout = time::Duration::from_millis(2000);
 
-        for _ in 1..3 {
+        for _ in 0..3 {
 
             match channel.recv_timeout(timeout) {
                 Ok(memo)       =>{
@@ -113,8 +113,7 @@ impl MemoRef {
                 Err(rcv_error) => {
                     use std::sync::mpsc::RecvTimeoutError::*;
                     match rcv_error {
-                        Timeout => {
-                        }
+                        Timeout => {}
                         Disconnected => {
                             return Err(RetrieveError::SlabError)
                         }
@@ -122,6 +121,7 @@ impl MemoRef {
                 }
             }
 
+            // have another go around
             if self.shared.lock().unwrap().send_memo_requests( &self.id, &slab ) == 0 {
                 return Err(RetrieveError::NotFound)
             }
