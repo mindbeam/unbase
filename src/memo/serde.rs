@@ -8,17 +8,16 @@ use network::Network;
 use memorefhead::serde::*;
 use util::serde::*;
 
-impl Serialize for Memo {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+impl StatefulSerialize for Memo {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         let mut seq = serializer.serialize_seq(Some(4))?;
         seq.serialize_element( &self.id )?;
         seq.serialize_element( &self.subject_id )?;
-        seq.serialize_element( &self.inner.parents )?;
-        seq.serialize_element( &self.inner.body )?;
+        seq.serialize_element( &SerializeWrapper( &self.inner.parents, helper ) )?;
+        seq.serialize_element( &SerializeWrapper( &self.inner.body, helper ) )?;
         seq.end()
-
     }
 }
 
@@ -32,34 +31,64 @@ impl Serialize for Memo {
     Peering(MemoId,SlabRef,PeeringStatus),
     MemoRequest(Vec<MemoId>,SlabRef)
 */
-/*
-impl Serialize for MemoBody {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+impl StatefulSerialize for MemoBody {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         use super::MemoBody::*;
         match *self {
-            SlabPresence(ref p) => {
-                serializer.serialize_newtype_struct("SlabPresence",p)
-            },
+            SlabPresence{ ref p, ref r } =>{
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 0, "SlabPresence", 2)?;
+                sv.serialize_field("p", p)?;
+                sv.serialize_field("r", &SerializeWrapper(r, helper))?;
+                sv.end()
+            }
             Relation(ref rhm) => {
-                serializer.serialize_newtype_struct("Relation",rhm)
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 1, "Relation", 1)?;
+                sv.serialize_field("r", &SerializeWrapper(rhm, helper))?;
+                sv.end()
             },
             Edit(ref e) => {
-                serializer.serialize_newtype_struct("Edit",e)
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 2, "Edit", 1)?;
+                sv.serialize_field("e", e )?;
+                sv.end()
             },
             FullyMaterialized{ ref r, ref v }  => {
-                let mut seq = serializer.serialize_seq(Some(2))?;
-                seq.serialize_element( &r )?;
-                seq.serialize_element( &v )?;
-                seq.end()
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 3, "FullyMaterialized", 2)?;
+                sv.serialize_field("r", &SerializeWrapper(r, helper))?;
+                sv.serialize_field("v", v)?;
+                sv.end()
             },
+            Peering( ref memo_id, ref slabpresence, ref peeringstatus ) =>{
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 4, "Peering", 3)?;
+                sv.serialize_field("i", memo_id )?;
+                sv.serialize_field("r", &slabpresence )?;
+                sv.serialize_field("v", peeringstatus)?;
+                sv.end()
+            }
+            MemoRequest( ref memo_ids, ref slabref ) =>{
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 5, "MemoRequest", 2)?;
+                sv.serialize_field("i", memo_ids )?;
+                sv.serialize_field("r", &SerializeWrapper(slabref, helper))?;
+                sv.end()
+            }
             _ => { panic!("woof") }
         }
 
     }
 }
-*/
+
+
+impl StatefulSerialize for (SubjectId,MemoRefHead) {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut seq = serializer.serialize_tuple(2)?;
+        seq.serialize_element( &self.0 )?;
+        seq.serialize_element( &SerializeWrapper( &self.1, helper ) )?;
+        seq.end()
+    }
+}
 
 pub struct MemoSeed<'a> { pub net: &'a Network }
 
@@ -85,25 +114,25 @@ impl<'a> Visitor for MemoSeed<'a>{
        let id: MemoId = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(0, &self));
+               return Err(DeError::invalid_length(0, &self));
            }
        };
        let subject_id: SubjectId = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(1, &self));
+               return Err(DeError::invalid_length(1, &self));
            }
        };
        let parents: MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ net: self.net })? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(2, &self));
+               return Err(DeError::invalid_length(2, &self));
            }
        };
        let body: MemoBody = match visitor.visit_seed(MemoBodySeed{ net: self.net })? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(3, &self));
+               return Err(DeError::invalid_length(3, &self));
            }
        };
 
@@ -181,7 +210,7 @@ impl Visitor for MBVariantVisitor
        formatter.write_str("MemoBody Variant")
     }
     fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-        where E: de::Error
+        where E: DeError
     {
         match value {
             "SlabPresence"            => Ok(MBVariant::SlabPresence),
@@ -191,7 +220,7 @@ impl Visitor for MBVariantVisitor
             "PartiallyMaterialized"   => Ok(MBVariant::PartiallyMaterialized),
             "Peering"                 => Ok(MBVariant::Peering),
             "MemoRequest"             => Ok(MBVariant::MemoRequest),
-            _ => Err(serde::de::Error::unknown_field(value, MEMOBODY_VARIANTS)),
+            _ => Err(serde::DeError::unknown_field(value, MEMOBODY_VARIANTS)),
         }
     }
 }
@@ -261,7 +290,7 @@ impl<'a> Visitor for MBSlabPresenceSeed<'a> {
         if presence.is_some() &&root_index_seed.is_some() {
             Ok(MemoBody::SlabPresence{ p: presence.unwrap(), r: root_index_seed.unwrap() })
         }else{
-            Err(de::Error::invalid_length(0, &self))
+            Err(DeError::invalid_length(0, &self))
         }
     }
 }
@@ -299,7 +328,7 @@ impl<'a> Visitor for MBFullyMaterializedSeed<'a> {
         if relations.is_some() && values.is_some() {
             Ok(MemoBody::FullyMaterialized{ r: relations.unwrap(), v: values.unwrap() })
         }else{
-            Err(de::Error::invalid_length(0, &self))
+            Err(DeError::invalid_length(0, &self))
         }
     }
 }
@@ -330,13 +359,13 @@ impl<'a> Visitor for SubjectMRHSeed<'a> {
         let subject_id : SubjectId = match visitor.visit()? {
             Some(value) => value,
             None => {
-                return Err(de::Error::invalid_length(0, &self));
+                return Err(DeError::invalid_length(0, &self));
             }
         };
         let mrh : MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ net: self.net })? {
             Some(value) => value,
             None => {
-                return Err(de::Error::invalid_length(1, &self));
+                return Err(DeError::invalid_length(1, &self));
             }
         };
 
@@ -368,19 +397,19 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
        let memo_id: MemoId = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(0, &self));
+               return Err(DeError::invalid_length(0, &self));
            }
        };
        let presence: SlabPresence = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(1, &self));
+               return Err(DeError::invalid_length(1, &self));
            }
        };
        let peering_status: PeeringStatus = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(2, &self));
+               return Err(DeError::invalid_length(2, &self));
            }
        };
 

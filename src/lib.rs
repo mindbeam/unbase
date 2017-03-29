@@ -1,3 +1,4 @@
+extern crate core;
 extern crate linked_hash_map;
 extern crate itertools;
 

@@ -68,7 +68,7 @@ impl TransportUDP {
 
                 if let Ok((to_address, packet)) = rx_channel.recv() {
                     let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
-
+                    
                     //HACK: we're trusting that each memo is smaller than 64k
                     socket.send_to(&b, &to_address.address).expect("Failed to send");
                     //println!("SENT UDP PACKET ({}) {:?}", &to_address.address, String::from_utf8(b));
@@ -267,8 +267,8 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
         //use util::serde::SerializeHelper;
         //let helper = SerializeHelper{ transmitter: self };
         //wrapper = SerializeWrapper<Packet>
-        //let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
-        //println!("UDP QUEUE FOR SEND SERIALIZED {}", String::from_utf8(b).unwrap() );
+//        let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
+//        println!("UDP QUEUE FOR SEND SERIALIZED {}", String::from_utf8(b).unwrap() );
 
         self.tx_channel.lock().unwrap().send((self.address.clone(), packet)).unwrap();
     }

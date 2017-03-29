@@ -22,7 +22,7 @@ use error::*;
 
 pub type RelationSlotId = u8;
 
-#[derive(Clone, Serialize, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct MemoRefHead (Vec<MemoRef>);
 
 impl MemoRefHead {

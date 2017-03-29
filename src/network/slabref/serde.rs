@@ -1,10 +1,8 @@
-use serde::*;
-use serde::ser::*;
-use serde::de::*;
+use util::serde::*;
 use super::*;
 
-impl Serialize for SlabRef {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+impl StatefulSerialize for SlabRef {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         if let TransportAddress::Local = self.presence.address {
@@ -46,13 +44,13 @@ impl<'a> Visitor for SlabRefSeed<'a> {
       /* let id: SlabId = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(0, &self));
+               return Err(DeError::invalid_length(0, &self));
            }
        };*/
        let presence: SlabPresence = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(0, &self));
+               return Err(DeError::invalid_length(0, &self));
            }
        };
 

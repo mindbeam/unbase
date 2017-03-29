@@ -2,22 +2,18 @@ use super::*;
 use super::super::*;
 
 use memo::serde::MemoSeed;
+use util::serde::*;
 
-use serde::*;
-use serde::ser::*;
-use serde::de::*;
-
-impl Serialize for Packet {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+impl StatefulSerialize for Packet {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         let mut seq = serializer.serialize_seq(Some(3))?;
         seq.serialize_element( &self.from_slab_id )?;
         seq.serialize_element( &self.from_slab_peering_status )?;
         seq.serialize_element( &self.to_slab_id )?;
-        seq.serialize_element( &self.memo )?;
+        seq.serialize_element( &SerializeWrapper( &self.memo, helper ) )?;
         seq.end()
-
     }
 }
 
@@ -46,25 +42,25 @@ impl<'a> Visitor for PacketSeed<'a> {
        let from_slab_id: SlabId = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(0, &self));
+               return Err(DeError::invalid_length(0, &self));
            }
        };
        let from_slab_peering_status: PeeringStatus = match visitor.visit()?{
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(1, &self));
+               return Err(DeError::invalid_length(1, &self));
            }
        };
        let to_slab_id: SlabId = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(2, &self));
+               return Err(DeError::invalid_length(2, &self));
            }
        };
        let memo: Memo = match visitor.visit_seed( MemoSeed { net: self.net } )? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(3, &self));
+               return Err(DeError::invalid_length(3, &self));
            }
        };
 

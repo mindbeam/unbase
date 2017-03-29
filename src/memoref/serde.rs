@@ -1,12 +1,9 @@
 use super::*;
-use serde::*;
-use serde::ser::*;
-use serde::de::*;
 use network::slabref::serde::*;
-use util::serde::VecSeed;
+use util::serde::*;
 
-impl Serialize for MemoRef {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+impl<'a> StatefulSerialize for &'a MemoRef {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         let shared = &self.shared.lock().unwrap();
@@ -17,16 +14,16 @@ impl Serialize for MemoRef {
             &MemoRefPtr::Remote      => seq.serialize_element(&false)?,
             &MemoRefPtr::Resident(_) => seq.serialize_element(&true)?,
         };
-        seq.serialize_element(&shared.peers)?;
+        seq.serialize_element( &SerializeWrapper(&shared.peers, helper) )?;
         seq.end()
     }
 }
-impl Serialize for MemoPeer {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+impl StatefulSerialize for MemoPeer {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         let mut seq = serializer.serialize_seq(Some(2))?;
-        seq.serialize_element(&self.slabref)?;
+        seq.serialize_element(&SerializeWrapper(&self.slabref, helper))?;
         seq.serialize_element(&self.status)?;
         seq.end()
     }
@@ -56,26 +53,26 @@ impl<'a> Visitor for MemoRefSeed<'a> {
         let memo_id: MemoId = match visitor.visit()? {
             Some(value) => value,
             None => {
-                return Err(de::Error::invalid_length(0, &self));
+                return Err(DeError::invalid_length(0, &self));
             }
         };
         let subject_id: SubjectId = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(1, &self));
+               return Err(DeError::invalid_length(1, &self));
            }
         };
         let has_memo: bool = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(2, &self));
+               return Err(DeError::invalid_length(2, &self));
            }
         };
 
         let peers: Vec<MemoPeer> = match visitor.visit_seed( VecSeed( MemoPeerSeed{ net: self.net } ) )? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(3, &self));
+               return Err(DeError::invalid_length(3, &self));
            }
         };
 
@@ -121,13 +118,13 @@ impl<'a> Visitor for MemoPeerSeed<'a> {
         let slabref: SlabRef = match visitor.visit_seed( SlabRefSeed{ net: self.net })? {
             Some(value) => value,
             None => {
-                return Err(de::Error::invalid_length(0, &self));
+                return Err(DeError::invalid_length(0, &self));
             }
         };
         let status: PeeringStatus = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(de::Error::invalid_length(1, &self));
+               return Err(DeError::invalid_length(1, &self));
            }
         };
 

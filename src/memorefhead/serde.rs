@@ -1,8 +1,19 @@
-use serde::*;
-use serde::de::*;
 use network::*;
 use memoref::serde::*;
+use util::serde::*;
 use super::*;
+
+impl StatefulSerialize for MemoRefHead {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for memoref in self.0.iter(){
+            seq.serialize_element( &SerializeWrapper( &memoref, helper ) )?;
+        }
+        seq.end()
+    }
+}
 
 pub struct MemoRefHeadSeed<'a> { pub net: &'a Network }
 

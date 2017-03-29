@@ -25,13 +25,15 @@ pub enum PeeringStatus{
     Unknown
 }
 
-#[derive(Debug,Serialize,PartialEq)]
+type RelationSlotSubjectHead = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
+
+#[derive(Debug,PartialEq)]
 pub enum MemoBody{
     SlabPresence{ p: SlabPresence, r: Option<MemoRefHead> }, // TODO: split out root_index_seed conveyance to another memobody type
     Relation(HashMap<RelationSlotId,(SubjectId,MemoRefHead)>),
     Edit(HashMap<String, String>),
-    FullyMaterialized     { v: HashMap<String, String>, r: HashMap<RelationSlotId,(SubjectId,MemoRefHead)> },
-    PartiallyMaterialized { v: HashMap<String, String>, r: HashMap<RelationSlotId,(SubjectId,MemoRefHead)> },
+    FullyMaterialized     { v: HashMap<String, String>, r: RelationSlotSubjectHead },
+    PartiallyMaterialized { v: HashMap<String, String>, r: RelationSlotSubjectHead },
     Peering(MemoId,SlabPresence,PeeringStatus),
     MemoRequest(Vec<MemoId>,SlabRef)
 }
