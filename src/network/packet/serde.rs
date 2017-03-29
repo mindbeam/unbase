@@ -2,6 +2,7 @@ use super::*;
 use super::super::*;
 
 use memo::serde::MemoSeed;
+use util::serde::DeserializeSeed;
 use util::serde::*;
 
 impl StatefulSerialize for Packet {
@@ -16,6 +17,20 @@ impl StatefulSerialize for Packet {
         seq.end()
     }
 }
+
+// can't use this because we don't have the same deserialize seed for all fields
+/*impl StatefulSerialize for Packet {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut sv = serializer.serialize_struct("Memoref", 4)?;
+        sv.serialize_field("from_slab_id",    &self.from_slab_id )?;
+        sv.serialize_field("peering_status",  &self.from_slab_peering_status )?;
+        sv.serialize_field("to_slab_id",      &self.to_slab_id )?;
+        sv.serialize_field("memo",            &SerializeWrapper( &self.memo, helper ) )?;
+        sv.end()
+    }
+}*/
 
 pub struct PacketSeed <'a>{ pub net: &'a Network }
 

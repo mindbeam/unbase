@@ -9,7 +9,7 @@ impl StatefulSerialize for MemoRefHead {
     {
         let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
         for memoref in self.0.iter(){
-            seq.serialize_element( &SerializeWrapper( &memoref, helper ) )?;
+            seq.serialize_element( &SerializeWrapper( memoref, helper ) )?;
         }
         seq.end()
     }

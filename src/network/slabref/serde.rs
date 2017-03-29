@@ -1,20 +1,33 @@
 use util::serde::*;
 use super::*;
 
+
+impl<'a> StatefulSerialize for &'a SlabPresence {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut sv = serializer.serialize_struct("SlabPresence", 3)?;
+        sv.serialize_field("slab_id",  &self.slab_id)?;
+
+        sv.serialize_field("address", match self.address {
+            TransportAddress::Local   => helper.return_address,
+            TransportAddress::UDP(_)  => &self.address,
+            _ => return Err(SerError::custom("Address does not support serialization"))
+        })?;
+        sv.serialize_field("lifetime", &self.lifetime ) ?;
+        sv.end()
+    }
+}
+
 impl StatefulSerialize for SlabRef {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        if let TransportAddress::Local = self.presence.address {
-            use std::{thread,time};
-            thread::sleep( time::Duration::from_secs(2) );
-            panic!("Illegal to serialize TransportAddress::Local");
-        }
-
+        // TODO: Should actually be a sequence of slab presences
+        // to allow for slabs with multiple transports
         let mut seq = serializer.serialize_seq(Some(1))?;
-        seq.serialize_element(&self.presence)?;
+        seq.serialize_element( &SerializeWrapper(&&self.presence,helper) )?;
         seq.end()
-
     }
 }
 

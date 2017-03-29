@@ -1,17 +1,17 @@
 use std::fmt;
-use network::transport::DynamicDispatchTransmitter;
-use network::{Network, Transport, SlabRef};
+use network::{TransportAddress};
+use slab::SlabId;
 
 use serde::ser::{Serialize};
-pub use serde::ser::{Serializer,SerializeSeq,SerializeMap};
+pub use serde::ser::{Serializer,SerializeStruct,SerializeSeq,SerializeMap};
 pub use serde::de::{Deserializer,DeserializeSeed,Visitor,SeqVisitor};
 
+pub use serde::ser::Error as SerError;
 pub use serde::de::Error as DeError;
 
 pub struct SerializeHelper<'a> {
-    network: &'a Network,
-    transport: &'a Transport,
-    dest_slab: &'a SlabRef
+    pub dest_slab_id: &'a SlabId,
+    pub return_address: &'a TransportAddress
 }
 
 pub struct SerializeWrapper<'a, T: 'a> (
@@ -61,9 +61,13 @@ impl<K,V,H> StatefulSerialize for HashMap<K,V,H>
         where S: Serializer
     {
         let iter = self.into_iter();
-        let mut serializer = try!(serializer.serialize_map(iter.len_hint()));
+        let hint = match iter.size_hint() {
+            (lo, Some(hi)) if lo == hi => Some(lo),
+            _ => None,
+        };
+        let mut serializer = try!(serializer.serialize_map(hint));
         for (key, value) in iter {
-            try!(serializer.serialize_entry(&key, &SerializeWrapper(&value,helper)));
+            try!(serializer.serialize_entry(&key, &SerializeWrapper(value,helper)));
         }
         serializer.end()
 

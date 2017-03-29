@@ -106,10 +106,10 @@ fn remote_traversal_nondeterministic_udp() {
         let context_a = slab_a.create_context();
 
         // wait for slab_b to be on the peer list, and to be hooked in to our root_index_seed
-        thread::sleep( time::Duration::from_millis(100) );
+        thread::sleep( time::Duration::from_millis(150) );
 
         // Do some stuff
-        //let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").unwrap();
+        let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").unwrap();
         //rec_a1.set_value("animal_sound","Woof");
         //rec_a1.set_value("animal_sound","Meow");
 
@@ -117,14 +117,14 @@ fn remote_traversal_nondeterministic_udp() {
         thread::sleep(time::Duration::from_millis(50));
 
         // manually remove the memos
-        //slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() );
+        slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() );
 
         // Not really any strong reason to wait here, except just to play nice and make sure slab_b's peering is updated
         // TODO: test memo expungement/de-peering, followed immediately by MemoRequest for same
-        //thread::sleep(time::Duration::from_millis(50));
+        thread::sleep(time::Duration::from_millis(50));
 
         // now lets see if we can project rec_a1 animal_sound. This will require memo retrieval from slab_b
-        //assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Meow");
+        assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Meow");
         println!("T1 EXIT");
     });
 
@@ -147,7 +147,7 @@ println!("MARK1" );
 println!("MARK2" );
         // hang out to keep stuff in scope, and hold off calling the destructors
         // necessary in order to be online so we can answer slab_a's inquiries
-        thread::sleep(time::Duration::from_millis(300));
+        thread::sleep(time::Duration::from_millis(1000));
 
         println!("T2 EXIT");
     });

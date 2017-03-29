@@ -6,6 +6,8 @@ use super::*;
 use std::fmt;
 use network::Network;
 use memorefhead::serde::*;
+
+use network::slabref::serde::SlabRefSeed;
 use util::serde::*;
 
 impl StatefulSerialize for Memo {
@@ -15,22 +17,25 @@ impl StatefulSerialize for Memo {
         let mut seq = serializer.serialize_seq(Some(4))?;
         seq.serialize_element( &self.id )?;
         seq.serialize_element( &self.subject_id )?;
-        seq.serialize_element( &SerializeWrapper( &self.inner.parents, helper ) )?;
         seq.serialize_element( &SerializeWrapper( &self.inner.body, helper ) )?;
+        seq.serialize_element( &SerializeWrapper( &self.inner.parents, helper ) )?;
         seq.end()
     }
 }
 
+/*impl StatefulSerialize for Memo {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut sv = serializer.serialize_struct("Memo", 4)?;
+        sv.serialize_field("memo_id",    &self.id)?;
+        sv.serialize_field("subject_id", &self.subject_id )?;
+        sv.serialize_field("parents",    &SerializeWrapper( &self.inner.parents, helper ) )?;
+        sv.serialize_field("body",       &SerializeWrapper( &self.inner.body, helper ) )?;
+        sv.end()
+    }
+}*/
 
-/*
-    SlabPresence(SlabPresence),
-    Relation(HashMap<RelationSlotId,(SubjectId,MemoRefHead)>),
-    Edit(HashMap<String, String>),
-    FullyMaterialized     { v: HashMap<String, String>, r: HashMap<RelationSlotId,(SubjectId,MemoRefHead)> },
-    PartiallyMaterialized { v: HashMap<String, String>, r: HashMap<RelationSlotId,(SubjectId,MemoRefHead)> },
-    Peering(MemoId,SlabRef,PeeringStatus),
-    MemoRequest(Vec<MemoId>,SlabRef)
-*/
 impl StatefulSerialize for MemoBody {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
@@ -39,14 +44,15 @@ impl StatefulSerialize for MemoBody {
         match *self {
             SlabPresence{ ref p, ref r } =>{
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 0, "SlabPresence", 2)?;
-                sv.serialize_field("p", p)?;
+                sv.serialize_field("p", &SerializeWrapper(&p, helper))?;
                 sv.serialize_field("r", &SerializeWrapper(r, helper))?;
                 sv.end()
             }
             Relation(ref rhm) => {
-                let mut sv = serializer.serialize_struct_variant("MemoBody", 1, "Relation", 1)?;
-                sv.serialize_field("r", &SerializeWrapper(rhm, helper))?;
-                sv.end()
+                //let mut sv = serializer.serialize_struct_variant("MemoBody", 1, "Relation", 1)?;
+                //sv.serialize_field("r", &SerializeWrapper(rhm, helper))?;
+                //sv.end()
+                serializer.serialize_newtype_variant("MemoBody", 1, "Relation", &SerializeWrapper(rhm, helper) )
             },
             Edit(ref e) => {
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 2, "Edit", 1)?;
@@ -59,20 +65,25 @@ impl StatefulSerialize for MemoBody {
                 sv.serialize_field("v", v)?;
                 sv.end()
             },
+            PartiallyMaterialized{ ref r, ref v }  => {
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 3, "PartiallyMaterialized", 2)?;
+                sv.serialize_field("r", &SerializeWrapper(r, helper))?;
+                sv.serialize_field("v", v)?;
+                sv.end()
+            },
             Peering( ref memo_id, ref slabpresence, ref peeringstatus ) =>{
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 4, "Peering", 3)?;
                 sv.serialize_field("i", memo_id )?;
-                sv.serialize_field("r", &slabpresence )?;
-                sv.serialize_field("v", peeringstatus)?;
+                sv.serialize_field("p", &SerializeWrapper(&slabpresence,helper) )?;
+                sv.serialize_field("s", peeringstatus)?;
                 sv.end()
             }
             MemoRequest( ref memo_ids, ref slabref ) =>{
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 5, "MemoRequest", 2)?;
                 sv.serialize_field("i", memo_ids )?;
-                sv.serialize_field("r", &SerializeWrapper(slabref, helper))?;
+                sv.serialize_field("s", &SerializeWrapper(slabref, helper))?;
                 sv.end()
             }
-            _ => { panic!("woof") }
         }
 
     }
@@ -123,13 +134,13 @@ impl<'a> Visitor for MemoSeed<'a>{
                return Err(DeError::invalid_length(1, &self));
            }
        };
-       let parents: MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ net: self.net })? {
+       let body: MemoBody = match visitor.visit_seed(MemoBodySeed{ net: self.net })? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(2, &self));
            }
        };
-       let body: MemoBody = match visitor.visit_seed(MemoBodySeed{ net: self.net })? {
+       let parents: MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ net: self.net })? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(3, &self));
@@ -174,7 +185,7 @@ impl<'a> Visitor for MemoBodySeed<'a> {
     type Value = MemoBody;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-       formatter.write_str("Sequence of MemoRefs")
+       formatter.write_str("MemoBody")
     }
     fn visit_enum<V>(self, visitor: V) -> Result<MemoBody, V::Error>
         where V: EnumVisitor
@@ -185,9 +196,9 @@ impl<'a> Visitor for MemoBodySeed<'a> {
             (MBVariant::Relation,          variant) => variant.visit_newtype_seed(RelationMRHSeed{ net: self.net }).map(MemoBody::Relation),
             (MBVariant::Edit,              variant) => variant.visit_newtype().map(MemoBody::Edit),
             (MBVariant::FullyMaterialized, variant) => variant.visit_newtype_seed(MBFullyMaterializedSeed{ net: self.net }),
-        //    (MBVariant::PartiallyMaterialized, variant) => variant.visit_newtype().map(MemoBody::PartiallyMaterialized),
-            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ _net: self.net }),
-        //    (MBVariant::MemoRequest, variant) => variant.visit_newtype().map(MemoBody::MemoRequest),
+        //  (MBVariant::PartiallyMaterialized, variant) => variant.visit_newtype().map(MemoBody::PartiallyMaterialized),
+            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ net: self.net }),
+            (MBVariant::MemoRequest,       variant) => variant.visit_newtype_seed(MBMemoRequestSeed{ net: self.net }),
             _ => panic!("meow")
 
         }
@@ -221,6 +232,46 @@ impl Visitor for MBVariantVisitor
             "Peering"                 => Ok(MBVariant::Peering),
             "MemoRequest"             => Ok(MBVariant::MemoRequest),
             _ => Err(serde::DeError::unknown_field(value, MEMOBODY_VARIANTS)),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct MBMemoRequestSeed<'a> { net: &'a Network }
+
+impl<'a> DeserializeSeed for MBMemoRequestSeed<'a> {
+    type Value = MemoBody;
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+        where D: Deserializer
+    {
+        deserializer.deserialize_seq(self)
+    }
+}
+
+impl<'a> Visitor for MBMemoRequestSeed<'a> {
+    type Value = MemoBody;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+       formatter.write_str("MemoBody::MemoRequest")
+    }
+    fn visit_map<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
+       where V: MapVisitor
+    {
+        let mut memo_ids : Option<Vec<MemoId>> = None;
+        let mut slabref  : Option<SlabRef> = None;
+        while let Some(key) = visitor.visit_key()? {
+            match key {
+                'i' => memo_ids = visitor.visit_value()?,
+                's' => slabref  = Some(visitor.visit_value_seed(SlabRefSeed{ net: self.net })?),
+                _   => {}
+            }
+        }
+
+        if memo_ids.is_some() && slabref.is_some() {
+
+            Ok(MemoBody::MemoRequest( memo_ids.unwrap(), slabref.unwrap() ))
+        }else{
+            Err(DeError::invalid_length(0, &self))
         }
     }
 }
@@ -374,7 +425,7 @@ impl<'a> Visitor for SubjectMRHSeed<'a> {
 }
 
 // TODO convert this to a non-seed deserializer
-struct MBPeeringSeed<'a> { _net: &'a Network }
+struct MBPeeringSeed<'a> { net: &'a Network }
 
 impl<'a> DeserializeSeed for MBPeeringSeed<'a> {
     type Value = MemoBody;
@@ -391,28 +442,28 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("MemoBody::Peering")
     }
-    fn visit_seq<V> (self, mut visitor: V) -> Result<MemoBody, V::Error>
-        where V: SeqVisitor
+    fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
+        where Visitor: MapVisitor,
     {
-       let memo_id: MemoId = match visitor.visit()? {
-           Some(value) => value,
-           None => {
-               return Err(DeError::invalid_length(0, &self));
-           }
-       };
-       let presence: SlabPresence = match visitor.visit()? {
-           Some(value) => value,
-           None => {
-               return Err(DeError::invalid_length(1, &self));
-           }
-       };
-       let peering_status: PeeringStatus = match visitor.visit()? {
-           Some(value) => value,
-           None => {
-               return Err(DeError::invalid_length(2, &self));
-           }
-       };
+        let _ = self.net;
+        let mut memo_ids : Option<MemoId> = None;
+        let mut presence : Option<SlabPresence> = None;
+        let mut status   : Option<PeeringStatus> = None;
+        while let Some(key) = visitor.visit_key()? {
+            match key {
+                'i' => memo_ids  = visitor.visit_value()?,
+                'p' => presence  = visitor.visit_value()?,
+                's' => status    = visitor.visit_value()?,
+                _   => {}
+            }
+        }
 
-       Ok(MemoBody::Peering( memo_id, presence, peering_status ))
+        if memo_ids.is_some() && presence.is_some() && status.is_some() {
+
+            Ok(MemoBody::Peering( memo_ids.unwrap(), presence.unwrap(), status.unwrap() ))
+        }else{
+            Err(DeError::invalid_length(0, &self))
+        }
+
     }
 }

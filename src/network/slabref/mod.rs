@@ -27,7 +27,7 @@ pub enum SlabAnticipatedLifetime{
     Unknown
 }
 
-#[derive(Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Deserialize, PartialEq)]
 pub struct SlabPresence{
     pub slab_id: SlabId,
     pub address: TransportAddress,

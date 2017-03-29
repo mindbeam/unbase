@@ -9,8 +9,9 @@ use std::sync::{Arc,Mutex};
 use memo::*;
 // use std::collections::BTreeMap;
 use super::packet::*;
+use util::serde::DeserializeSeed;
 
-use serde::de::*;
+use util::serde::{SerializeHelper,SerializeWrapper};
 use super::packet::serde::PacketSeed;
 
 use serde_json;// {serialize as bin_serialize, deserialize as bin_deserialize};
@@ -41,9 +42,12 @@ impl TransportAddressUDP {
 
 impl TransportUDP {
     pub fn new (address: String) -> Self{
-        let socket = Arc::new( UdpSocket::bind(address.clone()).expect("UdpSocket::bind") );
 
-        let (tx_thread,tx_channel) = Self::setup_tx_thread(socket.clone());
+        let bind_address = TransportAddressUDP{ address : address };
+
+        let socket = Arc::new( UdpSocket::bind( bind_address.address.clone() ).expect("UdpSocket::bind") );
+
+        let (tx_thread,tx_channel) = Self::setup_tx_thread(socket.clone(), bind_address.clone());
 
         TransportUDP {
             tx_channel: Arc::new(Mutex::new(tx_channel)),
@@ -53,25 +57,35 @@ impl TransportUDP {
                     rx_thread: None,
                     tx_thread: Some(tx_thread),
                     network: None,
-                    address: TransportAddressUDP{ address : address }
+                    address: bind_address
                 }
             ))
         }
     }
 
-    fn setup_tx_thread (socket: Arc<UdpSocket>) -> (thread::JoinHandle<()>,mpsc::Sender<(TransportAddressUDP, Packet)>){
+    fn setup_tx_thread (socket: Arc<UdpSocket>, inbound_address: TransportAddressUDP ) -> (thread::JoinHandle<()>,mpsc::Sender<(TransportAddressUDP, Packet)>){
+
         let (tx_channel, rx_channel) = mpsc::channel::<(TransportAddressUDP,Packet)>();
 
         let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
+
+            let helper = SerializeHelper {
+                return_address: &TransportAddress::UDP(inbound_address),
+                dest_slab_id:   &0,
+            };
+
             //let mut buf = [0; 65536];
             loop {
 
                 if let Ok((to_address, packet)) = rx_channel.recv() {
-                    let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
-                    
+
+
+                    //println!("UDP SEND {:?}", &packet);
+                    let b = serde_json::to_vec( &SerializeWrapper(&packet, &helper) ).expect("serde_json::to_vec");
+
                     //HACK: we're trusting that each memo is smaller than 64k
                     socket.send_to(&b, &to_address.address).expect("Failed to send");
-                    //println!("SENT UDP PACKET ({}) {:?}", &to_address.address, String::from_utf8(b));
+                    println!("SENT UDP PACKET ({}) {}", &to_address.address, &String::from_utf8(b).unwrap());
                 }else{
                     break;
                 }
@@ -111,19 +125,19 @@ impl TransportUDP {
                 MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed(&my_slab) }
             );
 
-            self.send(
+            self.send_to_addr(
                 &my_slab.get_ref(),
-                0,
                 hello,
                 to_address.clone()
             );
         }
 
     }
-    pub fn send (&self, from: &SlabRef, to_slab_id: SlabId, memo: Memo, address : TransportAddressUDP) {
+    pub fn send_to_addr (&self, from_slabref: &SlabRef, memo: Memo, address : TransportAddressUDP) {
+
         let packet = Packet{
-            to_slab_id: to_slab_id,
-            from_slab_id: from.slab_id,
+            to_slab_id: 0,
+            from_slab_id: from_slabref.slab_id,
             from_slab_peering_status: PeeringStatus::Resident, // TODO - stop assuming that it's actually resident in the sending slab
             memo: memo
         };
@@ -262,7 +276,7 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
         };
 
 
-        println!("UDP QUEUE FOR SEND {:?}", &packet);
+        //println!("UDP QUEUE FOR SEND {:?}", &packet);
 
         //use util::serde::SerializeHelper;
         //let helper = SerializeHelper{ transmitter: self };

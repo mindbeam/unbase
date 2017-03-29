@@ -2,22 +2,67 @@ use super::*;
 use network::slabref::serde::*;
 use util::serde::*;
 
-impl<'a> StatefulSerialize for &'a MemoRef {
+impl StatefulSerialize for MemoPeerList {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+
+        let mut seq = serializer.serialize_seq(None)?;
+        for memopeer in self.0.iter() {
+
+            // don't tell the receiving slab that they have it.
+            // They know they have it
+            if &memopeer.slabref.slab_id != helper.dest_slab_id {
+                seq.serialize_element(&SerializeWrapper(memopeer,helper))?
+            }
+        }
+        seq.end()
+    }
+}
+
+impl StatefulSerialize for MemoRef {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         let shared = &self.shared.lock().unwrap();
+
+        use super::MemoRefPtr::*;
+
         let mut seq = serializer.serialize_seq(Some(4))?;
         seq.serialize_element(&self.id)?;
         seq.serialize_element(&self.subject_id)?;
-        match &shared.ptr {
-            &MemoRefPtr::Remote      => seq.serialize_element(&false)?,
-            &MemoRefPtr::Resident(_) => seq.serialize_element(&true)?,
-        };
+        seq.serialize_element(&match &shared.ptr {
+            &Remote      => false,
+            &Resident(_) => true
+        })?;
         seq.serialize_element( &SerializeWrapper(&shared.peers, helper) )?;
         seq.end()
     }
 }
+
+/* impl StatefulSerialize for MemoRef {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let shared = &self.shared.lock().unwrap();
+
+        let mut sv = serializer.serialize_struct("Memoref", 4)?;
+        sv.serialize_field("memo_id",    &self.id)?;
+        sv.serialize_field("subject_id", &self.subject_id )?;
+
+        use super::MemoRefPtr::*;
+
+        sv.serialize_field("resident", &match &shared.ptr {
+            &Remote      => false,
+            &Resident(_) => true
+        })?;
+
+        sv.serialize_field("peers", &SerializeWrapper(&shared.peers, helper) )?;
+        sv.end()
+
+    }
+}*/
+
 impl StatefulSerialize for MemoPeer {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
@@ -76,12 +121,14 @@ impl<'a> Visitor for MemoRefSeed<'a> {
            }
         };
 
+        //panic!("implement this");
+println!("TODO TODO TODO" );
        let memoref = MemoRef {
            id: memo_id,
            subject_id: Some(subject_id),
            shared: Arc::new(Mutex::new(
                MemoRefShared {
-                   peers: peers,
+                   peers: MemoPeerList(peers),
                    ptr: match has_memo {
                        true  => MemoRefPtr::Remote,
                        false => MemoRefPtr::Remote

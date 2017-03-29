@@ -21,9 +21,13 @@ pub struct MemoPeer {
     slabref: SlabRef,
     status: PeeringStatus
 }
+
+#[derive(Debug)]
+struct MemoPeerList (Vec<MemoPeer>);
+
 #[derive(Debug)]
 struct MemoRefShared {
-    pub peers: Vec<MemoPeer>,
+    pub peers: MemoPeerList,
     pub ptr:   MemoRefPtr
 }
 #[derive(Debug)]
@@ -39,7 +43,7 @@ impl MemoRef {
             subject_id: Some(memo.subject_id),
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
-                    peers: Vec::with_capacity(3),
+                    peers: MemoPeerList(Vec::with_capacity(3)),
                     ptr: MemoRefPtr::Resident( memo.clone() )
                 }
             ))
@@ -51,7 +55,7 @@ impl MemoRef {
             subject_id: None,
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
-                    peers: Vec::with_capacity(3),
+                    peers: MemoPeerList(Vec::with_capacity(3)),
                     ptr: MemoRefPtr::Remote
                 }
             ))
@@ -74,7 +78,7 @@ impl MemoRef {
     pub fn is_peered_with_slabref(&self, slabref: &SlabRef) -> bool {
         let shared = self.shared.lock().unwrap();
 
-        let status = shared.peers.iter().any(|peer| {
+        let status = shared.peers.0.iter().any(|peer| {
             (peer.slabref.slab_id == slabref.slab_id && peer.status != PeeringStatus::NonParticipating)
         });
 
@@ -165,7 +169,7 @@ impl MemoRef {
                 MemoBody::Peering(self.id, slabref.presence.clone(), PeeringStatus::Resident)
             );
 
-            for peer in shared.peers.iter() {
+            for peer in shared.peers.0.iter() {
                 peer.slabref.send_memo( &slabref, peering_memo.clone() );
             }
 
@@ -181,7 +185,7 @@ impl MemoRef {
         let mut shared = self.shared.lock().unwrap();
 
         if let MemoRefPtr::Resident(_) = shared.ptr {
-            if shared.peers.len() == 0 {
+            if shared.peers.0.len() == 0 {
                 panic!("Attempt to remotize a non-peered memo")
             }
 
@@ -194,7 +198,7 @@ impl MemoRef {
                 MemoBody::Peering(self.id, slabref.presence.clone() ,PeeringStatus::Participating)
             );
 
-            for peer in shared.peers.iter() {
+            for peer in shared.peers.0.iter() {
                 peer.slabref.send_memo( &slabref, peering_memo.clone() );
             }
         }
@@ -206,7 +210,7 @@ impl MemoRef {
         let mut shared = self.shared.lock().unwrap();
 
         let mut found : bool = false;
-        for peer in shared.peers.iter_mut() {
+        for peer in shared.peers.0.iter_mut() {
             if peer.slabref.slab_id == slabref.slab_id {
                 found = true;
                 peer.status = status.clone();
@@ -216,7 +220,7 @@ impl MemoRef {
         }
 
         if !found {
-            shared.peers.push(MemoPeer{
+            shared.peers.0.push(MemoPeer{
                 slabref: slabref.clone(),
                 status: status.clone()
             })
@@ -255,7 +259,7 @@ impl MemoRefShared {
         );
 
         let mut sent = 0u8;
-        for peer in self.peers.iter().take(5) {
+        for peer in self.peers.0.iter().take(5) {
             peer.slabref.send_memo( &slabref, request_memo.clone() );
             sent += 1;
         }
