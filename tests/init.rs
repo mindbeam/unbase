@@ -2,7 +2,7 @@ extern crate unbase;
 
 use std::{thread, time};
 
-//#[test]
+#[test]
 fn init_blackhole() {
     let net = unbase::Network::create_new_system();
     let blachole = unbase::network::transport::Blackhole::new();
@@ -16,7 +16,7 @@ fn init_blackhole() {
     assert!( net.get_all_local_slabs().len() == 0 );
 }
 
-//#[test]
+#[test]
 fn init_local_single() {
     let net = unbase::Network::create_new_system();
     {
@@ -28,7 +28,7 @@ fn init_local_single() {
     assert!( net.get_all_local_slabs().len() == 0 );
 }
 
-//#[test]
+#[test]
 fn init_local_multi() {
 
     let net = unbase::Network::create_new_system();
@@ -128,7 +128,7 @@ fn init_udp() {
     println!("MARK 9");
 }
 
-//#[test]
+#[test]
 fn avoid_unnecessary_chatter() {
 
     let net = unbase::Network::create_new_system();

@@ -11,7 +11,8 @@ use unbase::network::{Network,Packet};
 use unbase::network::packet::serde::PacketSeed;
 //use serde_json;
 
-#[test]
+/*
+//#[test]
 fn serialize() {
 
     let net = unbase::Network::create_new_system();
@@ -59,3 +60,4 @@ fn check_roundtrip(record: &Subject, net: &Network, slab: &Slab){
 
     assert_eq!(*memo, decoded_memo);
 }
+*/

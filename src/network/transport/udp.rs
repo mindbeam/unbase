@@ -25,7 +25,7 @@ struct TransportUDPInternal {
     socket: Arc<UdpSocket>,
     tx_thread: Option<thread::JoinHandle<()>>,
     rx_thread: Option<thread::JoinHandle<()>>,
-    tx_channel: Option<Arc<Mutex<mpsc::Sender<(TransportAddressUDP,Packet)>>>>,
+    tx_channel: Option<Arc<Mutex<Option<mpsc::Sender<(TransportAddressUDP,Packet)>>>>>,
     network: Option<WeakNetwork>,
     address: TransportAddressUDP
 }
@@ -56,7 +56,7 @@ impl TransportUDP {
                     socket: socket,
                     rx_thread: None,
                     tx_thread: Some(tx_thread),
-                    tx_channel: Some(Arc::new(Mutex::new(tx_channel))),
+                    tx_channel: Some(Arc::new(Mutex::new(Some(tx_channel)))),
                     network: None,
                     address: bind_address
                 }
@@ -76,21 +76,14 @@ impl TransportUDP {
             };
 
             //let mut buf = [0; 65536];
-            loop {
+            while let Ok((to_address, packet)) = rx_channel.recv() {
+                //println!("UDP SEND {:?}", &packet);
+                let b = serde_json::to_vec( &SerializeWrapper(&packet, &helper) ).expect("serde_json::to_vec");
 
-                if let Ok((to_address, packet)) = rx_channel.recv() {
-
-
-                    //println!("UDP SEND {:?}", &packet);
-                    let b = serde_json::to_vec( &SerializeWrapper(&packet, &helper) ).expect("serde_json::to_vec");
-
-                    //HACK: we're trusting that each memo is smaller than 64k
-                    socket.send_to(&b, &to_address.address).expect("Failed to send");
-                    println!("SENT UDP PACKET ({}) {}", &to_address.address, &String::from_utf8(b).unwrap());
-                }else{
-                    break;
-                }
-            };
+                //HACK: we're trusting that each memo is smaller than 64k
+                socket.send_to(&b, &to_address.address).expect("Failed to send");
+                println!("SENT UDP PACKET ({}) {}", &to_address.address, &String::from_utf8(b).unwrap());
+            }
     });
 
         (tx_thread, tx_channel)
@@ -146,13 +139,10 @@ impl TransportUDP {
         println!("TransportUDP.send({:?})", packet );
 
         if let Some(ref tx_channel) = self.shared.lock().unwrap().tx_channel {
-            tx_channel.lock().unwrap().send( (address, packet) ).unwrap();
+            if let Some(ref tx_channel) = *(tx_channel.lock().unwrap()) {
+                tx_channel.send( (address, packet) ).unwrap();
+            }
         }
-    }
-    pub fn clean_up (&self) {
-        let mut shared = self.shared.lock().expect("TransportUDP.shared.lock");
-        shared.tx_thread.take();
-        shared.rx_thread.take();
     }
 }
 
@@ -252,7 +242,14 @@ impl Drop for TransportUDPInternal{
         println!("# TransportUDPInternal().drop");
 
         println!("# TransportUDPInternal.drop A");
-        self.tx_channel.take();
+
+        // BUG NOTE: having to use a pretty extraordinary workaround here
+        //           this horoughly horrible Option<Arc<Mutex<Option<>>> regime
+        //           is necessary because the tx_thread was somehow being wedged open
+        //           presumably we have transmitters that aren't going out of scope somewhere
+        if let Some(ref tx) = self.tx_channel {
+            tx.lock().unwrap().take();
+        }
 
         println!("# TransportUDPInternal.drop B");
 
@@ -271,7 +268,7 @@ pub struct TransmitterUDP{
     pub slab_id: SlabId,
     address: TransportAddressUDP,
     // HACK HACK HACK - lose the Arc<Mutex<>> here by making transmitter Send, but not Sync
-    tx_channel: Arc<Mutex<mpsc::Sender<(TransportAddressUDP,Packet)>>>
+    tx_channel: Arc<Mutex<Option<mpsc::Sender<(TransportAddressUDP,Packet)>>>>
 }
 impl DynamicDispatchTransmitter for TransmitterUDP {
     fn send (&self, from: &SlabRef, memo: Memo) {
@@ -292,7 +289,9 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
 //        let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
 //        println!("UDP QUEUE FOR SEND SERIALIZED {}", String::from_utf8(b).unwrap() );
 
-        self.tx_channel.lock().unwrap().send((self.address.clone(), packet)).unwrap();
+        if let Some(ref tx_channel) = *(self.tx_channel.lock().unwrap()) {
+            tx_channel.send((self.address.clone(), packet)).unwrap();
+        }
     }
 }
 impl Drop for TransmitterUDP{

@@ -2,7 +2,7 @@ extern crate unbase;
 use unbase::subject::Subject;
 use std::{thread, time};
 
-//#[test]
+#[test]
 fn remote_traversal_simulated() {
 
     let net = unbase::Network::create_new_system();
@@ -48,7 +48,7 @@ fn remote_traversal_simulated() {
 
 }
 
-//#[test]
+#[test]
 fn remote_traversal_nondeterministic() {
 
 
@@ -98,7 +98,7 @@ fn remote_traversal_nondeterministic_udp() {
     let t1 = thread::spawn(|| {
 
         let net1 = unbase::Network::create_new_system();
-        
+
         let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12001".to_string());
         net1.add_transport( Box::new(udp1.clone()) );
         let slab_a = unbase::Slab::new(&net1);
@@ -128,9 +128,6 @@ fn remote_traversal_nondeterministic_udp() {
         //assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Meow");
         println!("T1 EXIT");
 
-
-        //udp1.clean_up();
-        net1.clean_up();
     });
 
     // Ensure slab_a is listening
@@ -156,8 +153,6 @@ println!("MARK2" );
 
         println!("T2 EXIT");
 
-        //udp2.clean_up();
-        net2.clean_up();
     });
 
     t2.join().expect("thread2.join");
