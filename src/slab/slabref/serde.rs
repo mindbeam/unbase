@@ -19,6 +19,22 @@ impl<'a> StatefulSerialize for &'a SlabPresence {
         sv.end()
     }
 }
+impl StatefulSerialize for SlabPresence {
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut sv = serializer.serialize_struct("SlabPresence", 3)?;
+        sv.serialize_field("slab_id",  &self.slab_id)?;
+
+        sv.serialize_field("address", match self.address {
+            TransportAddress::Local   => helper.return_address,
+            TransportAddress::UDP(_)  => &self.address,
+            _ => return Err(SerError::custom("Address does not support serialization"))
+        })?;
+        sv.serialize_field("lifetime", &self.lifetime ) ?;
+        sv.end()
+    }
+}
 
 impl StatefulSerialize for SlabRef {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
@@ -27,13 +43,13 @@ impl StatefulSerialize for SlabRef {
         // TODO: Should actually be a sequence of slab presences
         // to allow for slabs with multiple transports
         let mut seq = serializer.serialize_seq(Some(1))?;
-        seq.serialize_element( &SerializeWrapper(&self.presence,helper) )?;
+        seq.serialize_element( &SerializeWrapper(&*(self.0.presence.lock().unwrap()),helper) )?;
         seq.end()
     }
 }
 
 
-pub struct SlabRefSeed<'a> { pub net: &'a Network }
+pub struct SlabRefSeed<'a> { pub dest_slab: &'a Slab }
 impl<'a> DeserializeSeed for SlabRefSeed<'a> {
     type Value = SlabRef;
 

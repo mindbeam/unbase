@@ -141,7 +141,7 @@ impl Slab {
         {
             let shared = self.inner.shared.lock().unwrap();
             println!("get_root_index_seed B" );
-            net = shared.net.clone();
+            net = shared.net.clone();g
         }
 
         println!("get_root_index_seed C" );

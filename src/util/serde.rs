@@ -47,6 +47,19 @@ impl<T> StatefulSerialize for Vec<T>
         seq.end()
     }
 }
+impl<'a, T> StatefulSerialize for &'a Vec<T>
+      where T: StatefulSerialize
+{
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(self.len()))?;
+        for e in self.iter(){
+            seq.serialize_element( &SerializeWrapper( e, helper ) )?;
+        }
+        seq.end()
+    }
+}
 // whoops, looks like I need a macro for n-tuples?
 
 use core::hash::{Hash, BuildHasher};

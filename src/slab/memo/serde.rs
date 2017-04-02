@@ -62,7 +62,7 @@ impl StatefulSerialize for MemoBody {
             Peering( ref memo_id, ref slabpresence, ref peeringstatus ) =>{
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 4, "Peering", 3)?;
                 sv.serialize_field("i", memo_id )?;
-                sv.serialize_field("p", VecSeed(&SerializeWrapper(&slabpresence,helper)) )?;
+                sv.serialize_field("p", &SerializeWrapper(&slabpresence,helper) )?; 
                 sv.serialize_field("s", peeringstatus)?;
                 sv.end()
             }
