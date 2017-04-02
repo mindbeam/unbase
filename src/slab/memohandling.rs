@@ -20,6 +20,7 @@ impl SlabShared {
         match memo.inner.body {
             // This Memo is a peering status update for another memo
             MemoBody::SlabPresence{ p: ref presence, r: ref opt_root_index_seed } => {
+
                 let should_process;
 
 
@@ -36,33 +37,53 @@ impl SlabShared {
                     &None => {
                         should_process = true;
                     }
+
                 }
 
                 if should_process {
 
                     let mentioned_slabref = SlabRef::new_from_presence( presence, &self.net );
 
+                    println!("# SlabShared({}).handle_memo_from_other_slab(D)", self.id);
                     if self.inject_peer_slabref( mentioned_slabref ) {
+                    println!("# SlabShared({}).handle_memo_from_other_slab(E)", self.id);
                         // TODO: should we be telling the origin slabref, or the presence slabref that we're here?
                         //       these will usually be the same, but not always
 
                         // Get the address that the remote slab would recogize
                         if let &Some(ref my_local_address) = origin_slabref.get_local_return_address() {
+                        println!("# SlabShared({}).handle_memo_from_other_slab(F)", self.id);
                             let my_presence = SlabPresence {
                                 slab_id: my_slab.id,
                                 address: my_local_address.clone(),
                                 lifetime: SlabAnticipatedLifetime::Unknown
                             };
 
+                            println!("# SlabShared({}).handle_memo_from_other_slab(G)", self.id);
+
+                            println!("# SlabShared({}).handle_memo_from_other_slab(G.1)", self.id);
+                            let memo_id = my_slab.gen_memo_id();
+                            println!("# SlabShared({}).handle_memo_from_other_slab(G.2)", self.id);
+                            let parents = MemoRefHead::from_memoref(memoref.clone());
+                            println!("# SlabShared({}).handle_memo_from_other_slab(G.3)", self.id);
+                            let root_index_seed = self.get_root_index_seed();
+                            println!("# SlabShared({}).handle_memo_from_other_slab(G.4)", self.id);
+
+
                             let my_presence_memo = Memo::new_basic(
-                                my_slab.gen_memo_id(),
+                                memo_id,
                                 0,
-                                MemoRefHead::from_memoref(memoref.clone()),
-                                MemoBody::SlabPresence{ p: my_presence, r: self.get_root_index_seed() }
+                                parents,
+                                MemoBody::SlabPresence{ p: my_presence, r: root_index_seed }
                             );
 
+                            println!("# SlabShared({}).handle_memo_from_other_slab(H)", self.id);
                             origin_slabref.send_memo( &my_ref, my_presence_memo );
+
+                            println!("# SlabShared({}).handle_memo_from_other_slab(I)", self.id);
                         }
+
+                        println!("# SlabShared({}).handle_memo_from_other_slab(J)", self.id);
                     }
                 }
             }

@@ -16,7 +16,7 @@ use std::fmt;
 use super::*;
 use slab::{Slab,SlabId};
 use memo::Memo;
-use std::sync::Arc;
+use std::sync::{Arc,Mutex};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum SlabAnticipatedLifetime{
@@ -43,7 +43,7 @@ pub struct SlabRef {
 struct SlabRefInner {
     slab_id: SlabId,
     local_return_address: Option<TransportAddress>,
-    tx: Transmitter
+    tx: Mutex<Option<Transmitter>>
 }
 
 impl SlabRef{
@@ -69,7 +69,7 @@ impl SlabRef{
             inner: Arc::new (SlabRefInner {
                 slab_id: presence.slab_id,
                 local_return_address: maybe_local_return_address,
-                tx: tx
+                tx: Mutex::new(Some(tx))
             })
         }
     }
@@ -87,14 +87,21 @@ impl SlabRef{
             inner: Arc::new (SlabRefInner {
                 slab_id: slab.id,
                 local_return_address: Some(TransportAddress::Local),
-                tx: tx
+                tx: Mutex::new(Some(tx))
             })
         }
     }
 
     pub fn send_memo (&self, from: &SlabRef, memo: Memo) {
         println!("# SlabRef({}).send_memo({})", self.slab_id, memo.id );
-        self.inner.tx.send(from, memo);
+        //if let Some(ref tx) =  {
+            match *(self.inner.tx.lock().unwrap()){
+                Some(ref tx) => {
+                    tx.send(from, memo);
+                }
+                None => {}
+            }
+        //}
     }
 
     pub fn get_local_return_address(&self) -> &Option<TransportAddress> {
@@ -125,5 +132,10 @@ impl fmt::Debug for SlabPresence {
             .field("address", &self.address.to_string() )
             .field("lifetime", &self.lifetime)
             .finish()
+    }
+}
+impl Drop for SlabRefInner{
+    fn drop(&mut self) {
+        println!("# SlabRefInner({}).drop",self.slab_id);
     }
 }

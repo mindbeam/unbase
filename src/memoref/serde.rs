@@ -128,6 +128,7 @@ println!("TODO TODO TODO" );
            subject_id: Some(subject_id),
            shared: Arc::new(Mutex::new(
                MemoRefShared {
+                   id: memo_id,
                    peers: MemoPeerList(peers),
                    ptr: match has_memo {
                        true  => MemoRefPtr::Remote,

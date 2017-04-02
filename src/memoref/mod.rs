@@ -27,6 +27,7 @@ struct MemoPeerList (Vec<MemoPeer>);
 
 #[derive(Debug)]
 struct MemoRefShared {
+    pub id:    MemoId,
     pub peers: MemoPeerList,
     pub ptr:   MemoRefPtr
 }
@@ -43,6 +44,7 @@ impl MemoRef {
             subject_id: Some(memo.subject_id),
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
+                    id: memo.id,
                     peers: MemoPeerList(Vec::with_capacity(3)),
                     ptr: MemoRefPtr::Resident( memo.clone() )
                 }
@@ -55,6 +57,7 @@ impl MemoRef {
             subject_id: None,
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
+                    id: memo_id,
                     peers: MemoPeerList(Vec::with_capacity(3)),
                     ptr: MemoRefPtr::Remote
                 }
@@ -265,5 +268,10 @@ impl MemoRefShared {
         }
 
         sent
+    }
+}
+impl Drop for MemoRefShared{
+    fn drop(&mut self) {
+        println!("# MemoRefShared({}).drop", self.id);
     }
 }

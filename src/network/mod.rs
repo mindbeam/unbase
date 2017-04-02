@@ -71,6 +71,34 @@ impl Network {
 
         net
     }
+/*    pub fn clean_up (&self) {
+        println!("Network.clean_up started");
+
+        let mut internals = self.shared.internals.lock().expect("Network.shared.internals.lock");
+        println!("Network.clean_up A");
+
+        /*for slab in internals.slabs.drain(..) {
+            if let Some(slab) = slab.upgrade() {
+                slab.clean_up();
+            }
+        }*/
+
+        println!("Network.clean_up B");
+
+        internals.root_index_seed.take();
+
+        println!("Network.clean_up C");
+
+        for slabref in internals.slab_refs.drain(..){
+            slabref.clean_up();
+        }
+        println!("Network.clean_up D");
+
+        internals.transports.clear();
+
+        println!("Network.clean_up end")
+    }
+*/
     pub fn hack_set_next_slab_id(&self, id: SlabId ){
         let mut internals = self.shared.internals.lock().unwrap();
         internals.next_slab_id = id;
@@ -105,7 +133,9 @@ impl Network {
         id
     }
     pub fn get_all_local_slabs(&self) -> Vec<Slab> {
+        println!("MARK A");
         let mut internals = self.shared.internals.lock().unwrap();
+        println!("MARK B");
         internals.get_all_local_slabs()
     }
     pub fn get_slab (&mut self, slab_id: SlabId ) -> Option<Slab> {
@@ -113,15 +143,18 @@ impl Network {
         internals.get_slab(slab_id)
     }
     pub fn distribute_memos(&self, from_presence: &SlabPresence, packet: Packet ) {
-        println!("Network.distribute_memos");
+        println!("###### Network.distribute_memos (start)");
         // TODO: optimize this. redundant mutex locking inside, weak slab upgrades, etc
 
         let from = self.assert_slabref_from_presence(from_presence);
 
+        println!("###### Network.distribute_memos (A)");
         let mut send_slabs = Vec::new();
         {
+            println!("###### Network.distribute_memos (B)");
             let internals = self.shared.internals.lock().unwrap();
 
+            println!("###### Network.distribute_memos (C)");
             for weak_slab in internals.slabs.iter(){
                 // slab_id 0 means any/all slabs present
                 // otherwise it's destined to a specific slab
@@ -135,10 +168,17 @@ impl Network {
         // can't have the lock open any time we're putting memos
         // because some internal logic needs to access the network struct
 
+        println!("###### Network.distribute_memos (D)");
+
         let memoorigin = MemoOrigin::OtherSlab(&from,packet.from_slab_peering_status);
+        println!("###### Network.distribute_memos (E)");
+
         for slab in send_slabs {
+            println!("###### Network.distribute_memos (F, {:?})", slab);
             slab.put_memos( &memoorigin,vec![packet.memo.clone()]);
         }
+
+        println!("###### Network.distribute_memos (end)");
     }
     pub fn assert_slabref_from_presence(&self, presence: &SlabPresence) -> SlabRef {
 
@@ -205,27 +245,34 @@ impl Network {
         slab_ref
     }
 
-    pub fn get_root_index_seed(&self, slab: &Slab) -> Option<MemoRefHead> {
+    pub fn get_root_index_seed(&self) -> Option<MemoRefHead> {
 
-        let mut internals = self.shared.internals.lock().unwrap();
+        let internals = self.shared.internals.lock().unwrap();
 
         match internals.root_index_seed {
             Some(ref s) => {
-                return Some(s.clone())
+                Some(s.clone())
             }
-            None => {}
+            None => {
+                None
+            }
         }
 
-        if internals.create_new_system {
-            // I'm a new system, so I can do this!
-            let seed = SystemCreator::generate_root_index_seed( &slab );
-            internals.root_index_seed = Some(seed.clone());
-            return Some(seed);
-        }else{
-            None
-        }
     }
+    pub fn conditionally_generate_root_index_seed (&self, slab: &Slab) -> bool {
+        let mut internals = self.shared.internals.lock().unwrap();
 
+        if let None = internals.root_index_seed {
+            if internals.create_new_system {
+                // I'm a new system, so I can do this!
+                let seed = SystemCreator::generate_root_index_seed( slab );
+                internals.root_index_seed = Some(seed.clone());
+                return true;
+            }
+        }
+
+        false
+    }
     /// When we receive a root_index_seed from a peer slab that's already attached to a system,
     /// we need to apply it in order to "join" the same system
     ///
@@ -313,6 +360,19 @@ impl fmt::Debug for Network {
 impl Drop for NetworkInternals {
     fn drop(&mut self) {
         println!("# > Dropping NetworkInternals");
+
+        self.slabs.clear();
+            println!("# > Dropping NetworkInternals B");
+        self.slab_refs.clear();
+
+            println!("# > Dropping NetworkInternals C");
+        self.transports.clear();
+
+            println!("# > Dropping NetworkInternals D");
+        self.root_index_seed.take();
+
+            println!("# > Dropping NetworkInternals E");
+
     }
 }
 

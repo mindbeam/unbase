@@ -1,4 +1,4 @@
-use context::Context;
+use context::ContextRef;
 use subject::*;
 use memorefhead::{MemoRefHead,RelationSlotId};
 use error::RetrieveError;
@@ -6,24 +6,24 @@ use std::collections::HashMap;
 
 
 pub struct IndexFixed {
-    context: Context,
+    contextref: ContextRef,
     root: Subject,
     depth: u8
 }
 
 impl IndexFixed {
-    pub fn new (context: &Context, depth: u8) -> IndexFixed {
+    pub fn new (contextref: &ContextRef, depth: u8) -> IndexFixed {
 
         Self {
-            context: context.clone(),
-            root: Subject::new( context, HashMap::new(), true ).unwrap(),
+            contextref: contextref.clone(),
+            root: Subject::new_with_contextref( contextref.clone(), HashMap::new(), true ).unwrap(),
             depth: depth
         }
     }
-    pub fn new_from_memorefhead (context: &Context, depth: u8, memorefhead: MemoRefHead ) -> IndexFixed {
+    pub fn new_from_memorefhead (contextref: ContextRef, depth: u8, memorefhead: MemoRefHead ) -> IndexFixed {
         Self {
-            context: context.clone(),
-            root: Subject::reconstitute( context, memorefhead ),
+            contextref: contextref.clone(),
+            root: Subject::reconstitute( contextref, memorefhead ),
             depth: depth
         }
     }
@@ -67,7 +67,7 @@ impl IndexFixed {
                     let mut values = HashMap::new();
                     values.insert("tier".to_string(),tier.to_string());
 
-                    let new_node = Subject::new( &self.context, values, true ).unwrap();
+                    let new_node = Subject::new_with_contextref(self.contextref.clone(), values, true ).unwrap();
                     node.set_relation(y,&new_node);
 
                     self.recurse_set(tier+1, key, &new_node, subject);

@@ -109,6 +109,8 @@ impl Slab {
             shared.my_ref   = Some(my_ref);
         }
 
+        net.conditionally_generate_root_index_seed(&me);
+
         me
     }
     pub fn weak (&self) -> WeakSlab {
@@ -124,13 +126,20 @@ impl Slab {
         my_ref
     }
     pub fn get_root_index_seed (&self) -> Option<MemoRefHead> {
+    println!("get_root_index_seed A" );
         let net;
         {
             let shared = self.inner.shared.lock().unwrap();
+            println!("get_root_index_seed B" );
             net = shared.net.clone();
         }
 
-        net.get_root_index_seed( self )
+        println!("get_root_index_seed C" );
+        let seed = net.get_root_index_seed();
+
+        println!("get_root_index_seed D" );
+
+        seed
     }
     pub fn generate_subject_id(&self) -> SubjectId {
         let mut counters = self.inner.counters.lock().unwrap();
@@ -151,9 +160,13 @@ impl Slab {
     }
     pub fn put_memos(&self, memo_origin: &MemoOrigin, memos : Vec<Memo> ) -> Vec<MemoRef> {
         if memos.len() == 0 { return Vec::new() }
+
         let mut shared = self.inner.shared.lock().unwrap();
 
-        shared.put_memos(memo_origin, memos)
+        let memorefs = shared.put_memos(memo_origin, memos);
+
+        memorefs
+
     }
     /*pub fn put_memo_from_other_local_slab(&self, from_slab_id: SlabId, memo: Memo ){
         let mut shared = self.inner.shared.lock().unwrap();
@@ -176,10 +189,14 @@ impl Slab {
         // What luxury!
 
         let mut shared = self.inner.shared.lock().unwrap();
-        shared.inject_peer_slabref(new_peer_ref)
+        let acted = shared.inject_peer_slabref(new_peer_ref);
+
+        acted
     }
     pub fn peer_slab_count (&self) -> usize {
         let shared = self.inner.shared.lock().unwrap();
+
+        println!("Slab({}).peer_slab_count = {}", self.id, shared.peer_refs.len() );
         shared.peer_refs.len()
     }
     pub fn create_context (&self) -> Context {
@@ -273,7 +290,7 @@ impl SlabShared {
         }
     }
     pub fn get_root_index_seed (&self) -> Option<MemoRefHead> {
-        self.net.get_root_index_seed( &self.get_my_slab() )
+        self.net.get_root_index_seed()
     }
     pub fn put_memos<'a> (&mut self, memo_origin: &MemoOrigin, memos: Vec<Memo> ) -> Vec<MemoRef> {
         let mids : Vec<MemoId> = memos.iter().map(|x| -> MemoId{ x.id }).collect();
@@ -307,23 +324,30 @@ impl SlabShared {
                     mr.clone()
                 }
             };
-
+println!("# SlabShared({}).put_memos(A)", self.id);
             match memo_origin {
                 &MemoOrigin::SameSlab => {
                     //
                 }
                 &MemoOrigin::OtherSlab(origin_slabref,ref origin_peering_status) => {
+    println!("# SlabShared({}).put_memos(B)", self.id);
                     self.check_memo_waiters(&memo);
+        println!("# SlabShared({}).put_memos(C)", self.id);
                     self.handle_memo_from_other_slab(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
 
+                    println!("# SlabShared({}).put_memos(D)", self.id);
                     memoref.update_peer(origin_slabref, origin_peering_status.clone());
 
+                    println!("# SlabShared({}).put_memos(E)", self.id);
                     self.do_peering_for_memo(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
 
+                    println!("# SlabShared({}).put_memos(F)", self.id);
                     if memo.subject_id > 0 {
                         let mut head = subject_updates.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
                         head.apply_memoref(&memoref, &my_slab);
                     }
+
+        println!("# SlabShared({}).put_memos(G)", self.id);
                 }
             };
 
@@ -340,7 +364,7 @@ impl SlabShared {
         memorefs
     }
     pub fn dispatch_subject_head (&self, subject_id: u64, head : &MemoRefHead){
-        println!("# \t\\ Slab({}).dispatch_subject_head({}, {:?})", self.id, subject_id, head.memo_ids() );
+        println!("# \t\\ SlabShared({}).dispatch_subject_head({}, {:?})", self.id, subject_id, head.memo_ids() );
         if let Some(subscribers) = self.subject_subscriptions.get( &subject_id ) {
             for weakcontext in subscribers {
                 if let Some(context) = weakcontext.upgrade() {
@@ -353,12 +377,17 @@ impl SlabShared {
 
     fn inject_peer_slabref (&mut self, new_peer_ref: SlabRef ) -> bool {
         // QUESTION: why does this require a double deref?
-        if let Some(_) = self.peer_refs.iter().find(|sr| **sr == new_peer_ref) {
+        println!("SlabShared({}).inject_peer_slabref({:?})", self.id, new_peer_ref );
+        let acted = if let Some(_) = self.peer_refs.iter().find(|sr| **sr == new_peer_ref) {
             false
         }else{
             self.peer_refs.push(new_peer_ref);
             true
-        }
+        };
+
+
+        println!("Slab({}).inject_peer_slabref acted: {}, {}", self.id, acted, self.peer_refs.len() );
+        acted
     }
     fn check_peering_target( &self, memo: &Memo ) -> u8 {
         if memo.does_peering() {

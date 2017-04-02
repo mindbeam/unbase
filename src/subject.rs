@@ -2,7 +2,7 @@ use std::fmt;
 use std::collections::HashMap;
 use memo::*;
 use memorefhead::*;
-use context::Context;
+use context::{Context,ContextRef};
 use error::*;
 use slab::*;
 use std::sync::{Arc,Mutex,Weak};
@@ -25,11 +25,16 @@ pub struct WeakSubject {
 pub struct SubjectShared {
     id:      SubjectId,
     head:    MemoRefHead,
-    context: Context,
+    contextref: ContextRef,
 }
 
 impl Subject {
     pub fn new ( context: &Context, vals: HashMap<String, String>, is_index: bool ) -> Result<Subject,String> {
+        Self::new_with_contextref( ContextRef::Strong(context.clone()), vals, is_index )
+    }
+    pub fn new_with_contextref ( contextref: ContextRef, vals: HashMap<String, String>, is_index: bool ) -> Result<Subject,String> {
+        // don't store this
+        let context = contextref.get_context();
 
         let my_slab : &Slab = context.get_slab();
         let subject_id = my_slab.generate_subject_id();
@@ -38,7 +43,7 @@ impl Subject {
         let shared = Arc::new(Mutex::new(SubjectShared{
             id: subject_id,
             head: MemoRefHead::new(),
-            context: context.clone()
+            contextref: contextref
         }));
 
         let subject = Subject {
@@ -59,7 +64,7 @@ impl Subject {
         {
             let mut shared = subject.shared.lock().unwrap();
             shared.head.apply_memoref(&memoref, &my_slab);
-            shared.context.subject_updated( subject_id, &shared.head );
+            context.subject_updated( subject_id, &shared.head );
         }
 
         // IMPORTANT: Need to wait to insert this into the index until _after_ the first memo
@@ -72,14 +77,15 @@ impl Subject {
         }
         Ok(subject)
     }
-    pub fn reconstitute (context: &Context, head: MemoRefHead) -> Subject {
+    pub fn reconstitute (contextref: ContextRef, head: MemoRefHead) -> Subject {
 
+        let context = contextref.get_context();
         let subject_id = head.first_subject_id( context.get_slab() ).unwrap();
 
         let shared = SubjectShared{
             id: subject_id,
             head: head,
-            context: context.clone()
+            contextref: contextref
         };
 
         let subject = Subject {
@@ -104,14 +110,15 @@ impl Subject {
         println!("# Subject({}).get_value({})",self.id,key);
 
         let shared = self.shared.lock().unwrap();
-        shared.head.project_value(&shared.context, key)
+        shared.head.project_value(&shared.contextref.get_context(), key)
     }
     pub fn get_relation ( &self, key: RelationSlotId ) -> Result<Subject, RetrieveError> {
         println!("# Subject({}).get_relation({})",self.id,key);
 
         let shared = self.shared.lock().unwrap();
-        match shared.head.project_relation(&shared.context, key) {
-            Ok((subject_id, head)) => shared.context.get_subject_with_head(subject_id,head),
+        let context = shared.contextref.get_context();
+        match shared.head.project_relation(&context, key) {
+            Ok((subject_id, head)) => context.get_subject_with_head(subject_id,head),
             Err(e)   => Err(e)
 
         }
@@ -122,9 +129,11 @@ impl Subject {
 
         let my_slab;
         let memo;
+        let context;
         {
             let shared = self.shared.lock().unwrap();
-            my_slab = shared.context.get_slab().clone();
+            context = shared.contextref.get_context();
+            my_slab = context.get_slab().clone();
 
             memo = Memo::new_basic(
                 my_slab.gen_memo_id(),
@@ -138,7 +147,7 @@ impl Subject {
 
         let mut shared = self.shared.lock().unwrap();
         shared.head.apply_memoref(&memoref, &my_slab);
-        shared.context.subject_updated( self.id, &shared.head );
+        context.subject_updated( self.id, &shared.head );
 
         true
     }
@@ -149,9 +158,11 @@ impl Subject {
 
         let slab;
         let memo;
+        let context;
         {
             let shared = self.shared.lock().unwrap();
-            slab = shared.context.get_slab().clone();
+            context = shared.contextref.get_context();
+            slab = context.get_slab().clone();
 
             memo = Memo::new(
                 slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
@@ -169,7 +180,7 @@ impl Subject {
         //       causes a deadlock
         let mut shared = self.shared.lock().unwrap();
         shared.head.apply_memoref(&memoref, &slab);
-        shared.context.subject_updated( self.id, &shared.head );
+        context.subject_updated( self.id, &shared.head );
 
     }
     // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
@@ -177,7 +188,8 @@ impl Subject {
         println!("# Subject({}).apply_head({:?})", &self.id, new.memo_ids() );
 
         let mut shared = self.shared.lock().unwrap();
-        let slab = shared.context.get_slab().clone(); // TODO: find a way to get rid of this clone
+        let context = shared.contextref.get_context();
+        let slab = context.get_slab().clone(); // TODO: find a way to get rid of this clone
 
         println!("# Record({}) calling apply_memoref", self.id);
         shared.head.apply(&new, &slab);
@@ -188,7 +200,7 @@ impl Subject {
     }
     pub fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
         println!("# Subject({}).get_all_memo_ids()",self.id);
-        let slab = self.shared.lock().unwrap().context.get_slab().clone();
+        let slab = self.shared.lock().unwrap().contextref.get_context().get_slab().clone();
 
         self.get_head().causal_memo_iter( &slab ).map(|m| m.id).collect()
     }
@@ -210,7 +222,19 @@ impl Subject {
 impl Drop for SubjectShared {
     fn drop (&mut self) {
         println!("# Subject({}).drop", &self.id);
-        self.context.unsubscribe_subject(self.id);
+        match self.contextref {
+            ContextRef::Strong(ref c) => {
+                c.unsubscribe_subject(self.id);
+            }
+            ContextRef::Weak(ref c) => {
+                match c.upgrade() {
+                    Some(c) => {
+                        c.unsubscribe_subject(self.id);
+                    }
+                    None => {}
+                }
+            }
+        }
     }
 }
 impl fmt::Debug for SubjectShared {

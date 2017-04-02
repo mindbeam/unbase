@@ -11,7 +11,8 @@ pub trait DynamicDispatchTransmitter {
 
 enum TransmitterInternal {
     Local(Mutex<mpsc::Sender<(SlabRef,PeeringStatus,Memo)>>),
-    Dynamic(Box<DynamicDispatchTransmitter + Send + Sync>)
+    Dynamic(Box<DynamicDispatchTransmitter + Send + Sync>),
+    Blackhole
 }
 
 pub struct Transmitter {
@@ -23,6 +24,11 @@ impl Transmitter {
     pub fn new_local( tx: Mutex<mpsc::Sender<(SlabRef,PeeringStatus,Memo)>> ) -> Self {
         Self {
             internal: TransmitterInternal::Local( tx )
+        }
+    }
+    pub fn new_blackhole() -> Self {
+        Self {
+            internal: TransmitterInternal::Blackhole
         }
     }
     /// Create a new transmitter capable of using any dynamic-dispatch transmitter.
@@ -44,6 +50,13 @@ impl Transmitter {
             Dynamic(ref tx) => {
                 tx.send(from,memo)
             }
+            Blackhole => {}
         }
+    }
+}
+
+impl Drop for TransmitterInternal{
+    fn drop(&mut self) {
+        println!("# TransmitterInternal().drop");
     }
 }

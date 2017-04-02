@@ -1,7 +1,6 @@
 use std::net::UdpSocket;
 use std::thread;
 use std::str;
-use std::mem;
 
 use super::*;
 use std::sync::mpsc;
@@ -13,6 +12,7 @@ use util::serde::DeserializeSeed;
 
 use util::serde::{SerializeHelper,SerializeWrapper};
 use super::packet::serde::PacketSeed;
+use std::time;
 
 use serde_json;// {serialize as bin_serialize, deserialize as bin_deserialize};
 
@@ -20,12 +20,12 @@ use serde_json;// {serialize as bin_serialize, deserialize as bin_deserialize};
 pub struct TransportUDP {
     shared: Arc<Mutex<TransportUDPInternal>>,
     // TEMPORARY - TODO: remove Arc<Mutex<>> here and instead make transmitters Send but not sync
-    tx_channel: Arc<Mutex<mpsc::Sender<(TransportAddressUDP,Packet)>>>
 }
 struct TransportUDPInternal {
     socket: Arc<UdpSocket>,
     tx_thread: Option<thread::JoinHandle<()>>,
     rx_thread: Option<thread::JoinHandle<()>>,
+    tx_channel: Option<Arc<Mutex<mpsc::Sender<(TransportAddressUDP,Packet)>>>>,
     network: Option<WeakNetwork>,
     address: TransportAddressUDP
 }
@@ -46,16 +46,17 @@ impl TransportUDP {
         let bind_address = TransportAddressUDP{ address : address };
 
         let socket = Arc::new( UdpSocket::bind( bind_address.address.clone() ).expect("UdpSocket::bind") );
+        socket.set_read_timeout( Some(time::Duration::from_millis(2000)) ).expect("set_read_timeout call failed");
 
         let (tx_thread,tx_channel) = Self::setup_tx_thread(socket.clone(), bind_address.clone());
 
         TransportUDP {
-            tx_channel: Arc::new(Mutex::new(tx_channel)),
             shared: Arc::new(Mutex::new(
                 TransportUDPInternal {
                     socket: socket,
                     rx_thread: None,
                     tx_thread: Some(tx_thread),
+                    tx_channel: Some(Arc::new(Mutex::new(tx_channel))),
                     network: None,
                     address: bind_address
                 }
@@ -122,7 +123,7 @@ impl TransportUDP {
             let hello = Memo::new_basic_noparent(
                 my_slab.gen_memo_id(),
                 0,
-                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed(&my_slab) }
+                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed() }
             );
 
             self.send_to_addr(
@@ -144,8 +145,14 @@ impl TransportUDP {
 
         println!("TransportUDP.send({:?})", packet );
 
-        // HACK HACK HACK lose the mutex here
-        self.tx_channel.lock().unwrap().send( (address, packet) ).unwrap();
+        if let Some(ref tx_channel) = self.shared.lock().unwrap().tx_channel {
+            tx_channel.lock().unwrap().send( (address, packet) ).unwrap();
+        }
+    }
+    pub fn clean_up (&self) {
+        let mut shared = self.shared.lock().expect("TransportUDP.shared.lock");
+        shared.tx_thread.take();
+        shared.rx_thread.take();
     }
 }
 
@@ -158,19 +165,19 @@ impl Transport for TransportUDP {
         if let &TransmitterArgs::Remote(slab_id,address) = args {
             if let &TransportAddress::UDP(ref udp_address) = address {
 
-                let tx = TransmitterUDP{
-                    slab_id: *slab_id,
-                    address: udp_address.clone(),
-                    tx_channel: self.tx_channel.clone(),
-                };
+                if let Some(ref tx_channel) = self.shared.lock().unwrap().tx_channel {
 
-                Some(Transmitter::new( Box::new(tx) ))
-            }else{
-                None
+                    let tx = TransmitterUDP{
+                        slab_id: *slab_id,
+                        address: udp_address.clone(),
+                        tx_channel: tx_channel.clone(),
+                    };
+
+                    return Some(Transmitter::new( Box::new(tx) ))
+                }
             }
-        }else{
-            None
         }
+        None
     }
 
     fn bind_network(&self, net: &Network) {
@@ -187,8 +194,7 @@ impl Transport for TransportUDP {
         let rx_handle : thread::JoinHandle<()> = thread::spawn(move || {
             let mut buf = [0; 65536];
 
-            loop {
-                let (amt, src) = rx_socket.recv_from(&mut buf).unwrap();
+            while let Ok((amt, src)) = rx_socket.recv_from(&mut buf) {
 
                 if let Some(net) = net_weak.upgrade() {
 
@@ -219,8 +225,6 @@ impl Transport for TransportUDP {
                         }
                     }
 
-
-
                 }
             };
         });
@@ -243,18 +247,22 @@ impl Transport for TransportUDP {
     }
 }
 
-impl Drop for TransportUDP{
+impl Drop for TransportUDPInternal{
     fn drop(&mut self) {
-        let mut shared = self.shared.lock().unwrap();
-        println!("# TransportUDP({:?}).drop", shared.address);
-        let mut tx_thread = None;
-        let mut rx_thread = None;
-        mem::swap(&mut tx_thread,&mut shared.tx_thread);
-        mem::swap(&mut rx_thread,&mut shared.rx_thread);
+        println!("# TransportUDPInternal().drop");
 
-        //TODO: uncomment this. Getting a Poisonerror presently
-        //tx_thread.unwrap().join().unwrap();
-        //rx_thread.unwrap().join().unwrap();
+        println!("# TransportUDPInternal.drop A");
+        self.tx_channel.take();
+
+        println!("# TransportUDPInternal.drop B");
+
+        self.tx_thread.take().unwrap().join().unwrap();
+        println!("# TransportUDPInternal.drop C");
+
+        //TODO: implement an atomic boolean and a timeout to close the receiver thread in an orderly fashion
+        //self.rx_thread.take().unwrap().join().unwrap();
+        println!("# TransportUDPInternal.drop D");
+
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
     }
 }
@@ -285,5 +293,10 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
 //        println!("UDP QUEUE FOR SEND SERIALIZED {}", String::from_utf8(b).unwrap() );
 
         self.tx_channel.lock().unwrap().send((self.address.clone(), packet)).unwrap();
+    }
+}
+impl Drop for TransmitterUDP{
+    fn drop(&mut self) {
+        println!("# TransmitterUDP.drop");
     }
 }

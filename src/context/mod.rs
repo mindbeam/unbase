@@ -35,10 +35,27 @@ pub struct Context {
     inner: Arc<ContextInner>
 }
 
+#[derive(Clone)]
 pub struct WeakContext {
     inner: Weak<ContextInner>
 }
 
+#[derive(Clone)]
+pub enum ContextRef{
+    Weak(WeakContext),
+    Strong(Context)
+}
+
+impl ContextRef{
+    pub fn get_context<'a>(&'a self) -> Context {
+        match self {
+            &ContextRef::Weak(ref c)   => {
+                c.upgrade().expect("Sanity error. Weak context has been dropped")
+            },
+            &ContextRef::Strong(ref c) => { c.clone() }
+        }
+    }
+}
 
 impl Context{
     pub fn new ( slab: &Slab ) -> Context {
@@ -55,7 +72,15 @@ impl Context{
             })
         };
 
-        let index = IndexFixed::new_from_memorefhead(&new_self, 5, slab.get_root_index_seed().expect("Uninitialized slab") );
+        // Typically subjects, and the indexes that use them, have a hard link to their originating
+        // contexts. This is useful because we want to make sure the context (and associated slab)
+        // stick around until we're done with them
+
+        // The root index is a bit of a special case however, because the context needs to have a hard link to it,
+        // as it must use the index directly. Therefore I need to make sure it doesn't have a hard link back to me.
+        // This shouldn't be a problem, because the index is private, and not subject to direct use, so the context
+        // should outlive it.
+        let index = IndexFixed::new_from_memorefhead(ContextRef::Weak(new_self.weak()), 5, slab.get_root_index_seed().expect("Uninitialized slab") );
 
         {
             *new_self.inner.root_index.lock().unwrap() = Some(index);
@@ -153,7 +178,7 @@ impl Context{
 
         // NOTE: Subject::reconstitute calls back to Context.subscribe_subject()
         //       so we need to release the mutex prior to this
-        let subject = Subject::reconstitute(self,head);
+        let subject = Subject::reconstitute(ContextRef::Strong(self.clone()),head);
         return Ok(subject);
 
     }

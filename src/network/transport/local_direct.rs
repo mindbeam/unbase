@@ -68,11 +68,17 @@ impl Transport for LocalDirect {
     }
 }
 
-impl Drop for LocalDirect {
+impl Drop for Internal {
     fn drop (&mut self) {
-        let mut shared = self.shared.lock().unwrap();
-        for thread in shared.tx_threads.drain(..) {
-            thread.join().unwrap();
+        println!("# LocalDirectInternal.drop");
+        for _thread in self.tx_threads.drain(..) {
+
+            println!("# LocalDirectInternal.drop Thread pre join");
+            //TODO: Figure out why the transmitter isn't getting freed
+            //      because we're getting stuck here
+            //thread.join().unwrap();
+
+            println!("# LocalDirectInternal.drop Thread post join");
         }
     }
 }
