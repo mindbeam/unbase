@@ -2,7 +2,7 @@ extern crate unbase;
 use unbase::subject::Subject;
 use std::{thread, time};
 
-#[test]
+//#[test]
 fn remote_traversal_simulated() {
 
     let net = unbase::Network::create_new_system();
@@ -48,7 +48,7 @@ fn remote_traversal_simulated() {
 
 }
 
-#[test]
+//#[test]
 fn remote_traversal_nondeterministic() {
 
 
@@ -111,8 +111,8 @@ fn remote_traversal_nondeterministic_udp() {
 
         // Do some stuff
         let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").unwrap();
-        //rec_a1.set_value("animal_sound","Woof");
-        //rec_a1.set_value("animal_sound","Meow");
+        rec_a1.set_value("animal_sound","Woof");
+        rec_a1.set_value("animal_sound","Meow");
 
         // Wait until it's been replicated
         thread::sleep(time::Duration::from_millis(50));
@@ -125,8 +125,9 @@ fn remote_traversal_nondeterministic_udp() {
         thread::sleep(time::Duration::from_millis(50));
 
         // now lets see if we can project rec_a1 animal_sound. This will require memo retrieval from slab_b
-        //assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Meow");
-        println!("T1 EXIT");
+        println!("MARK 1" );
+        assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Meow");
+        println!("MARK 2" );
 
     });
 
@@ -144,14 +145,10 @@ fn remote_traversal_nondeterministic_udp() {
 
         udp2.seed_address_from_string( "127.0.0.1:12001".to_string() );
         thread::sleep( time::Duration::from_millis(50) );
-println!("MARK1" );
         let _context_b = slab_b.create_context();
-println!("MARK2" );
         // hang out to keep stuff in scope, and hold off calling the destructors
         // necessary in order to be online so we can answer slab_a's inquiries
         thread::sleep(time::Duration::from_millis(1000));
-
-        println!("T2 EXIT");
 
     });
 

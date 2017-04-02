@@ -4,7 +4,7 @@ use super::*;
 use std::sync::{Arc,Mutex};
 use slab::*;
 use itertools::partition;
-use memo::{Memo,PeeringStatus};
+use slab::memo::{Memo,MemoPeeringStatus};
 use network::*;
 
 // Minkowski stuff: Still ridiculous, but necessary for our purposes.
@@ -23,7 +23,7 @@ struct SimEvent {
     _source_point: MinkowskiPoint,
     dest_point:    MinkowskiPoint,
     from:          SlabRef,
-    origin_peering_status: PeeringStatus,
+    origin_peering_status: MemoPeeringStatus,
     dest:          WeakSlab,
     memo:          Memo
 }
@@ -172,9 +172,9 @@ impl DynamicDispatchTransmitter for SimulatorTransmitter {
             _source_point: source_point,
             dest_point: dest_point,
             from: from.clone(),
-            
+
             // TODO - stop assuming that this is resident on the sending slab just because we're sending it
-            origin_peering_status: PeeringStatus::Resident,
+            origin_peering_status: MemoPeeringStatus::Resident,
             dest: self.dest.clone(),
             memo: memo
         };

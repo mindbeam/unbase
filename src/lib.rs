@@ -10,8 +10,6 @@ extern crate serde_json;
 //#[doc(inline)]
 pub mod network;
 pub mod slab;
-pub mod memo;
-pub mod memoref;
 pub mod subject;
 pub mod context;
 pub mod error;

@@ -5,14 +5,14 @@ use std::str;
 use super::*;
 use std::sync::mpsc;
 use std::sync::{Arc,Mutex};
-use memo::*;
+use slab::memo::{Memo,MemoPeeringStatus,MemoBody};
 // use std::collections::BTreeMap;
 use super::packet::*;
 use util::serde::DeserializeSeed;
 
 use util::serde::{SerializeHelper,SerializeWrapper};
 use super::packet::serde::PacketSeed;
-use std::time;
+//use std::time;
 
 use serde_json;// {serialize as bin_serialize, deserialize as bin_deserialize};
 
@@ -46,7 +46,7 @@ impl TransportUDP {
         let bind_address = TransportAddressUDP{ address : address };
 
         let socket = Arc::new( UdpSocket::bind( bind_address.address.clone() ).expect("UdpSocket::bind") );
-        socket.set_read_timeout( Some(time::Duration::from_millis(2000)) ).expect("set_read_timeout call failed");
+        //socket.set_read_timeout( Some(time::Duration::from_millis(2000)) ).expect("set_read_timeout call failed");
 
         let (tx_thread,tx_channel) = Self::setup_tx_thread(socket.clone(), bind_address.clone());
 
@@ -132,7 +132,7 @@ impl TransportUDP {
         let packet = Packet{
             to_slab_id: 0,
             from_slab_id: from_slabref.slab_id,
-            from_slab_peering_status: PeeringStatus::Resident, // TODO - stop assuming that it's actually resident in the sending slab
+            from_slab_peering_status: MemoPeeringStatus::Resident, // TODO - stop assuming that it's actually resident in the sending slab
             memo: memo
         };
 
@@ -193,22 +193,14 @@ impl Transport for TransportUDP {
                     //println!("DESERIALIZE {}", String::from_utf8(buf.to_vec()).unwrap());
                     let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
 
-                    let maybe_packet = {
-                        let packet_seed : PacketSeed = PacketSeed{ net: &net };
-                        packet_seed.deserialize(&mut deserializer)
+                    let packet_seed : PacketSeed = PacketSeed{
+                        net: &net,
+                        source_address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() })
                     };
 
-                    match maybe_packet {
-                        Ok(packet) => {
-                            // TODO: create packet.get_presence ?
-                            // TODO: cache this
-                            let from_presence =  SlabPresence{
-                                slab_id: packet.from_slab_id,
-                                address: TransportAddress::UDP(TransportAddressUDP{ address: src.to_string() }),
-                                lifetime: SlabAnticipatedLifetime::Unknown
-                            };
-                            println!("GOT {:?}", packet);
-                            net.distribute_memos(&from_presence, packet);
+                    match packet_seed.deserialize(&mut deserializer) {
+                        Ok(()) => {
+                            // PacketSeed actually does everything
                         },
                         Err(e) =>{
                             println!("DESERIALIZE ERROR {}", e);
@@ -276,7 +268,7 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
         let packet = Packet {
             to_slab_id: self.slab_id,
             from_slab_id: from.slab_id,
-            from_slab_peering_status: PeeringStatus::Resident, //TODO: stop assuming this is resident just because we're sending it
+            from_slab_peering_status: MemoPeeringStatus::Resident, //TODO: stop assuming this is resident just because we're sending it
             memo: memo
         };
 

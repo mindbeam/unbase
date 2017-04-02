@@ -1,5 +1,5 @@
 use super::*;
-use network::slabref::serde::*;
+use slab::slabref::serde::*;
 use util::serde::*;
 
 impl StatefulSerialize for MemoPeerList {
@@ -121,24 +121,8 @@ impl<'a> Visitor for MemoRefSeed<'a> {
            }
         };
 
-        //panic!("implement this");
-println!("TODO TODO TODO" );
-       let memoref = MemoRef {
-           id: memo_id,
-           subject_id: Some(subject_id),
-           shared: Arc::new(Mutex::new(
-               MemoRefShared {
-                   id: memo_id,
-                   peers: MemoPeerList(peers),
-                   ptr: match has_memo {
-                       true  => MemoRefPtr::Remote,
-                       false => MemoRefPtr::Remote
-                   }
-               }
-           ))
-       };
 
-       Ok(memoref)
+        Ok(self.dest_slab.assert_memoref( memo_id, subject_id, peers ))
     }
 }
 
@@ -169,7 +153,7 @@ impl<'a> Visitor for MemoPeerSeed<'a> {
                 return Err(DeError::invalid_length(0, &self));
             }
         };
-        let status: PeeringStatus = match visitor.visit()? {
+        let status: MemoPeeringStatus = match visitor.visit()? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(1, &self));

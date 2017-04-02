@@ -6,8 +6,8 @@ use std::fmt;
 use std::slice;
 use std::collections::VecDeque;
 
-use memo::*;
-use memoref::*;
+use slab::memo::*;
+use slab::memoref::*;
 use slab::*;
 use subject::*;
 use context::*;
@@ -218,7 +218,7 @@ impl Iterator for CausalMemoIter {
                     return Some(memo)
                 },
                 Err(err) => {
-                    panic!(err);
+                    panic!("Failed to retrieve memo {} ({:?})", memoref.id, err );
                 }
             }
             //TODO: memoref.get_memo needs to be able to fail

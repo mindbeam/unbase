@@ -1,5 +1,5 @@
 pub mod serde;
-use memo::{Memo, PeeringStatus};
+use slab::memo::{Memo, MemoPeeringStatus};
 use slab::SlabId;
 use std::fmt;
 
@@ -7,7 +7,7 @@ use std::fmt;
 pub struct Packet {
     pub to_slab_id: SlabId,
     pub from_slab_id: SlabId,
-    pub from_slab_peering_status: PeeringStatus,
+    pub from_slab_peering_status: MemoPeeringStatus,
     pub memo: Memo
 }
 

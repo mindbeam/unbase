@@ -8,17 +8,17 @@ use std::{fmt};
 use std::sync::Arc;
 
 use subject::{SubjectId};
-use memoref::*;
+use slab::MemoRef;
 use memorefhead::*;
 use network::{SlabRef,SlabPresence};
-use slab::Slab;
+use super::*;
 
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
 
 
 #[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-pub enum PeeringStatus{
+pub enum MemoPeeringStatus{
     Resident,
     Participating,
     NonParticipating,
@@ -34,7 +34,7 @@ pub enum MemoBody{
     Edit(HashMap<String, String>),
     FullyMaterialized     { v: HashMap<String, String>, r: RelationSlotSubjectHead },
     PartiallyMaterialized { v: HashMap<String, String>, r: RelationSlotSubjectHead },
-    Peering(MemoId,SlabPresence,PeeringStatus),
+    Peering(MemoId,Vec<SlabPresence>,MemoPeeringStatus),
     MemoRequest(Vec<MemoId>,SlabRef)
 }
 
@@ -43,6 +43,7 @@ pub enum MemoBody{
 #[derive(Clone,PartialEq)]
 pub struct Memo {
     pub id: u64,
+    pub owning_slab_id: SlabId,
     pub subject_id: u64,
     pub inner: Arc<MemoInner>
 }
@@ -79,12 +80,13 @@ impl fmt::Debug for Memo{
 }
 
 impl Memo {
-    pub fn new (id: MemoId, subject_id: SubjectId, parents: MemoRefHead, body: MemoBody) -> Memo {
+    pub fn new ( id: MemoId, subject_id: SubjectId, parents: MemoRefHead, body: MemoBody, slab: &Slab ) -> Memo {
 
         println!("# Memo.new(id: {},subject_id: {}, parents: {:?}, body: {:?})", id, subject_id, parents.memo_ids(), body );
 
         let me = Memo {
             id:    id,
+            owning_slab_id: slab.id,
             subject_id: subject_id,
             inner: Arc::new(MemoInner {
                 id:    id,
@@ -94,14 +96,13 @@ impl Memo {
             })
         };
 
-        //println!("# New Memo: {:?}", me.inner.id );
         me
     }
-    pub fn new_basic (id: MemoId, subject_id: SubjectId, parents: MemoRefHead, body: MemoBody) -> Self {
-        Self::new(id, subject_id, parents, body)
+    pub fn new_basic (id: MemoId, subject_id: SubjectId, parents: MemoRefHead, body: MemoBody, slab: &Slab) -> Self {
+        Self::new(id, subject_id, parents, body, slab)
     }
-    pub fn new_basic_noparent (id: MemoId, subject_id: SubjectId, body: MemoBody) -> Self {
-        Self::new(id, subject_id, MemoRefHead::new(), body)
+    pub fn new_basic_noparent (id: MemoId, subject_id: SubjectId, body: MemoBody, slab: &Slab) -> Self {
+        Self::new(id, subject_id, MemoRefHead::new(), body, slab)
     }
     pub fn get_parent_head (&self) -> MemoRefHead {
         self.inner.parents.clone()

@@ -16,7 +16,6 @@ pub use self::transmitter::{Transmitter, DynamicDispatchTransmitter};
 
 use network::*;
 use slab::Slab;
-use memo::Memo;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum TransportAddress{

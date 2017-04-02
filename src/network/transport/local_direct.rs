@@ -1,9 +1,8 @@
 use std::sync::{Arc,Mutex};
 use std::thread;
 use std::sync::mpsc;
+use slab::memo::*;
 use super::*;
-use slab::MemoOrigin;
-use memo::*;
 
 #[derive(Clone)]
 pub struct LocalDirect {
@@ -33,7 +32,7 @@ impl Transport for LocalDirect {
     fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
         if let &TransmitterArgs::Local(rcv_slab) = args {
             let slab = rcv_slab.weak();
-            let (tx_channel, rx_channel) = mpsc::channel::<(SlabRef,PeeringStatus,Memo)>();
+            let (tx_channel, rx_channel) = mpsc::channel::<(SlabRef,MemoPeeringStatus,Memo)>();
 
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
                 //let mut buf = [0; 65536];

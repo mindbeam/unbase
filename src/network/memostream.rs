@@ -1,3 +1,7 @@
+/*
+
+Not used. Might be useful in the future
+
 use std::collections::BTreeMap;
 const MAX_FRAGMENT : usize = 10000;
 
@@ -67,3 +71,4 @@ struct Packet {
     envelope_id: u64,
     fragments: Vec<MemoFragment>
 }
+*/

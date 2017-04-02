@@ -11,13 +11,13 @@ use unbase::network::{Network,Packet};
 use unbase::network::packet::serde::PacketSeed;
 //use serde_json;
 
-/*
-//#[test]
+
+#[test]
 fn serialize() {
 
     let net = unbase::Network::create_new_system();
-    let simulator = unbase::network::transport::Simulator::new();
-    net.add_transport( Box::new(simulator.clone()) );
+    //let simulator = unbase::network::transport::Simulator::new();
+    //net.add_transport( Box::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
     let context_a = slab_a.create_context();
@@ -27,8 +27,8 @@ fn serialize() {
 
 
     let net2 = unbase::Network::new();
-    let simulator = unbase::network::transport::Simulator::new();
-    net.add_transport( Box::new(simulator.clone()) );
+    //let simulator = unbase::network::transport::Simulator::new();
+    //net.add_transport( Box::new(simulator.clone()) );
     let slab_b = unbase::Slab::new(&net);
 
     check_roundtrip(&record, &net2, &slab_b);
@@ -42,7 +42,7 @@ fn check_roundtrip(record: &Subject, net: &Network, slab: &Slab){
     let packet = Packet{
         to_slab_id: 1,
         from_slab_id: 0,
-        from_slab_peering_status: PeeringStatus::Resident,
+        from_slab_peering_status: MemoPeeringStatus::Resident,
         memo: memo.clone()
     };
 
@@ -60,4 +60,3 @@ fn check_roundtrip(record: &Subject, net: &Network, slab: &Slab){
 
     assert_eq!(*memo, decoded_memo);
 }
-*/

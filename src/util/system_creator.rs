@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use memo::{Memo,MemoBody};
+use slab::Memo;
+use slab::memo::MemoBody;
 use memorefhead::MemoRefHead;
 use slab::{Slab,MemoOrigin};
 
@@ -15,12 +16,13 @@ impl SystemCreator {
         let memo = Memo::new_basic_noparent(
             slab.gen_memo_id(),
             slab.generate_subject_id(),
-            MemoBody::FullyMaterialized {v: values, r: HashMap::new() }
+            MemoBody::FullyMaterialized {v: values, r: HashMap::new() },
+            slab
         );
 
-        let memorefs = slab.put_memos(&MemoOrigin::SameSlab, vec![ memo.clone() ]);
+        let memoref = slab.put_memo(&MemoOrigin::SameSlab, memo);
 
-        MemoRefHead::from_memoref(memorefs[0].clone())
+        MemoRefHead::from_memoref(memoref)
     }
 
 }

@@ -1,20 +1,28 @@
+pub mod memo;
+pub mod slabref;
+pub mod memoref;
+mod memohandling;
+
+pub use self::slabref::{SlabRef,SlabRefInner,SlabPresence,SlabAnticipatedLifetime};
+pub use self::memoref::MemoRef;
+pub use self::memo::Memo;
+
+use self::memo::*;
+use network::transport::{TransportAddress,TransmitterArgs};
+
 use std::fmt;
 use std::sync::mpsc;
 use std::sync::mpsc::channel;
 use std::sync::{Arc,Mutex,Weak};
+use std::sync::atomic;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use network::SlabRef;
 
 use network::Network;
-use memo::*;
 use subject::SubjectId;
-use memoref::MemoRef;
 use memorefhead::*;
 use context::{Context,WeakContext};
-use network::slabref::{SlabPresence,SlabAnticipatedLifetime};
 
-mod memohandling;
 
 /* Initial plan:
  * Initially use Mutex-managed internal struct to manage slab storage
@@ -62,7 +70,7 @@ pub struct WeakSlab{
 #[derive(Debug)]
 pub enum MemoOrigin<'a>{
     SameSlab,
-    OtherSlab(&'a SlabRef, PeeringStatus)
+    OtherSlab(&'a SlabRef, MemoPeeringStatus)
     // TODO: consider bifurcation into OtherSlabTrusted, OtherSlabUntrusted
     //       in cases where we want to reduce computational complexity by foregoing verification
 }
@@ -97,16 +105,18 @@ impl Slab {
             })
         };
 
-        let my_ref = net.register_slab(&me);
+        net.register_local_slab(&me);
+/*
         {
             *(me.inner.my_ref.lock().unwrap()) = Some(my_ref.clone());
         }
 
         // not sure if there's a better way to do this, but I want to have a handy return address
+*/
         {
             let mut shared = me.inner.shared.lock().unwrap();
             shared.my_slab = Some(me.weak());
-            shared.my_ref   = Some(my_ref);
+            //shared.my_ref   = Some(my_ref);
         }
 
         net.conditionally_generate_root_index_seed(&me);
@@ -184,14 +194,9 @@ impl Slab {
         let shared = self.inner.shared.lock().unwrap();
         shared.memos_redundantly_received
     }
-    pub fn inject_peer_slabref (&self, new_peer_ref: SlabRef ) -> bool {
-        // We don't have to figure it out, it's just being given to us
-        // What luxury!
-
-        let mut shared = self.inner.shared.lock().unwrap();
-        let acted = shared.inject_peer_slabref(new_peer_ref);
-
-        acted
+    pub fn assert_slabref_from_local_slab(&self, peer_slab: &Slab ){
+        let shared = self.inner.shared.lock().unwrap();
+        shared.assert_slabref_from_local_slab( peer_slab );
     }
     pub fn peer_slab_count (&self) -> usize {
         let shared = self.inner.shared.lock().unwrap();
@@ -271,6 +276,62 @@ impl WeakSlab {
 }
 
 impl SlabShared {
+    pub fn assert_slabref_from_local_slab(&self, peer_slab: &Slab) -> SlabRef {
+
+        let args = TransmitterArgs::Local(&peer_slab);
+        let presence = SlabPresence{
+            slab_id: peer_slab.id,
+            address: TransportAddress::Local,
+            lifetime: SlabAnticipatedLifetime::Unknown
+        };
+
+        self.assert_slabref(args, &presence)
+    }
+    pub fn assert_slabref_from_presence(&self, presence: &SlabPresence) -> Result<SlabRef,&str> {
+
+        match presence.address {
+            TransportAddress::Simulator  => {
+                return Err("Invalid - Cannot create simulator slabref from presence")
+            }
+            TransportAddress::Local      => {
+                return Err("Invalid - Cannot create local slabref from presence")
+            }
+            _ => { }
+        };
+
+        let args = TransmitterArgs::Remote( &presence.slab_id, &presence.address );
+
+        Ok(self.assert_slabref( args, presence ))
+    }
+    fn assert_slabref(&self, args: TransmitterArgs, presence: &SlabPresence ) -> SlabRef {
+
+        if let Some(slabref) = self.peer_refs.iter().find(|r| r.0.to_slab_id == presence.slab_id ) {
+            if slabref.apply_presence(presence) {
+                let new_trans = self.net.get_transmitter( args ).expect("new_from_slab net.get_transmitter");
+                let return_address = self.net.get_return_address( &presence.address ).expect("return address not found");
+
+                *(slabref.0.tx.lock().unwrap()) = new_trans;
+                slabref.0.return_address.store(&mut return_address, atomic::Ordering::Relaxed);
+            }
+            return slabref.clone();
+        }else{
+            let tx = self.net.get_transmitter( args ).expect("new_from_slab net.get_transmitter");
+            let return_address = self.net.get_return_address( &presence.address ).expect("return address not found");
+
+            let inner = SlabRefInner {
+                to_slab_id: presence.slab_id,
+                owning_slab_id: self.id, // for assertions only?
+                presence: Mutex::new(vec![presence.clone()]),
+                tx: Mutex::new(tx),
+                return_address: atomic::AtomicPtr::new(&mut return_address),
+            };
+
+            let slabref = SlabRef(Arc::new(inner));
+            self.peer_refs.push(slabref);
+            return slabref;
+        };
+
+    }
     pub fn get_my_slab <'a> (&self) -> Slab {
         if let Some(ref weak) = self.my_slab {
             if let Some(s) = weak.upgrade() {
@@ -375,20 +436,6 @@ println!("# SlabShared({}).put_memos(A)", self.id);
         }
     }
 
-    fn inject_peer_slabref (&mut self, new_peer_ref: SlabRef ) -> bool {
-        // QUESTION: why does this require a double deref?
-        println!("SlabShared({}).inject_peer_slabref({:?})", self.id, new_peer_ref );
-        let acted = if let Some(_) = self.peer_refs.iter().find(|sr| **sr == new_peer_ref) {
-            false
-        }else{
-            self.peer_refs.push(new_peer_ref);
-            true
-        };
-
-
-        println!("Slab({}).inject_peer_slabref acted: {}, {}", self.id, acted, self.peer_refs.len() );
-        acted
-    }
     fn check_peering_target( &self, memo: &Memo ) -> u8 {
         if memo.does_peering() {
             5

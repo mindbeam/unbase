@@ -7,7 +7,8 @@ use std::fmt;
 use network::Network;
 use memorefhead::serde::*;
 
-use network::slabref::serde::SlabRefSeed;
+use slab::slabref::serde::SlabRefSeed;
+use slab::MemoOrigin;
 use util::serde::*;
 
 impl StatefulSerialize for Memo {
@@ -22,19 +23,6 @@ impl StatefulSerialize for Memo {
         seq.end()
     }
 }
-
-/*impl StatefulSerialize for Memo {
-    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        let mut sv = serializer.serialize_struct("Memo", 4)?;
-        sv.serialize_field("memo_id",    &self.id)?;
-        sv.serialize_field("subject_id", &self.subject_id )?;
-        sv.serialize_field("parents",    &SerializeWrapper( &self.inner.parents, helper ) )?;
-        sv.serialize_field("body",       &SerializeWrapper( &self.inner.body, helper ) )?;
-        sv.end()
-    }
-}*/
 
 impl StatefulSerialize for MemoBody {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
@@ -74,7 +62,7 @@ impl StatefulSerialize for MemoBody {
             Peering( ref memo_id, ref slabpresence, ref peeringstatus ) =>{
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 4, "Peering", 3)?;
                 sv.serialize_field("i", memo_id )?;
-                sv.serialize_field("p", &SerializeWrapper(&slabpresence,helper) )?;
+                sv.serialize_field("p", VecSeed(&SerializeWrapper(&slabpresence,helper)) )?;
                 sv.serialize_field("s", peeringstatus)?;
                 sv.end()
             }
@@ -101,10 +89,14 @@ impl StatefulSerialize for (SubjectId,MemoRefHead) {
     }
 }
 
-pub struct MemoSeed<'a> { pub net: &'a Network }
+pub struct MemoSeed<'a> {
+    dest_slab: &'a Slab,
+    from_presence: SlabPresence,
+    from_slab_peering_status: MemoPeeringStatus
+}
 
 impl<'a> DeserializeSeed for MemoSeed<'a> {
-    type Value = Memo;
+    type Value = ();
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
@@ -113,13 +105,13 @@ impl<'a> DeserializeSeed for MemoSeed<'a> {
 }
 
 impl<'a> Visitor for MemoSeed<'a>{
-    type Value = Memo;
+    type Value = ();
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
        formatter.write_str("struct Memo")
     }
 
-    fn visit_seq<V> (self, mut visitor: V) -> Result<Memo, V::Error>
+    fn visit_seq<V> (self, mut visitor: V) -> Result<Self::Value, V::Error>
         where V: SeqVisitor
     {
        let id: MemoId = match visitor.visit()? {
@@ -147,7 +139,20 @@ impl<'a> Visitor for MemoSeed<'a>{
            }
        };
 
-       Ok(Memo::new( id, subject_id, parents, body ))
+       let from = self.dest_slab.assert_slabref_from_presence(&self.from_presence);
+       let memoorigin = MemoOrigin::OtherSlab(&from, self.from_slab_peering_status);
+       let memoref = self.dest_slab.put_memo(&memoorigin,
+           Memo::new(
+               id,
+               subject_id,
+               parents,
+               body,
+               self.dest_slab
+           )
+       );
+
+       //Ok(Memo::new( id, subject_id, parents, body ))
+       Ok(())
     }
 }
 

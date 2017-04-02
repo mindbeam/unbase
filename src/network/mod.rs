@@ -1,11 +1,10 @@
 extern crate linked_hash_map;
 
 pub mod transport;
-pub mod slabref;
 pub mod packet;
 
-pub use self::slabref::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
-pub use self::transport::{Transport,TransportAddress};
+pub use slab::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
+pub use self::transport::{Transport,TransportAddress,Transmitter};
 pub use self::packet::Packet;
 use self::transport::*;
 use util::system_creator::SystemCreator;
@@ -18,7 +17,6 @@ use memorefhead::MemoRefHead;
 struct NetworkInternals {
     next_slab_id: u32,
     slabs:     Vec<WeakSlab>,
-    slab_refs: Vec<SlabRef>,
     transports: Vec<Box<Transport + Send + Sync>>,
     root_index_seed: Option<MemoRefHead>,
     create_new_system: bool
@@ -52,7 +50,6 @@ impl Network {
         let internals = NetworkInternals {
             next_slab_id: 0,
             slabs:     Vec::new(),
-            slab_refs: Vec::new(),
             transports: Vec::new(),
             root_index_seed: None,
             create_new_system: create_new_system
@@ -71,34 +68,6 @@ impl Network {
 
         net
     }
-/*    pub fn clean_up (&self) {
-        println!("Network.clean_up started");
-
-        let mut internals = self.shared.internals.lock().expect("Network.shared.internals.lock");
-        println!("Network.clean_up A");
-
-        /*for slab in internals.slabs.drain(..) {
-            if let Some(slab) = slab.upgrade() {
-                slab.clean_up();
-            }
-        }*/
-
-        println!("Network.clean_up B");
-
-        internals.root_index_seed.take();
-
-        println!("Network.clean_up C");
-
-        for slabref in internals.slab_refs.drain(..){
-            slabref.clean_up();
-        }
-        println!("Network.clean_up D");
-
-        internals.transports.clear();
-
-        println!("Network.clean_up end")
-    }
-*/
     pub fn hack_set_next_slab_id(&self, id: SlabId ){
         let mut internals = self.shared.internals.lock().unwrap();
         internals.next_slab_id = id;
@@ -142,61 +111,9 @@ impl Network {
         let mut internals = self.shared.internals.lock().unwrap();
         internals.get_slab(slab_id)
     }
-    pub fn distribute_memos(&self, from_presence: &SlabPresence, packet: Packet ) {
-        println!("###### Network.distribute_memos (start)");
-        // TODO: optimize this. redundant mutex locking inside, weak slab upgrades, etc
-
-        let from = self.assert_slabref_from_presence(from_presence);
-
-        println!("###### Network.distribute_memos (A)");
-        let mut send_slabs = Vec::new();
-        {
-            println!("###### Network.distribute_memos (B)");
-            let internals = self.shared.internals.lock().unwrap();
-
-            println!("###### Network.distribute_memos (C)");
-            for weak_slab in internals.slabs.iter(){
-                // slab_id 0 means any/all slabs present
-                // otherwise it's destined to a specific slab
-                if packet.to_slab_id == 0 || weak_slab.id == packet.to_slab_id {
-                    if let Some(slab) = weak_slab.upgrade() {
-                        send_slabs.push(slab);
-                    }
-                }
-            }
-        }
-        // can't have the lock open any time we're putting memos
-        // because some internal logic needs to access the network struct
-
-        println!("###### Network.distribute_memos (D)");
-
-        let memoorigin = MemoOrigin::OtherSlab(&from,packet.from_slab_peering_status);
-        println!("###### Network.distribute_memos (E)");
-
-        for slab in send_slabs {
-            println!("###### Network.distribute_memos (F, {:?})", slab);
-            slab.put_memos( &memoorigin,vec![packet.memo.clone()]);
-        }
-
-        println!("###### Network.distribute_memos (end)");
-    }
-    pub fn assert_slabref_from_presence(&self, presence: &SlabPresence) -> SlabRef {
-
-        {
-            let internals = self.shared.internals.lock().unwrap();
-            match internals.slab_refs.iter().find(|r| r.presence == *presence ) {
-                Some(slabref) => {
-                    //TODO: should we update the slabref if the address is different?
-                    //      or should we find/make a new slabref because its different?
-                    return slabref.clone();
-                }
-                _ =>{}
-            }
-        }
-
-        let slabref = SlabRef::new_from_presence(&presence, &self);
-        self.shared.internals.lock().unwrap().slab_refs.push(slabref.clone());
-        return slabref;
+    pub fn get_representative_slab (&self) -> Option<Slab>{
+        let mut internals = self.shared.internals.lock().unwrap();
+        internals.get_representative_slab()
     }
     pub fn get_transmitter (&self, args: TransmitterArgs ) -> Option<Transmitter> {
 
@@ -223,26 +140,19 @@ impl Network {
         }
         None
     }
-    pub fn register_slab(&self, slab: &Slab) -> SlabRef {
-        println!("# register_slab {:?}", slab );
+    pub fn register_local_slab(&self, new_slab: &Slab) {
+        println!("# register_slab {:?}", new_slab );
 
         // Probably won't use transports in quite the same way in the future
-
-        let slab_ref = SlabRef::new_from_slab( &slab, &self );
 
         let mut internals = self.shared.internals.lock().unwrap();
 
         for prev_slab in internals.get_all_local_slabs() {
-            prev_slab.inject_peer_slabref( slab_ref.clone() );
-        }
-        for prev_slab_ref in internals.get_slab_refs() {
-            slab.inject_peer_slabref( prev_slab_ref.clone() );
+            prev_slab.assert_slabref_from_local_slab( new_slab );
+            new_slab.assert_slabref_from_local_slab( &prev_slab );
         }
 
-        internals.slab_refs.insert( 0, slab_ref.clone() );
-        internals.slabs.insert(0, slab.weak() );
-
-        slab_ref
+        internals.slabs.insert(0, new_slab.weak() );
     }
 
     pub fn get_root_index_seed(&self) -> Option<MemoRefHead> {
@@ -312,6 +222,15 @@ impl NetworkInternals {
 
         return None;
     }
+    fn get_representative_slab ( &mut self ) -> Option<Slab> {
+        for weak in self.slabs.iter() {
+            if let Some(slab) = weak.upgrade() {
+                return Some(slab);
+            }
+        }
+
+        return None;
+    }
     fn get_all_local_slabs (&mut self) -> Vec<Slab> {
         // TODO: convert this into a iter generator that automatically expunges missing slabs.
         let mut res: Vec<Slab> = Vec::with_capacity(self.slabs.len());
@@ -332,19 +251,6 @@ impl NetworkInternals {
         res
     }
 
-    fn get_slab_refs (&mut self) -> Vec<SlabRef> {
-        // TODO: convert this into a iter generator that automatically expunges missing slabs.
-        let mut res: Vec<SlabRef> = Vec::with_capacity(self.slabs.len());
-        //let mut missing : Vec<usize> = Vec::new();
-
-        for slab_ref in self.slab_refs.iter() {
-            //if slab_ref.is_resident() {
-                res.push(slab_ref.clone());
-            //}
-        }
-
-        res
-    }
 }
 
 impl fmt::Debug for Network {
@@ -361,17 +267,13 @@ impl Drop for NetworkInternals {
     fn drop(&mut self) {
         println!("# > Dropping NetworkInternals");
 
-        self.slabs.clear();
             println!("# > Dropping NetworkInternals B");
-        self.slab_refs.clear();
-
-            println!("# > Dropping NetworkInternals C");
         self.transports.clear();
 
-            println!("# > Dropping NetworkInternals D");
+            println!("# > Dropping NetworkInternals C");
         self.root_index_seed.take();
 
-            println!("# > Dropping NetworkInternals E");
+            println!("# > Dropping NetworkInternals D");
 
     }
 }

@@ -13,13 +13,14 @@ use error::RetrieveError;
 #[derive(Clone)]
 pub struct MemoRef {
     pub id:    MemoId,
+    pub owning_slab_id: SlabId,
     pub subject_id: Option<SubjectId>,
     shared: Arc<Mutex<MemoRefShared>>
 }
 #[derive(Debug)]
 pub struct MemoPeer {
     slabref: SlabRef,
-    status: PeeringStatus
+    status: MemoPeeringStatus
 }
 
 #[derive(Debug)]
@@ -38,9 +39,10 @@ pub enum MemoRefPtr {
 }
 
 impl MemoRef {
-    pub fn new_from_memo (memo : &Memo) -> Self {
+    pub fn from_memo (slab: &Slab, memo : &Memo) -> Self {
         MemoRef {
             id: memo.id,
+            owning_slab_id: slab.id,
             subject_id: Some(memo.subject_id),
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
@@ -51,9 +53,10 @@ impl MemoRef {
             ))
         }
     }
-    pub fn new_remote (memo_id: MemoId) -> Self {
+    pub fn from_memo_id_remote (slab: &Slab, memo_id: MemoId) -> Self {
         MemoRef {
             id: memo_id,
+            owning_slab_id: slab.id,
             subject_id: None,
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
@@ -82,12 +85,13 @@ impl MemoRef {
         let shared = self.shared.lock().unwrap();
 
         let status = shared.peers.0.iter().any(|peer| {
-            (peer.slabref.slab_id == slabref.slab_id && peer.status != PeeringStatus::NonParticipating)
+            (peer.slabref.slab_id == slabref.slab_id && peer.status != MemoPeeringStatus::NonParticipating)
         });
 
         status
     }
     pub fn get_memo (&self, slab: &Slab) -> Result<Memo,RetrieveError> {
+        assert!(self.owning_slab_id == slab.id);
         // This seems pretty crude, but using channels for now in the interest of expediency
         let channel;
         {
@@ -139,6 +143,7 @@ impl MemoRef {
 
     }
     pub fn descends (&self, memoref: &MemoRef, slab: &Slab) -> bool {
+        assert!(self.owning_slab_id == slab.id);
         match self.get_memo( slab ) {
             Ok(my_memo) => {
                 if my_memo.descends(&memoref, slab) {
@@ -152,6 +157,7 @@ impl MemoRef {
         false
     }
     pub fn residentize(&self, slab: &Slab, memo: &Memo) -> bool {
+        assert!(self.owning_slab_id == slab.id);
         println!("# MemoRef({}).residentize()", self.id);
 
         let mut shared = self.shared.lock().unwrap();
@@ -169,7 +175,7 @@ impl MemoRef {
                 slab.gen_memo_id(),
                 0,
                 MemoRefHead::from_memoref(self.clone()),
-                MemoBody::Peering(self.id, slabref.presence.clone(), PeeringStatus::Resident)
+                MemoBody::Peering(self.id, slabref.presence.clone(), MemoPeeringStatus::Resident)
             );
 
             for peer in shared.peers.0.iter() {
@@ -184,6 +190,7 @@ impl MemoRef {
         }
     }
     pub fn remotize(&self, slab: &Slab ) {
+        assert!(self.owning_slab_id == slab.id);
         println!("# MemoRef({}).remotize()", self.id);
         let mut shared = self.shared.lock().unwrap();
 
@@ -198,7 +205,7 @@ impl MemoRef {
                 slab.gen_memo_id(),
                 0,
                 MemoRefHead::from_memoref(self.clone()),
-                MemoBody::Peering(self.id, slabref.presence.clone() ,PeeringStatus::Participating)
+                MemoBody::Peering(self.id, slabref.presence.clone() ,MemoPeeringStatus::Participating)
             );
 
             for peer in shared.peers.0.iter() {
@@ -208,7 +215,7 @@ impl MemoRef {
 
         shared.ptr = MemoRefPtr::Remote;
     }
-    pub fn update_peer (&self, slabref: &SlabRef, status: PeeringStatus){
+    pub fn update_peer (&self, slabref: &SlabRef, status: MemoPeeringStatus){
 
         let mut shared = self.shared.lock().unwrap();
 
@@ -217,7 +224,7 @@ impl MemoRef {
             if peer.slabref.slab_id == slabref.slab_id {
                 found = true;
                 peer.status = status.clone();
-                // TODO remove the peer entirely for PeeringStatus::NonParticipating
+                // TODO remove the peer entirely for MemoPeeringStatus::NonParticipating
                 // TODO prune excess peers - Should keep this list O(10) peers
             }
         }
