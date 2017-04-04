@@ -15,7 +15,7 @@ impl SlabShared {
         };
     }
 
-    pub fn handle_memo_from_other_slab( &mut self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef, my_slab: &Slab, my_ref: &SlabRef  ){
+    pub fn handle_memo_from_other_slab( &mut self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef, origin_peering_status: MemoPeeringStatus, my_slab: &Slab, my_ref: &SlabRef  ){
 
         match memo.inner.body {
             // This Memo is a peering status update for another memo
@@ -26,6 +26,7 @@ impl SlabShared {
 
                 match opt_root_index_seed {
                     &Some(ref root_index_seed) => {
+
 
                         // HACK - this should be done inside the deserialize
                         for memoref in root_index_seed.iter() {
@@ -60,7 +61,7 @@ impl SlabShared {
 
                         let my_presence_memo = Memo::new_basic(
                             memo_id,
-                            0,
+                            None,
                             parents,
                             MemoBody::SlabPresence{ p: my_presence, r: root_index_seed },
                             &my_slab
@@ -71,10 +72,14 @@ impl SlabShared {
                     }
                 }
             }
-            MemoBody::Peering(memo_id, ref presence, ref status) => {
+            MemoBody::Peering(memo_id, subject_id, ref presence, ref status) => {
                 // Don't peer with yourself
-
-                let peered_memoref = self.memorefs_by_id.entry(memo_id).or_insert_with(|| MemoRef::from_memo_id_remote(&my_slab,memo_id));
+                self.memorefs_by_id.entry(memo_id).or_insert_with(|| MemoRef::from_memo_id_remote(&my_slab,memo_id));
+                let peerlist = MemoPeerList(vec![MemoPeer{
+                            slabref: origin_slabref.clone(),
+                            status: origin_peering_status.clone()
+                        }]);
+                let (peered_memoref,_) = self.assert_memoref(memo_id, subject_id, peerlist );
                 for p in presence.iter().filter(|p| p.slab_id != self.id ) {
                     let slabref = self.assert_slabref_from_presence( p ).expect("assert_slabref_from_presence");
                     peered_memoref.update_peer( &slabref, status.clone());
@@ -128,7 +133,7 @@ impl SlabShared {
             //println!("MEOW {}, {:?}", my_ref );
 
             let peering_memo = Memo::new(
-                my_slab.gen_memo_id(), 0,
+                my_slab.gen_memo_id(), None,
                 MemoRefHead::from_memoref(memoref.clone()),
                 MemoBody::Peering(
                     memo.id,
@@ -154,7 +159,7 @@ impl SlabShared {
                 let needs_peers = self.check_peering_target(&memo);
 
                 for peer_ref in self.peer_refs.iter().filter(|x| !memoref.is_peered_with_slabref(x) ).take( needs_peers as usize ) {
-                    println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", my_ref.slab_id, memo.id, peer_ref.slab_id );
+                    println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", my_ref.0.to_slab_id, memo.id, peer_ref.0.to_slab_id );
                     peer_ref.send_memo( my_ref, memo.clone() );
                 }
             }

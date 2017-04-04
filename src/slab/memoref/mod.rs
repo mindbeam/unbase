@@ -24,10 +24,10 @@ pub struct MemoPeer {
 }
 
 #[derive(Debug)]
-struct MemoPeerList (Vec<MemoPeer>);
+pub struct MemoPeerList (pub Vec<MemoPeer>);
 
 #[derive(Debug)]
-struct MemoRefShared {
+pub struct MemoRefShared {
     pub id:    MemoId,
     pub peers: MemoPeerList,
     pub ptr:   MemoRefPtr
@@ -43,7 +43,7 @@ impl MemoRef {
         MemoRef {
             id: memo.id,
             owning_slab_id: slab.id,
-            subject_id: Some(memo.subject_id),
+            subject_id: memo.subject_id,
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
                     id: memo.id,
@@ -53,26 +53,9 @@ impl MemoRef {
             ))
         }
     }
-    pub fn from_memo_id_remote (slab: &Slab, memo_id: MemoId) -> Self {
-        MemoRef {
-            id: memo_id,
-            owning_slab_id: slab.id,
-            subject_id: None,
-            shared: Arc::new(Mutex::new(
-                MemoRefShared {
-                    id: memo_id,
-                    peers: MemoPeerList(Vec::with_capacity(3)),
-                    ptr: MemoRefPtr::Remote
-                }
-            ))
-        }
+    pub fn apply_peers (&self, peers: MemoPeerList ) -> bool {
+        unimplemented!();
     }
-    /* pub fn id (&self) -> MemoId {
-        match self {
-            MemoRef::Resident(memo) => memo.id,
-            MemoRef::Remote(id)     => id
-        }
-    }*/
     pub fn get_presence_for_peer (&self, slabref: &SlabRef) -> Vec<SlabPresence> {
         let shared = *(self.shared.lock().unwrap());
         let presence = Vec::new();
@@ -93,7 +76,7 @@ impl MemoRef {
 
                 // TODO: move MemoPeeringStatus inside presence
                 //       and include presence for MemoPeeringStatus::Participating slabrefs
-                //       See: memohandling.rs 
+                //       See: memohandling.rs
                 if peer.status == MemoPeeringStatus::Resident {
                     presence.append(&mut peer.slabref.get_presence());
                 }
@@ -204,7 +187,7 @@ impl MemoRef {
 
             let peering_memo = Memo::new_basic(
                 slab.gen_memo_id(),
-                0,
+                None,
                 MemoRefHead::from_memoref(self.clone()),
                 MemoBody::Peering(self.id, slabref.get_presence(), MemoPeeringStatus::Resident),
                 &slab
@@ -235,7 +218,7 @@ impl MemoRef {
 
             let peering_memo = Memo::new_basic(
                 slab.gen_memo_id(),
-                0,
+                None,
                 MemoRefHead::from_memoref(self.clone()),
                 MemoBody::Peering(self.id, slabref.get_presence() ,MemoPeeringStatus::Participating),
                 &slab
@@ -296,7 +279,7 @@ impl MemoRefShared {
         let slabref = slab.get_ref();
         let request_memo = Memo::new_basic(
             slab.gen_memo_id(),
-            0,
+            None,
             MemoRefHead::new(), // TODO: how should this be parented?
             MemoBody::MemoRequest(vec![my_memo_id.clone()],slabref.clone()),
             &slab

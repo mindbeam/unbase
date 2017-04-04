@@ -89,12 +89,13 @@ impl<'a> Visitor for PacketSeed<'a> {
 
        let memo: Memo = match visitor.visit_seed( MemoSeed {
            dest_slab: &dest_slab,
+           origin_slabref: dest_slab.assert_slabref_from_presence(&from_presence),
            from_presence: from_presence,
            from_slab_peering_status: from_slab_peering_status,
        } )? {
            Some(value) => value,
            None => {
-               return Err(DeError::invalid_length(3, &self));
+                return Err(DeError::invalid_length(3, &self));
            }
        };
 

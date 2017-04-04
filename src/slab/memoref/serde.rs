@@ -12,7 +12,7 @@ impl StatefulSerialize for MemoPeerList {
 
             // don't tell the receiving slab that they have it.
             // They know they have it
-            if &memopeer.slabref.slab_id != helper.dest_slab_id {
+            if &memopeer.slabref.0.to_slab_id != helper.dest_slab_id {
                 seq.serialize_element(&SerializeWrapper(memopeer,helper))?
             }
         }
@@ -74,7 +74,7 @@ impl StatefulSerialize for MemoPeer {
     }
 }
 
-pub struct MemoRefSeed<'a> { pub dest_slab: &'a Slab }
+pub struct MemoRefSeed<'a> { pub dest_slab: &'a Slab, pub origin_slabref: &'a SlabRef }
 
 impl<'a> DeserializeSeed for MemoRefSeed<'a> {
     type Value = MemoRef;
@@ -101,7 +101,7 @@ impl<'a> Visitor for MemoRefSeed<'a> {
                 return Err(DeError::invalid_length(0, &self));
             }
         };
-        let subject_id: SubjectId = match visitor.visit()? {
+        let subject_id: Option<SubjectId> = match visitor.visit()? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(1, &self));
@@ -114,20 +114,28 @@ impl<'a> Visitor for MemoRefSeed<'a> {
            }
         };
 
-        let peers: Vec<MemoPeer> = match visitor.visit_seed( VecSeed( MemoPeerSeed{ net: self.net } ) )? {
+        let peers: Vec<MemoPeer> = match visitor.visit_seed( VecSeed( MemoPeerSeed{ dest_slab: self.dest_slab } ) )? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(3, &self));
            }
         };
 
+        peers.push(MemoPeer{
+            slabref: self.origin_slabref.clone(),
+            status: if has_memo {
+                MemoPeeringStatus::Resident
+            } else {
+                MemoPeeringStatus::Participating
+            }
+        });
 
-        Ok(self.dest_slab.assert_memoref( memo_id, subject_id, peers ))
+        Ok(self.dest_slab.assert_memoref(memo_id, subject_id, MemoPeerList(peers)).0)
     }
 }
 
 #[derive(Clone)]
-pub struct MemoPeerSeed<'a> { net: &'a Network }
+pub struct MemoPeerSeed<'a> { dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MemoPeerSeed<'a> {
     type Value = MemoPeer;
@@ -147,7 +155,7 @@ impl<'a> Visitor for MemoPeerSeed<'a> {
     fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
        where V: SeqVisitor
     {
-        let slabref: SlabRef = match visitor.visit_seed( SlabRefSeed{ net: self.net })? {
+        let slabref: SlabRef = match visitor.visit_seed( SlabRefSeed{ dest_slab: self.dest_slab })? {
             Some(value) => value,
             None => {
                 return Err(DeError::invalid_length(0, &self));

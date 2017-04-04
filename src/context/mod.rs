@@ -100,10 +100,12 @@ impl Context{
         // TODO: trim existing context based on descendants
 
         for memoref in memorefs.drain(0..) {
-            let subject_id = memoref.get_memo(&self.inner.slab).unwrap().subject_id;
+            let maybe_subject_id = memoref.get_memo(&self.inner.slab).unwrap().subject_id;
 
+            if let Some(subject_id) = maybe_subject_id {
             println!("# Context calling apply_memoref");
-            shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() ).apply_memoref(&memoref, &self.inner.slab);
+                shared.subject_heads.entry(subject_id).or_insert( MemoRefHead::new() ).apply_memoref(&memoref, &self.inner.slab);
+            }
         }
     }
     pub fn get_slab (&self) -> &Slab {

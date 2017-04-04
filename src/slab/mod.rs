@@ -4,7 +4,7 @@ pub mod memoref;
 mod memohandling;
 
 pub use self::slabref::{SlabRef,SlabRefInner,SlabPresence,SlabAnticipatedLifetime};
-pub use self::memoref::MemoRef;
+pub use self::memoref::{MemoRef,MemoRefShared,MemoPeer,MemoPeerList,MemoRefPtr};
 pub use self::memo::Memo;
 
 use self::memo::*;
@@ -67,6 +67,7 @@ pub struct WeakSlab{
     inner: Weak<SlabInner>
 }
 
+//TODO: update OtherSlab to use MemoPeer?
 #[derive(Debug)]
 pub enum MemoOrigin<'a>{
     SameSlab,
@@ -194,10 +195,15 @@ impl Slab {
         let shared = self.inner.shared.lock().unwrap();
         shared.memos_redundantly_received
     }
+    pub fn assert_memoref( &self, memo_id: MemoId, subject_id: Option<SubjectId>, peers: MemoPeerList ) -> (MemoRef, bool) {
+        let shared = self.inner.shared.lock().unwrap();
+        shared.assert_memoref( memo_id, subject_id, peers )
+    }
     pub fn assert_slabref_from_local_slab(&self, peer_slab: &Slab ){
         let shared = self.inner.shared.lock().unwrap();
         shared.assert_slabref_from_local_slab( peer_slab );
     }
+
     pub fn peer_slab_count (&self) -> usize {
         let shared = self.inner.shared.lock().unwrap();
 
@@ -276,6 +282,54 @@ impl WeakSlab {
 }
 
 impl SlabShared {
+    pub fn assert_memoref_from_memo_and_origin(&self, memo: &Memo, memo_origin: &MemoOrigin ) -> (MemoRef,bool) {
+        let peerlist = match memo_origin {
+            &MemoOrigin::SameSlab => {
+                MemoPeerList(vec![])
+            }
+            &MemoOrigin::OtherSlab(origin_slabref,ref origin_peering_status) => {
+                MemoPeerList(vec![MemoPeer{
+                    slabref: origin_slabref.clone(),
+                    status: origin_peering_status.clone()
+                }])
+            }
+        };
+
+        let (memoref,acted) = self.assert_memoref( memo.id, memo.subject_id, peerlist );
+
+        // TODO - convert to using SlabShared
+        (memoref, memoref.residentize(&self.get_my_slab(), &memo) )
+    }
+    pub fn assert_memoref( &self, memo_id: MemoId, subject_id: Option<SubjectId>, peers: MemoPeerList ) -> (MemoRef, bool) {
+        let acted;
+        let memoref = match self.memorefs_by_id.entry(memo_id) {
+            Entry::Vacant(o)   => {
+                let mr = MemoRef {
+                    id: memo_id,
+                    owning_slab_id: self.id,
+                    subject_id: subject_id,
+                    shared: Arc::new(Mutex::new(
+                        MemoRefShared {
+                            id: memo_id,
+                            peers: peers,
+                            ptr: MemoRefPtr::Remote
+                        }
+                    ))
+                };
+
+                acted = true;
+                o.insert( mr ).clone()// TODO: figure out how to prolong the borrow here & avoid clone
+            }
+            Entry::Occupied(o) => {
+                let mr = o.get();
+                acted = false;
+                mr.apply_peers( peers );
+                mr.clone()
+            }
+        };
+
+        (memoref, acted)
+    }
     pub fn assert_slabref_from_local_slab(&self, peer_slab: &Slab) -> SlabRef {
 
         let args = TransmitterArgs::Local(&peer_slab);
@@ -370,21 +424,12 @@ impl SlabShared {
             self.memos_received += 1;
             println!("# \\ Memo Type {:?}", memo.inner.body );
             // Store the memoref - avoid creating duplicates
-            let memoref = match self.memorefs_by_id.entry(memo.id) {
-                Entry::Vacant(o)   => {
-                    o.insert( MemoRef::from_memo(&my_slab, &memo) ).clone() // TODO: figure out how to prolong the borrow here & avoid clone
-                }
-                Entry::Occupied(o) => {
-                    let mr = o.get();
-                    if !mr.residentize(&my_slab, &memo) {
-                        self.memos_redundantly_received += 1;
-                    }
-                    // TODO: consider whether all of the below code should be short circuited
-                    //       in the case that we already have this memo resident
 
-                    mr.clone()
-                }
-            };
+            let (memoref, pre_existed) = self.assert_memoref_from_memo_and_origin( &memo, memo_origin );
+
+            if pre_existed {
+                self.memos_redundantly_received += 1;
+            }
 println!("# SlabShared({}).put_memos(A)", self.id);
             match memo_origin {
                 &MemoOrigin::SameSlab => {
@@ -394,7 +439,7 @@ println!("# SlabShared({}).put_memos(A)", self.id);
     println!("# SlabShared({}).put_memos(B)", self.id);
                     self.check_memo_waiters(&memo);
         println!("# SlabShared({}).put_memos(C)", self.id);
-                    self.handle_memo_from_other_slab(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
+                    self.handle_memo_from_other_slab(&memo, &memoref, &origin_slabref, origin_peering_status, &my_slab, &my_ref);
 
                     println!("# SlabShared({}).put_memos(D)", self.id);
                     memoref.update_peer(origin_slabref, origin_peering_status.clone());
@@ -403,8 +448,8 @@ println!("# SlabShared({}).put_memos(A)", self.id);
                     self.do_peering_for_memo(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
 
                     println!("# SlabShared({}).put_memos(F)", self.id);
-                    if memo.subject_id > 0 {
-                        let mut head = subject_updates.entry( memo.subject_id ).or_insert( MemoRefHead::new() );
+                    if let Some(subject_id) = memo.subject_id {
+                        let mut head = subject_updates.entry( subject_id ).or_insert( MemoRefHead::new() );
                         head.apply_memoref(&memoref, &my_slab);
                     }
 

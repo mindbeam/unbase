@@ -15,7 +15,7 @@ impl StatefulSerialize for MemoRefHead {
     }
 }
 
-pub struct MemoRefHeadSeed<'a> { pub net: &'a Network }
+pub struct MemoRefHeadSeed<'a> { pub dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MemoRefHeadSeed<'a> {
     type Value = MemoRefHead;
@@ -39,7 +39,7 @@ impl<'a> Visitor for MemoRefHeadSeed<'a> {
 
         let mut memorefs : Vec<MemoRef> = Vec::new();
 
-        while let Some(memopeer) = visitor.visit_seed( MemoRefSeed{ net: self.net })? {
+        while let Some(memopeer) = visitor.visit_seed( MemoRefSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref })? {
             memorefs.push(memopeer);
         };
 

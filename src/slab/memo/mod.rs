@@ -27,30 +27,29 @@ pub enum MemoPeeringStatus{
 
 type RelationSlotSubjectHead = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug)]
 pub enum MemoBody{
     SlabPresence{ p: SlabPresence, r: Option<MemoRefHead> }, // TODO: split out root_index_seed conveyance to another memobody type
     Relation(HashMap<RelationSlotId,(SubjectId,MemoRefHead)>),
     Edit(HashMap<String, String>),
     FullyMaterialized     { v: HashMap<String, String>, r: RelationSlotSubjectHead },
     PartiallyMaterialized { v: HashMap<String, String>, r: RelationSlotSubjectHead },
-    Peering(MemoId,Vec<SlabPresence>,MemoPeeringStatus),
+    Peering(MemoId,SubjectId,Vec<SlabPresence>,MemoPeeringStatus),
     MemoRequest(Vec<MemoId>,SlabRef)
 }
 
 // All portions of this struct should be immutable
 
-#[derive(Clone,PartialEq)]
+#[derive(Clone)]
 pub struct Memo {
     pub id: u64,
     pub owning_slab_id: SlabId,
-    pub subject_id: u64,
+    pub subject_id: Option<SubjectId>,
     pub inner: Arc<MemoInner>
 }
-#[derive(PartialEq)]
 pub struct MemoInner {
     pub id: u64,
-    pub subject_id: u64,
+    pub subject_id: Option<SubjectId>,
     pub parents: MemoRefHead,
     pub body: MemoBody
 }
@@ -80,9 +79,9 @@ impl fmt::Debug for Memo{
 }
 
 impl Memo {
-    pub fn new ( id: MemoId, subject_id: SubjectId, parents: MemoRefHead, body: MemoBody, slab: &Slab ) -> Memo {
+    pub fn new ( id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, slab: &Slab ) -> Memo {
 
-        println!("# Memo.new(id: {},subject_id: {}, parents: {:?}, body: {:?})", id, subject_id, parents.memo_ids(), body );
+        println!("# Memo.new(id: {},subject_id: {:?}, parents: {:?}, body: {:?})", id, subject_id, parents.memo_ids(), body );
 
         let me = Memo {
             id:    id,
@@ -98,10 +97,10 @@ impl Memo {
 
         me
     }
-    pub fn new_basic (id: MemoId, subject_id: SubjectId, parents: MemoRefHead, body: MemoBody, slab: &Slab) -> Self {
+    pub fn new_basic (id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, slab: &Slab) -> Self {
         Self::new(id, subject_id, parents, body, slab)
     }
-    pub fn new_basic_noparent (id: MemoId, subject_id: SubjectId, body: MemoBody, slab: &Slab) -> Self {
+    pub fn new_basic_noparent (id: MemoId, subject_id: Option<SubjectId>, body: MemoBody, slab: &Slab) -> Self {
         Self::new(id, subject_id, MemoRefHead::new(), body, slab)
     }
     pub fn get_parent_head (&self) -> MemoRefHead {

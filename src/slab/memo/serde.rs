@@ -91,6 +91,7 @@ impl StatefulSerialize for (SubjectId,MemoRefHead) {
 
 pub struct MemoSeed<'a> {
     dest_slab: &'a Slab,
+    origin_slabref: &'a SlabRef,
     from_presence: SlabPresence,
     from_slab_peering_status: MemoPeeringStatus
 }
@@ -120,7 +121,7 @@ impl<'a> Visitor for MemoSeed<'a>{
                return Err(DeError::invalid_length(0, &self));
            }
        };
-       let subject_id: SubjectId = match visitor.visit()? {
+       let subject_id: Option<SubjectId> = match visitor.visit()? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(1, &self));
@@ -139,8 +140,7 @@ impl<'a> Visitor for MemoSeed<'a>{
            }
        };
 
-       let from = self.dest_slab.assert_slabref_from_presence(&self.from_presence);
-       let memoorigin = MemoOrigin::OtherSlab(&from, self.from_slab_peering_status);
+       let memoorigin = MemoOrigin::OtherSlab(self.origin_slabref, self.from_slab_peering_status);
        let memoref = self.dest_slab.put_memo(&memoorigin,
            Memo::new(
                id,
@@ -197,13 +197,13 @@ impl<'a> Visitor for MemoBodySeed<'a> {
     {
 
         match try!(visitor.visit_variant()) {
-            (MBVariant::SlabPresence,      variant) => variant.visit_newtype_seed(MBSlabPresenceSeed{ net: self.net }),
+            (MBVariant::SlabPresence,      variant) => variant.visit_newtype_seed(MBSlabPresenceSeed{ dest_slab: self.dest_slab }),
             (MBVariant::Relation,          variant) => variant.visit_newtype_seed(RelationMRHSeed{ net: self.net }).map(MemoBody::Relation),
             (MBVariant::Edit,              variant) => variant.visit_newtype().map(MemoBody::Edit),
-            (MBVariant::FullyMaterialized, variant) => variant.visit_newtype_seed(MBFullyMaterializedSeed{ net: self.net }),
+            (MBVariant::FullyMaterialized, variant) => variant.visit_newtype_seed(MBFullyMaterializedSeed{ dest_slab: self.dest_slab }),
         //  (MBVariant::PartiallyMaterialized, variant) => variant.visit_newtype().map(MemoBody::PartiallyMaterialized),
-            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ net: self.net }),
-            (MBVariant::MemoRequest,       variant) => variant.visit_newtype_seed(MBMemoRequestSeed{ net: self.net }),
+            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ dest_slab: self.dest_slab }),
+            (MBVariant::MemoRequest,       variant) => variant.visit_newtype_seed(MBMemoRequestSeed{ dest_slab: self.dest_slab_id }),
             _ => panic!("meow")
 
         }
@@ -242,7 +242,7 @@ impl Visitor for MBVariantVisitor
 }
 
 #[derive(Clone)]
-pub struct MBMemoRequestSeed<'a> { net: &'a Network }
+pub struct MBMemoRequestSeed<'a> { dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MBMemoRequestSeed<'a> {
     type Value = MemoBody;
@@ -267,7 +267,7 @@ impl<'a> Visitor for MBMemoRequestSeed<'a> {
         while let Some(key) = visitor.visit_key()? {
             match key {
                 'i' => memo_ids = visitor.visit_value()?,
-                's' => slabref  = Some(visitor.visit_value_seed(SlabRefSeed{ net: self.net })?),
+                's' => slabref  = Some(visitor.visit_value_seed(SlabRefSeed{ dest_slab: self.dest_slab })?),
                 _   => {}
             }
         }
@@ -281,7 +281,7 @@ impl<'a> Visitor for MBMemoRequestSeed<'a> {
     }
 }
 
-struct RelationMRHSeed<'a> { net: &'a Network }
+struct RelationMRHSeed<'a> { dest_slab: &'a Slab }
 impl<'a> DeserializeSeed for RelationMRHSeed<'a> {
     type Value = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
 
@@ -305,7 +305,7 @@ impl<'a> Visitor for RelationMRHSeed<'a> {
         let mut values : Self::Value = HashMap::new();
 
         while let Some(slot) = visitor.visit_key()? {
-             let (subject_id ,mrh ) = visitor.visit_value_seed(SubjectMRHSeed{ net: self.net })?;
+             let (subject_id ,mrh ) = visitor.visit_value_seed(SubjectMRHSeed{ dest_slab: self.dest_slab })?;
              values.insert(slot, (subject_id,mrh));
         }
 
@@ -313,7 +313,7 @@ impl<'a> Visitor for RelationMRHSeed<'a> {
     }
 }
 
-struct MBSlabPresenceSeed <'a> { net: &'a Network }
+struct MBSlabPresenceSeed <'a> { dest_slab: &'a Slab }
 impl<'a> DeserializeSeed for MBSlabPresenceSeed<'a> {
     type Value = MemoBody;
 
@@ -339,7 +339,7 @@ impl<'a> Visitor for MBSlabPresenceSeed<'a> {
         while let Some(key) = visitor.visit_key()? {
             match key {
                 'p' => presence        = visitor.visit_value()?,
-                'r' => root_index_seed = Some(visitor.visit_value_seed(OptionSeed(MemoRefHeadSeed{ net: self.net }))?),
+                'r' => root_index_seed = Some(visitor.visit_value_seed(OptionSeed(MemoRefHeadSeed{ dest_slab: self.dest_slab }))?),
                 _   => {}
             }
         }
@@ -351,7 +351,7 @@ impl<'a> Visitor for MBSlabPresenceSeed<'a> {
     }
 }
 
-struct MBFullyMaterializedSeed<'a> { net: &'a Network }
+struct MBFullyMaterializedSeed<'a> { dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MBFullyMaterializedSeed<'a> {
     type Value = MemoBody;
@@ -376,7 +376,7 @@ impl<'a> Visitor for MBFullyMaterializedSeed<'a> {
         let mut values    = None;
         while let Some(key) = visitor.visit_key()? {
             match key {
-                'r' => relations = Some(visitor.visit_value_seed(RelationMRHSeed{ net: self.net })?),
+                'r' => relations = Some(visitor.visit_value_seed(RelationMRHSeed{ dest_slab: self.dest_slab })?),
                 'v' => values    = visitor.visit_value()?,
                 _   => {}
             }
@@ -389,7 +389,7 @@ impl<'a> Visitor for MBFullyMaterializedSeed<'a> {
     }
 }
 
-struct SubjectMRHSeed<'a> { net: &'a Network }
+struct SubjectMRHSeed<'a> { dest_slab: &'a Slab }
 impl<'a> DeserializeSeed for SubjectMRHSeed<'a> {
     type Value = (SubjectId,MemoRefHead);
 
@@ -418,7 +418,7 @@ impl<'a> Visitor for SubjectMRHSeed<'a> {
                 return Err(DeError::invalid_length(0, &self));
             }
         };
-        let mrh : MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ net: self.net })? {
+        let mrh : MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ dest_slab: self.dest_slab })? {
             Some(value) => value,
             None => {
                 return Err(DeError::invalid_length(1, &self));
@@ -430,7 +430,7 @@ impl<'a> Visitor for SubjectMRHSeed<'a> {
 }
 
 // TODO convert this to a non-seed deserializer
-struct MBPeeringSeed<'a> { net: &'a Network }
+struct MBPeeringSeed<'a> { dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MBPeeringSeed<'a> {
     type Value = MemoBody;
@@ -450,7 +450,6 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
     fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
         where Visitor: MapVisitor,
     {
-        let _ = self.net;
         let mut memo_ids : Option<MemoId> = None;
         let mut presence : Option<Vec<SlabPresence>> = None;
         let mut status   : Option<MemoPeeringStatus> = None;
