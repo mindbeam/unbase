@@ -1,6 +1,6 @@
 
 pub mod serde;
-use memo::*;
+use super::memo::*;
 use slab::*;
 use network::*;
 use subject::*;
@@ -73,6 +73,37 @@ impl MemoRef {
             MemoRef::Remote(id)     => id
         }
     }*/
+    pub fn get_presence_for_peer (&self, slabref: &SlabRef) -> Vec<SlabPresence> {
+        let shared = *(self.shared.lock().unwrap());
+        let presence = Vec::new();
+
+        presence.push(SlabPresence {
+            slab_id:  self.owning_slab_id,
+            address: slabref.get_return_address(),
+            lifetime: SlabAnticipatedLifetime::Unknown
+        });
+
+        // Tell the peer about all other presences except for ones belonging to them
+        // we don't need to tell them they have it. They know, they were there :)
+
+
+
+        for peer in shared.peers.0.iter() {
+            if peer.slabref.0.to_slab_id != slabref.0.to_slab_id {
+
+                // TODO: move MemoPeeringStatus inside presence
+                //       and include presence for MemoPeeringStatus::Participating slabrefs
+                //       See: memohandling.rs 
+                if peer.status == MemoPeeringStatus::Resident {
+                    presence.append(&mut peer.slabref.get_presence());
+                }
+            }
+        }
+
+        presence
+
+
+    }
     pub fn get_memo_if_resident(&self) -> Option<Memo> {
         let shared = self.shared.lock().unwrap();
 
@@ -85,7 +116,7 @@ impl MemoRef {
         let shared = self.shared.lock().unwrap();
 
         let status = shared.peers.0.iter().any(|peer| {
-            (peer.slabref.slab_id == slabref.slab_id && peer.status != MemoPeeringStatus::NonParticipating)
+            (peer.slabref.0.to_slab_id == slabref.0.to_slab_id && peer.status != MemoPeeringStatus::NonParticipating)
         });
 
         status
@@ -175,7 +206,8 @@ impl MemoRef {
                 slab.gen_memo_id(),
                 0,
                 MemoRefHead::from_memoref(self.clone()),
-                MemoBody::Peering(self.id, slabref.presence.clone(), MemoPeeringStatus::Resident)
+                MemoBody::Peering(self.id, slabref.get_presence(), MemoPeeringStatus::Resident),
+                &slab
             );
 
             for peer in shared.peers.0.iter() {
@@ -205,7 +237,8 @@ impl MemoRef {
                 slab.gen_memo_id(),
                 0,
                 MemoRefHead::from_memoref(self.clone()),
-                MemoBody::Peering(self.id, slabref.presence.clone() ,MemoPeeringStatus::Participating)
+                MemoBody::Peering(self.id, slabref.get_presence() ,MemoPeeringStatus::Participating),
+                &slab
             );
 
             for peer in shared.peers.0.iter() {
@@ -221,7 +254,7 @@ impl MemoRef {
 
         let mut found : bool = false;
         for peer in shared.peers.0.iter_mut() {
-            if peer.slabref.slab_id == slabref.slab_id {
+            if peer.slabref.0.to_slab_id == slabref.0.to_slab_id {
                 found = true;
                 peer.status = status.clone();
                 // TODO remove the peer entirely for MemoPeeringStatus::NonParticipating
@@ -265,7 +298,8 @@ impl MemoRefShared {
             slab.gen_memo_id(),
             0,
             MemoRefHead::new(), // TODO: how should this be parented?
-            MemoBody::MemoRequest(vec![my_memo_id.clone()],slabref.clone())
+            MemoBody::MemoRequest(vec![my_memo_id.clone()],slabref.clone()),
+            &slab
         );
 
         let mut sent = 0u8;

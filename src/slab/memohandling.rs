@@ -47,45 +47,42 @@ impl SlabShared {
                         //       these will usually be the same, but not always
 
                         // Get the address that the remote slab would recogize
-                        if let &Some(ref my_local_address) = origin_slabref.get_local_return_address() {
-                            let my_presence = SlabPresence {
-                                slab_id: my_slab.id,
-                                address: my_local_address.clone(),
-                                lifetime: SlabAnticipatedLifetime::Unknown
-                            };
+                        let my_presence = SlabPresence {
+                            slab_id: my_slab.id,
+                            address: origin_slabref.get_return_address(),
+                            lifetime: SlabAnticipatedLifetime::Unknown
+                        };
 
-                            let memo_id = my_slab.gen_memo_id();
-                            let parents = MemoRefHead::from_memoref(memoref.clone());
-                            let root_index_seed = self.get_root_index_seed();
+                        let memo_id = my_slab.gen_memo_id();
+                        let parents = MemoRefHead::from_memoref(memoref.clone());
+                        let root_index_seed = self.get_root_index_seed();
 
 
-                            let my_presence_memo = Memo::new_basic(
-                                memo_id,
-                                0,
-                                parents,
-                                MemoBody::SlabPresence{ p: my_presence, r: root_index_seed }
-                            );
+                        let my_presence_memo = Memo::new_basic(
+                            memo_id,
+                            0,
+                            parents,
+                            MemoBody::SlabPresence{ p: my_presence, r: root_index_seed },
+                            &my_slab
+                        );
 
-                            origin_slabref.send_memo( &my_ref, my_presence_memo );
-
-                        }
+                        origin_slabref.send_memo( &my_ref, my_presence_memo );
 
                     }
                 }
             }
             MemoBody::Peering(memo_id, ref presence, ref status) => {
                 // Don't peer with yourself
-                if presence.slab_id != my_ref.slab_id {
-                    // NOTE: should never really get here, but it's possible that we got a bounced memo which we emitted in the first place
-                    // TODO: Determine when this memo is superseded/stale, punt update
-                    let peered_memoref = self.memorefs_by_id.entry(memo_id).or_insert_with(|| MemoRef::new_remote(memo_id));
 
-                    peered_memoref.update_peer( &self.dest_slab.assert_slabref_from_presence( presence ), status.clone());
+                let peered_memoref = self.memorefs_by_id.entry(memo_id).or_insert_with(|| MemoRef::from_memo_id_remote(&my_slab,memo_id));
+                for p in presence.iter().filter(|p| p.slab_id != self.id ) {
+                    let slabref = self.assert_slabref_from_presence( p ).expect("assert_slabref_from_presence");
+                    peered_memoref.update_peer( &slabref, status.clone());
                 }
             },
             MemoBody::MemoRequest(ref desired_memo_ids, ref requesting_slabref ) => {
 
-                if requesting_slabref.slab_id != my_ref.slab_id {
+                if requesting_slabref.0.to_slab_id != self.id {
                     for desired_memo_id in desired_memo_ids {
                         if let Some(desired_memoref) = self.memorefs_by_id.get(&desired_memo_id) {
                             if let Some(desired_memo) = desired_memoref.get_memo_if_resident() {
@@ -96,7 +93,8 @@ impl SlabShared {
                                 let peering_memo = Memo::new(
                                     my_slab.gen_memo_id(), 0,
                                     MemoRefHead::from_memoref(memoref.clone()),
-                                    MemoBody::Peering( memo.id, my_ref.presence.clone(), MemoPeeringStatus::Participating)
+                                    MemoBody::Peering( memo.id, my_ref.get_presence(), MemoPeeringStatus::Participating),
+                                    &my_slab
                                 );
                                 requesting_slabref.send_memo(&my_ref, peering_memo)
                             }
@@ -104,7 +102,8 @@ impl SlabShared {
                             let peering_memo = Memo::new(
                                 my_slab.gen_memo_id(), 0,
                                 MemoRefHead::from_memoref(memoref.clone()),
-                                MemoBody::Peering( memo.id, my_ref.presence.clone(), MemoPeeringStatus::NonParticipating)
+                                MemoBody::Peering( memo.id, my_ref.get_presence(), MemoPeeringStatus::NonParticipating),
+                                &my_slab
                             );
                             requesting_slabref.send_memo(&my_ref, peering_memo)
                         }
@@ -127,22 +126,18 @@ impl SlabShared {
             //    B. and if so, what should be should we be using them for?
             //    C. Should we be sing that to determine the peered memo instead of the payload?
             //println!("MEOW {}, {:?}", my_ref );
-            if let &Some(ref my_return_address) = origin_slabref.get_local_return_address() {
-                let peering_memo = Memo::new(
-                    my_slab.gen_memo_id(), 0,
-                    MemoRefHead::from_memoref(memoref.clone()),
-                    MemoBody::Peering(
-                        memo.id,
-                        SlabPresence {
-                            slab_id:  self.id,
-                            address: my_return_address.clone(),
-                            lifetime: SlabAnticipatedLifetime::Unknown
-                        },
-                        MemoPeeringStatus::Resident
-                    )
-                );
-                origin_slabref.send_memo( &my_slabref, peering_memo );
-            }
+
+            let peering_memo = Memo::new(
+                my_slab.gen_memo_id(), 0,
+                MemoRefHead::from_memoref(memoref.clone()),
+                MemoBody::Peering(
+                    memo.id,
+                    memoref.get_presence_for_peer(origin_slabref),
+                    MemoPeeringStatus::Resident
+                ),
+                &my_slab
+            );
+            origin_slabref.send_memo( &my_slabref, peering_memo );
         }
 
     }

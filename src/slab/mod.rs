@@ -141,7 +141,7 @@ impl Slab {
         {
             let shared = self.inner.shared.lock().unwrap();
             println!("get_root_index_seed B" );
-            net = shared.net.clone();g
+            net = shared.net.clone();
         }
 
         println!("get_root_index_seed C" );
@@ -372,7 +372,7 @@ impl SlabShared {
             // Store the memoref - avoid creating duplicates
             let memoref = match self.memorefs_by_id.entry(memo.id) {
                 Entry::Vacant(o)   => {
-                    o.insert( MemoRef::new_from_memo(&memo) ).clone() // TODO: figure out how to prolong the borrow here & avoid clone
+                    o.insert( MemoRef::from_memo(&my_slab, &memo) ).clone() // TODO: figure out how to prolong the borrow here & avoid clone
                 }
                 Entry::Occupied(o) => {
                     let mr = o.get();

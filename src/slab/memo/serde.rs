@@ -62,7 +62,7 @@ impl StatefulSerialize for MemoBody {
             Peering( ref memo_id, ref slabpresence, ref peeringstatus ) =>{
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 4, "Peering", 3)?;
                 sv.serialize_field("i", memo_id )?;
-                sv.serialize_field("p", &SerializeWrapper(&slabpresence,helper) )?; 
+                sv.serialize_field("p", &SerializeWrapper(&slabpresence,helper) )?;
                 sv.serialize_field("s", peeringstatus)?;
                 sv.end()
             }
@@ -126,13 +126,13 @@ impl<'a> Visitor for MemoSeed<'a>{
                return Err(DeError::invalid_length(1, &self));
            }
        };
-       let body: MemoBody = match visitor.visit_seed(MemoBodySeed{ net: self.net })? {
+       let body: MemoBody = match visitor.visit_seed(MemoBodySeed{ dest_slab: self.dest_slab })? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(2, &self));
            }
        };
-       let parents: MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ net: self.net })? {
+       let parents: MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ dest_slab: self.dest_slab })? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(3, &self));
@@ -156,7 +156,7 @@ impl<'a> Visitor for MemoSeed<'a>{
     }
 }
 
-pub struct MemoBodySeed<'a> { net: &'a Network }
+pub struct MemoBodySeed<'a> { dest_slab: &'a Slab }
 
 enum MBVariant {
     SlabPresence,
@@ -452,8 +452,8 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
     {
         let _ = self.net;
         let mut memo_ids : Option<MemoId> = None;
-        let mut presence : Option<SlabPresence> = None;
-        let mut status   : Option<PeeringStatus> = None;
+        let mut presence : Option<Vec<SlabPresence>> = None;
+        let mut status   : Option<MemoPeeringStatus> = None;
         while let Some(key) = visitor.visit_key()? {
             match key {
                 'i' => memo_ids  = visitor.visit_value()?,

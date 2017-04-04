@@ -74,7 +74,7 @@ impl StatefulSerialize for MemoPeer {
     }
 }
 
-pub struct MemoRefSeed<'a> { pub net: &'a Network }
+pub struct MemoRefSeed<'a> { pub dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MemoRefSeed<'a> {
     type Value = MemoRef;

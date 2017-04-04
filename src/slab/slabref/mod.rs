@@ -74,6 +74,9 @@ impl SlabRef{
         list.push(presence.clone());
         return true
     }
+    pub fn get_presence(&self) -> Vec<SlabPresence> {
+        self.0.presence.lock().unwrap().clone()
+    }
     pub fn compare(&self, other: &SlabRef) -> bool {
         // When comparing equality, we can skip the transmitter
         self.0.to_slab_id == other.0.to_slab_id && *self.0.presence.lock().unwrap() == *other.0.presence.lock().unwrap()

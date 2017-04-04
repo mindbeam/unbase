@@ -1,6 +1,6 @@
 use std::fmt;
 use std::collections::HashMap;
-use memo::*;
+use slab::memo::*;
 use memorefhead::*;
 use context::{Context,ContextRef};
 use error::*;
@@ -57,7 +57,8 @@ impl Subject {
             Memo::new_basic_noparent(
                 my_slab.gen_memo_id(),
                 subject_id,
-                MemoBody::FullyMaterialized {v: vals, r: HashMap::new() } // TODO: accept relations
+                MemoBody::FullyMaterialized {v: vals, r: HashMap::new() },
+                &my_slab
             )
         );
 
@@ -139,7 +140,8 @@ impl Subject {
                 my_slab.gen_memo_id(),
                 self.id,
                 shared.head.clone(),
-                MemoBody::Edit(vals)
+                MemoBody::Edit(vals),
+                &my_slab
             );
         }
 
@@ -168,7 +170,8 @@ impl Subject {
                 slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
                 self.id,
                 shared.head.clone(),
-                MemoBody::Relation(memoref_map)
+                MemoBody::Relation(memoref_map),
+                &slab
             );
         }
 

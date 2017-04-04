@@ -1,7 +1,7 @@
 use super::*;
 use super::super::*;
 
-use memo::serde::MemoSeed;
+use slab::memo::serde::MemoSeed;
 use util::serde::DeserializeSeed;
 use util::serde::*;
 
@@ -88,9 +88,9 @@ impl<'a> Visitor for PacketSeed<'a> {
        };
 
        let memo: Memo = match visitor.visit_seed( MemoSeed {
-           dest_slab: dest_slab,
+           dest_slab: &dest_slab,
            from_presence: from_presence,
-           from_slab_peering_status: from_slab_peering_status
+           from_slab_peering_status: from_slab_peering_status,
        } )? {
            Some(value) => value,
            None => {
