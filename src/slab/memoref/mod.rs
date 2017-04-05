@@ -30,6 +30,15 @@ pub enum MemoRefPtr {
     Remote
 }
 
+impl MemoRefPtr {
+    pub fn to_peering_status (&self) -> MemoPeeringStatus {
+        match self {
+            &MemoRefPtr::Resident(_) => MemoPeeringStatus::Resident,
+            &MemoRefPtr::Remote      => MemoPeeringStatus::Participating
+        }
+    }
+}
+
 impl MemoRef {
     pub fn from_memo (slab: &Slab, memo : &Memo) -> Self {
         MemoRef {
@@ -45,37 +54,41 @@ impl MemoRef {
             ))
         }
     }
+    pub fn inner (&self) -> MutexGuard<MemoRefShared> {
+        self.shared.lock().unwrap()
+    }
+    pub fn to_head (&self) -> MemoRefHead {
+        MemoRefHead::from_memoref(self.clone())
+    }
     pub fn apply_peers (&self, peers: &MemoPeerList ) -> bool {
         unimplemented!();
     }
-    pub fn get_peerlist_for_peer (&self, slabref: &SlabRef) -> MemoPeerList {
+    pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, dest_slabref: &SlabRef) -> MemoPeerList {
         let shared = *(self.shared.lock().unwrap());
-        let presence = Vec::new();
+        let list : Vec<MemoPeer> = Vec::with_capacity(shared.peerlist.0.len() + 1);
 
-        presence.push(SlabPresence {
-            slab_id:  self.owning_slab_id,
-            address: slabref.get_return_address(),
-            lifetime: SlabAnticipatedLifetime::Unknown
+        list.push(MemoPeer{
+            slabref: my_ref.clone(),
+            status: shared.ptr.to_peering_status()
         });
 
         // Tell the peer about all other presences except for ones belonging to them
         // we don't need to tell them they have it. They know, they were there :)
 
-        for peer in shared.peerlist.0.iter() {
-            if peer.slabref.0.slab_id != slabref.0.slab_id {
-
-                // TODO: move MemoPeeringStatus inside presence
-                //       and include presence for MemoPeeringStatus::Participating slabrefs
-                //       See: memohandling.rs
-                if peer.status == MemoPeeringStatus::Resident {
-                    presence.append(&mut peer.slabref.get_presence());
-                }
-            }
+        for peer in shared.peerlist.0.iter().filter(|p| p.slabref.0.slab_id != dest_slabref.0.slab_id ) {
+            list.push(*peer.clone());
         }
 
-        presence
+        MemoPeerList(list)
 
+    }
+    pub fn is_resident(&self) -> bool {
+        let shared = self.shared.lock().unwrap();
 
+        match shared.ptr {
+            MemoRefPtr::Resident(_) => true,
+            _                       => false
+        }
     }
     pub fn get_memo_if_resident(&self) -> Option<Memo> {
         let shared = self.shared.lock().unwrap();
@@ -96,6 +109,12 @@ impl MemoRef {
     }
     pub fn get_memo (&self, slab: &Slab) -> Result<Memo,RetrieveError> {
         assert!(self.owning_slab_id == slab.id);
+
+    // *********************************************************
+    // IMPORTANT TODO: avoid blocking with an active SlabInner.
+    // *********************************************************
+
+
         // This seems pretty crude, but using channels for now in the interest of expediency
         let channel;
         {
@@ -137,7 +156,7 @@ impl MemoRef {
             }
 
             // have another go around
-            if self.shared.lock().unwrap().send_memo_requests( &self.id, &slab ) == 0 {
+            if self.inner().send_memo_requests( &self.id, &slab ) == 0 {
                 return Err(RetrieveError::NotFound)
             }
 
@@ -204,7 +223,8 @@ impl fmt::Debug for MemoRef{
 
 
 impl MemoRefShared {
-    fn send_memo_requests (&self, my_memo_id: &MemoId, slab: &Slab) -> u8 {
+    fn send_memo_requests (&self, my_memo_id: &MemoId, slab_inner: &SlabInner) -> u8 {
+
         let slabref = slab.get_ref();
         let request_memo = Memo::new_basic(
             slab.gen_memo_id(),

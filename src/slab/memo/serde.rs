@@ -451,21 +451,22 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
     {
         let mut memo_ids : Option<MemoId> = None;
         let mut subject_id: Option<Option<SubjectId>> = None;
-        let mut presence : Option<Vec<SlabPresence>> = None;
-        let mut status   : Option<MemoPeeringStatus> = None;
+        let mut peerlist   : Option<MemoPeerList> = None;
         while let Some(key) = visitor.visit_key()? {
             match key {
                 'i' => memo_ids  = visitor.visit_value()?,
                 'j' => subject_id = visitor.visit_value()?,
-                'p' => presence  = visitor.visit_value()?,
-                's' => status    = visitor.visit_value()?,
+                'p' => peerlist  = visitor.visit_value()?,
                 _   => {}
             }
         }
 
-        if memo_ids.is_some() && subject_id.is_some() && presence.is_some() && status.is_some() {
+        if memo_ids.is_some() && subject_id.is_some() && peerlist.is_some() {
 
-            Ok(MemoBody::Peering( memo_ids.unwrap(), subject_id.unwrap(), presence.unwrap(), status.unwrap() ))
+            Ok(MemoBody::Peering(
+                memo_ids.unwrap(),
+                subject_id.unwrap(),
+                peerlist.unwrap() ))
         }else{
             Err(DeError::invalid_length(0, &self))
         }

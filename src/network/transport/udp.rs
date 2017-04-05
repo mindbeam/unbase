@@ -6,6 +6,7 @@ use super::*;
 use std::sync::mpsc;
 use std::sync::{Arc,Mutex};
 use slab::memo::{Memo,MemoPeeringStatus,MemoBody};
+use slab::memoref::MemoRef;
 // use std::collections::BTreeMap;
 use super::packet::*;
 use util::serde::DeserializeSeed;
@@ -105,43 +106,45 @@ impl TransportUDP {
             }
         };
 
-        for my_slab in net.get_all_local_slabs() {
+        for slab in net.get_all_local_slabs() {
 
             let presence = SlabPresence {
-                slab_id: my_slab.id,
+                slab_id: slab.id,
                 address: TransportAddress::UDP( my_address.clone() ),
                 lifetime: SlabAnticipatedLifetime::Unknown
             };
 
-            let hello = Memo::new_basic_noparent(
-                my_slab.gen_memo_id(),
+            let hello = slab.inner().new_memo_basic_noparent(
                 None,
-                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed() },
-                &my_slab
+                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed() }
             );
 
             self.send_to_addr(
-                &my_slab.get_ref(),
+                &slab.inner().my_ref,
                 hello,
                 to_address.clone()
             );
         }
 
     }
-    pub fn send_to_addr (&self, from_slabref: &SlabRef, memo: Memo, address : TransportAddressUDP) {
+    pub fn send_to_addr (&self, from_slabref: &SlabRef, memoref: MemoRef, address : TransportAddressUDP) {
 
-        let packet = Packet{
-            to_slab_id: 0,
-            from_slab_id: from_slabref.0.slab_id,
-            from_slab_peering_status: MemoPeeringStatus::Resident, // TODO - stop assuming that it's actually resident in the sending slab
-            memo: memo
-        };
+        // HACK - should actually retrieve the memo and sent it
+        //        will require nonblocking retrieval mode
+        if let Some(memo) = memoref.get_memo_if_resident() {
+            let packet = Packet{
+                to_slab_id: 0,
+                from_slab_id: from_slabref.0.slab_id,
+                from_slab_peering_status: MemoPeeringStatus::Resident, // TODO - stop assuming that it's actually resident in the sending slab
+                memo: memo
+            };
 
-        println!("TransportUDP.send({:?})", packet );
+            println!("TransportUDP.send({:?})", packet );
 
-        if let Some(ref tx_channel) = self.shared.lock().unwrap().tx_channel {
-            if let Some(ref tx_channel) = *(tx_channel.lock().unwrap()) {
-                tx_channel.send( (address, packet) ).unwrap();
+            if let Some(ref tx_channel) = self.shared.lock().unwrap().tx_channel {
+                if let Some(ref tx_channel) = *(tx_channel.lock().unwrap()) {
+                    tx_channel.send( (address, packet) ).unwrap();
+                }
             }
         }
     }

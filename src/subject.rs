@@ -4,8 +4,8 @@ use slab::memo::*;
 use memorefhead::*;
 use context::{Context,ContextRef};
 use error::*;
-use slab::*;
-use std::sync::{Arc,Mutex,Weak};
+use slab::{Slab,SlabInner};
+use std::sync::{Arc,Mutex,Weak,MutexGuard};
 
 pub type SubjectId     = u64;
 pub type SubjectField  = String;
@@ -36,8 +36,8 @@ impl Subject {
         // don't store this
         let context = contextref.get_context();
 
-        let my_slab : &Slab = context.get_slab();
-        let subject_id = my_slab.generate_subject_id();
+        let slab_inner : MutexGuard<SlabInner> = context.get_slab().inner();
+        let subject_id = slab_inner.generate_subject_id();
         println!("# Subject({}).new()",subject_id);
 
         let shared = Arc::new(Mutex::new(SubjectShared{
@@ -53,18 +53,13 @@ impl Subject {
 
         context.subscribe_subject( &subject );
 
-        let memoref = my_slab.put_memo(&MemoOrigin::SameSlab,
-            Memo::new_basic_noparent(
-                my_slab.gen_memo_id(),
+        let memoref = slab_inner.new_memo_basic_noparent(
                 Some(subject_id),
-                MemoBody::FullyMaterialized {v: vals, r: HashMap::new() },
-                &my_slab
-            )
-        );
+                MemoBody::FullyMaterialized {v: vals, r: HashMap::new() }
+            );
 
         {
-            let mut shared = subject.shared.lock().unwrap();
-            shared.head.apply_memoref(&memoref, &my_slab);
+            subject.inner().head.apply_memoref(&memoref, slab_inner);
             context.subject_updated( subject_id, &shared.head );
         }
 
@@ -107,6 +102,9 @@ impl Subject {
 
         Self::new( context, vals, false )
     }
+    pub fn inner (&self) -> MutexGuard<SubjectShared> {
+        self.shared.lock().unwrap()
+    }
     pub fn get_value ( &self, key: &str ) -> Option<String> {
         println!("# Subject({}).get_value({})",self.id,key);
 
@@ -129,27 +127,23 @@ impl Subject {
         vals.insert(key.to_string(), value.to_string());
 
         let my_slab;
-        let memo;
+        let memoref;
         let context;
         {
             let shared = self.shared.lock().unwrap();
             context = shared.contextref.get_context();
             my_slab = context.get_slab().clone();
 
-            memo = Memo::new_basic(
-                my_slab.gen_memo_id(),
+            memoref = my_slab.inner().new_memo_basic(
                 Some(self.id),
                 shared.head.clone(),
-                MemoBody::Edit(vals),
-                &my_slab
+                MemoBody::Edit(vals)
             );
         }
 
-        let memoref = my_slab.put_memo(&MemoOrigin::SameSlab, memo);
-
-        let mut shared = self.shared.lock().unwrap();
-        shared.head.apply_memoref(&memoref, &my_slab);
-        context.subject_updated( self.id, &shared.head );
+        let mut inner = self.inner();
+        inner.head.apply_memoref(&memoref, &my_slab);
+        context.subject_updated( self.id,  &inner.head );
 
         true
     }
@@ -159,23 +153,19 @@ impl Subject {
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
         let slab;
-        let memo;
+        let memoref;
         let context;
         {
             let shared = self.shared.lock().unwrap();
             context = shared.contextref.get_context();
-            slab = context.get_slab().clone();
+            slab = context.get_slab();
 
-            memo = Memo::new(
-                slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
+            let memoref = slab.inner().new_memo(
                 Some(self.id),
                 shared.head.clone(),
-                MemoBody::Relation(memoref_map),
-                &slab
+                MemoBody::Relation(memoref_map)
             );
         }
-
-        let memoref = slab.put_memo( &MemoOrigin::SameSlab, memo );
 
 
         // TODO: determine conclusively whether it's possible for apply_memorefs

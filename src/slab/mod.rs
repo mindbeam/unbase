@@ -45,7 +45,7 @@ pub struct SlabShared{
 
     counters: SlabCounters,
 
-    my_ref: SlabRef,
+    pub my_ref: SlabRef,
     peer_refs: Vec<SlabRef>,
     net: Network
 }
@@ -264,7 +264,7 @@ impl SlabShared {
 
         println!("# Memo.new(id: {},subject_id: {:?}, parents: {:?}, body: {:?})", memo_id, subject_id, parents.memo_ids(), body );
 
-        let me = Memo {
+        let memo = Memo {
             id:    memo_id,
             owning_slab_id: self.id,
             subject_id: subject_id,
@@ -276,7 +276,7 @@ impl SlabShared {
             })
         };
 
-        me
+        self.memoref_from_memo_and_origin(memo, &MemoOrigin::SameSlab).0
     }
     pub fn new_memo_basic (&self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
         self.new_memo(subject_id, parents, body)
@@ -285,7 +285,7 @@ impl SlabShared {
         self.new_memo(subject_id, MemoRefHead::new(), body)
     }
 
-    pub fn memoref_from_memo_and_origin(&self, memo: &Memo, memo_origin: &MemoOrigin ) -> (MemoRef,bool) {
+    pub fn memoref_from_memo_and_origin(&self, memo: Memo, memo_origin: &MemoOrigin ) -> (MemoRef,bool) {
         assert!(memo.owning_slab_id == self.id);
 
         let peerlist = match memo_origin {
@@ -303,7 +303,7 @@ impl SlabShared {
 
         let (memoref, had_memoref) = self.memoref( memo.id, memo.subject_id, &peerlist );
 
-        let residentized = self.residentize_memo(&memoref, &memo);
+        let residentized = self.residentize_memoref(&memoref, memo);
         (memoref, residentized)
     }
     pub fn memoref( &self, memo_id: MemoId, subject_id: Option<SubjectId>, peers: &MemoPeerList ) -> (MemoRef, bool) {
@@ -336,21 +336,23 @@ impl SlabShared {
 
         (memoref, had_memoref)
     }
-    pub fn residentize_memo(&self, memoref: &MemoRef, memo: &Memo) -> bool {
+    pub fn residentize_memoref(&self, memoref: &MemoRef, memo: Memo) -> bool {
         println!("# MemoRef({}).residentize()", self.id);
+
+        assert!(memoref.owning_slab_id == self.id);
         assert!( memoref.id == memo.id );
 
         // TODO: get rid of mutex here
-        let mut mr_shared = memoref.shared.lock().unwrap();
+        let mut inner = memoref.inner();
 
-        if let MemoRefPtr::Remote = mr_shared.ptr {
-            mr_shared.ptr = MemoRefPtr::Resident( memo.clone() );
+        if let MemoRefPtr::Remote = inner.ptr {
+            inner.ptr = MemoRefPtr::Resident( memo );
 
             // should this be using do_peering_for_memo?
             // doing it manually for now, because I think we might only want to do
             // a concise update to reflect our peering status change
 
-            self.new_memo(
+            let peering_memoref = self.new_memo(
                 None,
                 MemoRefHead::from_memoref(memoref.clone()),
                 MemoBody::Peering(
@@ -363,8 +365,8 @@ impl SlabShared {
                 )
             );
 
-            for peer in shared.peerlist.0.iter() {
-                peer.slabref.send_memo( &slabref, peering_memo.clone() );
+            for peer in inner.peerlist.0.iter() {
+                peer.slabref.send( &self.my_ref, peering_memoref.clone() );
             }
 
             // residentized
@@ -374,35 +376,36 @@ impl SlabShared {
             false
         }
     }
-    pub fn remotize_memo( &self, slab_inner: &SlabShared ) {
-        assert!(self.owning_slab_id == slab_inner.id);
-        println!("# MemoRef({}).remotize()", self.id);
-        let mut shared = self.shared.lock().unwrap();
+    pub fn remotize_memoref( &self, memoref: &MemoRef ) {
+        assert!(memoref.owning_slab_id == self.id);
 
-        if let MemoRefPtr::Resident(_) = shared.ptr {
-            if shared.peerlist.0.len() == 0 {
+        println!("# MemoRef({}).remotize()", self.id);
+        let mut inner = memoref.inner();
+
+        if let MemoRefPtr::Resident(_) = inner.ptr {
+            if inner.peerlist.0.len() == 0 {
                 panic!("Attempt to remotize a non-peered memo")
             }
 
-            let peering_memoref = slab_inner.new_memo_basic(
+            let peering_memoref = self.new_memo_basic(
                 None,
-                MemoRefHead::from_memoref(self.clone()),
+                MemoRefHead::from_memoref(memoref.clone()),
                 MemoBody::Peering(
-                    self.id,
-                    self.subject_id,
+                    memoref.id,
+                    memoref.subject_id,
                     MemoPeerList(vec![MemoPeer{
-                        slabref: slab_inner.my_ref,
+                        slabref: self.my_ref,
                         status: MemoPeeringStatus::Participating
                     }])
                 )
             );
 
-            for peer in shared.peerlist.0.iter() {
-                peer.slabref.send( &slab_inner.my_ref, peering_memoref.clone() );
+            for peer in inner.peerlist.0.iter() {
+                peer.slabref.send( &self.my_ref, peering_memoref.clone() );
             }
         }
 
-        shared.ptr = MemoRefPtr::Remote;
+        inner.ptr = MemoRefPtr::Remote;
     }
     pub fn slabref_from_local_slab(&self, peer_slab: &Slab) -> SlabRef {
 
@@ -460,11 +463,12 @@ impl SlabShared {
         };
 
     }
-    pub fn get_my_ref (&self) -> &SlabRef {
-        if let Some(ref slabref) = self.my_ref {
-            &slabref
-        }else{
-            panic!("Invalid state - Missing my_ref")
+    pub fn presence_for_origin (&self, origin_slabref: &SlabRef ) -> SlabPresence {
+        // Get the address that the remote slab would recogize
+        SlabPresence {
+            slab_id: self.id,
+            address: origin_slabref.get_return_address(),
+            lifetime: SlabAnticipatedLifetime::Unknown
         }
     }
     pub fn get_root_index_seed (&self) -> Option<MemoRefHead> {

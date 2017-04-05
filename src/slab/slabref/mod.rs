@@ -55,7 +55,7 @@ pub struct SlabPresence{
 impl SlabRef{
     //pub fn new (to_slab_id: SlabId, owning_slab_id: SlabId, presence: Vec<Slab) -> SlabRef {
     //}
-    pub fn send (&self, from: &SlabRef, memoref: MemoRef ) {
+    pub fn send (&self, from: &SlabRef, memoref: &MemoRef ) {
         println!("# SlabRef({},{}).send_memo({})", self.0.owning_slab_id, self.0.slab_id, memoref.id );
 
         if let Some(memo) = memoref.get_memo_if_resident() {
