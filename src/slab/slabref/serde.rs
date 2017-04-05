@@ -77,7 +77,11 @@ impl<'a> Visitor for SlabRefSeed<'a> {
                return Err(DeError::invalid_length(0, &self));
            }
        };
+       let slabref;
+       {
+           slabref = self.dest_slab.inner().slabref_from_presence(&presence).expect("slabref from slabrefseed presence");
+       }
 
-       Ok( self.dest_slab.assert_slabref_from_presence(&presence) )
+       Ok( slabref )
     }
 }

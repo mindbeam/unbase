@@ -125,7 +125,7 @@ impl MemoRefHead {
     pub fn first_subject_id (&self, slab: &Slab) -> Option<SubjectId> {
         if let Some(memoref) = self.0.iter().next() {
             // TODO: Could stand to be much more robust here
-            Some(memoref.get_memo(slab).unwrap().inner.subject_id)
+            memoref.get_memo(slab).unwrap().inner.subject_id
         }else{
             None
         }

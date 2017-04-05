@@ -16,28 +16,6 @@ use super::*;
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
 
-
-#[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-pub enum MemoPeeringStatus{
-    Resident,
-    Participating,
-    NonParticipating,
-    Unknown
-}
-
-type RelationSlotSubjectHead = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
-
-#[derive(Debug)]
-pub enum MemoBody{
-    SlabPresence{ p: SlabPresence, r: Option<MemoRefHead> }, // TODO: split out root_index_seed conveyance to another memobody type
-    Relation(HashMap<RelationSlotId,(SubjectId,MemoRefHead)>),
-    Edit(HashMap<String, String>),
-    FullyMaterialized     { v: HashMap<String, String>, r: RelationSlotSubjectHead },
-    PartiallyMaterialized { v: HashMap<String, String>, r: RelationSlotSubjectHead },
-    Peering(MemoId,SubjectId,Vec<SlabPresence>,MemoPeeringStatus),
-    MemoRequest(Vec<MemoId>,SlabRef)
-}
-
 // All portions of this struct should be immutable
 
 #[derive(Clone)]
@@ -52,6 +30,36 @@ pub struct MemoInner {
     pub subject_id: Option<SubjectId>,
     pub parents: MemoRefHead,
     pub body: MemoBody
+}
+
+#[derive(Debug)]
+pub enum MemoBody{
+    SlabPresence{ p: SlabPresence, r: Option<MemoRefHead> }, // TODO: split out root_index_seed conveyance to another memobody type
+    Relation(HashMap<RelationSlotId,(SubjectId,MemoRefHead)>),
+    Edit(HashMap<String, String>),
+    FullyMaterialized     { v: HashMap<String, String>, r: RelationSlotSubjectHead },
+    PartiallyMaterialized { v: HashMap<String, String>, r: RelationSlotSubjectHead },
+    Peering(MemoId,Option<SubjectId>,MemoPeerList),
+    MemoRequest(Vec<MemoId>,SlabRef)
+}
+
+type RelationSlotSubjectHead = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
+
+#[derive(Debug)]
+pub struct MemoPeerList (pub Vec<MemoPeer>);
+
+#[derive(Debug)]
+pub struct MemoPeer {
+    pub slabref: SlabRef,
+    pub status: MemoPeeringStatus
+}
+
+#[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
+pub enum MemoPeeringStatus{
+    Resident,
+    Participating,
+    NonParticipating,
+    Unknown
 }
 
 
@@ -79,30 +87,6 @@ impl fmt::Debug for Memo{
 }
 
 impl Memo {
-    pub fn new ( id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, slab: &Slab ) -> Memo {
-
-        println!("# Memo.new(id: {},subject_id: {:?}, parents: {:?}, body: {:?})", id, subject_id, parents.memo_ids(), body );
-
-        let me = Memo {
-            id:    id,
-            owning_slab_id: slab.id,
-            subject_id: subject_id,
-            inner: Arc::new(MemoInner {
-                id:    id,
-                subject_id: subject_id,
-                parents: parents,
-                body: body
-            })
-        };
-
-        me
-    }
-    pub fn new_basic (id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, slab: &Slab) -> Self {
-        Self::new(id, subject_id, parents, body, slab)
-    }
-    pub fn new_basic_noparent (id: MemoId, subject_id: Option<SubjectId>, body: MemoBody, slab: &Slab) -> Self {
-        Self::new(id, subject_id, MemoRefHead::new(), body, slab)
-    }
     pub fn get_parent_head (&self) -> MemoRefHead {
         self.inner.parents.clone()
     }

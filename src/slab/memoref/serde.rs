@@ -12,7 +12,7 @@ impl StatefulSerialize for MemoPeerList {
 
             // don't tell the receiving slab that they have it.
             // They know they have it
-            if &memopeer.slabref.0.to_slab_id != helper.dest_slab_id {
+            if &memopeer.slabref.0.slab_id != helper.dest_slab_id {
                 seq.serialize_element(&SerializeWrapper(memopeer,helper))?
             }
         }

@@ -86,17 +86,19 @@ impl<'a> Visitor for PacketSeed<'a> {
            address: self.source_address,
            lifetime: SlabAnticipatedLifetime::Unknown
        };
+       let origin_slabref;
+       {
+           origin_slabref = dest_slab.inner().slabref_from_presence(&from_presence).expect("slabref from presence");
+       }
 
-       let memo: Memo = match visitor.visit_seed( MemoSeed {
+       // no need to return the memo here, as it's added to the slab
+       if let None = visitor.visit_seed( MemoSeed {
            dest_slab: &dest_slab,
-           origin_slabref: dest_slab.assert_slabref_from_presence(&from_presence),
+           origin_slabref: &origin_slabref,
            from_presence: from_presence,
            from_slab_peering_status: from_slab_peering_status,
        } )? {
-           Some(value) => value,
-           None => {
-                return Err(DeError::invalid_length(3, &self));
-           }
+            return Err(DeError::invalid_length(3, &self));
        };
 
        Ok(())

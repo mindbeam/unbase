@@ -15,22 +15,14 @@ pub struct MemoRef {
     pub id:    MemoId,
     pub owning_slab_id: SlabId,
     pub subject_id: Option<SubjectId>,
-    shared: Arc<Mutex<MemoRefShared>>
+    pub shared: Arc<Mutex<MemoRefShared>>
 }
-#[derive(Debug)]
-pub struct MemoPeer {
-    slabref: SlabRef,
-    status: MemoPeeringStatus
-}
-
-#[derive(Debug)]
-pub struct MemoPeerList (pub Vec<MemoPeer>);
 
 #[derive(Debug)]
 pub struct MemoRefShared {
-    pub id:    MemoId,
-    pub peers: MemoPeerList,
-    pub ptr:   MemoRefPtr
+    pub id:       MemoId,
+    pub peerlist: MemoPeerList,
+    pub ptr:      MemoRefPtr
 }
 #[derive(Debug)]
 pub enum MemoRefPtr {
@@ -47,16 +39,16 @@ impl MemoRef {
             shared: Arc::new(Mutex::new(
                 MemoRefShared {
                     id: memo.id,
-                    peers: MemoPeerList(Vec::with_capacity(3)),
+                    peerlist: MemoPeerList(Vec::with_capacity(3)),
                     ptr: MemoRefPtr::Resident( memo.clone() )
                 }
             ))
         }
     }
-    pub fn apply_peers (&self, peers: MemoPeerList ) -> bool {
+    pub fn apply_peers (&self, peers: &MemoPeerList ) -> bool {
         unimplemented!();
     }
-    pub fn get_presence_for_peer (&self, slabref: &SlabRef) -> Vec<SlabPresence> {
+    pub fn get_peerlist_for_peer (&self, slabref: &SlabRef) -> MemoPeerList {
         let shared = *(self.shared.lock().unwrap());
         let presence = Vec::new();
 
@@ -69,10 +61,8 @@ impl MemoRef {
         // Tell the peer about all other presences except for ones belonging to them
         // we don't need to tell them they have it. They know, they were there :)
 
-
-
-        for peer in shared.peers.0.iter() {
-            if peer.slabref.0.to_slab_id != slabref.0.to_slab_id {
+        for peer in shared.peerlist.0.iter() {
+            if peer.slabref.0.slab_id != slabref.0.slab_id {
 
                 // TODO: move MemoPeeringStatus inside presence
                 //       and include presence for MemoPeeringStatus::Participating slabrefs
@@ -98,8 +88,8 @@ impl MemoRef {
     pub fn is_peered_with_slabref(&self, slabref: &SlabRef) -> bool {
         let shared = self.shared.lock().unwrap();
 
-        let status = shared.peers.0.iter().any(|peer| {
-            (peer.slabref.0.to_slab_id == slabref.0.to_slab_id && peer.status != MemoPeeringStatus::NonParticipating)
+        let status = shared.peerlist.0.iter().any(|peer| {
+            (peer.slabref.0.slab_id == slabref.0.slab_id && peer.status != MemoPeeringStatus::NonParticipating)
         });
 
         status
@@ -170,74 +160,13 @@ impl MemoRef {
 
         false
     }
-    pub fn residentize(&self, slab: &Slab, memo: &Memo) -> bool {
-        assert!(self.owning_slab_id == slab.id);
-        println!("# MemoRef({}).residentize()", self.id);
-
-        let mut shared = self.shared.lock().unwrap();
-
-        if self.id != memo.id {
-            panic!("Attempt to residentize mismatching memo");
-        }
-
-        if let MemoRefPtr::Remote = shared.ptr {
-            shared.ptr = MemoRefPtr::Resident( memo.clone() );
-
-            let slabref = slab.get_ref();
-
-            let peering_memo = Memo::new_basic(
-                slab.gen_memo_id(),
-                None,
-                MemoRefHead::from_memoref(self.clone()),
-                MemoBody::Peering(self.id, slabref.get_presence(), MemoPeeringStatus::Resident),
-                &slab
-            );
-
-            for peer in shared.peers.0.iter() {
-                peer.slabref.send_memo( &slabref, peering_memo.clone() );
-            }
-
-            // residentized
-            true
-        }else{
-            // already resident
-            false
-        }
-    }
-    pub fn remotize(&self, slab: &Slab ) {
-        assert!(self.owning_slab_id == slab.id);
-        println!("# MemoRef({}).remotize()", self.id);
-        let mut shared = self.shared.lock().unwrap();
-
-        if let MemoRefPtr::Resident(_) = shared.ptr {
-            if shared.peers.0.len() == 0 {
-                panic!("Attempt to remotize a non-peered memo")
-            }
-
-            let slabref = slab.get_ref();
-
-            let peering_memo = Memo::new_basic(
-                slab.gen_memo_id(),
-                None,
-                MemoRefHead::from_memoref(self.clone()),
-                MemoBody::Peering(self.id, slabref.get_presence() ,MemoPeeringStatus::Participating),
-                &slab
-            );
-
-            for peer in shared.peers.0.iter() {
-                peer.slabref.send_memo( &slabref, peering_memo.clone() );
-            }
-        }
-
-        shared.ptr = MemoRefPtr::Remote;
-    }
     pub fn update_peer (&self, slabref: &SlabRef, status: MemoPeeringStatus){
 
         let mut shared = self.shared.lock().unwrap();
 
         let mut found : bool = false;
-        for peer in shared.peers.0.iter_mut() {
-            if peer.slabref.0.to_slab_id == slabref.0.to_slab_id {
+        for peer in shared.peerlist.0.iter_mut() {
+            if peer.slabref.0.slab_id == slabref.0.slab_id {
                 found = true;
                 peer.status = status.clone();
                 // TODO remove the peer entirely for MemoPeeringStatus::NonParticipating
@@ -246,7 +175,7 @@ impl MemoRef {
         }
 
         if !found {
-            shared.peers.0.push(MemoPeer{
+            shared.peerlist.0.push(MemoPeer{
                 slabref: slabref.clone(),
                 status: status.clone()
             })
@@ -267,7 +196,7 @@ impl fmt::Debug for MemoRef{
         let shared = &self.shared.lock().unwrap();
         fmt.debug_struct("MemoRef")
            .field("memo_id", &self.id)
-           .field("peers", &shared.peers)
+           .field("peerlist", &shared.peerlist)
            .field("ptr", &shared.ptr)
            .finish()
     }
@@ -286,7 +215,7 @@ impl MemoRefShared {
         );
 
         let mut sent = 0u8;
-        for peer in self.peers.0.iter().take(5) {
+        for peer in self.peerlist.0.iter().take(5) {
             peer.slabref.send_memo( &slabref, request_memo.clone() );
             sent += 1;
         }

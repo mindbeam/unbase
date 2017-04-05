@@ -56,7 +56,7 @@ impl Subject {
         let memoref = my_slab.put_memo(&MemoOrigin::SameSlab,
             Memo::new_basic_noparent(
                 my_slab.gen_memo_id(),
-                subject_id,
+                Some(subject_id),
                 MemoBody::FullyMaterialized {v: vals, r: HashMap::new() },
                 &my_slab
             )
@@ -138,7 +138,7 @@ impl Subject {
 
             memo = Memo::new_basic(
                 my_slab.gen_memo_id(),
-                self.id,
+                Some(self.id),
                 shared.head.clone(),
                 MemoBody::Edit(vals),
                 &my_slab
@@ -168,7 +168,7 @@ impl Subject {
 
             memo = Memo::new(
                 slab.gen_memo_id(), // TODO: lazy memo hash gen should eliminate this
-                self.id,
+                Some(self.id),
                 shared.head.clone(),
                 MemoBody::Relation(memoref_map),
                 &slab

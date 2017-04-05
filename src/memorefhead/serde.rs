@@ -15,7 +15,7 @@ impl StatefulSerialize for MemoRefHead {
     }
 }
 
-pub struct MemoRefHeadSeed<'a> { pub dest_slab: &'a Slab }
+pub struct MemoRefHeadSeed<'a> { pub dest_slab: &'a Slab, pub origin_slabref: &'a SlabRef }
 
 impl<'a> DeserializeSeed for MemoRefHeadSeed<'a> {
     type Value = MemoRefHead;

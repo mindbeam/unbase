@@ -11,6 +11,17 @@ use slab::slabref::serde::SlabRefSeed;
 use slab::MemoOrigin;
 use util::serde::*;
 
+
+struct RelationMRHSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
+struct SubjectMRHSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
+pub struct MemoBodySeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef }
+#[derive(Clone)]
+pub struct MBMemoRequestSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
+struct MBSlabPresenceSeed <'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
+struct MBFullyMaterializedSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
+// TODO convert this to a non-seed deserializer
+struct MBPeeringSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
+
 impl StatefulSerialize for Memo {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
@@ -59,9 +70,10 @@ impl StatefulSerialize for MemoBody {
                 sv.serialize_field("v", v)?;
                 sv.end()
             },
-            Peering( ref memo_id, ref slabpresence, ref peeringstatus ) =>{
+            Peering( ref memo_id, ref subject_id, ref slabpresence, ref peeringstatus ) =>{
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 4, "Peering", 3)?;
                 sv.serialize_field("i", memo_id )?;
+                sv.serialize_field("j", subject_id )?;
                 sv.serialize_field("p", &SerializeWrapper(&slabpresence,helper) )?;
                 sv.serialize_field("s", peeringstatus)?;
                 sv.end()
@@ -127,13 +139,13 @@ impl<'a> Visitor for MemoSeed<'a>{
                return Err(DeError::invalid_length(1, &self));
            }
        };
-       let body: MemoBody = match visitor.visit_seed(MemoBodySeed{ dest_slab: self.dest_slab })? {
+       let body: MemoBody = match visitor.visit_seed(MemoBodySeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref })? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(2, &self));
            }
        };
-       let parents: MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ dest_slab: self.dest_slab })? {
+       let parents: MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref })? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(3, &self));
@@ -155,8 +167,6 @@ impl<'a> Visitor for MemoSeed<'a>{
        Ok(())
     }
 }
-
-pub struct MemoBodySeed<'a> { dest_slab: &'a Slab }
 
 enum MBVariant {
     SlabPresence,
@@ -197,14 +207,14 @@ impl<'a> Visitor for MemoBodySeed<'a> {
     {
 
         match try!(visitor.visit_variant()) {
-            (MBVariant::SlabPresence,      variant) => variant.visit_newtype_seed(MBSlabPresenceSeed{ dest_slab: self.dest_slab }),
-            (MBVariant::Relation,          variant) => variant.visit_newtype_seed(RelationMRHSeed{ net: self.net }).map(MemoBody::Relation),
+            (MBVariant::SlabPresence,      variant) => variant.visit_newtype_seed(MBSlabPresenceSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }),
+            (MBVariant::Relation,          variant) => variant.visit_newtype_seed(RelationMRHSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }).map(MemoBody::Relation),
             (MBVariant::Edit,              variant) => variant.visit_newtype().map(MemoBody::Edit),
-            (MBVariant::FullyMaterialized, variant) => variant.visit_newtype_seed(MBFullyMaterializedSeed{ dest_slab: self.dest_slab }),
+            (MBVariant::FullyMaterialized, variant) => variant.visit_newtype_seed(MBFullyMaterializedSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }),
         //  (MBVariant::PartiallyMaterialized, variant) => variant.visit_newtype().map(MemoBody::PartiallyMaterialized),
-            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ dest_slab: self.dest_slab }),
-            (MBVariant::MemoRequest,       variant) => variant.visit_newtype_seed(MBMemoRequestSeed{ dest_slab: self.dest_slab_id }),
-            _ => panic!("meow")
+            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }),
+            (MBVariant::MemoRequest,       variant) => variant.visit_newtype_seed(MBMemoRequestSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }),
+            _ => unimplemented!()
 
         }
     }
@@ -240,9 +250,6 @@ impl Visitor for MBVariantVisitor
         }
     }
 }
-
-#[derive(Clone)]
-pub struct MBMemoRequestSeed<'a> { dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MBMemoRequestSeed<'a> {
     type Value = MemoBody;
@@ -281,7 +288,6 @@ impl<'a> Visitor for MBMemoRequestSeed<'a> {
     }
 }
 
-struct RelationMRHSeed<'a> { dest_slab: &'a Slab }
 impl<'a> DeserializeSeed for RelationMRHSeed<'a> {
     type Value = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
 
@@ -305,7 +311,7 @@ impl<'a> Visitor for RelationMRHSeed<'a> {
         let mut values : Self::Value = HashMap::new();
 
         while let Some(slot) = visitor.visit_key()? {
-             let (subject_id ,mrh ) = visitor.visit_value_seed(SubjectMRHSeed{ dest_slab: self.dest_slab })?;
+             let (subject_id ,mrh ) = visitor.visit_value_seed(SubjectMRHSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref })?;
              values.insert(slot, (subject_id,mrh));
         }
 
@@ -313,7 +319,6 @@ impl<'a> Visitor for RelationMRHSeed<'a> {
     }
 }
 
-struct MBSlabPresenceSeed <'a> { dest_slab: &'a Slab }
 impl<'a> DeserializeSeed for MBSlabPresenceSeed<'a> {
     type Value = MemoBody;
 
@@ -339,7 +344,7 @@ impl<'a> Visitor for MBSlabPresenceSeed<'a> {
         while let Some(key) = visitor.visit_key()? {
             match key {
                 'p' => presence        = visitor.visit_value()?,
-                'r' => root_index_seed = Some(visitor.visit_value_seed(OptionSeed(MemoRefHeadSeed{ dest_slab: self.dest_slab }))?),
+                'r' => root_index_seed = Some(visitor.visit_value_seed(OptionSeed(MemoRefHeadSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref  }))?),
                 _   => {}
             }
         }
@@ -350,8 +355,6 @@ impl<'a> Visitor for MBSlabPresenceSeed<'a> {
         }
     }
 }
-
-struct MBFullyMaterializedSeed<'a> { dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MBFullyMaterializedSeed<'a> {
     type Value = MemoBody;
@@ -376,7 +379,7 @@ impl<'a> Visitor for MBFullyMaterializedSeed<'a> {
         let mut values    = None;
         while let Some(key) = visitor.visit_key()? {
             match key {
-                'r' => relations = Some(visitor.visit_value_seed(RelationMRHSeed{ dest_slab: self.dest_slab })?),
+                'r' => relations = Some(visitor.visit_value_seed(RelationMRHSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref })?),
                 'v' => values    = visitor.visit_value()?,
                 _   => {}
             }
@@ -389,7 +392,6 @@ impl<'a> Visitor for MBFullyMaterializedSeed<'a> {
     }
 }
 
-struct SubjectMRHSeed<'a> { dest_slab: &'a Slab }
 impl<'a> DeserializeSeed for SubjectMRHSeed<'a> {
     type Value = (SubjectId,MemoRefHead);
 
@@ -418,7 +420,7 @@ impl<'a> Visitor for SubjectMRHSeed<'a> {
                 return Err(DeError::invalid_length(0, &self));
             }
         };
-        let mrh : MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ dest_slab: self.dest_slab })? {
+        let mrh : MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref })? {
             Some(value) => value,
             None => {
                 return Err(DeError::invalid_length(1, &self));
@@ -428,9 +430,6 @@ impl<'a> Visitor for SubjectMRHSeed<'a> {
         Ok((subject_id,mrh))
     }
 }
-
-// TODO convert this to a non-seed deserializer
-struct MBPeeringSeed<'a> { dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MBPeeringSeed<'a> {
     type Value = MemoBody;
@@ -451,20 +450,22 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
         where Visitor: MapVisitor,
     {
         let mut memo_ids : Option<MemoId> = None;
+        let mut subject_id: Option<Option<SubjectId>> = None;
         let mut presence : Option<Vec<SlabPresence>> = None;
         let mut status   : Option<MemoPeeringStatus> = None;
         while let Some(key) = visitor.visit_key()? {
             match key {
                 'i' => memo_ids  = visitor.visit_value()?,
+                'j' => subject_id = visitor.visit_value()?,
                 'p' => presence  = visitor.visit_value()?,
                 's' => status    = visitor.visit_value()?,
                 _   => {}
             }
         }
 
-        if memo_ids.is_some() && presence.is_some() && status.is_some() {
+        if memo_ids.is_some() && subject_id.is_some() && presence.is_some() && status.is_some() {
 
-            Ok(MemoBody::Peering( memo_ids.unwrap(), presence.unwrap(), status.unwrap() ))
+            Ok(MemoBody::Peering( memo_ids.unwrap(), subject_id.unwrap(), presence.unwrap(), status.unwrap() ))
         }else{
             Err(DeError::invalid_length(0, &self))
         }
