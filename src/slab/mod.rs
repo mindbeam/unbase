@@ -18,7 +18,7 @@ use std::sync::atomic;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
-use network::Network;
+use network::{Network,Transmitter};
 use subject::SubjectId;
 use memorefhead::*;
 use context::{Context,WeakContext};
@@ -45,7 +45,7 @@ pub struct SlabShared{
 
     counters: SlabCounters,
 
-    my_ref: Option<SlabRef>,
+    my_ref: SlabRef,
     peer_refs: Vec<SlabRef>,
     net: Network
 }
@@ -57,7 +57,6 @@ struct SlabCounters{
 }
 struct SlabInner {
     pub id: SlabId,
-    my_ref: Mutex<Option<SlabRef>>,
     shared: Mutex<SlabShared>
 }
 
@@ -84,11 +83,11 @@ impl Slab {
             slab_id: slab_id,
             owning_slab_id: slab_id, // I own my own ref to me, obviously
             presence: Mutex::new(vec![]), // this bit is just for show
-            tx: Mutex::new(tx),
-            return_address: atomic::AtomicPtr::new(&mut return_address),
+            tx: Mutex::new(Transmitter::new_blackhole()),
+            return_address: TransportAddress::Local,
         };
 
-        let slabref = SlabRef(Arc::new(inner));
+        let my_ref = SlabRef(Arc::new(my_ref_inner));
 
         let shared = SlabShared {
             id: slab_id,
@@ -103,7 +102,7 @@ impl Slab {
                 memos_redundantly_received: 0,
             },
 
-            my_ref: None,
+            my_ref: my_ref,
             peer_refs: Vec::new(),
             net: net.clone()
         };
@@ -117,18 +116,6 @@ impl Slab {
         };
 
         net.register_local_slab(&me);
-/*
-        {
-            *(me.inner.my_ref.lock().unwrap()) = Some(my_ref.clone());
-        }
-
-        // not sure if there's a better way to do this, but I want to have a handy return address
-*/
-        {
-            let mut shared = me.inner.shared.lock().unwrap();
-            shared.my_slab = Some(me.weak());
-            //shared.my_ref   = Some(my_ref);
-        }
 
         net.conditionally_generate_root_index_seed(&me);
 
@@ -143,12 +130,6 @@ impl Slab {
             id: self.id,
             inner: Arc::downgrade(&self.inner)
         }
-    }
-    pub fn get_ref(&self) -> SlabRef {
-        // TODO: figure out how to get this to return a borrow, rather than cloning
-        // TODO: determine a better way than a Mutex<Option<SlabRef>> it's dumb
-        let my_ref : SlabRef = self.inner.my_ref.lock().unwrap().clone().unwrap();
-        my_ref
     }
     pub fn get_root_index_seed (&self) -> Option<MemoRefHead> {
     println!("get_root_index_seed A" );
