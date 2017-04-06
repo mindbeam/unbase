@@ -366,7 +366,7 @@ impl SlabShared {
             );
 
             for peer in inner.peerlist.0.iter() {
-                peer.slabref.send( &self.my_ref, peering_memoref.clone() );
+                peer.slabref.send( &self.my_ref, &peering_memoref );
             }
 
             // residentized
@@ -401,11 +401,30 @@ impl SlabShared {
             );
 
             for peer in inner.peerlist.0.iter() {
-                peer.slabref.send( &self.my_ref, peering_memoref.clone() );
+                peer.slabref.send( &self.my_ref, &peering_memoref );
             }
         }
 
         inner.ptr = MemoRefPtr::Remote;
+    }
+    fn request_memo (&self, memoref: &MemoRef) -> u8 {
+
+        let request_memo = self.new_memo_basic(
+            None,
+            MemoRefHead::new(), // TODO: how should this be parented?
+            MemoBody::MemoRequest(
+                vec![memoref.id],
+                self.my_ref.clone()
+            )
+        );
+
+        let mut sent = 0u8;
+        for peer in memoref.inner().peerlist.0.iter().take(5) {
+            peer.slabref.send( &self.my_ref, &request_memo.clone() );
+            sent += 1;
+        }
+
+        sent
     }
     pub fn slabref_from_local_slab(&self, peer_slab: &Slab) -> SlabRef {
 

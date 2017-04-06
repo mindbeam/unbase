@@ -123,8 +123,8 @@ impl MemoRef {
                 return Ok(memo.clone());
             }
 
-            if shared.send_memo_requests( &self.id, &slab ) > 0 {
-                channel = slab.memo_wait_channel(self.id);
+            if slab.inner().request_memo(self) > 0 {
+                channel = slab.memo_wait_channel(self.id, "convert request_memo to return a wait channel?");
             }else{
                 return Err(RetrieveError::NotFound)
             }
@@ -156,7 +156,7 @@ impl MemoRef {
             }
 
             // have another go around
-            if self.inner().send_memo_requests( &self.id, &slab ) == 0 {
+            if slab.inner().request_memo( &self ) == 0 {
                 return Err(RetrieveError::NotFound)
             }
 
@@ -223,25 +223,7 @@ impl fmt::Debug for MemoRef{
 
 
 impl MemoRefShared {
-    fn send_memo_requests (&self, my_memo_id: &MemoId, slab_inner: &SlabInner) -> u8 {
 
-        let slabref = slab.get_ref();
-        let request_memo = Memo::new_basic(
-            slab.gen_memo_id(),
-            None,
-            MemoRefHead::new(), // TODO: how should this be parented?
-            MemoBody::MemoRequest(vec![my_memo_id.clone()],slabref.clone()),
-            &slab
-        );
-
-        let mut sent = 0u8;
-        for peer in self.peerlist.0.iter().take(5) {
-            peer.slabref.send_memo( &slabref, request_memo.clone() );
-            sent += 1;
-        }
-
-        sent
-    }
 }
 impl Drop for MemoRefShared{
     fn drop(&mut self) {

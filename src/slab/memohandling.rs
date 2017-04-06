@@ -50,7 +50,7 @@ impl SlabShared {
                             }
                         );
 
-                        origin_slabref.send( &self.my_ref, my_presence_memoref );
+                        origin_slabref.send( &self.my_ref, &my_presence_memoref );
 
                     }
                 }
@@ -74,28 +74,22 @@ impl SlabShared {
                             } else {
                                 // Somebody asked me for a memo I don't have
                                 // It would be neighborly to tell them I don't have it
-                                let peering_memo = Memo::new(
-                                    my_slab.gen_memo_id(),
-                                    None,
-                                    MemoRefHead::from_memoref(memoref.clone()),
-                                    MemoBody::Peering( memo.id, memo.subject_id, my_ref.get_presence(), MemoPeeringStatus::Participating),
-                                    &my_slab
-                                );
-                                requesting_slabref.send_memo(&my_ref, peering_memo)
+                                self.do_peering(&memoref,requesting_slabref);
                             }
                         }else{
-                            let peering_memo = Memo::new(
-                                my_slab.gen_memo_id(),
+                            let peering_memoref = self.new_memo(
                                 None,
                                 MemoRefHead::from_memoref(memoref.clone()),
                                 MemoBody::Peering(
-                                    memo.id,
-                                    memo.subject_id,
-                                    my_ref.get_presence(),
-                                    MemoPeeringStatus::NonParticipating
+                                    *desired_memo_id,
+                                    None,
+                                    MemoPeerList(vec![MemoPeer{
+                                        slabref: self.my_ref,
+                                        status: MemoPeeringStatus::NonParticipating
+                                    }])
                                 )
                             );
-                            requesting_slabref.send(&my_ref, peering_memo)
+                            requesting_slabref.send(&self.my_ref, &peering_memoref)
                         }
                     }
                 }
@@ -103,10 +97,18 @@ impl SlabShared {
             _ => {}
         }
     }
-    pub fn do_peering_for_memo(&self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef, my_slab: &Slab, my_slabref: &SlabRef) {
-        // Peering memos don't get peering memos, but Edit memos do
-        // Abstracting this, because there might be more types that don't do peering
-        if memo.does_peering() {
+    pub fn do_peering(&self, memoref: &MemoRef, origin_slabref: &SlabRef) {
+
+        let do_send = if let Some(memo) = memoref.get_memo_if_resident(){
+            // Peering memos don't get peering memos, but Edit memos do
+            // Abstracting this, because there might be more types that don't do peering
+            memo.does_peering()
+        }else{
+            // we're always willing to do peering for non-resident memos
+            true
+        };
+
+        if do_send {
             // That we received the memo means that the sender didn't think we had it
             // Whether or not we had it already, lets tell them we have it now.
             // It's useful for them to know we have it, and it'll help them STFU
@@ -121,12 +123,12 @@ impl SlabShared {
                 None,
                 memoref.to_head(),
                 MemoBody::Peering(
-                    memo.id,
-                    memo.subject_id,
+                    memoref.id,
+                    memoref.subject_id,
                     memoref.get_peerlist_for_peer(&self.my_ref, origin_slabref)
                 )
             );
-            origin_slabref.send( &self.my_ref, peering_memoref );
+            origin_slabref.send( &self.my_ref, &peering_memoref );
         }
 
     }
@@ -142,7 +144,7 @@ impl SlabShared {
                 let needs_peers = self.check_peering_target(&memo);
 
                 for peer_ref in self.peer_refs.iter().filter(|x| !memoref.is_peered_with_slabref(x) ).take( needs_peers as usize ) {
-                    println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", my_ref.0.slab_id, memo.id, peer_ref.0.slab_id );
+                    println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", self.my_ref.0.slab_id, memo.id, peer_ref.0.slab_id );
                     peer_ref.send( &self.my_ref, memoref );
                 }
             }

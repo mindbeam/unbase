@@ -4,7 +4,7 @@ use slab::memo::*;
 use memorefhead::*;
 use context::{Context,ContextRef};
 use error::*;
-use slab::{Slab,SlabInner};
+use slab::Slab;
 use std::sync::{Arc,Mutex,Weak,MutexGuard};
 
 pub type SubjectId     = u64;
@@ -36,8 +36,8 @@ impl Subject {
         // don't store this
         let context = contextref.get_context();
 
-        let slab_inner : MutexGuard<SlabInner> = context.get_slab().inner();
-        let subject_id = slab_inner.generate_subject_id();
+        let slab = context.get_slab();
+        let subject_id = slab.inner().generate_subject_id();
         println!("# Subject({}).new()",subject_id);
 
         let shared = Arc::new(Mutex::new(SubjectShared{
@@ -53,13 +53,13 @@ impl Subject {
 
         context.subscribe_subject( &subject );
 
-        let memoref = slab_inner.new_memo_basic_noparent(
+        let memoref = slab.inner().new_memo_basic_noparent(
                 Some(subject_id),
                 MemoBody::FullyMaterialized {v: vals, r: HashMap::new() }
             );
 
         {
-            subject.inner().head.apply_memoref(&memoref, slab_inner);
+            subject.inner().head.apply_memoref(&memoref, slab);
             context.subject_updated( subject_id, &shared.head );
         }
 
