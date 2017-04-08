@@ -148,8 +148,8 @@ impl Network {
         let mut internals = self.shared.internals.lock().unwrap();
 
         for prev_slab in internals.get_all_local_slabs() {
-            prev_slab.inner().slabref_from_local_slab( new_slab );
-            new_slab.inner().slabref_from_local_slab( &prev_slab );
+            prev_slab.slabref_from_local_slab( new_slab );
+            new_slab.slabref_from_local_slab( &prev_slab );
         }
 
         internals.slabs.insert(0, new_slab.weak() );

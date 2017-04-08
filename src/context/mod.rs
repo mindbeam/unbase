@@ -3,7 +3,7 @@
 
 use std::fmt;
 use std::collections::HashMap;
-use slab::{Slab,MemoRef};
+use slab::*;
 use memorefhead::MemoRefHead;
 use error::RetrieveError;
 use index::IndexFixed;

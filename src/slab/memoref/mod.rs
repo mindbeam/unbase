@@ -11,7 +11,14 @@ use error::RetrieveError;
 
 
 #[derive(Clone)]
-pub struct MemoRef(Arc<MemoRefInner>);
+pub struct MemoRef(pub Arc<MemoRefInner>);
+
+impl Deref for MemoRef {
+    type Target = MemoRefInner;
+    fn deref(&self) -> &MemoRefInner {
+        self.0
+    }
+}
 
 #[derive(Debug)]
 pub struct MemoRefInner {
@@ -39,7 +46,7 @@ impl MemoRefPtr {
 
 impl MemoRef {
     pub fn from_memo (slab: &Slab, memo : &Memo) -> Self {
-        MemoRef(
+        MemoRef(Arc::new(
             MemoRefInner {
                 id: memo.id,
                 owning_slab_id: slab.id,
@@ -47,7 +54,7 @@ impl MemoRef {
                 peerlist: RwLock::new(MemoPeerList(Vec::with_capacity(3))),
                 ptr: RwLock::new(MemoRefPtr::Resident( memo.clone() ))
             }
-        )
+        ))
     }
 }
 impl MemoRefInner {
@@ -77,25 +84,19 @@ impl MemoRefInner {
 
     }
     pub fn is_resident(&self) -> bool {
-        let shared = self.shared.lock().unwrap();
-
-        match shared.ptr {
+        match *self.ptr.read().unwrap() {
             MemoRefPtr::Resident(_) => true,
             _                       => false
         }
     }
     pub fn get_memo_if_resident(&self) -> Option<Memo> {
-        let shared = self.shared.lock().unwrap();
-
-        match shared.ptr {
+        match *self.ptr.read().unwrap() {
             MemoRefPtr::Resident(ref memo) => Some(memo.clone()),
             _ => None
         }
     }
     pub fn is_peered_with_slabref(&self, slabref: &SlabRef) -> bool {
-        let shared = self.shared.lock().unwrap();
-
-        let status = shared.peerlist.0.iter().any(|peer| {
+        let status = self.peerlist.read().unwrap().0.iter().any(|peer| {
             (peer.slabref.0.slab_id == slabref.0.slab_id && peer.status != MemoPeeringStatus::NonParticipating)
         });
 
@@ -112,12 +113,11 @@ impl MemoRefInner {
         // This seems pretty crude, but using channels for now in the interest of expediency
         let channel;
         {
-            let shared = self.shared.lock().unwrap();
-            if let MemoRefPtr::Resident(ref memo) = shared.ptr {
+            if let MemoRefPtr::Resident(ref memo) = *self.ptr.read().unwrap() {
                 return Ok(memo.clone());
             }
 
-            if slab.inner().request_memo(self) > 0 {
+            if slab.request_memo(self) > 0 {
                 channel = slab.memo_wait_channel(self.id, "convert request_memo to return a wait channel?");
             }else{
                 return Err(RetrieveError::NotFound)
@@ -198,20 +198,9 @@ impl MemoRefInner {
 }
 
 impl PartialEq for MemoRefInner {
-    fn eq(&self, other: &MemoRef) -> bool {
+    fn eq(&self, other: &MemoRefInner) -> bool {
         // TODO: handle the comparision of pre-hashed memos as well as hashed memos
         self.id == other.id
-    }
-}
-
-impl fmt::Debug for MemoRefInner {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let shared = &self.shared.lock().unwrap();
-        fmt.debug_struct("MemoRef")
-           .field("memo_id", &self.id)
-           .field("peerlist", &shared.peerlist)
-           .field("ptr", &shared.ptr)
-           .finish()
     }
 }
 

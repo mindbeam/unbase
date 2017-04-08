@@ -4,6 +4,27 @@ use super::memo::*;
 use std::collections::hash_map::Entry;
 
 impl SlabInner {
+    pub fn handle_memoref (&mut self, memo_origin: &MemoOrigin, memoref: &MemoRef ){
+        println!("# SlabShared({}).handle_memoref({:?},{:?})", self.id, memo_origin, memoref.id);
+
+        match memo_origin {
+            &MemoOrigin::SameSlab => {
+                //do we want to do anything here?
+            }
+            &MemoOrigin::OtherSlab(origin_slabref,ref origin_peering_status) => {
+                if let Some(memo) = memoref.get_memo_if_resident() {
+                    self.check_memo_waiters(memo);
+                    self.handle_memo_from_other_slab(memo, &memoref, &origin_slabref, origin_peering_status);
+                    self.do_peering_for_memo(memo, &memoref, &origin_slabref);
+                }
+                memoref.update_peer(origin_slabref, origin_peering_status.clone());
+            }
+        }
+
+        self.consider_emit_memo(&memoref);
+
+    }
+
     pub fn check_memo_waiters ( &mut self, memo: &Memo) {
         match self.memo_wait_channels.entry(memo.id) {
             Entry::Occupied(o) => {

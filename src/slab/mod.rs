@@ -8,7 +8,8 @@ mod memohandling;
 pub use self::common_structs::*;
 pub use self::slabref::{SlabRef,SlabRefInner};
 pub use self::memoref::{MemoRef,MemoRefInner,MemoRefPtr};
-pub use self::memo::Memo;
+pub use self::memo::{Memo,MemoBody};
+pub use self::inner::SlabInner;
 use self::inner::*;
 
 use std::fmt;
@@ -36,8 +37,9 @@ pub type SlabId = u32;
 pub struct Slab(Arc<SlabInner>);
 
 impl Deref for Slab {
+    type Target = SlabInner;
     fn deref(&self) -> &SlabInner {
-        self.0
+        &*self.0
     }
 }
 
@@ -45,6 +47,26 @@ impl Deref for Slab {
 pub struct WeakSlab{
     pub id: u32,
     inner: Weak<SlabInner>
+}
+
+
+struct SlabInner{
+    pub id: SlabId,
+    memorefs_by_id: RwLock<HashMap<MemoId,MemoRef>>,
+    memo_wait_channels: Mutex<HashMap<MemoId,Vec<mpsc::Sender<Memo>>>>, // TODO: HERE HERE HERE - convert to per thread wait channel senders?
+    subject_subscriptions: RwLock<HashMap<SubjectId, Vec<WeakContext>>>,
+
+    counters: RwLock<SlabCounters>,
+
+    pub my_ref: SlabRef,
+    peer_refs: RwLock<Vec<SlabRef>>,
+    net: Network
+}
+struct SlabCounters{
+    last_memo_id: u32,
+    last_subject_id: u32,
+    memos_received: u64,
+    memos_redundantly_received: u64,
 }
 
 impl Slab {
@@ -61,7 +83,7 @@ impl Slab {
 
         let my_ref = SlabRef(Arc::new(my_ref_inner));
 
-        let shared = SlabInner {
+        let inner = SlabInner {
             id: slab_id,
             memorefs_by_id:        RwLock::new(HashMap::new()),
             memo_wait_channels:    RwLock::new(HashMap::new()),
@@ -79,16 +101,9 @@ impl Slab {
             net: net.clone()
         };
 
-        let me = Slab {
-            id: slab_id,
-            inner: Arc::new(SlabInner {
-                id: slab_id,
-                shared: Mutex::new(shared)
-            })
-        };
+        let me = Slab(inner);
 
         net.register_local_slab(&me);
-
         net.conditionally_generate_root_index_seed(&me);
 
         me

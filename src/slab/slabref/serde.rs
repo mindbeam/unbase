@@ -79,7 +79,7 @@ impl<'a> Visitor for SlabRefSeed<'a> {
        };
        let slabref;
        {
-           slabref = self.dest_slab.inner().slabref_from_presence(&presence).expect("slabref from slabrefseed presence");
+           slabref = self.dest_slab.slabref_from_presence(&presence).expect("slabref from slabrefseed presence");
        }
 
        Ok( slabref )

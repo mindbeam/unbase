@@ -5,8 +5,7 @@ use std::str;
 use super::*;
 use std::sync::mpsc;
 use std::sync::{Arc,Mutex};
-use slab::memo::{Memo,MemoPeeringStatus,MemoBody};
-use slab::memoref::MemoRef;
+use slab::*;
 // use std::collections::BTreeMap;
 use super::packet::*;
 use util::serde::DeserializeSeed;
@@ -114,13 +113,13 @@ impl TransportUDP {
                 lifetime: SlabAnticipatedLifetime::Unknown
             };
 
-            let hello = slab.inner().new_memo_basic_noparent(
+            let hello = slab.new_memo_basic_noparent(
                 None,
                 MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed() }
             );
 
             self.send_to_addr(
-                &slab.inner().my_ref,
+                &slab.my_ref,
                 hello,
                 to_address.clone()
             );

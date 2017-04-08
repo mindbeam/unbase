@@ -1,6 +1,5 @@
 pub mod serde;
-use slab::memo::{Memo, MemoPeeringStatus};
-use slab::SlabId;
+use slab::*;
 use std::fmt;
 
 #[derive(Clone)]

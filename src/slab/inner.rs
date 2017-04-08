@@ -1,4 +1,4 @@
-use super::SlabId;
+use super::{Slab,SlabId};
 use super::common_structs::*;
 use super::memo::*;
 use super::slabref::*;
@@ -17,34 +17,15 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::fmt;
 
-pub struct SlabInner{
-    pub id: SlabId,
-    memorefs_by_id: RwLock<HashMap<MemoId,MemoRef>>,
-    memo_wait_channels: RwLock<HashMap<MemoId,Vec<mpsc::Sender<Memo>>>>,
-    subject_subscriptions: RwLock<HashMap<SubjectId, Vec<WeakContext>>>,
-
-    counters: RwLock<SlabCounters>,
-
-    pub my_ref: SlabRef,
-    peer_refs: RwLock<Vec<SlabRef>>,
-    net: Network
-}
-pub struct SlabCounters{
-    last_memo_id: u32,
-    last_subject_id: u32,
-    memos_received: u64,
-    memos_redundantly_received: u64,
-}
-
-impl SlabInner {
+impl Slab {
     pub fn count_of_memorefs_resident( &self ) -> u32 {
         self.memorefs_by_id.read().unwrap().len() as u32
     }
     pub fn count_of_memos_received( &self ) -> u64 {
-        self.memos_received.read().unwrap().len() as u64
+        self.counters.read().unwrap().memos_received as u64
     }
     pub fn count_of_memos_reduntantly_received( &self ) -> u64 {
-        self.memos_redundantly_received.read().unwrap().len() as u64
+        self.counters.read().unwrap().memos_redundantly_received as u64
     }
     pub fn peer_slab_count (&self) -> usize {
         self.peer_refs.read().unwrap().len() as usize
@@ -55,12 +36,12 @@ impl SlabInner {
     pub fn subscribe_subject (&self, subject_id: u64, context: &Context) {
         let weakcontext : WeakContext = context.weak();
 
-        match self.subject_subscriptions.write().unwrap().entry(&subject_id){
+        match self.subject_subscriptions.write().unwrap().entry(subject_id){
             Entry::Occupied(e) => {
                 e.get().push(weakcontext)
             }
             Entry::Vacant(e) => {
-                e.insert(subject_id, vec![weakcontext]);
+                e.insert(vec![weakcontext]);
             }
         }
         return;
@@ -77,7 +58,7 @@ impl SlabInner {
     pub fn memo_wait_channel (&self, memo_id: MemoId ) -> mpsc::Receiver<Memo> {
         let (tx, rx) = channel::<Memo>();
 
-        match self.memo_wait_channels.write().entry(memo_id) {
+        match self.memo_wait_channels.lock().unwrap().entry(memo_id) {
             Entry::Vacant(o)       => { o.insert( vec![tx] ); }
             Entry::Occupied(mut o) => { o.get_mut().push(tx); }
         };
@@ -90,9 +71,9 @@ impl SlabInner {
         let mut memorefs : Vec<MemoRef> = Vec::with_capacity(memo_ids.len());
 
         {
-            let shared = self.inner.shared.lock().unwrap();
+            let memorefs_by_id = self.memorefs_by_id.read().unwrap();
             for memo_id in memo_ids.iter() {
-                if let Some(memoref) = shared.memorefs_by_id.get(memo_id) {
+                if let Some(memoref) = memorefs_by_id.get(memo_id) {
                     memorefs.push( memoref.clone() )
                 }
             }
@@ -160,15 +141,14 @@ impl SlabInner {
         let memoref = match self.memorefs_by_id.entry(memo_id) {
             Entry::Vacant(o)   => {
                 let mr = MemoRef(Arc::new(
-                        MemoRefInner {
-                            id: memo_id,
-                            owning_slab_id: self.id,
-                            subject_id: subject_id,
-                            peerlist: RwLock::new(*peers.clone()),
-                            ptr:      RwLock::new(MemoRefPtr::Remote)
-                        }
-                    ))
-                };
+                    MemoRefInner {
+                        id: memo_id,
+                        owning_slab_id: self.id,
+                        subject_id: subject_id,
+                        peerlist: RwLock::new(*peers.clone()),
+                        ptr:      RwLock::new(MemoRefPtr::Remote)
+                    }
+                ));
 
                 had_memoref = false;
                 o.insert( mr ).clone()// TODO: figure out how to prolong the borrow here & avoid clone
@@ -254,7 +234,7 @@ impl SlabInner {
 
         inner.ptr = MemoRefPtr::Remote;
     }
-    fn request_memo (&self, memoref: &MemoRef) -> u8 {
+    pub fn request_memo (&self, memoref: &MemoRef) -> u8 {
 
         let request_memo = self.new_memo_basic(
             None,
@@ -341,25 +321,43 @@ impl SlabInner {
         self.net.get_root_index_seed()
     }
     pub fn put_memo (&mut self, memo_origin: &MemoOrigin, memo: Memo ) -> MemoRef {
-        let memoref = self.put_memo_inner( memo_origin, memo );
-        *self.memos_received.write().unwrap() += 1;
-        self.dispatch_subject_head(subject_id, &memoref.to_head());
+        let (memoref, pre_existed) = self.memoref_from_memo_and_origin( &memo, memo_origin );
+
+        {
+            let counters = self.counters.write().unwrap();
+            counters.memos_received += 1;
+            if pre_existed {
+                counters.memos_redundantly_received += 1;
+            }
+        }
+
+        self.handle_memoref( memo_origin, memoref ); // located in memohandling.rs
+        self.dispatch_subject_head(memo.subject_id, &memoref.to_head());
+
     }
     pub fn put_memos(&self, memo_origin: &MemoOrigin, memos: Vec<Memo> ) -> Vec<MemoRef>{
 
         // TODO: Evaluate more efficient ways to group these memos by subject
         let mut subject_updates : HashMap<SubjectId, MemoRefHead> = HashMap::new();
         let mut memorefs = Vec::with_capacity( memos.len() );
+        let mut pre_existing = 0u64;
 
         for memo in memos.drain(){
-            memorefs.push(
-                self.put_memo( memo_origin, memo, &subject_updates );
-            );
+            let (memoref, pre_existed) = self.memoref_from_memo_and_origin( &memo, memo_origin );
+            memorefs.push(memoref);
+            if pre_existed { pre_existing += 1 }
 
+            self.handle_memoref( memo_origin, memoref ); // located in memohandling.rs
             if let Some(subject_id) = memo.subject_id {
                 let mut head = subject_updates.entry( subject_id ).or_insert( MemoRefHead::new() );
-                head.apply_memoref(&memoref, &my_slab);
+                head.apply_memoref(&memoref, self);
             }
+        }
+
+        {
+            let counters = self.counters.write().unwrap();
+            counters.memos_received += memorefs.len();
+            counters.memos_redundantly_received += pre_existing;
         }
 
         for (subject_id,head) in subject_updates {
@@ -367,32 +365,6 @@ impl SlabInner {
         }
 
         memorefs
-    }
-    pub fn handle_memo (&mut self, memo_origin: &MemoOrigin, memo: Memo ) -> (MemoRef, {
-        println!("# SlabShared({}).put_memo({:?},{:?},{:?})", self.id, memo_origin, memo.id, memo.body );
-
-
-// NOTE LEFT OFF HERE
-        let (memoref, pre_existed) = self.memoref_from_memo_and_origin( &memo, memo_origin );
-
-        if pre_existed {
-            self.memos_redundantly_received += 1;
-        }
-        match memo_origin {
-            &MemoOrigin::SameSlab => {
-                //
-            }
-            &MemoOrigin::OtherSlab(origin_slabref,ref origin_peering_status) => {
-                self.check_memo_waiters(&memo);
-                self.handle_memo_from_other_slab(&memo, &memoref, &origin_slabref, origin_peering_status, &my_slab, &my_ref);
-
-                memoref.update_peer(origin_slabref, origin_peering_status.clone());
-
-                self.do_peering_for_memo(&memo, &memoref, &origin_slabref, &my_slab, &my_ref);
-            }
-        };
-
-        self.consider_emit_memo(&memoref);
     }
     pub fn dispatch_subject_head (&self, subject_id: u64, head : &MemoRefHead){
         println!("# \t\\ SlabShared({}).dispatch_subject_head({}, {:?})", self.id, subject_id, head.memo_ids() );
@@ -428,6 +400,7 @@ impl SlabInner {
         0
     }
 */
+
 }
 
 impl Drop for SlabInner {

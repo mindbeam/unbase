@@ -1,7 +1,7 @@
 
 use std::sync::mpsc;
 use super::*;
-use slab::memo::{Memo,MemoPeeringStatus};
+use slab::*;
 
 /// A trait for transmitters to implement
 pub trait DynamicDispatchTransmitter {

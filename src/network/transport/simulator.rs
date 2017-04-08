@@ -4,7 +4,7 @@ use super::*;
 use std::sync::{Arc,Mutex};
 use slab::*;
 use itertools::partition;
-use slab::memo::{Memo,MemoPeeringStatus};
+use slab::*;
 use network::*;
 
 // Minkowski stuff: Still ridiculous, but necessary for our purposes.
