@@ -32,6 +32,8 @@ pub struct MemoInner {
     pub body: MemoBody
 }
 
+type RelationSlotSubjectHead = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
+
 #[derive(Debug)]
 pub enum MemoBody{
     SlabPresence{ p: SlabPresence, r: Option<MemoRefHead> }, // TODO: split out root_index_seed conveyance to another memobody type
@@ -41,25 +43,6 @@ pub enum MemoBody{
     PartiallyMaterialized { v: HashMap<String, String>, r: RelationSlotSubjectHead },
     Peering(MemoId,Option<SubjectId>,MemoPeerList),
     MemoRequest(Vec<MemoId>,SlabRef)
-}
-
-type RelationSlotSubjectHead = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
-
-#[derive(Debug)]
-pub struct MemoPeerList (pub Vec<MemoPeer>);
-
-#[derive(Debug)]
-pub struct MemoPeer {
-    pub slabref: SlabRef,
-    pub status: MemoPeeringStatus
-}
-
-#[derive(Debug,Clone,PartialEq,Serialize,Deserialize)]
-pub enum MemoPeeringStatus{
-    Resident,
-    Participating,
-    NonParticipating,
-    Unknown
 }
 
 

@@ -1,6 +1,9 @@
 use super::*;
+use super::common_structs;
+use super::memo::*;
+use std::collections::hash_map::Entry;
 
-impl SlabShared {
+impl SlabInner {
     pub fn check_memo_waiters ( &mut self, memo: &Memo) {
         match self.memo_wait_channels.entry(memo.id) {
             Entry::Occupied(o) => {
@@ -129,25 +132,6 @@ impl SlabShared {
                 )
             );
             origin_slabref.send( &self.my_ref, &peering_memoref );
-        }
-
-    }
-
-    pub fn emit_memos(&self, memorefs: &Vec<MemoRef>) {
-        // Emit memos for durability and notification purposes
-        // At present, some memos like peering and slab presence are emitted manually.
-        // TODO: This will almost certainly have to change once gossip/plumtree functionality is added
-
-        // TODO: test each memo for durability_score and emit accordingly
-        for memoref in memorefs.iter() {
-            if let Some(memo) = memoref.get_memo_if_resident() {
-                let needs_peers = self.check_peering_target(&memo);
-
-                for peer_ref in self.peer_refs.iter().filter(|x| !memoref.is_peered_with_slabref(x) ).take( needs_peers as usize ) {
-                    println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", self.my_ref.0.slab_id, memo.id, peer_ref.0.slab_id );
-                    peer_ref.send( &self.my_ref, memoref );
-                }
-            }
         }
 
     }

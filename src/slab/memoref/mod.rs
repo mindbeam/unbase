@@ -5,25 +5,23 @@ use slab::*;
 use network::*;
 use subject::*;
 use memorefhead::MemoRefHead;
-use std::sync::{Arc,Mutex};
+use std::sync::{Arc,RwLock};
 use std::fmt;
 use error::RetrieveError;
 
 
 #[derive(Clone)]
-pub struct MemoRef {
-    pub id:    MemoId,
-    pub owning_slab_id: SlabId,
-    pub subject_id: Option<SubjectId>,
-    pub shared: Arc<Mutex<MemoRefShared>>
-}
+pub struct MemoRef(Arc<MemoRefInner>);
 
 #[derive(Debug)]
-pub struct MemoRefShared {
+pub struct MemoRefInner {
     pub id:       MemoId,
-    pub peerlist: MemoPeerList,
-    pub ptr:      MemoRefPtr
+    pub owning_slab_id: SlabId,
+    pub subject_id: Option<SubjectId>,
+    pub peerlist: RwLock<MemoPeerList>,
+    pub ptr:      RwLock<MemoRefPtr>
 }
+
 #[derive(Debug)]
 pub enum MemoRefPtr {
     Resident(Memo),
@@ -41,22 +39,18 @@ impl MemoRefPtr {
 
 impl MemoRef {
     pub fn from_memo (slab: &Slab, memo : &Memo) -> Self {
-        MemoRef {
-            id: memo.id,
-            owning_slab_id: slab.id,
-            subject_id: memo.subject_id,
-            shared: Arc::new(Mutex::new(
-                MemoRefShared {
-                    id: memo.id,
-                    peerlist: MemoPeerList(Vec::with_capacity(3)),
-                    ptr: MemoRefPtr::Resident( memo.clone() )
-                }
-            ))
-        }
+        MemoRef(
+            MemoRefInner {
+                id: memo.id,
+                owning_slab_id: slab.id,
+                subject_id: memo.subject_id,
+                peerlist: RwLock::new(MemoPeerList(Vec::with_capacity(3))),
+                ptr: RwLock::new(MemoRefPtr::Resident( memo.clone() ))
+            }
+        )
     }
-    pub fn inner (&self) -> MutexGuard<MemoRefShared> {
-        self.shared.lock().unwrap()
-    }
+}
+impl MemoRefInner {
     pub fn to_head (&self) -> MemoRefHead {
         MemoRefHead::from_memoref(self.clone())
     }
@@ -203,14 +197,14 @@ impl MemoRef {
 
 }
 
-impl PartialEq for MemoRef {
+impl PartialEq for MemoRefInner {
     fn eq(&self, other: &MemoRef) -> bool {
         // TODO: handle the comparision of pre-hashed memos as well as hashed memos
         self.id == other.id
     }
 }
 
-impl fmt::Debug for MemoRef{
+impl fmt::Debug for MemoRefInner {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let shared = &self.shared.lock().unwrap();
         fmt.debug_struct("MemoRef")
@@ -221,12 +215,8 @@ impl fmt::Debug for MemoRef{
     }
 }
 
-
-impl MemoRefShared {
-
-}
-impl Drop for MemoRefShared{
+impl Drop for MemoRefInner{
     fn drop(&mut self) {
-        println!("# MemoRefShared({}).drop", self.id);
+        println!("# MemoRefInner({}).drop", self.id);
     }
 }

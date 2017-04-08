@@ -15,6 +15,7 @@ pub mod serde;
 use std::mem;
 use std::fmt;
 use slab::{Slab,SlabId};
+use super::common_structs::*;
 use super::memo::Memo;
 use super::memoref::MemoRef;
 use std::sync::{Arc,Mutex};
@@ -32,24 +33,6 @@ pub struct SlabRefInner {
     pub presence: Mutex<Vec<SlabPresence>>,
     pub tx: Mutex<Transmitter>,
     pub return_address: atomic::AtomicPtr<TransportAddress>,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub enum SlabAnticipatedLifetime{
-    Ephmeral,
-    Session,
-    Long,
-    VeryLong,
-    Unknown
-}
-
-/// SlabPresence represents the expected reachability of a given Slab
-/// Including Transport address and anticipated lifetime
-#[derive(Clone, Deserialize)]
-pub struct SlabPresence{
-    pub slab_id: SlabId,
-    pub address: TransportAddress,
-    pub lifetime: SlabAnticipatedLifetime
 }
 
 impl SlabRef{
@@ -91,12 +74,6 @@ impl SlabRef{
     }
 }
 
-impl PartialEq for SlabPresence {
-    fn eq(&self, other: &SlabPresence) -> bool {
-        // When comparing equality, we can skip the anticipated lifetime
-        self.slab_id == other.slab_id && self.address == other.address
-    }
-}
 impl fmt::Debug for SlabRef {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SlabRef")
@@ -106,15 +83,7 @@ impl fmt::Debug for SlabRef {
             .finish()
     }
 }
-impl fmt::Debug for SlabPresence {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("SlabPresence")
-            .field("slab_id", &self.slab_id)
-            .field("address", &self.address.to_string() )
-            .field("lifetime", &self.lifetime)
-            .finish()
-    }
-}
+
 impl Drop for SlabRefInner{
     fn drop(&mut self) {
         println!("# SlabRefInner({},{}).drop",self.owning_slab_id, self.slab_id);
