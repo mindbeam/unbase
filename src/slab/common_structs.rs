@@ -45,7 +45,12 @@ impl MemoPeerList {
         MemoPeerList(self.0.clone())
     }
     pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab) -> Self {
-        unimplemented!()
+        MemoPeerList( self.0.iter().map(|p| {
+            MemoPeer{
+                slabref: p.slabref.clone_for_slab(from_slabref, to_slab),
+                status: p.status.clone()
+            }
+        }).collect())
     }
 }
 

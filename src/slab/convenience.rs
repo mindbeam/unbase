@@ -45,7 +45,7 @@ impl Slab {
             lifetime: SlabAnticipatedLifetime::Unknown
         };
 
-        self.assert_slabref(args, &presence)
+        self.assert_slabref(args, &vec![presence])
     }
     pub fn slabref_from_presence(&self, presence: &SlabPresence) -> Result<SlabRef,&str> {
 
@@ -61,6 +61,6 @@ impl Slab {
 
         let args = TransmitterArgs::Remote( &presence.slab_id, &presence.address );
 
-        Ok(self.assert_slabref( args, presence ))
+        Ok(self.assert_slabref( args, &vec![presence.clone()] ))
     }
 }

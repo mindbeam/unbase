@@ -34,6 +34,14 @@ pub enum TransmitterArgs<'a>{
     Local(&'a Slab),
     Remote(&'a SlabId, &'a TransportAddress)
 }
+impl<'a> TransmitterArgs<'a>{
+    pub fn get_slab_id (&self) -> SlabId {
+        match self {
+            &TransmitterArgs::Local(ref s)     => s.id.clone(),
+            &TransmitterArgs::Remote(ref id,_) => *id.clone()
+        }
+    }
+}
 
 pub trait Transport {
     fn make_transmitter(  &self, args: &TransmitterArgs  ) -> Option<Transmitter>;

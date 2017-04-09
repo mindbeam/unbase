@@ -198,25 +198,28 @@ impl Slab {
 
         (memoref, had_memoref)
     }
-    pub fn assert_slabref(&self, args: TransmitterArgs, presence: &SlabPresence ) -> SlabRef {
+    pub fn assert_slabref(&self, args: TransmitterArgs, presence: &[SlabPresence] ) -> SlabRef {
+        let slab_id = args.get_slab_id();
+        if let Some(slabref) = self.peer_refs.read().unwrap().iter().find(|r| r.0.slab_id == slab_id ) {
+            for p in presence.iter(){
+                if slabref.apply_presence(p) {
+                    let new_trans = self.net.get_transmitter( &args ).expect("new_from_slab net.get_transmitter");
+                    let return_address = self.net.get_return_address( &p.address ).expect("return address not found");
 
-        if let Some(slabref) = self.peer_refs.read().unwrap().iter().find(|r| r.0.slab_id == presence.slab_id ) {
-            if slabref.apply_presence(presence) {
-                let new_trans = self.net.get_transmitter( args ).expect("new_from_slab net.get_transmitter");
-                let return_address = self.net.get_return_address( &presence.address ).expect("return address not found");
-
-                *slabref.0.tx.lock().unwrap() = new_trans;
-                *slabref.0.return_address.write().unwrap() = return_address;
+                    *slabref.0.tx.lock().unwrap() = new_trans;
+                    *slabref.0.return_address.write().unwrap() = return_address;
+                }
             }
             return slabref.clone();
         }else{
-            let tx = self.net.get_transmitter( args ).expect("new_from_slab net.get_transmitter");
-            let return_address = self.net.get_return_address( &presence.address ).expect("return address not found");
+            let tx = self.net.get_transmitter( &args ).expect("new_from_slab net.get_transmitter");
+            //  pick one of the presences to use as our return address
+            let return_address = self.net.get_return_address( &presence[0].address ).expect("return address not found");
 
             let inner = SlabRefInner {
-                slab_id: presence.slab_id,
+                slab_id: slab_id,
                 owning_slab_id: self.id, // for assertions only?
-                presence: RwLock::new(vec![presence.clone()]),
+                presence: RwLock::new(presence.to_vec()),
                 tx: Mutex::new(tx),
                 return_address: RwLock::new(return_address),
             };

@@ -114,11 +114,11 @@ impl Network {
         let mut internals = self.shared.internals.lock().unwrap();
         internals.get_representative_slab()
     }
-    pub fn get_transmitter (&self, args: TransmitterArgs ) -> Option<Transmitter> {
+    pub fn get_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
 
         let internals = self.shared.internals.lock().unwrap();
         for transport in internals.transports.iter() {
-            if let Some(transmitter) = transport.make_transmitter( &args ) {
+            if let Some(transmitter) = transport.make_transmitter( args ) {
                 return Some(transmitter);
             }
         }
