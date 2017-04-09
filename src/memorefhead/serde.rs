@@ -1,5 +1,5 @@
 use network::*;
-use slab::memoref::serde::*;
+use slab::memoref_serde::*;
 use util::serde::*;
 use super::*;
 

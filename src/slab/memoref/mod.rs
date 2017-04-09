@@ -1,22 +1,21 @@
-
 pub mod serde;
-use super::memo::*;
-use slab::*;
+use super::*;
 use network::*;
 use subject::*;
 use memorefhead::MemoRefHead;
-use std::sync::{Arc,RwLock};
-use std::fmt;
 use error::RetrieveError;
 
+use std::sync::{Arc,RwLock};
+use std::fmt;
 
-#[derive(Clone)]
+
+#[derive(Clone, Debug)]
 pub struct MemoRef(pub Arc<MemoRefInner>);
 
 impl Deref for MemoRef {
     type Target = MemoRefInner;
     fn deref(&self) -> &MemoRefInner {
-        self.0
+        &*self.0
     }
 }
 
@@ -51,13 +50,13 @@ impl MemoRef {
                 id: memo.id,
                 owning_slab_id: slab.id,
                 subject_id: memo.subject_id,
-                peerlist: RwLock::new(MemoPeerList(Vec::with_capacity(3))),
+                peerlist: RwLock::new(MemoPeerList::new(Vec::with_capacity(3))),
                 ptr: RwLock::new(MemoRefPtr::Resident( memo.clone() ))
             }
         ))
     }
 }
-impl MemoRefInner {
+impl MemoRef {
     pub fn to_head (&self) -> MemoRefHead {
         MemoRefHead::from_memoref(self.clone())
     }
@@ -65,22 +64,21 @@ impl MemoRefInner {
         unimplemented!();
     }
     pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, dest_slabref: &SlabRef) -> MemoPeerList {
-        let shared = *(self.shared.lock().unwrap());
-        let list : Vec<MemoPeer> = Vec::with_capacity(shared.peerlist.0.len() + 1);
+        let list : Vec<MemoPeer> = Vec::new();
 
         list.push(MemoPeer{
             slabref: my_ref.clone(),
-            status: shared.ptr.to_peering_status()
+            status: self.ptr.read().unwrap().to_peering_status()
         });
 
         // Tell the peer about all other presences except for ones belonging to them
         // we don't need to tell them they have it. They know, they were there :)
 
-        for peer in shared.peerlist.0.iter().filter(|p| p.slabref.0.slab_id != dest_slabref.0.slab_id ) {
+        for peer in self.peerlist.read().unwrap().iter().filter(|p| p.slabref.0.slab_id != dest_slabref.0.slab_id ) {
             list.push(*peer.clone());
         }
 
-        MemoPeerList(list)
+        MemoPeerList::new(list)
 
     }
     pub fn is_resident(&self) -> bool {
@@ -89,14 +87,14 @@ impl MemoRefInner {
             _                       => false
         }
     }
-    pub fn get_memo_if_resident(&self) -> Option<Memo> {
+    pub fn get_memo_if_resident(&self) -> Option<&Memo> {
         match *self.ptr.read().unwrap() {
-            MemoRefPtr::Resident(ref memo) => Some(memo.clone()),
+            MemoRefPtr::Resident(ref memo) => Some(&memo),
             _ => None
         }
     }
     pub fn is_peered_with_slabref(&self, slabref: &SlabRef) -> bool {
-        let status = self.peerlist.read().unwrap().0.iter().any(|peer| {
+        let status = self.peerlist.read().unwrap().iter().any(|peer| {
             (peer.slabref.0.slab_id == slabref.0.slab_id && peer.status != MemoPeeringStatus::NonParticipating)
         });
 
@@ -150,7 +148,7 @@ impl MemoRefInner {
             }
 
             // have another go around
-            if slab.inner().request_memo( &self ) == 0 {
+            if slab.request_memo( &self ) == 0 {
                 return Err(RetrieveError::NotFound)
             }
 
@@ -175,10 +173,9 @@ impl MemoRefInner {
     }
     pub fn update_peer (&self, slabref: &SlabRef, status: MemoPeeringStatus){
 
-        let mut shared = self.shared.lock().unwrap();
-
         let mut found : bool = false;
-        for peer in shared.peerlist.0.iter_mut() {
+        let list = self.peerlist.write().unwrap();
+        for peer in list.iter_mut() {
             if peer.slabref.0.slab_id == slabref.0.slab_id {
                 found = true;
                 peer.status = status.clone();
@@ -188,7 +185,7 @@ impl MemoRefInner {
         }
 
         if !found {
-            shared.peerlist.0.push(MemoPeer{
+            list.push(MemoPeer{
                 slabref: slabref.clone(),
                 status: status.clone()
             })
@@ -197,8 +194,8 @@ impl MemoRefInner {
 
 }
 
-impl PartialEq for MemoRefInner {
-    fn eq(&self, other: &MemoRefInner) -> bool {
+impl PartialEq for MemoRef {
+    fn eq(&self, other: &MemoRef) -> bool {
         // TODO: handle the comparision of pre-hashed memos as well as hashed memos
         self.id == other.id
     }

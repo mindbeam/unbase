@@ -18,8 +18,8 @@ pub mod memorefhead;
 pub mod util;
 
 pub use network::Network;
+pub use subject::Subject;
 pub use slab::Slab;
-pub use slab::memo::Memo;
 
 /*
 #[cfg(test)]

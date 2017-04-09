@@ -8,7 +8,7 @@ impl StatefulSerialize for MemoPeerList {
     {
 
         let mut seq = serializer.serialize_seq(None)?;
-        for memopeer in self.0.iter() {
+        for memopeer in self.iter() {
 
             // don't tell the receiving slab that they have it.
             // They know they have it
@@ -24,18 +24,16 @@ impl StatefulSerialize for MemoRef {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        let shared = &self.shared.lock().unwrap();
-
         use super::MemoRefPtr::*;
 
         let mut seq = serializer.serialize_seq(Some(4))?;
         seq.serialize_element(&self.id)?;
         seq.serialize_element(&self.subject_id)?;
-        seq.serialize_element(&match &shared.ptr {
+        seq.serialize_element(&match &*self.ptr.read().unwrap() {
             &Remote      => false,
             &Resident(_) => true
         })?;
-        seq.serialize_element( &SerializeWrapper(&shared.peers, helper) )?;
+        seq.serialize_element( &SerializeWrapper(&*self.peerlist.read().unwrap(), helper) )?;
         seq.end()
     }
 }
@@ -130,7 +128,7 @@ impl<'a> Visitor for MemoRefSeed<'a> {
             }
         });
 
-        Ok(self.dest_slab.assert_memoref(memo_id, subject_id, MemoPeerList(peers)).0)
+        Ok(self.dest_slab.memoref(memo_id, subject_id, &MemoPeerList::new(peers)).0 )
     }
 }
 

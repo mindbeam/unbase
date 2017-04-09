@@ -103,7 +103,7 @@ fn basic_eventual() {
     idx_node.set_relation( 0, rec_b1 );
 
     println!("All rec_b1 MemoIds: {:?}", rec_b1_memoids);
-    slab_b.remotize_memo_ids( &rec_b1_memoids );
+    slab_b.remotize_memo_ids( &rec_b1_memoids ).expect("failed to remotize memos");
 
     if let Some(record) = idx_node.get_relation(0) {
         println!("Retrieved record: {} - {:?}", record.id, record.get_value("animal_sound") );

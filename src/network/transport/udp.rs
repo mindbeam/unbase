@@ -135,7 +135,7 @@ impl TransportUDP {
                 to_slab_id: 0,
                 from_slab_id: from_slabref.0.slab_id,
                 from_slab_peering_status: MemoPeeringStatus::Resident, // TODO - stop assuming that it's actually resident in the sending slab
-                memo: memo
+                memo: memo.clone()
             };
 
             println!("TransportUDP.send({:?})", packet );

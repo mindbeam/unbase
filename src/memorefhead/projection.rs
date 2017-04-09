@@ -23,7 +23,7 @@ impl MemoRefHead {
 
         // TODO: how to handle relationship nullification?
         for memo in self.causal_memo_iter(slab){
-            match memo.inner.body {
+            match memo.body {
                 MemoBody::FullyMaterialized { v: _, ref r } => {
 
                     for (slot,&(subject_id,_)) in r {
@@ -47,7 +47,7 @@ impl MemoRefHead {
     pub fn project_value ( &self, context: &Context, key: &str ) -> Option<String> {
 
         //TODO: consider creating a consolidated projection routine for most/all uses
-        for memo in self.causal_memo_iter(context.get_slab()) {
+        for memo in self.causal_memo_iter(&context.slab) {
 
             println!("# \t\\ Considering Memo {}", memo.id );
             if let Some((values, materialized)) = memo.get_values() {
@@ -63,7 +63,7 @@ impl MemoRefHead {
     pub fn project_relation ( &self, context: &Context, key: RelationSlotId ) -> Result<(SubjectId,Self), RetrieveError> {
         // TODO: Make error handling more robust
 
-        for memo in self.causal_memo_iter( context.get_slab() ) {
+        for memo in self.causal_memo_iter( &context.slab ) {
 
             if let Some((relations,materialized)) = memo.get_relations(){
                 println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );

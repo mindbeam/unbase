@@ -24,7 +24,7 @@ fn remote_traversal_simulated() {
 
     simulator.advance_clock(1); // now slab A should know that Slab B has it
 
-    slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() );
+    slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() ).expect("failed to remotize memos");
 
     simulator.advance_clock(1);
 
@@ -69,7 +69,7 @@ fn remote_traversal_nondeterministic() {
 
     thread::sleep(time::Duration::from_millis(50));
 
-    slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() );
+    slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() ).expect("failed to remotize memos");
 
     thread::sleep(time::Duration::from_millis(50));
 
@@ -118,7 +118,7 @@ fn remote_traversal_nondeterministic_udp() {
         thread::sleep(time::Duration::from_millis(50));
 
         // manually remove the memos
-        slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() );
+        slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() ).expect("failed to remotize memos");
 
         // Not really any strong reason to wait here, except just to play nice and make sure slab_b's peering is updated
         // TODO: test memo expungement/de-peering, followed immediately by MemoRequest for same

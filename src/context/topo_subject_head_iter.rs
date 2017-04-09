@@ -15,7 +15,7 @@ pub struct TopoSubjectHeadIter {
 impl TopoSubjectHeadIter {
     pub fn new (context: &Context) -> TopoSubjectHeadIter {
 
-        let slab = context.get_slab().clone();
+        let slab = context.slab.clone();
         let shared = context.inner.shared.lock().unwrap();
 
         let mut topo_sorted_vertices : VecDeque<SubjectVertex> = VecDeque::new();
@@ -61,7 +61,7 @@ impl TopoSubjectHeadIter {
         TopoSubjectHeadIter {
             subject_ids: subject_ids,
             context: context.clone(),
-            slab: context.get_slab().clone()
+            slab: context.slab.clone()
         }
 
     }

@@ -1,7 +1,7 @@
 use super::*;
 use super::super::*;
 
-use slab::memo::serde::MemoSeed;
+use slab::memo_serde::MemoSeed;
 use util::serde::DeserializeSeed;
 use util::serde::*;
 

@@ -4,7 +4,7 @@ pub mod transport;
 pub mod packet;
 
 pub use slab::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
-pub use self::transport::{Transport,TransportAddress,Transmitter};
+pub use self::transport::{Transport,TransportAddress,Transmitter,TransmitterArgs};
 pub use self::packet::Packet;
 use self::transport::*;
 use util::system_creator::SystemCreator;

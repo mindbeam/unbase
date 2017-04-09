@@ -6,6 +6,7 @@ use super::*;
 use std::fmt;
 use network::Network;
 use memorefhead::serde::*;
+use super::memoref::serde::MemoPeerSeed;
 
 use slab::slabref::serde::SlabRefSeed;
 use slab::MemoOrigin;
@@ -29,8 +30,8 @@ impl StatefulSerialize for Memo {
         let mut seq = serializer.serialize_seq(Some(4))?;
         seq.serialize_element( &self.id )?;
         seq.serialize_element( &self.subject_id )?;
-        seq.serialize_element( &SerializeWrapper( &self.inner.body, helper ) )?;
-        seq.serialize_element( &SerializeWrapper( &self.inner.parents, helper ) )?;
+        seq.serialize_element( &SerializeWrapper( &self.body, helper ) )?;
+        seq.serialize_element( &SerializeWrapper( &self.parents, helper ) )?;
         seq.end()
     }
 }
@@ -65,21 +66,20 @@ impl StatefulSerialize for MemoBody {
                 sv.end()
             },
             PartiallyMaterialized{ ref r, ref v }  => {
-                let mut sv = serializer.serialize_struct_variant("MemoBody", 3, "PartiallyMaterialized", 2)?;
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 4, "PartiallyMaterialized", 2)?;
                 sv.serialize_field("r", &SerializeWrapper(r, helper))?;
                 sv.serialize_field("v", v)?;
                 sv.end()
             },
-            Peering( ref memo_id, ref subject_id, ref slabpresence, ref peeringstatus ) =>{
-                let mut sv = serializer.serialize_struct_variant("MemoBody", 4, "Peering", 3)?;
+            Peering( ref memo_id, ref subject_id, ref peerlist ) =>{
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 5, "Peering", 3)?;
                 sv.serialize_field("i", memo_id )?;
                 sv.serialize_field("j", subject_id )?;
-                sv.serialize_field("p", &SerializeWrapper(&slabpresence,helper) )?;
-                sv.serialize_field("s", peeringstatus)?;
+                sv.serialize_field("l", &SerializeWrapper(peerlist,helper) )?;
                 sv.end()
             }
             MemoRequest( ref memo_ids, ref slabref ) =>{
-                let mut sv = serializer.serialize_struct_variant("MemoBody", 5, "MemoRequest", 2)?;
+                let mut sv = serializer.serialize_struct_variant("MemoBody", 6, "MemoRequest", 2)?;
                 sv.serialize_field("i", memo_ids )?;
                 sv.serialize_field("s", &SerializeWrapper(slabref, helper))?;
                 sv.end()
@@ -153,15 +153,17 @@ impl<'a> Visitor for MemoSeed<'a>{
        };
 
        let memoorigin = MemoOrigin::OtherSlab(self.origin_slabref, self.from_slab_peering_status);
-       let memoref = self.dest_slab.put_memo(&memoorigin,
-           Memo::new(
-               id,
-               subject_id,
-               parents,
-               body,
-               self.dest_slab
-           )
-       );
+
+
+       let memo = Memo::new(MemoInner {
+           id:    id,
+           owning_slab_id: self.dest_slab.id,
+           subject_id: subject_id,
+           parents: parents,
+           body: body
+       });
+
+       let memoref = self.dest_slab.memoref_from_memo_and_origin(memo, &memoorigin).0;
 
        //Ok(Memo::new( id, subject_id, parents, body ))
        Ok(())
@@ -456,7 +458,7 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
             match key {
                 'i' => memo_ids  = visitor.visit_value()?,
                 'j' => subject_id = visitor.visit_value()?,
-                'p' => peerlist  = visitor.visit_value()?,
+                'l' => peerlist  = Some(MemoPeerList::new(visitor.visit_value_seed(VecSeed(MemoPeerSeed{ dest_slab: self.dest_slab }))?)),
                 _   => {}
             }
         }

@@ -1,3 +1,10 @@
+Patterns:
+
+    Arc deref pattern:
+        Unbase wishes to have as few opinions as possible about the thread model with which you are using it. As such, we presently assume that a Slab and its surrogates could be accessed from multiple different threads. Because of this, we employ a design pattern where essentially all data are wrapped in Arcs. We wish to make this ergonomic and reasonably future proof however. As such, we utilize a pattern of: FooStruct(Arc<FooStructInner>), where the outer FooStruct is essentially just an Arc newtype with a deref impl yeilding the FooStructInner. Essentially all unbase business logic is implemented against the FooStruct, with the Arc derefs happening automatically. The downside of this is that we're doing rather of a lot of Arc derefs internal to their respective business logic. The hope is that this can be replaced later with a non-refcounted approach using generational GC.
+
+Structs:
+
 Slab - A storage place for Memos and MemoRefs
   Slabs do not perform any projections. They ONLY store Memos, MemoRefs, and notify interested parties
 

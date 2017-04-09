@@ -19,15 +19,19 @@ pub type MemoId = u64;
 // All portions of this struct should be immutable
 
 #[derive(Clone)]
-pub struct Memo {
-    pub id: u64,
-    pub owning_slab_id: SlabId,
-    pub subject_id: Option<SubjectId>,
-    pub inner: Arc<MemoInner>
+pub struct Memo(Arc<MemoInner>);
+
+impl Deref for Memo {
+    type Target = MemoInner;
+    fn deref(&self) -> &MemoInner {
+        &*self.0
+    }
 }
+
 pub struct MemoInner {
     pub id: u64,
     pub subject_id: Option<SubjectId>,
+    pub owning_slab_id: SlabId,
     pub parents: MemoRefHead,
     pub body: MemoBody
 }
@@ -59,23 +63,25 @@ impl Hash for MemoId {
 
 impl fmt::Debug for Memo{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let inner = &self.inner;
         fmt.debug_struct("Memo")
-           .field("id", &inner.id)
-           .field("subject_id", &inner.subject_id)
-           .field("parents", &inner.parents)
-           .field("body", &inner.body)
+           .field("id", &self.id)
+           .field("subject_id", &self.subject_id)
+           .field("parents", &self.parents)
+           .field("body", &self.body)
            .finish()
     }
 }
 
 impl Memo {
+    pub fn new (inner: MemoInner) -> Self {
+        Memo(Arc::new(inner))
+    }
     pub fn get_parent_head (&self) -> MemoRefHead {
-        self.inner.parents.clone()
+        self.parents.clone()
     }
     pub fn get_values (&self) -> Option<(HashMap<String, String>,bool)> {
 
-        match self.inner.body {
+        match self.body {
             MemoBody::Edit(ref v)
                 => Some((v.clone(),false)),
             MemoBody::FullyMaterialized { ref v, r: _ }
@@ -85,7 +91,7 @@ impl Memo {
     }
     pub fn get_relations (&self) -> Option<(HashMap<RelationSlotId, (SubjectId, MemoRefHead)>,bool)> {
 
-        match self.inner.body {
+        match self.body {
             MemoBody::Relation(ref r)
                 => Some((r.clone(),false)),
             MemoBody::FullyMaterialized { v: _, ref r }
@@ -94,7 +100,7 @@ impl Memo {
         }
     }
     pub fn does_peering (&self) -> bool {
-        match self.inner.body {
+        match self.body {
             MemoBody::MemoRequest(_,_) => {
                 false
             }
@@ -116,14 +122,14 @@ impl Memo {
 
 
         // breadth-first
-        for parent in self.inner.parents.iter() {
+        for parent in self.parents.iter() {
             if parent == memoref {
                 return true
             };
         }
 
         // Ok now depth
-        for parent in self.inner.parents.iter() {
+        for parent in self.parents.iter() {
             if parent.descends(&memoref,slab) {
                 return true
             }

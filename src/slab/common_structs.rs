@@ -44,7 +44,21 @@ pub enum MemoOrigin<'a>{
 }
 
 #[derive(Debug)]
-pub struct MemoPeerList (pub Vec<MemoPeer>);
+pub struct MemoPeerList (Vec<MemoPeer>);
+
+impl MemoPeerList {
+    pub fn new(list: Vec<MemoPeer>) -> Self {
+        MemoPeerList(list)
+    }
+}
+
+impl Deref for MemoPeerList {
+    type Target = Vec<MemoPeer>;
+    fn deref(&self) -> &Vec<MemoPeer> {
+        &self.0
+    }
+}
+
 
 #[derive(Debug)]
 pub struct MemoPeer {

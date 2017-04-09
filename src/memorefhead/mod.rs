@@ -1,17 +1,15 @@
 pub mod serde;
 mod projection;
 
-use std::mem;
-use std::fmt;
-use std::slice;
-use std::collections::VecDeque;
-
-use slab::memo::*;
-use slab::memoref::*;
 use slab::*;
 use subject::*;
 use context::*;
 use error::*;
+
+use std::mem;
+use std::fmt;
+use std::slice;
+use std::collections::VecDeque;
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -24,6 +22,7 @@ pub type RelationSlotId = u8;
 
 #[derive(Clone, PartialEq)]
 pub struct MemoRefHead (Vec<MemoRef>);
+
 
 impl MemoRefHead {
     pub fn new () -> Self {
@@ -123,9 +122,9 @@ impl MemoRefHead {
         self.0.iter().map(|m| m.id).collect()
     }
     pub fn first_subject_id (&self, slab: &Slab) -> Option<SubjectId> {
-        if let Some(memoref) = self.0.iter().next() {
+        if let Some(memoref) = self.iter().next() {
             // TODO: Could stand to be much more robust here
-            memoref.get_memo(slab).unwrap().inner.subject_id
+            memoref.get_memo(slab).unwrap().subject_id
         }else{
             None
         }
@@ -137,10 +136,10 @@ impl MemoRefHead {
         VecDeque::from(self.0.clone())
     }
     pub fn len (&self) -> usize {
-        self.0.len()
+        self.len()
     }
     pub fn iter (&self) -> slice::Iter<MemoRef> {
-        self.0.iter()
+        self.iter()
     }
     pub fn causal_memo_iter(&self, slab: &Slab ) -> CausalMemoIter {
         CausalMemoIter::from_head( &self, slab )
@@ -151,7 +150,7 @@ impl MemoRefHead {
 
         for memoref in self.iter(){
             if let Ok(memo) = memoref.get_memo(slab) {
-                match memo.inner.body {
+                match memo.body {
                     MemoBody::FullyMaterialized { v: _, r: _ } => {},
                     _                           => { return false }
                 }
@@ -169,7 +168,7 @@ impl fmt::Debug for MemoRefHead{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 
         fmt.debug_struct("MemoRefHead")
-            .field("memo_refs", &self.0 )
+            .field("memo_refs", &self )
             //.field("memo_ids", &self.memo_ids() )
             .finish()
     }
