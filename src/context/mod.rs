@@ -100,7 +100,7 @@ impl Context{
         }
     }
 
-    fn get_subject_if_resident (&mut self, subject_id: SubjectId) -> Option<Subject> {
+    fn get_subject_if_resident (&self, subject_id: SubjectId) -> Option<Subject> {
 
         if let Some(weaksub) = self.subjects.read().unwrap().get(&subject_id) {
             if let Some(subject) = weaksub.upgrade() {
@@ -182,7 +182,8 @@ impl Context{
     // specifically for created/updated subjects
     // Called by Subject::new, set_*
     pub fn subject_updated (&self, subject_id: SubjectId, head: &MemoRefHead){
-        let my_subject_head = self.subject_heads.write().unwrap().entry(subject_id).or_insert( MemoRefHead::new() );
+        let mut subject_heads = self.subject_heads.write().unwrap();
+        let my_subject_head = subject_heads.entry(subject_id).or_insert( MemoRefHead::new() );
         my_subject_head.apply(head, &self.slab);
 
         // Necessary bookkeeping for topological traversal
@@ -209,10 +210,8 @@ impl Context{
 
         {
 
-            if let Some(mut subject) = self.get_subject_if_resident(subject_id) {
+            if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
                 subject.apply_head(head);
-
-                _maybe_subject = Some(subject);
             }
 
             // TODO: It probably makes sense to stop playing telephone between the context and the subject
@@ -225,9 +224,11 @@ impl Context{
             //       and the duplicate work of merging it twice might actually make sense vs having to cross
             //       the thread bountary to retrieve the data we want ( probably not, but asking anway)
 
-            let my_subject_head = self.subject_heads.write().unwrap().entry(subject_id).or_insert( MemoRefHead::new() );
-            my_subject_head.apply(&head, &self.slab);
-
+            {
+                let mut subject_heads = self.subject_heads.write().unwrap();
+                let my_subject_head = subject_heads.entry(subject_id).or_insert( MemoRefHead::new() );
+                my_subject_head.apply(&head, &self.slab);
+            }
             // Necessary bookkeeping for topological traversal
             // TODO: determine if it makes sense to calculate only the relationship diffs to minimize cost
             //shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links( &self.inner.slab ));

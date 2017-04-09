@@ -58,8 +58,8 @@ impl SlabRef{
     pub fn get_return_address(&self) -> TransportAddress {
         self.return_address.read().unwrap().clone()
     }
-    pub fn apply_presence ( &mut self, presence: &SlabPresence ) -> bool {
-        let list = self.presence.write().unwrap();
+    pub fn apply_presence ( &self, presence: &SlabPresence ) -> bool {
+        let mut list = self.presence.write().unwrap();
         for p in list.iter_mut(){
             if p == presence {
                 mem::replace(p,presence.clone()); // Update anticipated liftime

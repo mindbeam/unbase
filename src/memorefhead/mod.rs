@@ -136,10 +136,10 @@ impl MemoRefHead {
         VecDeque::from(self.0.clone())
     }
     pub fn len (&self) -> usize {
-        self.len()
+        self.0.len()
     }
     pub fn iter (&self) -> slice::Iter<MemoRef> {
-        self.iter()
+        self.0.iter()
     }
     pub fn causal_memo_iter(&self, slab: &Slab ) -> CausalMemoIter {
         CausalMemoIter::from_head( &self, slab )
@@ -168,7 +168,7 @@ impl fmt::Debug for MemoRefHead{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 
         fmt.debug_struct("MemoRefHead")
-            .field("memo_refs", &self )
+            .field("memo_refs", &self.0 )
             //.field("memo_ids", &self.memo_ids() )
             .finish()
     }

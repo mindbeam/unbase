@@ -43,7 +43,7 @@ impl StatefulSerialize for SlabRef {
         // TODO: Should actually be a sequence of slab presences
         // to allow for slabs with multiple transports
         let mut seq = serializer.serialize_seq(Some(1))?;
-        seq.serialize_element( &SerializeWrapper(&*(self.0.presence.lock().unwrap()),helper) )?;
+        seq.serialize_element( &SerializeWrapper(&*(self.presence.read().unwrap()),helper) )?;
         seq.end()
     }
 }

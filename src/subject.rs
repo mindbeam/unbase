@@ -1,7 +1,7 @@
 use core::ops::Deref;
 use std::fmt;
 use std::collections::HashMap;
-use std::sync::{Arc,RwLock,Mutex,Weak,MutexGuard};
+use std::sync::{Arc,RwLock,Weak};
 
 use slab::*;
 use memorefhead::*;
@@ -36,7 +36,7 @@ impl Subject {
         // don't store this
         let context = contextref.get_context();
 
-        let slab = context.slab;
+        let slab = &context.slab;
         let subject_id = slab.generate_subject_id();
         println!("# Subject({}).new()",subject_id);
 
@@ -66,7 +66,7 @@ impl Subject {
     pub fn reconstitute (contextref: ContextRef, head: MemoRefHead) -> Subject {
 
         let context = contextref.get_context();
-        let subject_id = head.first_subject_id( context.slab ).unwrap();
+        let subject_id = head.first_subject_id( &context.slab ).unwrap();
 
         let subject = Subject(Arc::new(SubjectInner{
             id: subject_id,
@@ -107,8 +107,8 @@ impl Subject {
         vals.insert(key.to_string(), value.to_string());
 
         let context = self.contextref.get_context();
-        let slab = context.slab;
-        let head = self.head.write().unwrap();
+        let slab = &context.slab;
+        let mut head = self.head.write().unwrap();
 
         let memoref = slab.new_memo_basic(
             Some(self.id),
@@ -127,8 +127,8 @@ impl Subject {
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
         let context = self.contextref.get_context();
-        let slab = context.slab;
-        let head = self.head.write().unwrap();
+        let slab = &context.slab;
+        let mut head = self.head.write().unwrap();
 
         let memoref = slab.new_memo(
             Some(self.id),
@@ -141,7 +141,7 @@ impl Subject {
 
     }
     // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
-    pub fn apply_head (&mut self, new: &MemoRefHead){
+    pub fn apply_head (&self, new: &MemoRefHead){
         println!("# Subject({}).apply_head({:?})", &self.id, new.memo_ids() );
 
         let context = self.contextref.get_context();
@@ -164,9 +164,9 @@ impl Subject {
     }
     pub fn is_fully_materialized (&self) -> bool {
         let context = self.contextref.get_context();
-        self.head.read().unwrap().is_fully_materialized(context.slab)
+        self.head.read().unwrap().is_fully_materialized(&context.slab)
     }
-    pub fn fully_materialize (&mut self, _slab: &Slab) -> bool {
+    pub fn fully_materialize (&self, _slab: &Slab) -> bool {
         unimplemented!();
         //self.shared.lock().unwrap().head.fully_materialize(slab)
     }

@@ -6,12 +6,11 @@ pub mod packet;
 pub use slab::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
 pub use self::transport::{Transport,TransportAddress,Transmitter,TransmitterArgs};
 pub use self::packet::Packet;
-use self::transport::*;
 use util::system_creator::SystemCreator;
 
 use std::sync::{Arc, Weak, Mutex};
 use std::fmt;
-use slab::{Slab,WeakSlab,SlabId,MemoOrigin};
+use slab::{Slab,WeakSlab,SlabId};
 use memorefhead::MemoRefHead;
 
 struct NetworkInternals {
@@ -107,7 +106,7 @@ impl Network {
         println!("MARK B");
         internals.get_all_local_slabs()
     }
-    pub fn get_slab (&mut self, slab_id: SlabId ) -> Option<Slab> {
+    pub fn get_slab (&self, slab_id: SlabId ) -> Option<Slab> {
         let mut internals = self.shared.internals.lock().unwrap();
         internals.get_slab(slab_id)
     }

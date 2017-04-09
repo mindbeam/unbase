@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use slab::Memo;
-use slab::memo::MemoBody;
 use memorefhead::MemoRefHead;
 use slab::*;
 

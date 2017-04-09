@@ -12,7 +12,7 @@ impl StatefulSerialize for MemoPeerList {
 
             // don't tell the receiving slab that they have it.
             // They know they have it
-            if &memopeer.slabref.0.slab_id != helper.dest_slab_id {
+            if &memopeer.slabref.slab_id != helper.dest_slab_id {
                 seq.serialize_element(&SerializeWrapper(memopeer,helper))?
             }
         }
@@ -112,7 +112,7 @@ impl<'a> Visitor for MemoRefSeed<'a> {
            }
         };
 
-        let peers: Vec<MemoPeer> = match visitor.visit_seed( VecSeed( MemoPeerSeed{ dest_slab: self.dest_slab } ) )? {
+        let mut peers: Vec<MemoPeer> = match visitor.visit_seed( VecSeed( MemoPeerSeed{ dest_slab: self.dest_slab } ) )? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(3, &self));
@@ -128,12 +128,12 @@ impl<'a> Visitor for MemoRefSeed<'a> {
             }
         });
 
-        Ok(self.dest_slab.memoref(memo_id, subject_id, &MemoPeerList::new(peers)).0 )
+        Ok(self.dest_slab.memoref(memo_id, subject_id, MemoPeerList::new(peers)).0 )
     }
 }
 
 #[derive(Clone)]
-pub struct MemoPeerSeed<'a> { dest_slab: &'a Slab }
+pub struct MemoPeerSeed<'a> { pub dest_slab: &'a Slab }
 
 impl<'a> DeserializeSeed for MemoPeerSeed<'a> {
     type Value = MemoPeer;

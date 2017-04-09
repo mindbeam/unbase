@@ -1,6 +1,5 @@
 pub mod serde;
 use super::*;
-use network::*;
 use subject::*;
 use memorefhead::MemoRefHead;
 use error::RetrieveError;
@@ -60,11 +59,11 @@ impl MemoRef {
     pub fn to_head (&self) -> MemoRefHead {
         MemoRefHead::from_memoref(self.clone())
     }
-    pub fn apply_peers (&self, peers: &MemoPeerList ) -> bool {
+    pub fn apply_peers (&self, _peers: &MemoPeerList ) -> bool {
         unimplemented!();
     }
     pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, dest_slabref: &SlabRef) -> MemoPeerList {
-        let list : Vec<MemoPeer> = Vec::new();
+        let mut list : Vec<MemoPeer> = Vec::new();
 
         list.push(MemoPeer{
             slabref: my_ref.clone(),
@@ -75,7 +74,7 @@ impl MemoRef {
         // we don't need to tell them they have it. They know, they were there :)
 
         for peer in self.peerlist.read().unwrap().iter().filter(|p| p.slabref.0.slab_id != dest_slabref.0.slab_id ) {
-            list.push(*peer.clone());
+            list.push((*peer).clone());
         }
 
         MemoPeerList::new(list)
@@ -87,9 +86,9 @@ impl MemoRef {
             _                       => false
         }
     }
-    pub fn get_memo_if_resident(&self) -> Option<&Memo> {
+    pub fn get_memo_if_resident(&self) -> Option<Memo> {
         match *self.ptr.read().unwrap() {
-            MemoRefPtr::Resident(ref memo) => Some(&memo),
+            MemoRefPtr::Resident(ref memo) => Some(memo.clone()),
             _ => None
         }
     }
@@ -103,11 +102,6 @@ impl MemoRef {
     pub fn get_memo (&self, slab: &Slab) -> Result<Memo,RetrieveError> {
         assert!(self.owning_slab_id == slab.id);
 
-    // *********************************************************
-    // IMPORTANT TODO: avoid blocking with an active SlabInner.
-    // *********************************************************
-
-
         // This seems pretty crude, but using channels for now in the interest of expediency
         let channel;
         {
@@ -116,7 +110,7 @@ impl MemoRef {
             }
 
             if slab.request_memo(self) > 0 {
-                channel = slab.memo_wait_channel(self.id, "convert request_memo to return a wait channel?");
+                channel = slab.memo_wait_channel(self.id);
             }else{
                 return Err(RetrieveError::NotFound)
             }
@@ -174,9 +168,9 @@ impl MemoRef {
     pub fn update_peer (&self, slabref: &SlabRef, status: MemoPeeringStatus){
 
         let mut found : bool = false;
-        let list = self.peerlist.write().unwrap();
+        let ref mut list = self.peerlist.write().unwrap().0;
         for peer in list.iter_mut() {
-            if peer.slabref.0.slab_id == slabref.0.slab_id {
+            if peer.slabref.slab_id == slabref.slab_id {
                 found = true;
                 peer.status = status.clone();
                 // TODO remove the peer entirely for MemoPeeringStatus::NonParticipating

@@ -44,11 +44,14 @@ pub enum MemoOrigin<'a>{
 }
 
 #[derive(Debug)]
-pub struct MemoPeerList (Vec<MemoPeer>);
+pub struct MemoPeerList (pub Vec<MemoPeer>);
 
 impl MemoPeerList {
     pub fn new(list: Vec<MemoPeer>) -> Self {
         MemoPeerList(list)
+    }
+    pub fn clone(&self) -> Self {
+        MemoPeerList(self.0.clone())
     }
 }
 
@@ -59,8 +62,7 @@ impl Deref for MemoPeerList {
     }
 }
 
-
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct MemoPeer {
     pub slabref: SlabRef,
     pub status: MemoPeeringStatus

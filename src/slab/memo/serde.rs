@@ -1,16 +1,15 @@
-
-use serde::*;
-use serde::ser::*;
-use serde::de::*;
 use super::*;
-use std::fmt;
-use network::Network;
 use memorefhead::serde::*;
 use super::memoref::serde::MemoPeerSeed;
 
 use slab::slabref::serde::SlabRefSeed;
 use slab::MemoOrigin;
 use util::serde::*;
+
+use std::fmt;
+use serde::*;
+use serde::ser::*;
+use serde::de::*;
 
 
 struct RelationMRHSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
@@ -21,7 +20,7 @@ pub struct MBMemoRequestSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a Slab
 struct MBSlabPresenceSeed <'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
 struct MBFullyMaterializedSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
 // TODO convert this to a non-seed deserializer
-struct MBPeeringSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
+struct MBPeeringSeed<'a> { dest_slab: &'a Slab }
 
 impl StatefulSerialize for Memo {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
@@ -102,10 +101,10 @@ impl StatefulSerialize for (SubjectId,MemoRefHead) {
 }
 
 pub struct MemoSeed<'a> {
-    dest_slab: &'a Slab,
-    origin_slabref: &'a SlabRef,
-    from_presence: SlabPresence,
-    from_slab_peering_status: MemoPeeringStatus
+    pub dest_slab: &'a Slab,
+    pub origin_slabref: &'a SlabRef,
+    pub from_presence: SlabPresence,
+    pub from_slab_peering_status: MemoPeeringStatus
 }
 
 impl<'a> DeserializeSeed for MemoSeed<'a> {
@@ -163,7 +162,7 @@ impl<'a> Visitor for MemoSeed<'a>{
            body: body
        });
 
-       let memoref = self.dest_slab.memoref_from_memo_and_origin(memo, &memoorigin).0;
+       let _memoref = self.dest_slab.memoref_from_memo_and_origin(memo, &memoorigin).0;
 
        //Ok(Memo::new( id, subject_id, parents, body ))
        Ok(())
@@ -214,7 +213,7 @@ impl<'a> Visitor for MemoBodySeed<'a> {
             (MBVariant::Edit,              variant) => variant.visit_newtype().map(MemoBody::Edit),
             (MBVariant::FullyMaterialized, variant) => variant.visit_newtype_seed(MBFullyMaterializedSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }),
         //  (MBVariant::PartiallyMaterialized, variant) => variant.visit_newtype().map(MemoBody::PartiallyMaterialized),
-            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }),
+            (MBVariant::Peering,           variant) => variant.visit_newtype_seed(MBPeeringSeed{ dest_slab: self.dest_slab }),
             (MBVariant::MemoRequest,       variant) => variant.visit_newtype_seed(MBMemoRequestSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }),
             _ => unimplemented!()
 
