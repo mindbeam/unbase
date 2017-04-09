@@ -22,7 +22,7 @@ struct SimEvent {
     _source_point: MinkowskiPoint,
     dest_point:    MinkowskiPoint,
     from:          SlabRef,
-    origin_peering_status: MemoPeeringStatus,
+    _origin_peering_status: MemoPeeringStatus,
     dest:          WeakSlab,
     memo:          Memo
 }
@@ -31,7 +31,7 @@ impl SimEvent {
     pub fn deliver (self) {
         println!("# SimEvent.deliver {} to Slab {}", &self.memo.id, self.dest.id );
         if let Some(slab) = self.dest.upgrade() {
-            slab.put_memos(&MemoOrigin::OtherSlab(&self.from,self.origin_peering_status), vec![self.memo]);
+            self.memo.clone_for_slab( &self.from, &slab );
         }
         // we all have to learn to deal with loss sometime
     }
@@ -173,7 +173,7 @@ impl DynamicDispatchTransmitter for SimulatorTransmitter {
             from: from.clone(),
 
             // TODO - stop assuming that this is resident on the sending slab just because we're sending it
-            origin_peering_status: MemoPeeringStatus::Resident,
+            _origin_peering_status: MemoPeeringStatus::Resident,
             dest: self.dest.clone(),
             memo: memo
         };

@@ -13,7 +13,7 @@ impl SystemCreator {
 
         let memoref = slab.new_memo_basic_noparent(
             Some(slab.generate_subject_id()),
-            MemoBody::FullyMaterialized {v: values, r: HashMap::new() }
+            MemoBody::FullyMaterialized {v: values, r: RelationSlotSubjectHead(HashMap::new()) }
         );
 
         MemoRefHead::from_memoref(memoref)

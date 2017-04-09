@@ -37,10 +37,13 @@ impl Transport for LocalDirect {
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
                 //let mut buf = [0; 65536];
                 //println!("Started TX Thread");g
-                while let Ok((from_slabref, from_slab_peering_status, memo)) = rx_channel.recv() {
+                while let Ok((from_slabref, _from_slab_peering_status, memo)) = rx_channel.recv() {
                     //println!("CHANNEL RCV {:?}", memo);
                     if let Some(slab) = slab.upgrade(){
-                        slab.put_memo(&MemoOrigin::OtherSlab(&from_slabref,from_slab_peering_status), memo);
+                        // clone_for_slab adds the memo to the slab, because memos cannot exist outside of an owning slab
+                        let _memo = memo.clone_for_slab(&from_slabref, &slab);
+
+                        //slab.reconstitute_memo_from_local(memo, from_slabref, from_slab_peering_status);
                     }
                 }
             });

@@ -34,16 +34,7 @@ pub enum SlabAnticipatedLifetime{
     Unknown
 }
 
-//TODO: update OtherSlab to use MemoPeer?
-#[derive(Debug)]
-pub enum MemoOrigin<'a>{
-    SameSlab,
-    OtherSlab(&'a SlabRef, MemoPeeringStatus)
-    // TODO: consider bifurcation into OtherSlabTrusted, OtherSlabUntrusted
-    //       in cases where we want to reduce computational complexity by foregoing verification
-}
-
-#[derive(Debug)]
+#[derive(Clone,Debug)]
 pub struct MemoPeerList (pub Vec<MemoPeer>);
 
 impl MemoPeerList {
@@ -52,6 +43,9 @@ impl MemoPeerList {
     }
     pub fn clone(&self) -> Self {
         MemoPeerList(self.0.clone())
+    }
+    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab) -> Self {
+        unimplemented!()
     }
 }
 
@@ -74,4 +68,25 @@ pub enum MemoPeeringStatus{
     Participating,
     NonParticipating,
     Unknown
+}
+
+#[derive(Clone, Debug)]
+pub struct RelationSlotSubjectHead(pub HashMap<RelationSlotId,(SubjectId,MemoRefHead)>);
+
+impl RelationSlotSubjectHead {
+    pub fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &Slab ) -> Self {
+
+        let new = self.0.iter().map(|(slot_id,&(subject_id,ref mrh))| {
+            (*slot_id, (subject_id, mrh.clone_for_slab( from_slabref, to_slab )  ))
+        }).collect();
+
+        RelationSlotSubjectHead(new)
+    }
+}
+
+impl Deref for RelationSlotSubjectHead {
+    type Target = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
+    fn deref(&self) -> &HashMap<RelationSlotId,(SubjectId,MemoRefHead)> {
+        &self.0
+    }
 }

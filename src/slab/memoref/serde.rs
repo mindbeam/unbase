@@ -128,7 +128,7 @@ impl<'a> Visitor for MemoRefSeed<'a> {
             }
         });
 
-        Ok(self.dest_slab.memoref(memo_id, subject_id, MemoPeerList::new(peers)).0 )
+        Ok(self.dest_slab.assert_memoref(memo_id, subject_id, MemoPeerList::new(peers), None).0 )
     }
 }
 

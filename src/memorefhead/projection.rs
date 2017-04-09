@@ -26,7 +26,7 @@ impl MemoRefHead {
             match memo.body {
                 MemoBody::FullyMaterialized { v: _, ref r } => {
 
-                    for (slot,&(subject_id,_)) in r {
+                    for (slot,&(subject_id,_)) in &r.0 {
                         relation_links[ *slot as usize ] = subject_id as SubjectId;
                     }
                     break;

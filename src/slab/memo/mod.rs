@@ -9,7 +9,6 @@ use std::sync::Arc;
 
 use subject::{SubjectId};
 use slab::MemoRef;
-use memorefhead::*;
 use network::{SlabRef,SlabPresence};
 use super::*;
 
@@ -36,12 +35,10 @@ pub struct MemoInner {
     pub body: MemoBody
 }
 
-type RelationSlotSubjectHead = HashMap<RelationSlotId,(SubjectId,MemoRefHead)>;
-
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum MemoBody{
     SlabPresence{ p: SlabPresence, r: Option<MemoRefHead> }, // TODO: split out root_index_seed conveyance to another memobody type
-    Relation(HashMap<RelationSlotId,(SubjectId,MemoRefHead)>),
+    Relation(RelationSlotSubjectHead),
     Edit(HashMap<String, String>),
     FullyMaterialized     { v: HashMap<String, String>, r: RelationSlotSubjectHead },
     PartiallyMaterialized { v: HashMap<String, String>, r: RelationSlotSubjectHead },
@@ -89,7 +86,7 @@ impl Memo {
             _   => None
         }
     }
-    pub fn get_relations (&self) -> Option<(HashMap<RelationSlotId, (SubjectId, MemoRefHead)>,bool)> {
+    pub fn get_relations (&self) -> Option<(RelationSlotSubjectHead,bool)> {
 
         match self.body {
             MemoBody::Relation(ref r)
@@ -135,5 +132,52 @@ impl Memo {
             }
         }
         return false;
+    }
+    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab) -> Memo {
+        to_slab.reconstitute_memo(
+            self.id,
+            self.subject_id,
+            self.parents.clone_for_slab(from_slabref, to_slab),
+            self.body.clone_for_slab(from_slabref, to_slab),
+            from_slabref,
+            &MemoPeeringStatus::Resident
+        ).0
+    }
+}
+
+impl MemoBody {
+    fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &Slab ) -> MemoBody {
+        match self {
+            &MemoBody::SlabPresence{ ref p, ref r } => {
+                MemoBody::SlabPresence{
+                    p: p.clone(),
+                    r: match r {
+                        &Some(ref root_mrh) => {
+                            Some(root_mrh.clone_for_slab(from_slabref, to_slab))
+                        }
+                        &None => None
+                    }
+                }
+            },
+            &MemoBody::Relation(ref rssh) => {
+                MemoBody::Relation(rssh.clone_for_slab(from_slabref, to_slab))
+            }
+            &MemoBody::Edit(ref hm) => {
+                MemoBody::Edit(hm.clone())
+            }
+            &MemoBody::FullyMaterialized{ ref v, ref r } => {
+                MemoBody::FullyMaterialized{ v: v.clone(), r: r.clone_for_slab(from_slabref, to_slab)}
+            }
+            &MemoBody::PartiallyMaterialized{ ref v, ref r } => {
+                MemoBody::PartiallyMaterialized{ v: v.clone(), r: r.clone_for_slab(from_slabref, to_slab)}
+            }
+            &MemoBody::Peering(memo_id, subject_id, ref peerlist) => {
+                MemoBody::Peering(memo_id,subject_id,peerlist.clone_for_slab(from_slabref,to_slab))
+            }
+            &MemoBody::MemoRequest(ref memo_ids, ref slabref) =>{
+                MemoBody::MemoRequest(memo_ids.clone(), slabref.clone_for_slab(from_slabref, to_slab))
+            }
+        }
+
     }
 }

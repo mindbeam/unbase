@@ -1,0 +1,108 @@
+use super::*;
+
+impl Deref for Slab {
+    type Target = SlabInner;
+    fn deref(&self) -> &SlabInner {
+        &*self.0
+    }
+}
+
+impl Slab {
+    pub fn new(net: &Network) -> Slab {
+        let slab_id = net.generate_slab_id();
+
+        let my_ref_inner = SlabRefInner {
+            slab_id: slab_id,
+            owning_slab_id: slab_id, // I own my own ref to me, obviously
+            presence: RwLock::new(vec![]), // this bit is just for show
+            tx: Mutex::new(Transmitter::new_blackhole()),
+            return_address: RwLock::new(TransportAddress::Local),
+        };
+
+        let my_ref = SlabRef(Arc::new(my_ref_inner));
+
+        let inner = SlabInner {
+            id: slab_id,
+            memorefs_by_id:        RwLock::new(HashMap::new()),
+            memo_wait_channels:    Mutex::new(HashMap::new()),
+            subject_subscriptions: RwLock::new(HashMap::new()),
+
+            counters: RwLock::new(SlabCounters {
+                last_memo_id: 5000,
+                last_subject_id: 0,
+                memos_received: 0,
+                memos_redundantly_received: 0,
+            }),
+
+            my_ref: my_ref,
+            peer_refs: RwLock::new(Vec::new()),
+            net: net.clone()
+        };
+
+        let me = Slab(Arc::new(inner));
+
+        net.register_local_slab(&me);
+        net.conditionally_generate_root_index_seed(&me);
+
+
+        me
+    }
+    pub fn weak (&self) -> WeakSlab {
+        WeakSlab {
+            id: self.id,
+            inner: Arc::downgrade(&self.0)
+        }
+    }
+    pub fn get_root_index_seed (&self) -> Option<MemoRefHead> {
+        self.net.get_root_index_seed()
+    }
+    pub fn create_context (&self) -> Context {
+        Context::new(self)
+    }
+    pub fn subscribe_subject (&self, subject_id: u64, context: &Context) {
+        let weakcontext : WeakContext = context.weak();
+
+        match self.subject_subscriptions.write().unwrap().entry(subject_id){
+            Entry::Occupied(mut e) => {
+                e.get_mut().push(weakcontext)
+            }
+            Entry::Vacant(e) => {
+                e.insert(vec![weakcontext]);
+            }
+        }
+        return;
+    }
+    pub fn unsubscribe_subject (&self,  subject_id: u64, context: &Context ){
+        if let Some(subs) = self.subject_subscriptions.write().unwrap().get_mut(&subject_id) {
+            let weak_context = context.weak();
+            subs.retain(|c| {
+                c.cmp(&weak_context)
+            });
+            return;
+        }
+    }
+    pub fn memo_wait_channel (&self, memo_id: MemoId ) -> mpsc::Receiver<Memo> {
+        let (tx, rx) = channel::<Memo>();
+
+        match self.memo_wait_channels.lock().unwrap().entry(memo_id) {
+            Entry::Vacant(o)       => { o.insert( vec![tx] ); }
+            Entry::Occupied(mut o) => { o.get_mut().push(tx); }
+        };
+
+        rx
+    }
+    pub fn generate_subject_id(&self) -> SubjectId {
+        let mut counters = self.counters.write().unwrap();
+        counters.last_subject_id += 1;
+        (self.id as u64).rotate_left(32) | counters.last_subject_id as u64
+    }
+}
+
+impl WeakSlab {
+    pub fn upgrade (&self) -> Option<Slab> {
+        match self.inner.upgrade() {
+            Some(i) => Some( Slab(i) ),
+            None    => None
+        }
+    }
+}

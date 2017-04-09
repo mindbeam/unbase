@@ -42,7 +42,7 @@ impl Subject {
 
         let memoref = slab.new_memo_basic_noparent(
                 Some(subject_id),
-                MemoBody::FullyMaterialized {v: vals, r: HashMap::new() }
+                MemoBody::FullyMaterialized {v: vals, r: RelationSlotSubjectHead(HashMap::new()) }
             );
         let head = memoref.to_head();
         // Not 100% sure we can do this before subscribing, but it saves us a clone, so lets try it!
@@ -133,7 +133,7 @@ impl Subject {
         let memoref = slab.new_memo(
             Some(self.id),
             head.clone(),
-            MemoBody::Relation(memoref_map)
+            MemoBody::Relation(RelationSlotSubjectHead(memoref_map))
         );
 
         head.apply_memoref(&memoref, &slab);

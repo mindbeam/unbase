@@ -76,6 +76,9 @@ impl SlabRef{
         // When comparing equality, we can skip the transmitter
         self.slab_id == other.slab_id && *self.presence.read().unwrap() == *other.presence.read().unwrap()
     }
+    pub fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &Slab ) -> SlabRef {
+        unimplemented!()
+    }
 }
 
 impl fmt::Debug for SlabRef {

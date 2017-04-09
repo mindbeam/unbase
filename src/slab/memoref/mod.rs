@@ -1,6 +1,5 @@
 pub mod serde;
 use super::*;
-use subject::*;
 use memorefhead::MemoRefHead;
 use error::RetrieveError;
 
@@ -43,6 +42,8 @@ impl MemoRefPtr {
 }
 
 impl MemoRef {
+    /*
+    // NO: this needs to be managed by the slab to ensure there's no duplication. bad. shame.
     pub fn from_memo (slab: &Slab, memo : &Memo) -> Self {
         MemoRef(Arc::new(
             MemoRefInner {
@@ -54,6 +55,7 @@ impl MemoRef {
             }
         ))
     }
+    */
 }
 impl MemoRef {
     pub fn to_head (&self) -> MemoRefHead {
@@ -185,7 +187,22 @@ impl MemoRef {
             })
         }
     }
+    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, include_memo: bool ) -> Self{
+        // TODO: determine: do we ever want to clone a memoref at any depth?
 
+        to_slab.assert_memoref(
+            self.id,
+            self.subject_id,
+            self.peerlist.read().unwrap().clone_for_slab( from_slabref, to_slab ),
+            match include_memo {
+                true => match *self.ptr.read().unwrap() {
+                    MemoRefPtr::Resident(ref m) => Some(m.clone_for_slab(from_slabref, to_slab)),
+                    MemoRefPtr::Remote      => None
+                },
+                false => None
+            }
+        ).0
+    }
 }
 
 impl PartialEq for MemoRef {
