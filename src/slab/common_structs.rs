@@ -82,7 +82,7 @@ impl RelationSlotSubjectHead {
     pub fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &Slab ) -> Self {
 
         let new = self.0.iter().map(|(slot_id,&(subject_id,ref mrh))| {
-            (*slot_id, (subject_id, mrh.clone_for_slab( from_slabref, to_slab )  ))
+            (*slot_id, (subject_id, mrh.clone_for_slab( from_slabref, to_slab, false )  ))
         }).collect();
 
         RelationSlotSubjectHead(new)

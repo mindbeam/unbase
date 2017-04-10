@@ -115,7 +115,7 @@ impl TransportUDP {
 
             let hello = slab.new_memo_basic_noparent(
                 None,
-                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed() }
+                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed(&slab) }
             );
 
             self.send_to_addr(

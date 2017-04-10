@@ -8,30 +8,33 @@ pub use self::transport::{Transport,TransportAddress,Transmitter,TransmitterArgs
 pub use self::packet::Packet;
 use util::system_creator::SystemCreator;
 
-use std::sync::{Arc, Weak, Mutex};
+use std::ops::Deref;
+use std::sync::{Arc, Weak, Mutex, RwLock};
 use std::fmt;
 use slab::{Slab,WeakSlab,SlabId};
 use memorefhead::MemoRefHead;
 
-struct NetworkInternals {
-    next_slab_id: u32,
-    slabs:     Vec<WeakSlab>,
-    transports: Vec<Box<Transport + Send + Sync>>,
-    root_index_seed: Option<MemoRefHead>,
+
+
+#[derive(Clone)]
+pub struct Network (Arc<NetworkInner>);
+
+impl Deref for Network {
+    type Target = NetworkInner;
+    fn deref(&self) -> &NetworkInner {
+        &*self.0
+    }
+}
+
+pub struct NetworkInner {
+    next_slab_id:      RwLock<u32>,
+    slabs:             RwLock<Vec<WeakSlab>>,
+    transports:        RwLock<Vec<Box<Transport + Send + Sync>>>,
+    root_index_seed:   RwLock<Option<(MemoRefHead,SlabRef)>>,
     create_new_system: bool
 }
 
-struct NetworkShared {
-    internals: Mutex<NetworkInternals>
-}
-
-#[derive(Clone)]
-pub struct Network {
-    shared: Arc<NetworkShared>
-}
-pub struct WeakNetwork {
-    shared: Weak<NetworkShared>
-}
+pub struct WeakNetwork(Weak<NetworkInner>);
 
 impl Network {
     /// Create a new network struct
@@ -46,196 +49,72 @@ impl Network {
     }
     fn new_inner (create_new_system: bool) -> Network {
 
-        let internals = NetworkInternals {
-            next_slab_id: 0,
-            slabs:     Vec::new(),
-            transports: Vec::new(),
-            root_index_seed: None,
+        let net = Network(Arc::new(NetworkInner {
+            next_slab_id:      RwLock::new(0),
+            slabs:             RwLock::new(Vec::new()),
+            transports:        RwLock::new(Vec::new()),
+            root_index_seed:   RwLock::new(None),
             create_new_system: create_new_system
-        };
-
-        let shared = NetworkShared {
-            internals: Mutex::new(internals)
-        };
-
-        let net = Network {
-            shared: Arc::new(shared)
-        };
+        }));
 
         let localdirect = self::transport::LocalDirect::new();
         net.add_transport(Box::new(localdirect));
 
         net
     }
+
+    // TODO: remove this when slab ids are randomly generated
     pub fn hack_set_next_slab_id(&self, id: SlabId ){
-        let mut internals = self.shared.internals.lock().unwrap();
-        internals.next_slab_id = id;
+        *self.next_slab_id.write().unwrap() = id;
     }
     pub fn weak (&self) -> WeakNetwork {
-        WeakNetwork {
-            shared: Arc::downgrade(&self.shared)
-        }
+        WeakNetwork (Arc::downgrade(&self.0))
     }
-    pub fn add_transport (&self, transport: Box<Transport + Send + Sync> ) {
-        let mut internals = self.shared.internals.lock().unwrap();
 
+    pub fn add_transport (&self, transport: Box<Transport + Send + Sync> ) {
         if transport.is_local() {
-            // Can only have one is_local transport at a time
-            if let Some(removed) = internals.transports.iter_mut().position(|t| t.is_local())
-                .map(|e| internals.transports.remove(e)) {
+            // Can only have one is_local transport at a time. Filter out any other local transports when adding this one
+            let mut transports = self.transports.write().unwrap();
+            if let Some(removed) = transports.iter().position(|t| t.is_local())
+                .map(|e| transports.remove(e)) {
                     println!("Unbinding local transport");
                     removed.unbind_network(self);
             }
         }
 
         transport.bind_network(self);
-        internals.transports.push(transport);
+        self.transports.write().unwrap().push(transport);
     }
+
     pub fn generate_slab_id(&self) -> u32 {
-        let mut internals = self.shared.internals.lock().unwrap();
-
-        let id = internals.next_slab_id;
-
-        internals.next_slab_id += 1;
+        let mut next_slab_id = self.next_slab_id.write().unwrap();
+        let id = *next_slab_id;
+        *next_slab_id += 1;
 
         id
     }
+    pub fn get_slab (&self, slab_id: SlabId) -> Option<Slab> {
+        if let Some(weak) = self.slabs.read().unwrap().iter().find(|s| s.id == slab_id ) {
+            if let Some(slab) = weak.upgrade() {
+                return Some(slab);
+            }
+        }
+        return None;
+    }
+    fn get_representative_slab (&self) -> Option<Slab> {
+        for weak in self.slabs.read().unwrap().iter() {
+            if let Some(slab) = weak.upgrade() {
+                return Some(slab);
+            }
+        }
+        return None;
+    }
     pub fn get_all_local_slabs(&self) -> Vec<Slab> {
-        println!("MARK A");
-        let mut internals = self.shared.internals.lock().unwrap();
-        println!("MARK B");
-        internals.get_all_local_slabs()
-    }
-    pub fn get_slab (&self, slab_id: SlabId ) -> Option<Slab> {
-        let mut internals = self.shared.internals.lock().unwrap();
-        internals.get_slab(slab_id)
-    }
-    pub fn get_representative_slab (&self) -> Option<Slab>{
-        let mut internals = self.shared.internals.lock().unwrap();
-        internals.get_representative_slab()
-    }
-    pub fn get_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
-
-        let internals = self.shared.internals.lock().unwrap();
-        for transport in internals.transports.iter() {
-            if let Some(transmitter) = transport.make_transmitter( args ) {
-                return Some(transmitter);
-            }
-        }
-        None
-
-    }
-    pub fn get_return_address<'a>( &self, address: &TransportAddress ) -> Option<TransportAddress> {
-        // We're just going to assume that we have an in-process transmitter, or freak out
-        // Should probably do this more intelligently
-
-        let internals = self.shared.internals.lock().unwrap();
-        for transport in internals.transports.iter() {
-
-            if let Some(return_address) = transport.get_return_address( address ) {
-                return Some(return_address);
-            }
-
-        }
-        None
-    }
-    pub fn register_local_slab(&self, new_slab: &Slab) {
-        println!("# register_slab {:?}", new_slab );
-
-        // Probably won't use transports in quite the same way in the future
-
-        let mut internals = self.shared.internals.lock().unwrap();
-
-        for prev_slab in internals.get_all_local_slabs() {
-            prev_slab.slabref_from_local_slab( new_slab );
-            new_slab.slabref_from_local_slab( &prev_slab );
-        }
-
-        internals.slabs.insert(0, new_slab.weak() );
-    }
-
-    pub fn get_root_index_seed(&self) -> Option<MemoRefHead> {
-
-        let internals = self.shared.internals.lock().unwrap();
-
-        match internals.root_index_seed {
-            Some(ref s) => {
-                Some(s.clone())
-            }
-            None => {
-                None
-            }
-        }
-
-    }
-    pub fn conditionally_generate_root_index_seed (&self, slab: &Slab) -> bool {
-        let mut internals = self.shared.internals.lock().unwrap();
-
-        if let None = internals.root_index_seed {
-            if internals.create_new_system {
-                // I'm a new system, so I can do this!
-                let seed = SystemCreator::generate_root_index_seed( slab );
-                internals.root_index_seed = Some(seed.clone());
-                return true;
-            }
-        }
-
-        false
-    }
-    /// When we receive a root_index_seed from a peer slab that's already attached to a system,
-    /// we need to apply it in order to "join" the same system
-    ///
-    /// TODO: how do we decide if we want to accept this?
-    ///       do we just take any system seed that is sent to us when unseeded?
-    ///       Probably good enough for Alpha, but obviously not good enough for Beta
-    pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &MemoRefHead ) -> bool {
-        let mut internals = self.shared.internals.lock().unwrap();
-
-        match internals.root_index_seed {
-            Some(_) => {
-                // TODO: scrutinize the received root_index_seed to see if our existing seed descends it, or it descends ours
-                //       if neither is the case ( apply currently allows this ) then reject the root_index_seed and return false
-                //       this is use to determine if the SlabPresence should be blackholed or not
-
-                // let did_apply : bool = internals.root_index_seed.apply_disallow_diverse_root(  root_index_seed )
-                // did_apply
-
-                true // be lenient for now. Not ok for Alpha
-            }
-            None => {
-                internals.root_index_seed = Some(root_index_seed.clone());
-                true
-            }
-        }
-    }
-}
-
-impl NetworkInternals {
-
-    fn get_slab (&mut self, slab_id: SlabId ) -> Option<Slab> {
-        if let Some(weak) = self.slabs.iter().find(|s| s.id == slab_id ) {
-            if let Some(slab) = weak.upgrade() {
-                return Some(slab);
-            }
-        }
-
-        return None;
-    }
-    fn get_representative_slab ( &mut self ) -> Option<Slab> {
-        for weak in self.slabs.iter() {
-            if let Some(slab) = weak.upgrade() {
-                return Some(slab);
-            }
-        }
-
-        return None;
-    }
-    fn get_all_local_slabs (&mut self) -> Vec<Slab> {
         // TODO: convert this into a iter generator that automatically expunges missing slabs.
-        let mut res: Vec<Slab> = Vec::with_capacity(self.slabs.len());
+        let mut res: Vec<Slab> = Vec::new();
         //let mut missing : Vec<usize> = Vec::new();
 
-        for slab in self.slabs.iter_mut() {
+        for slab in self.slabs.read().unwrap().iter() {
             match slab.upgrade() {
                 Some(s) => {
                     res.push( s );
@@ -249,20 +128,135 @@ impl NetworkInternals {
 
         res
     }
+    pub fn get_transmitter(&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+        for transport in self.transports.read().unwrap().iter() {
+            if let Some(transmitter) = transport.make_transmitter( args ) {
+                return Some(transmitter);
+            }
+        }
+        None
+    }
+    pub fn get_return_address<'a>( &self, address: &TransportAddress ) -> Option<TransportAddress> {
+        for transport in self.transports.read().unwrap().iter() {
+            if let Some(return_address) = transport.get_return_address( address ) {
+                return Some(return_address);
+            }
+        }
+        None
+    }
+    pub fn register_local_slab(&self, new_slab: &Slab) {
+        println!("# register_slab {:?}", new_slab );
 
+            println!(">>> register_slab B" );
+        for prev_slab in self.get_all_local_slabs() {
+            println!(">>> register_slab C" );
+            prev_slab.slabref_from_local_slab( new_slab );
+
+            println!(">>> register_slab D" );
+            new_slab.slabref_from_local_slab( &prev_slab );
+        }
+
+        self.slabs.write().unwrap().insert(0, new_slab.weak() );
+    }
+    pub fn deregister_local_slab(&self, slab_id: SlabId) {
+        // Remove the deregistered slab so get_representative_slab doesn't return it
+        {
+            let mut slabs = self.slabs.write().unwrap();
+            if let Some(_) = slabs.iter().position(|s| s.id == slab_id )
+                .map(|e| slabs.remove(e)) {
+                    println!("Unbinding Slab");
+                    // removed.unbind_network(self);
+            }
+        }
+
+        // If the deregistered slab is the one that's holding the root_index_seed
+        // then we need to move it to a different slab
+
+        let mut root_index_seed = self.root_index_seed.write().unwrap();
+        if let Some(ref mut r) = *root_index_seed {
+            if r.1.slab_id == slab_id {
+                if let Some(new_slab) = self.get_representative_slab() {
+                    r.0 = r.0.clone_for_slab(&r.1, &new_slab, false);
+                    r.1 = new_slab.my_ref.clone();
+                }
+            }
+        }
+    }
+    pub fn get_root_index_seed(&self, slab: &Slab) -> Option<MemoRefHead> {
+        let root_index_seed = self.root_index_seed.read().unwrap();
+
+        match *root_index_seed {
+            Some((ref seed, ref from_slabref)) => {
+                if from_slabref.slab_id == slab.id {
+                    // seed is resident on the requesting slab
+                    Some(seed.clone())
+                }else{
+                    Some(seed.clone_for_slab(from_slabref, slab, true) )
+                }
+            }
+            None => {
+                None
+            }
+        }
+
+    }
+    pub fn conditionally_generate_root_index_seed (&self, slab: &Slab) -> bool {
+        {
+            if let Some(_) = *self.root_index_seed.read().unwrap() {
+                return false;
+            }
+        }
+
+        if self.create_new_system {
+            // I'm a new system, so I can do this!
+            let seed = SystemCreator::generate_root_index_seed( slab );
+            *self.root_index_seed.write().unwrap() = Some((seed.clone(), slab.my_ref.clone()));
+            return true;
+        }
+
+        false
+    }
+    /// When we receive a root_index_seed from a peer slab that's already attached to a system,
+    /// we need to apply it in order to "join" the same system
+    ///
+    /// TODO: how do we decide if we want to accept this?
+    ///       do we just take any system seed that is sent to us when unseeded?
+    ///       Probably good enough for Alpha, but obviously not good enough for Beta
+    pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &MemoRefHead, resident_slabref: &SlabRef ) -> bool {
+        match *self.root_index_seed.read().unwrap() {
+            Some(_) => {
+                // TODO: scrutinize the received root_index_seed to see if our existing seed descends it, or it descends ours
+                //       if neither is the case ( apply currently allows this ) then reject the root_index_seed and return false
+                //       this is use to determine if the SlabPresence should be blackholed or not
+
+                // let did_apply : bool = internals.root_index_seed.apply_disallow_diverse_root(  root_index_seed )
+                // did_apply
+
+                // IMPORTANT NOTE: we may be getting this root_index_seed from a different slab than the one that initialized it.
+                //                 it is imperative that all memorefs in the root_index_seed reside on the same local slabref
+                //                 so, it is important to undertake the necessary dilligence to clone them to that slab
+
+                true // be lenient for now. Not ok for Alpha
+            }
+            None => {
+                *self.root_index_seed.write().unwrap() = Some((root_index_seed.clone(),resident_slabref.clone()));
+                true
+            }
+        }
+    }
 }
 
 impl fmt::Debug for Network {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let inner = self.shared.internals.lock().unwrap();
-
         fmt.debug_struct("Network")
-            .field("next_slab_id", &inner.next_slab_id)
+            .field("next_slab_id", &self.next_slab_id.read().unwrap())
             .finish()
     }
 }
 
-impl Drop for NetworkInternals {
+/*
+// probably wasn't ever necessary, except as a way to debug
+impl Drop for NetworkInner {
     fn drop(&mut self) {
         println!("# > Dropping NetworkInternals");
 
@@ -276,11 +270,12 @@ impl Drop for NetworkInternals {
 
     }
 }
+*/
 
 impl WeakNetwork {
     pub fn upgrade (&self) -> Option<Network> {
-        match self.shared.upgrade() {
-            Some(s) => Some( Network { shared: s } ),
+        match self.0.upgrade() {
+            Some(i) => Some( Network(i) ),
             None    => None
         }
     }

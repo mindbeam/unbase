@@ -153,6 +153,7 @@ impl Slab {
 impl Drop for SlabInner {
     fn drop(&mut self) {
         println!("# SlabInner({}).drop", self.id);
+        self.net.deregister_local_slab(self.id);
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
     }
 }

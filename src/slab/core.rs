@@ -53,7 +53,7 @@ impl Slab {
 
         if let Some(ref memo) = memoref.get_memo_if_resident() {
             self.check_memo_waiters(memo);
-            self.handle_memo_from_other_slab( memo, &memoref, &origin_slabref, origin_peering_status);
+            self.handle_memo_from_other_slab(memo, &memoref, &origin_slabref, origin_peering_status);
             self.do_peering(&memoref, &origin_slabref);
 
         }
@@ -200,35 +200,41 @@ impl Slab {
     }
     pub fn assert_slabref(&self, args: TransmitterArgs, presence: &[SlabPresence] ) -> SlabRef {
         let slab_id = args.get_slab_id();
-        if let Some(slabref) = self.peer_refs.read().unwrap().iter().find(|r| r.0.slab_id == slab_id ) {
-            for p in presence.iter(){
-                if slabref.apply_presence(p) {
-                    let new_trans = self.net.get_transmitter( &args ).expect("new_from_slab net.get_transmitter");
-                    let return_address = self.net.get_return_address( &p.address ).expect("return address not found");
 
-                    *slabref.0.tx.lock().unwrap() = new_trans;
-                    *slabref.0.return_address.write().unwrap() = return_address;
+        {
+            // Instead of having to scope our read lock, and getting a write lock later
+            // should we be using a single write lock for the full function scope?
+            if let Some(slabref) = self.peer_refs.read().unwrap().iter().find(|r| r.0.slab_id == slab_id ) {
+                for p in presence.iter(){
+                    if slabref.apply_presence(p) {
+                        let new_trans = self.net.get_transmitter( &args ).expect("new_from_slab net.get_transmitter");
+                        let return_address = self.net.get_return_address( &p.address ).expect("return address not found");
+
+                        *slabref.0.tx.lock().unwrap() = new_trans;
+                        *slabref.0.return_address.write().unwrap() = return_address;
+                    }
                 }
+                return slabref.clone();
             }
-            return slabref.clone();
-        }else{
-            let tx = self.net.get_transmitter( &args ).expect("new_from_slab net.get_transmitter");
-            //  pick one of the presences to use as our return address
-            let return_address = self.net.get_return_address( &presence[0].address ).expect("return address not found");
+        }
 
-            let inner = SlabRefInner {
-                slab_id: slab_id,
-                owning_slab_id: self.id, // for assertions only?
-                presence: RwLock::new(presence.to_vec()),
-                tx: Mutex::new(tx),
-                return_address: RwLock::new(return_address),
-            };
+        let tx = self.net.get_transmitter( &args ).expect("new_from_slab net.get_transmitter");
+        //  pick one of the presences to use as our return address
+        let return_address = self.net.get_return_address( &presence[0].address ).expect("return address not found");
 
-            let slabref = SlabRef(Arc::new(inner));
-            self.peer_refs.write().unwrap().push(slabref.clone());
-
-            return slabref;
+        let inner = SlabRefInner {
+            slab_id:        slab_id,
+            owning_slab_id: self.id, // for assertions only?
+            presence:       RwLock::new(presence.to_vec()),
+            tx:             Mutex::new(tx),
+            return_address: RwLock::new(return_address),
         };
+
+        let slabref = SlabRef(Arc::new(inner));
+
+        self.peer_refs.write().unwrap().push(slabref.clone());
+
+        return slabref;
 
     }
 }

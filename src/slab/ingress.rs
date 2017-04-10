@@ -15,7 +15,7 @@ impl Slab {
                             memoref.update_peer(origin_slabref, MemoPeeringStatus::Resident);
                         }
 
-                        should_process = self.net.apply_root_index_seed( &presence, root_index_seed );
+                        should_process = self.net.apply_root_index_seed( &presence, root_index_seed, &self.my_ref );
                     }
                     &None => {
                         should_process = true;

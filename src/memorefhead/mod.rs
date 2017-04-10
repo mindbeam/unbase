@@ -162,8 +162,9 @@ impl MemoRefHead {
 
         true
     }
-    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab ) -> Self {
-        MemoRefHead( self.iter().map(|mr| mr.clone_for_slab(from_slabref, to_slab, false )).collect() )
+    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, include_memos: bool ) -> Self {
+        assert!(from_slabref.slab_id != to_slab.id, "slab id should differ");
+        MemoRefHead( self.iter().map(|mr| mr.clone_for_slab(from_slabref, to_slab, include_memos )).collect() )
     }
 }
 

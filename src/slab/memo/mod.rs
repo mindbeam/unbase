@@ -137,7 +137,7 @@ impl Memo {
         to_slab.reconstitute_memo(
             self.id,
             self.subject_id,
-            self.parents.clone_for_slab(from_slabref, to_slab),
+            self.parents.clone_for_slab(from_slabref, to_slab, false),
             self.body.clone_for_slab(from_slabref, to_slab),
             from_slabref,
             &MemoPeeringStatus::Resident
@@ -153,7 +153,7 @@ impl MemoBody {
                     p: p.clone(),
                     r: match r {
                         &Some(ref root_mrh) => {
-                            Some(root_mrh.clone_for_slab(from_slabref, to_slab))
+                            Some(root_mrh.clone_for_slab(from_slabref, to_slab, true))
                         }
                         &None => None
                     }

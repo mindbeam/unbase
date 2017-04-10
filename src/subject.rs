@@ -64,7 +64,7 @@ impl Subject {
         Ok(subject)
     }
     pub fn reconstitute (contextref: ContextRef, head: MemoRefHead) -> Subject {
-
+        println!("Subject.reconstitute({:?})", head);
         let context = contextref.get_context();
         let subject_id = head.first_subject_id( &context.slab ).unwrap();
 

@@ -10,7 +10,7 @@ impl Deref for Slab {
 impl Slab {
     pub fn new(net: &Network) -> Slab {
         let slab_id = net.generate_slab_id();
-
+println!("MARK 1" );
         let my_ref_inner = SlabRefInner {
             slab_id: slab_id,
             owning_slab_id: slab_id, // I own my own ref to me, obviously
@@ -38,13 +38,14 @@ impl Slab {
             peer_refs: RwLock::new(Vec::new()),
             net: net.clone()
         };
-
+println!("MARK 2" );
         let me = Slab(Arc::new(inner));
 
         net.register_local_slab(&me);
+        println!("MARK 3" );
         net.conditionally_generate_root_index_seed(&me);
 
-
+println!("MARK 4" );
         me
     }
     pub fn weak (&self) -> WeakSlab {
@@ -54,7 +55,7 @@ impl Slab {
         }
     }
     pub fn get_root_index_seed (&self) -> Option<MemoRefHead> {
-        self.net.get_root_index_seed()
+        self.net.get_root_index_seed(self)
     }
     pub fn create_context (&self) -> Context {
         Context::new(self)

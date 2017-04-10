@@ -61,7 +61,7 @@ impl MemoRef {
     pub fn to_head (&self) -> MemoRefHead {
         MemoRefHead::from_memoref(self.clone())
     }
-    pub fn apply_peers (&self, _peers: &MemoPeerList ) -> bool {
+    pub fn apply_peers ( &self, _peers: &MemoPeerList ) -> bool {
         unimplemented!();
     }
     pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, dest_slabref: &SlabRef) -> MemoPeerList {
@@ -102,7 +102,8 @@ impl MemoRef {
         status
     }
     pub fn get_memo (&self, slab: &Slab) -> Result<Memo,RetrieveError> {
-        assert!(self.owning_slab_id == slab.id);
+        println!("Slab({}).MemoRef({}).get_memo()", self.owning_slab_id, self.id );
+        assert!(self.owning_slab_id == slab.id,"requesting slab does not match owning slab");
 
         // This seems pretty crude, but using channels for now in the interest of expediency
         let channel;
@@ -111,13 +112,16 @@ impl MemoRef {
                 return Ok(memo.clone());
             }
 
+                println!("MARK X");
             if slab.request_memo(self) > 0 {
                 channel = slab.memo_wait_channel(self.id);
             }else{
+                println!("MARK Y");
                 return Err(RetrieveError::NotFound)
             }
         }
 
+            println!("MARK Z");
 
         // By sending the memo itself through the channel
         // we guarantee that there's no funny business with request / remotize timing
@@ -127,12 +131,13 @@ impl MemoRef {
         let timeout = time::Duration::from_millis(2000);
 
         for _ in 0..3 {
-
             match channel.recv_timeout(timeout) {
                 Ok(memo)       =>{
+                    println!("Slab({}).MemoRef({}).get_memo() received memo: {}", self.owning_slab_id, self.id, memo.id );
                     return Ok(memo)
                 }
                 Err(rcv_error) => {
+
                     use std::sync::mpsc::RecvTimeoutError::*;
                     match rcv_error {
                         Timeout => {}
