@@ -220,7 +220,13 @@ impl Transport for TransportUDP {
     }
 
     fn unbind_network(&self, _net: &Network) {
-        unimplemented!()
+        /*,
+        let mut shared = self.shared.lock().unwrap();
+        shared.tx_thread = None;
+        shared.rx_thread = None;
+        shared.tx_channel = None;
+        shared.network = None;
+        */
     }
     fn get_return_address  ( &self, address: &TransportAddress ) -> Option<TransportAddress> {
         if let TransportAddress::UDP(_) = *address {
@@ -266,12 +272,12 @@ pub struct TransmitterUDP{
     tx_channel: Arc<Mutex<Option<mpsc::Sender<(TransportAddressUDP,Packet)>>>>
 }
 impl DynamicDispatchTransmitter for TransmitterUDP {
-    fn send (&self, from: &SlabRef, memo: Memo) {
+    fn send (&self, from: &SlabRef, memoref: MemoRef) {
 
         let packet = Packet {
             to_slab_id: self.slab_id,
             from_slab_id: from.0.slab_id,
-            from_slab_peering_status: MemoPeeringStatus::Resident, //TODO: stop assuming this is resident just because we're sending it
+            peerlist: memoref.,
             memo: memo
         };
 

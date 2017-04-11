@@ -28,7 +28,7 @@ fn init_local_single() {
     assert!( net.get_all_local_slabs().len() == 0 );
 }
 
-//#[test]
+#[test]
 fn init_local_multi() {
 
     let net = unbase::Network::create_new_system();
@@ -46,18 +46,21 @@ fn init_local_multi() {
         assert!(slab_b.peer_slab_count() == 2, "Slab B Should know two peers" );
         assert!(slab_c.peer_slab_count() == 2, "Slab C Should know two peers" );
 
-        // NOTE: commenting out the contexts here breaks the refcount cycle, and the slabs are able
-        // to go out of scope. With them as is, the slabs do not
-
-        //slab -> network -> transports -> thread list -> closures? -> ??
-        //                                                         was strong slab, now weak (local_direct)
         let _context_a = slab_a.create_context();
+        thread::sleep( time::Duration::from_millis(50) );
+
         let _context_b = slab_b.create_context();
         let _context_c = slab_c.create_context();
     }
 
+    // TODO: Sometimes not all slabs clean up immediately. This is almost certainly indicative of some
+    // kind of bug. There appears to be some occasional laggard thread which is causing a race condition
+    // of some kind, and occasionally preventing one of the Slabs from destroying in time. All I know at
+    // this point is that adding the sleep here seems to help, which implies that it's not a deadlock.
+    thread::sleep( time::Duration::from_millis(50) );
+
     // We should have zero slabs resident at this point
-    assert!( net.get_all_local_slabs().len() == 0 );
+    assert!( net.get_all_local_slabs().len() == 0, "not all slabs have cleaned up" );
 }
 
 #[test]
@@ -123,7 +126,7 @@ fn init_udp() {
     println!("MARK 9");
 }
 
-//#[test]
+#[test]
 fn avoid_unnecessary_chatter() {
 
     let net = unbase::Network::create_new_system();

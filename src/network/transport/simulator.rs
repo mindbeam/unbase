@@ -21,17 +21,17 @@ pub struct MinkowskiPoint {
 struct SimEvent {
     _source_point: MinkowskiPoint,
     dest_point:    MinkowskiPoint,
-    from:          SlabRef,
-    _origin_peering_status: MemoPeeringStatus,
+    from_slabref:  SlabRef,
     dest:          WeakSlab,
-    memo:          Memo
+    memoref:       MemoRef
 }
 
 impl SimEvent {
     pub fn deliver (self) {
-        println!("# SimEvent.deliver {} to Slab {}", &self.memo.id, self.dest.id );
-        if let Some(slab) = self.dest.upgrade() {
-            self.memo.clone_for_slab( &self.from, &slab );
+        println!("# SimEvent.deliver {} to Slab {}", &self.memoref.id, self.dest.id );
+        if let Some(to_slab) = self.dest.upgrade() {
+            let owned_slabref = &self.from_slabref.clone_for_slab(&to_slab);
+            self.memoref.clone_for_slab( &self.from_slabref, &to_slab, true );
         }
         // we all have to learn to deal with loss sometime
     }
@@ -40,7 +40,7 @@ impl fmt::Debug for SimEvent{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SimEvent")
             .field("dest", &self.dest.id )
-            .field("memo", &self.memo.id )
+            .field("memo", &self.memoref.id )
             .field("t", &self.dest_point.t )
             .finish()
     }
@@ -147,7 +147,7 @@ pub struct SimulatorTransmitter{
 }
 
 impl DynamicDispatchTransmitter for SimulatorTransmitter {
-    fn send (&self, from: &SlabRef, memo: Memo){
+    fn send (&self, from_slabref: &SlabRef, memoref: MemoRef){
         let ref q = self.source_point;
         let ref p = self.dest_point;
 
@@ -170,12 +170,10 @@ impl DynamicDispatchTransmitter for SimulatorTransmitter {
         let evt = SimEvent {
             _source_point: source_point,
             dest_point: dest_point,
-            from: from.clone(),
+            from_slabref: from_slabref.clone(),
 
-            // TODO - stop assuming that this is resident on the sending slab just because we're sending it
-            _origin_peering_status: MemoPeeringStatus::Resident,
             dest: self.dest.clone(),
-            memo: memo
+            memoref: memoref
         };
 
         self.simulator.add_event( evt );

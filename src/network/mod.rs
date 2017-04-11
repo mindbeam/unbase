@@ -104,7 +104,9 @@ impl Network {
     fn get_representative_slab (&self) -> Option<Slab> {
         for weak in self.slabs.read().unwrap().iter() {
             if let Some(slab) = weak.upgrade() {
-                return Some(slab);
+                if !slab.dropping {
+                    return Some(slab);
+                }
             }
         }
         return None;
@@ -145,14 +147,10 @@ impl Network {
         None
     }
     pub fn register_local_slab(&self, new_slab: &Slab) {
-        println!("# register_slab {:?}", new_slab );
+        println!("# Network.register_slab {:?}", new_slab );
 
-            println!(">>> register_slab B" );
         for prev_slab in self.get_all_local_slabs() {
-            println!(">>> register_slab C" );
             prev_slab.slabref_from_local_slab( new_slab );
-
-            println!(">>> register_slab D" );
             new_slab.slabref_from_local_slab( &prev_slab );
         }
 
@@ -161,10 +159,10 @@ impl Network {
     pub fn deregister_local_slab(&self, slab_id: SlabId) {
         // Remove the deregistered slab so get_representative_slab doesn't return it
         {
-            let mut slabs = self.slabs.write().unwrap();
-            if let Some(_) = slabs.iter().position(|s| s.id == slab_id )
-                .map(|e| slabs.remove(e)) {
-                    println!("Unbinding Slab");
+            let mut slabs = self.slabs.write().expect("slabs write lock");
+            if let Some(removed) = slabs.iter().position(|s| s.id == slab_id )
+                .map(|e| slabs.remove(e) ) {
+                    println!("Unbinding Slab {}", removed.id);
                     // removed.unbind_network(self);
             }
         }
@@ -172,18 +170,27 @@ impl Network {
         // If the deregistered slab is the one that's holding the root_index_seed
         // then we need to move it to a different slab
 
-        let mut root_index_seed = self.root_index_seed.write().unwrap();
-        if let Some(ref mut r) = *root_index_seed {
-            if r.1.slab_id == slab_id {
-                if let Some(new_slab) = self.get_representative_slab() {
-                    r.0 = r.0.clone_for_slab(&r.1, &new_slab, false);
-                    r.1 = new_slab.my_ref.clone();
+        let mut root_index_seed = self.root_index_seed.write().expect("root_index_seed write lock");
+        {
+            if let Some(ref mut r) = *root_index_seed {
+                if r.1.slab_id == slab_id {
+                    if let Some(new_slab) = self.get_representative_slab() {
+                        r.0 = r.0.clone_for_slab(&r.1, &new_slab, false);
+                        r.1 = new_slab.my_ref.clone();
+                        return;
+                    }
+                    // don't return
+                }else{
+                    return;
                 }
             }
         }
+
+        // No slabs left
+        root_index_seed.take();
     }
     pub fn get_root_index_seed(&self, slab: &Slab) -> Option<MemoRefHead> {
-        let root_index_seed = self.root_index_seed.read().unwrap();
+        let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");
 
         match *root_index_seed {
             Some((ref seed, ref from_slabref)) => {

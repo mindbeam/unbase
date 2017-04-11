@@ -11,7 +11,6 @@ impl StatefulSerialize for Packet {
     {
         let mut seq = serializer.serialize_seq(Some(4))?;
         seq.serialize_element( &self.from_slab_id )?;
-        seq.serialize_element( &self.from_slab_peering_status )?;
         seq.serialize_element( &self.to_slab_id )?;
         seq.serialize_element( &SerializeWrapper( &self.memo, helper ) )?;
         seq.end()

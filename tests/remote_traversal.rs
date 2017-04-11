@@ -2,7 +2,7 @@ extern crate unbase;
 use unbase::subject::Subject;
 use std::{thread, time};
 
-//#[test]
+#[test]
 fn remote_traversal_simulated() {
 
     let net = unbase::Network::create_new_system();
@@ -48,7 +48,7 @@ fn remote_traversal_simulated() {
 
 }
 
-//#[test]
+#[test]
 fn remote_traversal_nondeterministic() {
 
 
@@ -64,8 +64,8 @@ fn remote_traversal_nondeterministic() {
 
     let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").unwrap();
 
-    rec_a1.set_value("animal_sound","Woof");
-    rec_a1.set_value("animal_sound","Meow");
+    //rec_a1.set_value("animal_sound","Woof");
+    //rec_a1.set_value("animal_sound","Meow");
 
     thread::sleep(time::Duration::from_millis(50));
 

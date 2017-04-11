@@ -33,6 +33,9 @@ impl StatefulSerialize for MemoRef {
             &Remote      => false,
             &Resident(_) => true
         })?;
+
+        // QUESTION: Should we be using memoref.get_peerlist_for_peer instead of has_memo?
+        //           What about relayed memos which Slab A requests from B but actually receives from C?
         seq.serialize_element( &SerializeWrapper(&*self.peerlist.read().unwrap(), helper) )?;
         seq.end()
     }

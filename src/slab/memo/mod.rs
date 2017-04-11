@@ -175,7 +175,7 @@ impl MemoBody {
                 MemoBody::Peering(memo_id,subject_id,peerlist.clone_for_slab(from_slabref,to_slab))
             }
             &MemoBody::MemoRequest(ref memo_ids, ref slabref) =>{
-                MemoBody::MemoRequest(memo_ids.clone(), slabref.clone_for_slab(from_slabref, to_slab))
+                MemoBody::MemoRequest(memo_ids.clone(), slabref.clone_for_slab(to_slab))
             }
         }
 

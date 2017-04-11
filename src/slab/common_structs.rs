@@ -47,10 +47,29 @@ impl MemoPeerList {
     pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab) -> Self {
         MemoPeerList( self.0.iter().map(|p| {
             MemoPeer{
-                slabref: p.slabref.clone_for_slab(from_slabref, to_slab),
+                slabref: p.slabref.clone_for_slab(to_slab),
                 status: p.status.clone()
             }
         }).collect())
+    }
+    pub fn apply_peer(&mut self, peer: MemoPeer) -> bool {
+        //assert!(self.owning_slab_id == peer.slabref.owning_slab_id, "apply_peer for dissimilar owning_slab_id peer" );
+
+        let mut peerlist = &mut self.0;
+        {
+            if let Some(my_peer) = peerlist.iter_mut().find(|p| p.slabref.slab_id == peer.slabref.slab_id ){
+                if peer.status != my_peer.status {
+                    // same slabref, so no need to apply the peer presence
+                    my_peer.status = peer.status;
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        }
+
+        peerlist.push(peer);
+        true
     }
 }
 
@@ -81,6 +100,8 @@ pub struct RelationSlotSubjectHead(pub HashMap<RelationSlotId,(SubjectId,MemoRef
 impl RelationSlotSubjectHead {
     pub fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &Slab ) -> Self {
 
+        // HERE HERE HERE TODO
+        //panic!("check here to make sure that peers are being properly constructed for the root_index_seed");
         let new = self.0.iter().map(|(slot_id,&(subject_id,ref mrh))| {
             (*slot_id, (subject_id, mrh.clone_for_slab( from_slabref, to_slab, false )  ))
         }).collect();

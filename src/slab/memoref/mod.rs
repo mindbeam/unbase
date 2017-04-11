@@ -7,7 +7,7 @@ use std::sync::{Arc,RwLock};
 use std::fmt;
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct MemoRef(pub Arc<MemoRefInner>);
 
 impl Deref for MemoRef {
@@ -17,7 +17,6 @@ impl Deref for MemoRef {
     }
 }
 
-#[derive(Debug)]
 pub struct MemoRefInner {
     pub id:       MemoId,
     pub owning_slab_id: SlabId,
@@ -26,7 +25,6 @@ pub struct MemoRefInner {
     pub ptr:      RwLock<MemoRefPtr>
 }
 
-#[derive(Debug)]
 pub enum MemoRefPtr {
     Resident(Memo),
     Remote
@@ -42,27 +40,19 @@ impl MemoRefPtr {
 }
 
 impl MemoRef {
-    /*
-    // NO: this needs to be managed by the slab to ensure there's no duplication. bad. shame.
-    pub fn from_memo (slab: &Slab, memo : &Memo) -> Self {
-        MemoRef(Arc::new(
-            MemoRefInner {
-                id: memo.id,
-                owning_slab_id: slab.id,
-                subject_id: memo.subject_id,
-                peerlist: RwLock::new(MemoPeerList::new(Vec::with_capacity(3))),
-                ptr: RwLock::new(MemoRefPtr::Resident( memo.clone() ))
-            }
-        ))
-    }
-    */
-}
-impl MemoRef {
     pub fn to_head (&self) -> MemoRefHead {
         MemoRefHead::from_memoref(self.clone())
     }
-    pub fn apply_peers ( &self, _peers: &MemoPeerList ) -> bool {
-        unimplemented!();
+    pub fn apply_peers ( &self, apply_peerlist: &MemoPeerList ) -> bool {
+
+        let mut peerlist = &mut *self.peerlist.write().unwrap();
+        let mut acted = false;
+        for apply_peer in apply_peerlist.0.clone() {
+            if peerlist.apply_peer(apply_peer) {
+                acted = true;
+            }
+        }
+        acted
     }
     pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, dest_slabref: &SlabRef) -> MemoPeerList {
         let mut list : Vec<MemoPeer> = Vec::new();
@@ -102,7 +92,7 @@ impl MemoRef {
         status
     }
     pub fn get_memo (&self, slab: &Slab) -> Result<Memo,RetrieveError> {
-        println!("Slab({}).MemoRef({}).get_memo()", self.owning_slab_id, self.id );
+//        println!("Slab({}).MemoRef({}).get_memo()", self.owning_slab_id, self.id );
         assert!(self.owning_slab_id == slab.id,"requesting slab does not match owning slab");
 
         // This seems pretty crude, but using channels for now in the interest of expediency
@@ -193,20 +183,57 @@ impl MemoRef {
         }
     }
     pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, include_memo: bool ) -> Self{
-        // TODO: determine: do we ever want to clone a memoref at any depth?
+        assert!(from_slabref.owning_slab_id == to_slab.id,"MemoRef clone_for_slab owning slab should be identical");
+        assert!(from_slabref.slab_id != to_slab.id,       "MemoRef clone_for_slab dest slab should not be identical");
 
-        to_slab.assert_memoref(
-            self.id,
-            self.subject_id,
-            self.peerlist.read().unwrap().clone_for_slab( from_slabref, to_slab ),
-            match include_memo {
-                true => match *self.ptr.read().unwrap() {
+        let peerlist = self.peerlist.read().unwrap().clone_for_slab( from_slabref, to_slab );
+
+        let maybe_memo;
+
+        {
+            let ptr = *self.ptr.read().unwrap();
+
+            maybe_memo = match include_memo {
+                true => match ptr {
                     MemoRefPtr::Resident(ref m) => Some(m.clone_for_slab(from_slabref, to_slab)),
                     MemoRefPtr::Remote      => None
                 },
                 false => None
-            }
-        ).0
+            };
+
+            peerlist.apply_peer(MemoPeer{
+                slabref: from_slabref.clone(),
+                status:  ptr.to_peering_status(),
+            });
+        }
+
+        let memoref = to_slab.assert_memoref(
+            self.id,
+            self.subject_id,
+            peerlist.clone(),
+            maybe_memo
+        ).0;
+
+
+        println!("MemoRef.clone_for_slab({},{}) peerlist: {:?} -> MemoRef({:?})", from_slabref.slab_id, to_slab.id, &peerlist, &memoref );
+
+        memoref
+    }
+}
+
+impl fmt::Debug for MemoRef{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("MemoRef")
+           .field("id", &self.id)
+           .field("owning_slab_id", &self.owning_slab_id)
+           .field("subject_id", &self.subject_id)
+           .field("peerlist", &*self.peerlist.read().unwrap())
+
+           .field("resident", &match *self.ptr.read().unwrap() {
+               MemoRefPtr::Remote      => false,
+               MemoRefPtr::Resident(_) => true
+           })
+           .finish()
     }
 }
 

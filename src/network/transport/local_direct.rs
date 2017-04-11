@@ -32,18 +32,18 @@ impl Transport for LocalDirect {
     fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
         if let &TransmitterArgs::Local(rcv_slab) = args {
             let slab = rcv_slab.weak();
-            let (tx_channel, rx_channel) = mpsc::channel::<(SlabRef,MemoPeeringStatus,Memo)>();
+            let (tx_channel, rx_channel) = mpsc::channel::<(SlabRef,MemoRef)>();
 
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
                 //let mut buf = [0; 65536];
-                //println!("Started TX Thread");g
-                while let Ok((from_slabref, _from_slab_peering_status, memo)) = rx_channel.recv() {
-                    //println!("CHANNEL RCV {:?}", memo);
+                //println!("Started TX Thread");
+                while let Ok((from_slabref, memoref)) = rx_channel.recv() {
+                    println!("LocalDirect Slab({}) RECEIVED {:?} from {}", slab.id, memoref, from_slabref.slab_id);
                     if let Some(slab) = slab.upgrade(){
                         // clone_for_slab adds the memo to the slab, because memos cannot exist outside of an owning slab
-                        let _memo = memo.clone_for_slab(&from_slabref, &slab);
-
-                        //slab.reconstitute_memo_from_local(memo, from_slabref, from_slab_peering_status);
+                        
+                        let owned_slabref = from_slabref.clone_for_slab(&slab);
+                        memoref.clone_for_slab(&owned_slabref, &slab, true);
                     }
                 }
             });
@@ -73,13 +73,10 @@ impl Transport for LocalDirect {
 impl Drop for Internal {
     fn drop (&mut self) {
         println!("# LocalDirectInternal.drop");
-        for _thread in self.tx_threads.drain(..) {
+        for thread in self.tx_threads.drain(..) {
 
             println!("# LocalDirectInternal.drop Thread pre join");
-            //TODO: Figure out why the transmitter isn't getting freed
-            //      because we're getting stuck here
-            //thread.join().unwrap();
-
+            thread.join().expect("local_direct thread join");
             println!("# LocalDirectInternal.drop Thread post join");
         }
     }

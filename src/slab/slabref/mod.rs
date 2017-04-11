@@ -46,7 +46,7 @@ impl SlabRef{
         println!("# SlabRef({},{}).send_memo({})", self.owning_slab_id, self.slab_id, memoref.id );
 
         if let Some(memo) = memoref.get_memo_if_resident() {
-            self.tx.lock().unwrap().send(from, memo.clone());
+            self.tx.lock().unwrap().send(from, memoref);
         }else{
             // NOTE: we should actually implement this
             //       it is a totally reasonable use case that we might want to send a memo
@@ -76,7 +76,7 @@ impl SlabRef{
         // When comparing equality, we can skip the transmitter
         self.slab_id == other.slab_id && *self.presence.read().unwrap() == *other.presence.read().unwrap()
     }
-    pub fn clone_for_slab(&self, _from_slabref: &SlabRef, to_slab: &Slab ) -> SlabRef {
+    pub fn clone_for_slab(&self, to_slab: &Slab ) -> SlabRef {
         // For now, we don't seem to care what slabref we're being cloned from, just which one we point to
         if self.slab_id == to_slab.id {
             to_slab.my_ref.clone()
@@ -92,9 +92,9 @@ impl SlabRef{
 impl fmt::Debug for SlabRef {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SlabRef")
-            .field("owning_slab_id", &self.slab_id)
+            .field("owning_slab_id", &self.owning_slab_id)
             .field("to_slab_id",     &self.slab_id)
-            .field("presence",       &self.presence.read().unwrap())
+            .field("presence",       &*self.presence.read().unwrap())
             .finish()
     }
 }

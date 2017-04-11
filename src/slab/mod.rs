@@ -47,7 +47,8 @@ pub struct SlabInner{
 
     pub my_ref: SlabRef,
     peer_refs: RwLock<Vec<SlabRef>>,
-    net: Network
+    net: Network,
+    pub dropping: bool,
 }
 
 struct SlabCounters{
@@ -152,6 +153,8 @@ impl Slab {
 
 impl Drop for SlabInner {
     fn drop(&mut self) {
+        self.dropping = true;
+
         println!("# SlabInner({}).drop", self.id);
         self.net.deregister_local_slab(self.id);
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
