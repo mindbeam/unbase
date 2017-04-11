@@ -195,14 +195,15 @@ impl MemoRef {
         // HACK - do this in one step
         let peerlist = self.get_peerlist_for_peer(from_slabref, Some(to_slab.id)).clone_for_slab( to_slab );
 
+        // TODO - reduce the redundant work here. We're basically asserting the memoref twice
         let memoref = to_slab.assert_memoref(
             self.id,
             self.subject_id,
             peerlist.clone(),
             match include_memo {
                 true => match *self.ptr.read().unwrap() {
-                    MemoRefPtr::Resident(ref m) => Some(m.clone_for_slab(from_slabref, to_slab)),
-                    MemoRefPtr::Remote      => None
+                    MemoRefPtr::Resident(ref m) => Some(m.clone_for_slab(from_slabref, to_slab, &peerlist)),
+                    MemoRefPtr::Remote          => None
                 },
                 false => None
             }

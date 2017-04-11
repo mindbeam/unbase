@@ -2,6 +2,7 @@ use super::*;
 use super::super::*;
 
 use slab::memo_serde::MemoSeed;
+use slab::memoref_serde::MemoPeerSeed;
 use util::serde::DeserializeSeed;
 use util::serde::*;
 
@@ -12,8 +13,8 @@ impl StatefulSerialize for Packet {
         let mut seq = serializer.serialize_seq(Some(4))?;
         seq.serialize_element( &self.from_slab_id )?;
         seq.serialize_element( &self.to_slab_id )?;
-        seq.serialize_element( &SerializeWrapper( &self.memo, helper ) )?;
         seq.serialize_element( &SerializeWrapper( &self.peerlist, helper ) )?;
+        seq.serialize_element( &SerializeWrapper( &self.memo, helper ) )?;
         seq.end()
     }
 }
@@ -49,16 +50,10 @@ impl<'a> Visitor for PacketSeed<'a> {
                return Err(DeError::invalid_length(0, &self));
            }
        };
-       let from_slab_peering_status: MemoPeeringStatus = match visitor.visit()?{
-           Some(value) => value,
-           None => {
-               return Err(DeError::invalid_length(1, &self));
-           }
-       };
        let to_slab_id: SlabId = match visitor.visit()? {
            Some(value) => value,
            None => {
-               return Err(DeError::invalid_length(2, &self));
+               return Err(DeError::invalid_length(1, &self));
            }
        };
 
@@ -86,17 +81,27 @@ impl<'a> Visitor for PacketSeed<'a> {
            address: self.source_address.clone(),
            lifetime: SlabAnticipatedLifetime::Unknown
        };
+
        let origin_slabref = dest_slab.slabref_from_presence(&from_presence).expect("slabref from presence");
+
+       // no need to return the memo here, as it's added to the slab
+       let peerlist = match visitor.visit_seed(VecSeed(MemoPeerSeed{ dest_slab: &dest_slab }))? {
+           Some(v) => MemoPeerList::new(v),
+           None    => {
+               return Err(DeError::invalid_length(2, &self));
+           }
+       };
 
        // no need to return the memo here, as it's added to the slab
        if let None = visitor.visit_seed( MemoSeed {
            dest_slab: &dest_slab,
            origin_slabref: &origin_slabref,
            from_presence: from_presence,
-           from_slab_peering_status: from_slab_peering_status,
+           peerlist: peerlist
        } )? {
             return Err(DeError::invalid_length(3, &self));
        };
+
 
        Ok(())
    }

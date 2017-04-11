@@ -175,7 +175,9 @@ impl Network {
             if let Some(ref mut r) = *root_index_seed {
                 if r.1.slab_id == slab_id {
                     if let Some(new_slab) = self.get_representative_slab() {
-                        r.0 = r.0.clone_for_slab(&r.1, &new_slab, false);
+
+                        let owned_slabref = r.1.clone_for_slab(&new_slab);
+                        r.0 = r.0.clone_for_slab(&owned_slabref, &new_slab, false);
                         r.1 = new_slab.my_ref.clone();
                         return;
                     }
@@ -194,11 +196,12 @@ impl Network {
 
         match *root_index_seed {
             Some((ref seed, ref from_slabref)) => {
-                if from_slabref.slab_id == slab.id {
+                if from_slabref.owning_slab_id == slab.id {
                     // seed is resident on the requesting slab
                     Some(seed.clone())
                 }else{
-                    Some(seed.clone_for_slab(from_slabref, slab, true) )
+                    let owned_slabref = from_slabref.clone_for_slab(&slab);
+                    Some(seed.clone_for_slab(&owned_slabref, slab, true) )
                 }
             }
             None => {

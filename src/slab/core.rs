@@ -22,13 +22,8 @@ impl Slab {
 
         memoref
     }
-    pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, origin_peering_status: &MemoPeeringStatus ) -> (Memo,MemoRef,bool){
-        // TODO: should probably accept a peer list, rather than generating it ourselves
-
-        let peerlist = MemoPeerList(vec![MemoPeer{
-            slabref: origin_slabref.clone(),
-            status: origin_peering_status.clone()
-        }]);
+    pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){
+        // TODO: find a way to merge this with assert_memoref to avoid doing duplicative work with regard to peerlist application
 
         let memo = Memo::new(MemoInner {
             id:             memo_id,
@@ -39,7 +34,7 @@ impl Slab {
         });
 
 
-        let (memoref, had_memoref) = self.assert_memoref(memo.id, memo.subject_id, peerlist, Some(memo.clone()) );
+        let (memoref, had_memoref) = self.assert_memoref(memo.id, memo.subject_id, peerlist.clone(), Some(memo.clone()) );
 
         {
             let mut counters = self.counters.write().unwrap();
@@ -53,11 +48,10 @@ impl Slab {
 
         if let Some(ref memo) = memoref.get_memo_if_resident() {
             self.check_memo_waiters(memo);
-            self.handle_memo_from_other_slab(memo, &memoref, &origin_slabref, origin_peering_status);
+            self.handle_memo_from_other_slab(memo, &memoref, &origin_slabref);
             self.do_peering(&memoref, &origin_slabref);
 
         }
-        memoref.update_peer(origin_slabref, origin_peering_status.clone());
 
         if let Some(subject_id) = memoref.subject_id {
             self.dispatch_subject_head( subject_id, &memoref.to_head());

@@ -133,20 +133,24 @@ impl Memo {
         }
         return false;
     }
-    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab) -> Memo {
+    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, peerlist: &MemoPeerList) -> Memo {
+        assert!(from_slabref.owning_slab_id == to_slab.id, "Memo clone_for_slab owning slab should be identical");
+
         to_slab.reconstitute_memo(
             self.id,
             self.subject_id,
             self.parents.clone_for_slab(from_slabref, to_slab, false),
             self.body.clone_for_slab(from_slabref, to_slab),
             from_slabref,
-            &MemoPeeringStatus::Resident
+            peerlist
         ).0
     }
 }
 
 impl MemoBody {
     fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &Slab ) -> MemoBody {
+        assert!(from_slabref.owning_slab_id == to_slab.id, "MemoBody clone_for_slab owning slab should be identical");
+
         match self {
             &MemoBody::SlabPresence{ ref p, ref r } => {
                 MemoBody::SlabPresence{

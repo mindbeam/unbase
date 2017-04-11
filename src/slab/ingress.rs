@@ -1,7 +1,7 @@
 use super::*;
 
 impl Slab {
-    pub fn handle_memo_from_other_slab( &self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef, _origin_peering_status: &MemoPeeringStatus ){
+    pub fn handle_memo_from_other_slab( &self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef ){
 
         match memo.body {
             // This Memo is a peering status update for another memo

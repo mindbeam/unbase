@@ -103,7 +103,7 @@ pub struct MemoSeed<'a> {
     pub dest_slab: &'a Slab,
     pub origin_slabref: &'a SlabRef,
     pub from_presence: SlabPresence,
-    pub from_slab_peering_status: MemoPeeringStatus
+    pub peerlist: MemoPeerList
 }
 
 impl<'a> DeserializeSeed for MemoSeed<'a> {
@@ -150,7 +150,7 @@ impl<'a> Visitor for MemoSeed<'a>{
            }
        };
 
-        let _memo = self.dest_slab.reconstitute_memo(id, subject_id, parents, body, self.origin_slabref, &self.from_slab_peering_status ).0;
+        let _memo = self.dest_slab.reconstitute_memo(id, subject_id, parents, body, self.origin_slabref, &self.peerlist ).0;
 
         Ok(())
     }
