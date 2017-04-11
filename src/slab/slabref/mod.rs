@@ -45,14 +45,7 @@ impl SlabRef{
     pub fn send (&self, from: &SlabRef, memoref: &MemoRef ) {
         println!("# SlabRef({},{}).send_memo({})", self.owning_slab_id, self.slab_id, memoref.id );
 
-        if let Some(memo) = memoref.get_memo_if_resident() {
-            self.tx.lock().unwrap().send(from, memoref);
-        }else{
-            // NOTE: we should actually implement this
-            //       it is a totally reasonable use case that we might want to send a memo
-            //       to a remote slab that we do not ourselves have
-            unimplemented!();
-        }
+        self.tx.lock().unwrap().send(from, memoref.clone());
     }
 
     pub fn get_return_address(&self) -> TransportAddress {
@@ -78,7 +71,7 @@ impl SlabRef{
     }
     pub fn clone_for_slab(&self, to_slab: &Slab ) -> SlabRef {
         // For now, we don't seem to care what slabref we're being cloned from, just which one we point to
-        if self.slab_id == to_slab.id {
+        if self.owning_slab_id == to_slab.id {
             to_slab.my_ref.clone()
         }else{
             let address = &*self.return_address.read().unwrap();

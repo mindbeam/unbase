@@ -13,6 +13,7 @@ impl StatefulSerialize for Packet {
         seq.serialize_element( &self.from_slab_id )?;
         seq.serialize_element( &self.to_slab_id )?;
         seq.serialize_element( &SerializeWrapper( &self.memo, helper ) )?;
+        seq.serialize_element( &SerializeWrapper( &self.peerlist, helper ) )?;
         seq.end()
     }
 }

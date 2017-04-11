@@ -31,7 +31,7 @@ impl SimEvent {
         println!("# SimEvent.deliver {} to Slab {}", &self.memoref.id, self.dest.id );
         if let Some(to_slab) = self.dest.upgrade() {
             let owned_slabref = &self.from_slabref.clone_for_slab(&to_slab);
-            self.memoref.clone_for_slab( &self.from_slabref, &to_slab, true );
+            self.memoref.clone_for_slab( &owned_slabref, &to_slab, true );
         }
         // we all have to learn to deal with loss sometime
     }

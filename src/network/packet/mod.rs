@@ -15,8 +15,8 @@ impl fmt::Debug for Packet {
         fmt.debug_struct("Packet")
             .field("from_slab_id", &self.from_slab_id)
             .field("to_slab_id", &self.to_slab_id)
-            .field("memo", &self.memo)
-            .field("peerlist", &self.from_slab_peering_status)
+            .field("memoref", &self.memo)
+            .field("peerlist", &self.peerlist)
             .finish()
     }
 }

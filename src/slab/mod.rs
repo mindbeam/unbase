@@ -142,7 +142,7 @@ impl Slab {
                 MemoBody::Peering(
                     memoref.id,
                     memoref.subject_id,
-                    memoref.get_peerlist_for_peer(&self.my_ref, origin_slabref)
+                    memoref.get_peerlist_for_peer(&self.my_ref, Some(origin_slabref.slab_id))
                 )
             );
             origin_slabref.send( &self.my_ref, &peering_memoref );

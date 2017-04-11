@@ -54,7 +54,7 @@ impl MemoRef {
         }
         acted
     }
-    pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, dest_slabref: &SlabRef) -> MemoPeerList {
+    pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, maybe_dest_slab_id: Option<SlabId>) -> MemoPeerList {
         let mut list : Vec<MemoPeer> = Vec::new();
 
         list.push(MemoPeer{
@@ -65,8 +65,14 @@ impl MemoRef {
         // Tell the peer about all other presences except for ones belonging to them
         // we don't need to tell them they have it. They know, they were there :)
 
-        for peer in self.peerlist.read().unwrap().iter().filter(|p| p.slabref.0.slab_id != dest_slabref.0.slab_id ) {
-            list.push((*peer).clone());
+        if let Some(dest_slab_id) = maybe_dest_slab_id {
+            for peer in self.peerlist.read().unwrap().iter() {
+                if peer.slabref.0.slab_id != dest_slab_id {
+                    list.push((*peer).clone());
+                }
+            }
+        }else{
+            list.append(&mut self.peerlist.read().unwrap().0.clone());
         }
 
         MemoPeerList::new(list)
@@ -186,32 +192,20 @@ impl MemoRef {
         assert!(from_slabref.owning_slab_id == to_slab.id,"MemoRef clone_for_slab owning slab should be identical");
         assert!(from_slabref.slab_id != to_slab.id,       "MemoRef clone_for_slab dest slab should not be identical");
 
-        let peerlist = self.peerlist.read().unwrap().clone_for_slab( from_slabref, to_slab );
-
-        let maybe_memo;
-
-        {
-            let ptr = *self.ptr.read().unwrap();
-
-            maybe_memo = match include_memo {
-                true => match ptr {
-                    MemoRefPtr::Resident(ref m) => Some(m.clone_for_slab(from_slabref, to_slab)),
-                    MemoRefPtr::Remote      => None
-                },
-                false => None
-            };
-
-            peerlist.apply_peer(MemoPeer{
-                slabref: from_slabref.clone(),
-                status:  ptr.to_peering_status(),
-            });
-        }
+        // HACK - do this in one step
+        let peerlist = self.get_peerlist_for_peer(from_slabref, Some(to_slab.id)).clone_for_slab( to_slab );
 
         let memoref = to_slab.assert_memoref(
             self.id,
             self.subject_id,
             peerlist.clone(),
-            maybe_memo
+            match include_memo {
+                true => match *self.ptr.read().unwrap() {
+                    MemoRefPtr::Resident(ref m) => Some(m.clone_for_slab(from_slabref, to_slab)),
+                    MemoRefPtr::Remote      => None
+                },
+                false => None
+            }
         ).0;
 
 

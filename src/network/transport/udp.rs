@@ -134,8 +134,8 @@ impl TransportUDP {
             let packet = Packet{
                 to_slab_id: 0,
                 from_slab_id: from_slabref.0.slab_id,
-                from_slab_peering_status: MemoPeeringStatus::Resident, // TODO - stop assuming that it's actually resident in the sending slab
-                memo: memo.clone()
+                memo: memo.clone(),
+                peerlist: memoref.get_peerlist_for_peer(from_slabref, None)
             };
 
             println!("TransportUDP.send({:?})", packet );
@@ -274,24 +274,26 @@ pub struct TransmitterUDP{
 impl DynamicDispatchTransmitter for TransmitterUDP {
     fn send (&self, from: &SlabRef, memoref: MemoRef) {
 
-        let packet = Packet {
-            to_slab_id: self.slab_id,
-            from_slab_id: from.0.slab_id,
-            peerlist: memoref.,
-            memo: memo
-        };
+        if let Some(memo) = memoref.get_memo_if_resident(){
+            let packet = Packet {
+                to_slab_id: self.slab_id,
+                from_slab_id: from.0.slab_id,
+                memo:      memo,
+                peerlist:  memoref.get_peerlist_for_peer(from, Some(self.slab_id)),
+            };
 
 
-        //println!("UDP QUEUE FOR SEND {:?}", &packet);
+            //println!("UDP QUEUE FOR SEND {:?}", &packet);
 
-        //use util::serde::SerializeHelper;
-        //let helper = SerializeHelper{ transmitter: self };
-        //wrapper = SerializeWrapper<Packet>
-//        let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
-//        println!("UDP QUEUE FOR SEND SERIALIZED {}", String::from_utf8(b).unwrap() );
+            //use util::serde::SerializeHelper;
+            //let helper = SerializeHelper{ transmitter: self };
+            //wrapper = SerializeWrapper<Packet>
+    //        let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
+    //        println!("UDP QUEUE FOR SEND SERIALIZED {}", String::from_utf8(b).unwrap() );
 
-        if let Some(ref tx_channel) = *(self.tx_channel.lock().unwrap()) {
-            tx_channel.send((self.address.clone(), packet)).unwrap();
+            if let Some(ref tx_channel) = *(self.tx_channel.lock().unwrap()) {
+                tx_channel.send((self.address.clone(), packet)).unwrap();
+            }
         }
     }
 }
