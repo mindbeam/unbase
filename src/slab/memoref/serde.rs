@@ -20,6 +20,9 @@ impl StatefulSerialize for MemoPeerList {
     }
 }
 
+//             [      [  [[]],     "Resident" ]  ]
+// MemoPeerList^  Peer^  ^Slabref  ^Status
+
 impl StatefulSerialize for MemoRef {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer

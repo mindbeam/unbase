@@ -19,6 +19,7 @@ use slab::Slab;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum TransportAddress{
+    Blackhole,
     Simulator,
     Local,
     UDP(TransportAddressUDP),

@@ -65,3 +65,14 @@ MemoRefHead
 Context
 
 Index
+
+
+Serialization Format:
+Packet[
+    From SlabId,
+    To   SlabId,
+    PeerList
+    Memo
+]
+
+ [858993464201,null,{"SlabPresence":{"p":{"slab_id":200,"address":{"UDP":{"address":"127.0.0.1:1337"}},"lifetime":"Unknown"},"r":null}},[]]]

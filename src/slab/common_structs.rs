@@ -3,7 +3,7 @@ use network::TransportAddress;
 
 /// SlabPresence represents the expected reachability of a given Slab
 /// Including Transport address and anticipated lifetime
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct SlabPresence{
     pub slab_id: SlabId,
     pub address: TransportAddress,

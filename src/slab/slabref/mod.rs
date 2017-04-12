@@ -74,9 +74,9 @@ impl SlabRef{
         if self.owning_slab_id == to_slab.id {
             to_slab.my_ref.clone()
         }else{
-            let address = &*self.return_address.read().unwrap();
-            let args = TransmitterArgs::Remote( &self.slab_id, address );
-            to_slab.assert_slabref( args, &*self.presence.read().unwrap() )
+            //let address = &*self.return_address.read().unwrap();
+            //let args = TransmitterArgs::Remote( &self.slab_id, address );
+            to_slab.assert_slabref( self.slab_id, &*self.presence.read().unwrap() )
         }
 
     }

@@ -42,7 +42,7 @@ impl StatefulSerialize for MemoBody {
         match *self {
             SlabPresence{ ref p, ref r } =>{
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 0, "SlabPresence", 2)?;
-                sv.serialize_field("p", &SerializeWrapper(&p, helper))?;
+                sv.serialize_field("p", &p)?;
                 sv.serialize_field("r", &SerializeWrapper(r, helper))?;
                 sv.end()
             }

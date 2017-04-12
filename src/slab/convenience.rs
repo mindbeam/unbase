@@ -38,29 +38,29 @@ impl Slab {
     }
     pub fn slabref_from_local_slab(&self, peer_slab: &Self) -> SlabRef {
 
-        let args = TransmitterArgs::Local(&peer_slab);
+        //let args = TransmitterArgs::Local(&peer_slab);
         let presence = SlabPresence{
             slab_id: peer_slab.id,
             address: TransportAddress::Local,
             lifetime: SlabAnticipatedLifetime::Unknown
         };
 
-        self.assert_slabref(args, &vec![presence])
+        self.assert_slabref(peer_slab.id, &vec![presence])
     }
     pub fn slabref_from_presence(&self, presence: &SlabPresence) -> Result<SlabRef,&str> {
+            match presence.address {
+                TransportAddress::Simulator  => {
+                    return Err("Invalid - Cannot create simulator slabref from presence")
+                }
+                TransportAddress::Local      => {
+                    return Err("Invalid - Cannot create local slabref from presence")
+                }
+                _ => { }
+            };
 
-        match presence.address {
-            TransportAddress::Simulator  => {
-                return Err("Invalid - Cannot create simulator slabref from presence")
-            }
-            TransportAddress::Local      => {
-                return Err("Invalid - Cannot create local slabref from presence")
-            }
-            _ => { }
-        };
 
-        let args = TransmitterArgs::Remote( &presence.slab_id, &presence.address );
+        //let args = TransmitterArgs::Remote( &presence.slab_id, &presence.address );
 
-        Ok(self.assert_slabref( args, &vec![presence.clone()] ))
+        Ok(self.assert_slabref( presence.slab_id, &vec![presence.clone()] ))
     }
 }
