@@ -80,14 +80,14 @@ impl<'a> Visitor for SlabRefSeed<'a> {
                 return Err(DeError::invalid_length(0, &self));
             }
         };
-       let presence: SlabPresence = match visitor.visit()? {
+       let presence: Vec<SlabPresence> = match visitor.visit()? {
            Some(value) => value,
            None => {
                return Err(DeError::invalid_length(1, &self));
            }
        };
 
-       let slabref = self.dest_slab.assert_slabref(slab_id, &[presence]); //.expect("slabref from slabrefseed presence");
+       let slabref = self.dest_slab.assert_slabref(slab_id, &presence); //.expect("slabref from slabrefseed presence");
        Ok( slabref )
     }
 }
