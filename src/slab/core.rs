@@ -196,10 +196,17 @@ impl Slab {
     pub fn assert_slabref(&self, slab_id: SlabId, presence: &[SlabPresence] ) -> SlabRef {
         println!("Slab.assert_slabref({}, {:?})", slab_id, presence );
 
+        if slab_id == self.id {
+            return self.my_ref.clone();
+            // don't even look it up if it's me.
+            // We must not allow any third party to edit the peering.
+            // Also, my ref won't appeara in the list of peer_refs, because it's not a peer
+        }
+
         let maybe_slabref = {
             // Instead of having to scope our read lock, and getting a write lock later
             // should we be using a single write lock for the full function scope?
-            if let Some(slabref) = self.peer_refs.read().unwrap().iter().find(|r| r.0.slab_id == slab_id ){
+            if let Some(slabref) = self.peer_refs.read().expect("peer_refs.read()").iter().find(|r| r.0.slab_id == slab_id ){
                 Some(slabref.clone())
             }else{
                 None
@@ -210,41 +217,48 @@ impl Slab {
         if let Some(s) = maybe_slabref {
             slabref = s;
         }else{
-            assert!(slab_id != self.id, "sanity error. Tried to register same id slab");
-
             let inner = SlabRefInner {
                 slab_id:        slab_id,
                 owning_slab_id: self.id, // for assertions only?
-                presence:       RwLock::new(presence.to_vec()),
+                presence:       RwLock::new(Vec::new()),
                 tx:             Mutex::new(Transmitter::new_blackhole()),
                 return_address: RwLock::new(TransportAddress::Blackhole),
             };
 
             slabref = SlabRef(Arc::new(inner));
-            self.peer_refs.write().unwrap().push(slabref.clone());
+            self.peer_refs.write().expect("peer_refs.write()").push(slabref.clone());
         }
 
         if slab_id == slabref.owning_slab_id {
             return slabref; // no funny business. You don't get to tell me how to reach me
         }
-println!("Slab.assert_slabref({}, {:?}) A", slab_id, presence );
+
         for p in presence.iter(){
-println!("Slab.assert_slabref({}, {:?}) B", slab_id, presence );
             assert!(slab_id == p.slab_id, "presence slab_id does not match the provided slab_id");
 
-            let args = TransmitterArgs::Remote( &slab_id, &p.address );
+            let mut _maybe_slab = None;
+
+            let args = if p.address.is_local() {
+                _maybe_slab = self.net.get_slab(p.slab_id);
+
+                if let Some(ref slab) = _maybe_slab {
+                    TransmitterArgs::Local(slab)
+                }else{
+                    continue;
+                }
+            }else{
+                TransmitterArgs::Remote( &p.slab_id, &p.address )
+            };
              // Returns true if this presence is new to the slabref
              // False if we've seen this presence already
 
-     println!("Slab.assert_slabref C {:?} + {:?} ", &*slabref.presence.read().unwrap(), presence );
             if slabref.apply_presence(p) {
-
-        println!("MEOW");
+                println!("LOOK {:?}", &args );
                 let new_trans = self.net.get_transmitter( &args ).expect("assert_slabref net.get_transmitter");
                 let return_address = self.net.get_return_address( &p.address ).expect("return address not found");
 
-                *slabref.0.tx.lock().unwrap() = new_trans;
-                *slabref.0.return_address.write().unwrap() = return_address;
+                *slabref.0.tx.lock().expect("tx.lock()") = new_trans;
+                *slabref.0.return_address.write().expect("return_address write lock") = return_address;
             }
         }
 

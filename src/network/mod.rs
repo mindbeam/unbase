@@ -233,8 +233,9 @@ impl Network {
     ///       do we just take any system seed that is sent to us when unseeded?
     ///       Probably good enough for Alpha, but obviously not good enough for Beta
     pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &MemoRefHead, resident_slabref: &SlabRef ) -> bool {
-        match *self.root_index_seed.read().unwrap() {
-            Some(_) => {
+
+        {
+            if let Some(_) = *self.root_index_seed.read().unwrap() {
                 // TODO: scrutinize the received root_index_seed to see if our existing seed descends it, or it descends ours
                 //       if neither is the case ( apply currently allows this ) then reject the root_index_seed and return false
                 //       this is use to determine if the SlabPresence should be blackholed or not
@@ -246,13 +247,13 @@ impl Network {
                 //                 it is imperative that all memorefs in the root_index_seed reside on the same local slabref
                 //                 so, it is important to undertake the necessary dilligence to clone them to that slab
 
-                true // be lenient for now. Not ok for Alpha
-            }
-            None => {
-                *self.root_index_seed.write().unwrap() = Some((root_index_seed.clone(),resident_slabref.clone()));
-                true
+                return true // be lenient for now. Not ok for Alpha
             }
         }
+
+        *self.root_index_seed.write().unwrap() = Some((root_index_seed.clone(),resident_slabref.clone()));
+        true
+
     }
 }
 

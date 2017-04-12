@@ -85,23 +85,12 @@ impl<'a> Visitor for PacketSeed<'a> {
        let origin_slabref = dest_slab.slabref_from_presence(&from_presence).expect("slabref from presence");
 
        // no need to return the memo here, as it's added to the slab
-       let mut peers = match visitor.visit_seed(VecSeed(MemoPeerSeed{ dest_slab: &dest_slab }))? {
+       let peers = match visitor.visit_seed(VecSeed(MemoPeerSeed{ dest_slab: &dest_slab }))? {
            Some(p) => p,
            None    => {
                return Err(DeError::invalid_length(2, &self));
            }
        };
-
-       // HACK
-       let has_memo = true;
-       peers.push(MemoPeer{
-           slabref: origin_slabref.clone(),
-           status: if has_memo {
-               MemoPeeringStatus::Resident
-           } else {
-               MemoPeeringStatus::Participating
-           }
-       });
 
        // no need to return the memo here, as it's added to the slab
        if let None = visitor.visit_seed( MemoSeed {

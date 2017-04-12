@@ -55,6 +55,7 @@ impl MemoRef {
         acted
     }
     pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, maybe_dest_slab_id: Option<SlabId>) -> MemoPeerList {
+        println!("MemoRef({}).get_peerlist_for_peer({:?},{:?})", self.id, my_ref, maybe_dest_slab_id);
         let mut list : Vec<MemoPeer> = Vec::new();
 
         list.push(MemoPeer{

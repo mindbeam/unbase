@@ -52,11 +52,9 @@ impl SlabRef{
         self.return_address.read().unwrap().clone()
     }
     pub fn apply_presence ( &self, presence: &SlabPresence ) -> bool {
-        if self.slab_id == self.owning_slab_id{
-            println!("WOOF {}", self.slab_id );
+        if self.slab_id == self.owning_slab_id{        println!("MARK P2" );
             return false; // the slab manages presence for its self-ref separately
         }
-
         let mut list = self.presence.write().unwrap();
         for p in list.iter_mut(){
             if p == presence {
@@ -65,7 +63,6 @@ impl SlabRef{
             }
         }
         list.push(presence.clone());
-
         return true // We did a thing
     }
     pub fn get_presence_for_remote(&self, return_address: &TransportAddress) -> Vec<SlabPresence> {

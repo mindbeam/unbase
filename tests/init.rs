@@ -73,20 +73,14 @@ fn init_udp() {
             let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
             net1.add_transport( Box::new(udp1.clone()) );
             let slab_a = unbase::Slab::new(&net1);
-            println!("MARK 1.0");
             thread::sleep( time::Duration::from_millis(150) );
-            println!("MARK 1.1");
             assert_eq!( slab_a.peer_slab_count(), 1 );
-            println!("MARK 1.2");
         }
-        println!("MARK 1.2");
 
         // my local slab should have dropped
         assert_eq!( net1.get_all_local_slabs().len(), 0 );
 
-        println!("MARK 1.3");
     }
-    println!("MARK 1.4");
 
     });
 
@@ -104,26 +98,18 @@ fn init_udp() {
                 let slab_b = unbase::Slab::new(&net2);
 
                 udp2.seed_address_from_string( "127.0.0.1:12345".to_string() );
-                thread::sleep( time::Duration::from_millis(500) );
+                thread::sleep( time::Duration::from_millis(50) );
 
-                println!("MARK 3.0");
                 assert_eq!( slab_b.peer_slab_count(), 1 );
-                println!("MARK 3.1");
             }
-            println!("MARK 4");
 
             assert_eq!( net2.get_all_local_slabs().len(), 0 );
-            println!("MARK 5");
         }
-        println!("MARK 6");
 
     });
 
-    println!("MARK 7");
     t1.join().expect("thread1.join");
-    println!("MARK 8");
     t2.join().expect("thread2.join");
-    println!("MARK 9");
 }
 
 #[test]

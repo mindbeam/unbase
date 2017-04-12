@@ -274,6 +274,7 @@ pub struct TransmitterUDP{
 impl DynamicDispatchTransmitter for TransmitterUDP {
     fn send (&self, from: &SlabRef, memoref: MemoRef) {
         println!("TransmitterUDP.send({:?},{:?})", from, memoref);
+
         if let Some(memo) = memoref.get_memo_if_resident(){
             let packet = Packet {
                 to_slab_id: self.slab_id,
@@ -283,7 +284,7 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
             };
 
 
-            //println!("UDP QUEUE FOR SEND {:?}", &packet);
+            println!("UDP QUEUE FOR SEND {:?}", &packet);
 
             //use util::serde::SerializeHelper;
             //let helper = SerializeHelper{ transmitter: self };

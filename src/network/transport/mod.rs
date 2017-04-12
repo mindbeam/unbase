@@ -63,4 +63,11 @@ impl TransportAddress {
             _            => "UNKNOWN".to_string(),
         }
     }
+    pub fn is_local (&self) -> bool {
+        match self {
+            &TransportAddress::Local      => true,
+            &TransportAddress::Simulator  => true,
+            _                             => false
+        }
+    }
 }
