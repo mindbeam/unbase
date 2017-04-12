@@ -77,7 +77,7 @@ impl TransportUDP {
 
             //let mut buf = [0; 65536];
             while let Ok((to_address, packet)) = rx_channel.recv() {
-                //println!("UDP SEND {:?}", &packet);
+                println!("UDP SEND {:?}", &packet);
                 let b = serde_json::to_vec( &SerializeWrapper(&packet, &helper) ).expect("serde_json::to_vec");
 
                 //HACK: we're trusting that each memo is smaller than 64k
@@ -138,7 +138,7 @@ impl TransportUDP {
                 peerlist: memoref.get_peerlist_for_peer(from_slabref, None)
             };
 
-            println!("TransportUDP.send({:?})", packet );
+            //println!("TransportUDP.send({:?})", packet );
 
             if let Some(ref tx_channel) = self.shared.lock().unwrap().tx_channel {
                 if let Some(ref tx_channel) = *(tx_channel.lock().unwrap()) {
@@ -193,7 +193,7 @@ impl Transport for TransportUDP {
 
                     //TODO: create a protocol encode/decode module and abstract away the serde stuff
                     //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
-                    //println!("DESERIALIZE {}", String::from_utf8(buf.to_vec()).unwrap());
+                    println!("DESERIALIZE {}", String::from_utf8(buf.to_vec()).unwrap());
                     let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
 
                     let packet_seed : PacketSeed = PacketSeed{
@@ -273,7 +273,7 @@ pub struct TransmitterUDP{
 }
 impl DynamicDispatchTransmitter for TransmitterUDP {
     fn send (&self, from: &SlabRef, memoref: MemoRef) {
-
+        println!("TransmitterUDP.send({:?},{:?})", from, memoref);
         if let Some(memo) = memoref.get_memo_if_resident(){
             let packet = Packet {
                 to_slab_id: self.slab_id,

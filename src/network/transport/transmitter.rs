@@ -39,18 +39,25 @@ impl Transmitter {
     }
     /// Send a Memo over to the target of this transmitter
     pub fn send(&self, from: &SlabRef, memoref: MemoRef) {
+        println!("Transmitter.send({:?}, {:?})", from, memoref );
+
         use self::TransmitterInternal::*;
         match self.internal {
             Local(ref tx) => {
+                println!("Transmitter.send({:?}, {:?}) Local", from, memoref );
                 //println!("CHANNEL SEND from {}, {:?}", from.slab_id, memo);
                 // TODO - stop assuming that this is resident on the sending slab just because we're sending it
                 // TODO - lose the stupid lock on the transmitter
                 tx.lock().unwrap().send((from.clone(),memoref)).expect("local transmitter send")
             }
             Dynamic(ref tx) => {
+
+                println!("Transmitter.send({:?}, {:?}) Dynamic", from, memoref );
                 tx.send(from,memoref)
             }
-            Blackhole => {}
+            Blackhole => {
+                println!("Transmitter.send({:?}, {:?}) Blackhole", from, memoref );
+            }
         }
     }
 }

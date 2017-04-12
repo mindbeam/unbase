@@ -52,18 +52,41 @@ impl SlabRef{
         self.return_address.read().unwrap().clone()
     }
     pub fn apply_presence ( &self, presence: &SlabPresence ) -> bool {
+        if self.slab_id == self.owning_slab_id{
+            println!("WOOF {}", self.slab_id );
+            return false; // the slab manages presence for its self-ref separately
+        }
+
         let mut list = self.presence.write().unwrap();
         for p in list.iter_mut(){
             if p == presence {
                 mem::replace(p,presence.clone()); // Update anticipated liftime
-                return false;
+                return false; // no real change here
             }
         }
         list.push(presence.clone());
-        return true
+
+        return true // We did a thing
     }
-    pub fn get_presence(&self) -> Vec<SlabPresence> {
-        self.presence.read().unwrap().clone()
+    pub fn get_presence_for_remote(&self, return_address: &TransportAddress) -> Vec<SlabPresence> {
+
+        // If the slabref we are serializing is local, then construct a presence that refers to us
+        if self.slab_id == self.owning_slab_id {
+            // TODO: This is wrong. We should be sending presence for more than just self-refs.
+            //       I feel like we should be doing it for all local slabs which are reachabe through our transport?
+
+            // TODO: This needs much more thought. My gut says that we shouldn't be taking in a transport address here,
+            //       but should instead be managing our own presence.
+            let my_presence = SlabPresence{
+                slab_id: self.slab_id,
+                address: return_address.clone(),
+                lifetime: SlabAnticipatedLifetime::Unknown
+            };
+
+            vec![my_presence]
+        }else{
+            self.presence.read().unwrap().clone()
+        }
     }
     pub fn compare(&self, other: &SlabRef) -> bool {
         // When comparing equality, we can skip the transmitter

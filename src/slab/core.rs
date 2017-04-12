@@ -23,6 +23,7 @@ impl Slab {
         memoref
     }
     pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){
+        println!("Slab({}).reconstitute_memo({})", self.id, memo_id );
         // TODO: find a way to merge this with assert_memoref to avoid doing duplicative work with regard to peerlist application
 
         let memo = Memo::new(MemoInner {
@@ -32,7 +33,6 @@ impl Slab {
             parents:        parents,
             body:           body
         });
-
 
         let (memoref, had_memoref) = self.assert_memoref(memo.id, memo.subject_id, peerlist.clone(), Some(memo.clone()) );
 
@@ -47,6 +47,7 @@ impl Slab {
         self.consider_emit_memo(&memoref);
 
         if let Some(ref memo) = memoref.get_memo_if_resident() {
+
             self.check_memo_waiters(memo);
             self.handle_memo_from_other_slab(memo, &memoref, &origin_slabref);
             self.do_peering(&memoref, &origin_slabref);
@@ -193,6 +194,7 @@ impl Slab {
         (memoref, had_memoref)
     }
     pub fn assert_slabref(&self, slab_id: SlabId, presence: &[SlabPresence] ) -> SlabRef {
+        println!("Slab.assert_slabref({}, {:?})", slab_id, presence );
 
         let maybe_slabref = {
             // Instead of having to scope our read lock, and getting a write lock later
@@ -208,6 +210,8 @@ impl Slab {
         if let Some(s) = maybe_slabref {
             slabref = s;
         }else{
+            assert!(slab_id != self.id, "sanity error. Tried to register same id slab");
+
             let inner = SlabRefInner {
                 slab_id:        slab_id,
                 owning_slab_id: self.id, // for assertions only?
@@ -220,12 +224,22 @@ impl Slab {
             self.peer_refs.write().unwrap().push(slabref.clone());
         }
 
+        if slab_id == slabref.owning_slab_id {
+            return slabref; // no funny business. You don't get to tell me how to reach me
+        }
+println!("Slab.assert_slabref({}, {:?}) A", slab_id, presence );
         for p in presence.iter(){
+println!("Slab.assert_slabref({}, {:?}) B", slab_id, presence );
             assert!(slab_id == p.slab_id, "presence slab_id does not match the provided slab_id");
+
             let args = TransmitterArgs::Remote( &slab_id, &p.address );
              // Returns true if this presence is new to the slabref
              // False if we've seen this presence already
+
+     println!("Slab.assert_slabref C {:?} + {:?} ", &*slabref.presence.read().unwrap(), presence );
             if slabref.apply_presence(p) {
+
+        println!("MEOW");
                 let new_trans = self.net.get_transmitter( &args ).expect("assert_slabref net.get_transmitter");
                 let return_address = self.net.get_return_address( &p.address ).expect("return address not found");
 

@@ -104,7 +104,7 @@ fn init_udp() {
                 let slab_b = unbase::Slab::new(&net2);
 
                 udp2.seed_address_from_string( "127.0.0.1:12345".to_string() );
-                thread::sleep( time::Duration::from_millis(50) );
+                thread::sleep( time::Duration::from_millis(500) );
 
                 println!("MARK 3.0");
                 assert_eq!( slab_b.peer_slab_count(), 1 );

@@ -38,14 +38,14 @@ impl StatefulSerialize for SlabPresence {
 */
 
 impl StatefulSerialize for SlabRef {
-    fn serialize<S>(&self, serializer: S, _helper: &SerializeHelper) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         // TODO: Should actually be a sequence of slab presences
         // to allow for slabs with multiple transports
         let mut seq = serializer.serialize_seq(Some(2))?;
         seq.serialize_element( &self.slab_id )?;
-        seq.serialize_element( &*(self.presence.read().unwrap()) )?;
+        seq.serialize_element( &self.get_presence_for_remote(helper.return_address) )?;
         //seq.serialize_element( &SerializeWrapper(&*(self.presence.read().unwrap()),helper) )?;
         seq.end()
     }
@@ -68,7 +68,7 @@ impl<'a> Visitor for SlabRefSeed<'a> {
     type Value = SlabRef;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-       formatter.write_str("struct SlabRef")
+       formatter.write_str("SlabRef")
     }
 
     fn visit_seq<V> (self, mut visitor: V) -> Result<SlabRef, V::Error>
