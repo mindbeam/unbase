@@ -2,7 +2,7 @@ extern crate unbase;
 use unbase::subject::Subject;
 use unbase::error::*;
 
-g#[test]
+#[test]
 fn basic_eventual() {
 
     let net = unbase::Network::create_new_system();
