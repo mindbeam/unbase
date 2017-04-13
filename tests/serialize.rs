@@ -4,14 +4,16 @@ extern crate serde;
 extern crate serde_json;
 
 use serde::de::*;
+/*
 use unbase::subject::Subject;
 use unbase::memo::{Memo,PeeringStatus};
 use unbase::slab::Slab;
 use unbase::network::{Network,Packet};
 use unbase::network::packet::serde::PacketSeed;
+*/
 //use serde_json;
 
-
+/*
 #[test]
 fn serialize() {
 
@@ -60,3 +62,4 @@ fn check_roundtrip(record: &Subject, net: &Network, slab: &Slab){
 
     assert_eq!(*memo, decoded_memo);
 }
+*/

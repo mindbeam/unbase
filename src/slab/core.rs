@@ -7,7 +7,7 @@ impl Slab {
         counters.last_memo_id += 1;
         let memo_id = (self.id as u64).rotate_left(32) | counters.last_memo_id as u64;
 
-        println!("# Memo.new(id: {},subject_id: {:?}, parents: {:?}, body: {:?})", memo_id, subject_id, parents.memo_ids(), body );
+        println!("# Slab({}).new_memo(id: {},subject_id: {:?}, parents: {:?}, body: {:?})", self.id, memo_id, subject_id, parents.memo_ids(), body );
 
         let memo = Memo::new(MemoInner {
             id:    memo_id,
@@ -43,6 +43,8 @@ impl Slab {
                 counters.memos_redundantly_received += 1;
             }
         }
+        println!("Slab({}).reconstitute_memo({}) B -> {:?}", self.id, memo_id, memoref );
+
 
         self.consider_emit_memo(&memoref);
 
@@ -253,7 +255,6 @@ impl Slab {
              // False if we've seen this presence already
 
             if slabref.apply_presence(p) {
-                println!("LOOK {:?}", &args );
                 let new_trans = self.net.get_transmitter( &args ).expect("assert_slabref net.get_transmitter");
                 let return_address = self.net.get_return_address( &p.address ).expect("return address not found");
 

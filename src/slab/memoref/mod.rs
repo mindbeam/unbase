@@ -192,9 +192,11 @@ impl MemoRef {
     pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, include_memo: bool ) -> Self{
         assert!(from_slabref.owning_slab_id == to_slab.id,"MemoRef clone_for_slab owning slab should be identical");
         assert!(from_slabref.slab_id != to_slab.id,       "MemoRef clone_for_slab dest slab should not be identical");
+        println!("Slab({}).Memoref.clone_for_slab({})", self.owning_slab_id, self.id);
 
-        // HACK - do this in one step
-        let peerlist = self.get_peerlist_for_peer(from_slabref, Some(to_slab.id)).clone_for_slab( to_slab );
+        // Because our from_slabref is already owned by the destination slab, there is no need to do peerlist.clone_for_slab
+        let peerlist = self.get_peerlist_for_peer(from_slabref, Some(to_slab.id));
+        //println!("Slab({}).Memoref.clone_for_slab({}) C -> {:?}", self.owning_slab_id, self.id, peerlist);
 
         // TODO - reduce the redundant work here. We're basically asserting the memoref twice
         let memoref = to_slab.assert_memoref(
