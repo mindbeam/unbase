@@ -38,7 +38,7 @@ impl Subject {
 
         let slab = &context.slab;
         let subject_id = slab.generate_subject_id();
-        println!("# Subject({}).new()",subject_id);
+        //println!("# Subject({}).new()",subject_id);
 
         let memoref = slab.new_memo_basic_noparent(
                 Some(subject_id),
@@ -64,9 +64,10 @@ impl Subject {
         Ok(subject)
     }
     pub fn reconstitute (contextref: ContextRef, head: MemoRefHead) -> Subject {
-        println!("Subject.reconstitute({:?})", head);
+        //println!("Subject.reconstitute({:?})", head);
         let context = contextref.get_context();
-        let subject_id = head.first_subject_id( &context.slab ).unwrap();
+
+        let subject_id = head.first_subject_id().unwrap();
 
         let subject = Subject(Arc::new(SubjectInner{
             id: subject_id,
@@ -88,12 +89,12 @@ impl Subject {
         Self::new( context, vals, false )
     }
     pub fn get_value ( &self, key: &str ) -> Option<String> {
-        println!("# Subject({}).get_value({})",self.id,key);
+        //println!("# Subject({}).get_value({})",self.id,key);
 
         self.head.read().unwrap().project_value(&self.contextref.get_context(), key)
     }
     pub fn get_relation ( &self, key: RelationSlotId ) -> Result<Subject, RetrieveError> {
-        println!("# Subject({}).get_relation({})",self.id,key);
+        //println!("# Subject({}).get_relation({})",self.id,key);
 
         let context = self.contextref.get_context();
         match self.head.read().unwrap().project_relation(&context, key) {
@@ -122,7 +123,7 @@ impl Subject {
         true
     }
     pub fn set_relation (&self, key: RelationSlotId, relation: &Self) {
-        println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
+        //println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
         let mut memoref_map : HashMap<RelationSlotId, (SubjectId,MemoRefHead)> = HashMap::new();
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
@@ -142,19 +143,19 @@ impl Subject {
     }
     // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
     pub fn apply_head (&self, new: &MemoRefHead){
-        println!("# Subject({}).apply_head({:?})", &self.id, new.memo_ids() );
+        //println!("# Subject({}).apply_head({:?})", &self.id, new.memo_ids() );
 
         let context = self.contextref.get_context();
         let slab = context.slab.clone(); // TODO: find a way to get rid of this clone
 
-        println!("# Record({}) calling apply_memoref", self.id);
+        //println!("# Record({}) calling apply_memoref", self.id);
         self.head.write().unwrap().apply(&new, &slab);
     }
     pub fn get_head (&self) -> MemoRefHead {
         self.head.read().unwrap().clone()
     }
     pub fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
-        println!("# Subject({}).get_all_memo_ids()",self.id);
+        //println!("# Subject({}).get_all_memo_ids()",self.id);
         let context = self.contextref.get_context();
         let slab = context.slab.clone(); // TODO: find a way to get rid of this clone
         self.head.read().unwrap().causal_memo_iter( &slab ).map(|m| m.id).collect()
@@ -174,7 +175,7 @@ impl Subject {
 
 impl Drop for SubjectInner {
     fn drop (&mut self) {
-        println!("# Subject({}).drop", &self.id);
+        //println!("# Subject({}).drop", &self.id);
         match self.contextref {
             ContextRef::Strong(ref c) => {
                 c.unsubscribe_subject(self.id);

@@ -35,7 +35,7 @@ impl MemoRefHead {
         MemoRefHead( vec![memoref] )
     }
     pub fn apply_memoref(&mut self, new: &MemoRef, slab: &Slab ) -> bool {
-        println!("# MemoRefHead({:?}).apply_memoref({})", self.memo_ids(), &new.id);
+        //println!("# MemoRefHead({:?}).apply_memoref({})", self.memo_ids(), &new.id);
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
         // If so, any memorefs that it descends must be removed
@@ -101,9 +101,9 @@ impl MemoRefHead {
         // This memoref was applied if it was concurrent, or descends one or more previous memos
 
         if applied {
-            println!("# \t\\ Was applied - {:?}", self.memo_ids());
+            //println!("# \t\\ Was applied - {:?}", self.memo_ids());
         }else{
-            println!("# \t\\ NOT applied - {:?}", self.memo_ids());
+            //println!("# \t\\ NOT applied - {:?}", self.memo_ids());
         }
 
         applied
@@ -121,10 +121,10 @@ impl MemoRefHead {
     pub fn memo_ids (&self) -> Vec<MemoId> {
         self.0.iter().map(|m| m.id).collect()
     }
-    pub fn first_subject_id (&self, slab: &Slab) -> Option<SubjectId> {
+    pub fn first_subject_id (&self) -> Option<SubjectId> {
         if let Some(memoref) = self.iter().next() {
             // TODO: Could stand to be much more robust here
-            memoref.get_memo(slab).unwrap().subject_id
+            memoref.subject_id
         }else{
             None
         }
@@ -195,7 +195,7 @@ head ^    \- F -> D -/
 */
 impl CausalMemoIter {
     pub fn from_head ( head: &MemoRefHead, slab: &Slab) -> Self {
-        println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
+        //println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
 
         CausalMemoIter {
             queue: head.to_vecdeque(),

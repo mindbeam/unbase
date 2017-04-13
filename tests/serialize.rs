@@ -3,8 +3,10 @@ extern crate unbase;
 extern crate serde;
 extern crate serde_json;
 
-use serde::de::*;
 /*
+
+use serde::de::*;
+
 use unbase::subject::Subject;
 use unbase::memo::{Memo,PeeringStatus};
 use unbase::slab::Slab;

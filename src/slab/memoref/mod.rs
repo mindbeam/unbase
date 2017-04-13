@@ -48,6 +48,11 @@ impl MemoRef {
         let mut peerlist = &mut *self.peerlist.write().unwrap();
         let mut acted = false;
         for apply_peer in apply_peerlist.0.clone() {
+            if apply_peer.slabref.slab_id == self.owning_slab_id {
+                println!("WARNING - not allowed to apply self-peer");
+                //panic!("memoref.apply_peers is not allowed to apply for self-peers");
+                continue;
+            }
             if peerlist.apply_peer(apply_peer) {
                 acted = true;
             }
@@ -55,7 +60,7 @@ impl MemoRef {
         acted
     }
     pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, maybe_dest_slab_id: Option<SlabId>) -> MemoPeerList {
-        println!("MemoRef({}).get_peerlist_for_peer({:?},{:?})", self.id, my_ref, maybe_dest_slab_id);
+        //println!("MemoRef({}).get_peerlist_for_peer({:?},{:?})", self.id, my_ref, maybe_dest_slab_id);
         let mut list : Vec<MemoPeer> = Vec::new();
 
         list.push(MemoPeer{
@@ -109,28 +114,24 @@ impl MemoRef {
                 return Ok(memo.clone());
             }
 
-                println!("MARK X");
             if slab.request_memo(self) > 0 {
                 channel = slab.memo_wait_channel(self.id);
             }else{
-                println!("MARK Y");
                 return Err(RetrieveError::NotFound)
             }
         }
-
-            println!("MARK Z");
 
         // By sending the memo itself through the channel
         // we guarantee that there's no funny business with request / remotize timing
 
 
         use std::time;
-        let timeout = time::Duration::from_millis(2000);
+        let timeout = time::Duration::from_millis(1000);
 
         for _ in 0..3 {
             match channel.recv_timeout(timeout) {
                 Ok(memo)       =>{
-                    println!("Slab({}).MemoRef({}).get_memo() received memo: {}", self.owning_slab_id, self.id, memo.id );
+                    //println!("Slab({}).MemoRef({}).get_memo() received memo: {}", self.owning_slab_id, self.id, memo.id );
                     return Ok(memo)
                 }
                 Err(rcv_error) => {
@@ -163,36 +164,49 @@ impl MemoRef {
                     return true }
             }
             Err(_) => {
-                panic!("Unable to retrieve my memo")
+                // TODO: convert this into a Result<>
+                panic!("Unable to retrieve memo")
             }
         };
 
         false
     }
-    pub fn update_peer (&self, slabref: &SlabRef, status: MemoPeeringStatus){
+    pub fn update_peer (&self, slabref: &SlabRef, status: MemoPeeringStatus) -> bool {
 
-        let mut found : bool = false;
+        let mut acted = false;
+        let mut found = false;
         let ref mut list = self.peerlist.write().unwrap().0;
         for peer in list.iter_mut() {
+            if peer.slabref.slab_id == self.owning_slab_id {
+                println!("WARNING - not allowed to apply self-peer");
+                //panic!("memoref.update_peers is not allowed to apply for self-peers");
+                continue;
+            }
             if peer.slabref.slab_id == slabref.slab_id {
                 found = true;
-                peer.status = status.clone();
+                if peer.status != status {
+                    acted = true;
+                    peer.status = status.clone();
+                }
                 // TODO remove the peer entirely for MemoPeeringStatus::NonParticipating
                 // TODO prune excess peers - Should keep this list O(10) peers
             }
         }
 
         if !found {
+            acted = true;
             list.push(MemoPeer{
                 slabref: slabref.clone(),
                 status: status.clone()
             })
         }
+
+        acted
     }
     pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, include_memo: bool ) -> Self{
         assert!(from_slabref.owning_slab_id == to_slab.id,"MemoRef clone_for_slab owning slab should be identical");
         assert!(from_slabref.slab_id != to_slab.id,       "MemoRef clone_for_slab dest slab should not be identical");
-        println!("Slab({}).Memoref.clone_for_slab({})", self.owning_slab_id, self.id);
+        //println!("Slab({}).Memoref.clone_for_slab({})", self.owning_slab_id, self.id);
 
         // Because our from_slabref is already owned by the destination slab, there is no need to do peerlist.clone_for_slab
         let peerlist = self.get_peerlist_for_peer(from_slabref, Some(to_slab.id));
@@ -213,7 +227,7 @@ impl MemoRef {
         ).0;
 
 
-        println!("MemoRef.clone_for_slab({},{}) peerlist: {:?} -> MemoRef({:?})", from_slabref.slab_id, to_slab.id, &peerlist, &memoref );
+        //println!("MemoRef.clone_for_slab({},{}) peerlist: {:?} -> MemoRef({:?})", from_slabref.slab_id, to_slab.id, &peerlist, &memoref );
 
         memoref
     }
@@ -244,6 +258,6 @@ impl PartialEq for MemoRef {
 
 impl Drop for MemoRefInner{
     fn drop(&mut self) {
-        println!("# MemoRefInner({}).drop", self.id);
+        //println!("# MemoRefInner({}).drop", self.id);
     }
 }

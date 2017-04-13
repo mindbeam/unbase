@@ -9,7 +9,6 @@ impl StatefulSerialize for MemoPeerList {
 
         let mut seq = serializer.serialize_seq(None)?;
         for memopeer in self.iter() {
-
             // don't tell the receiving slab that they have it.
             // They know they have it
             if &memopeer.slabref.slab_id != helper.dest_slab_id {

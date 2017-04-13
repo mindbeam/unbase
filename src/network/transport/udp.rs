@@ -70,19 +70,23 @@ impl TransportUDP {
 
         let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
 
-            let helper = SerializeHelper {
-                return_address: &TransportAddress::UDP(inbound_address),
-                dest_slab_id:   &0,
-            };
-
+            let return_address = TransportAddress::UDP(inbound_address);
             //let mut buf = [0; 65536];
             while let Ok((to_address, packet)) = rx_channel.recv() {
-                println!("UDP SEND {:?}", &packet);
+
+                let helper = SerializeHelper {
+                    return_address: &return_address,
+                    dest_slab_id:   &packet.to_slab_id,
+                };
+
+                // KEEP THIS - This is the most useful memo trace
+                //println!("UDP SEND FROM {} TO {} -> {}: {:?} {:?} {:?}", &packet.from_slab_id, &packet.to_slab_id, &packet.memo.id, &packet.memo.body, &packet.memo.parents.memo_ids(), &packet.peerlist.slab_ids() );
                 let b = serde_json::to_vec( &SerializeWrapper(&packet, &helper) ).expect("serde_json::to_vec");
+                //println!("UDP SEND {}", String::from_utf8(b.clone()).unwrap());
 
                 //HACK: we're trusting that each memo is smaller than 64k
                 socket.send_to(&b, &to_address.address).expect("Failed to send");
-                println!("SENT UDP PACKET ({}) {}", &to_address.address, &String::from_utf8(b).unwrap());
+                //println!("SENT UDP PACKET ({}) {}", &to_address.address, &String::from_utf8(b).unwrap());
             }
     });
 
@@ -193,7 +197,7 @@ impl Transport for TransportUDP {
 
                     //TODO: create a protocol encode/decode module and abstract away the serde stuff
                     //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
-                    println!("DESERIALIZE {}", String::from_utf8(buf.to_vec()).unwrap());
+                    //println!("DESERIALIZE          {}", String::from_utf8(buf.to_vec()).unwrap());
                     let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
 
                     let packet_seed : PacketSeed = PacketSeed{
@@ -209,7 +213,7 @@ impl Transport for TransportUDP {
                             println!("DESERIALIZE ERROR {}", e);
                         }
                     }
-
+                    //println!("DESERIALIZE COMPLETE {}", String::from_utf8(buf.to_vec()).unwrap());
                 }
             };
         });
@@ -240,9 +244,7 @@ impl Transport for TransportUDP {
 
 impl Drop for TransportUDPInternal{
     fn drop(&mut self) {
-        println!("# TransportUDPInternal().drop");
-
-        println!("# TransportUDPInternal.drop A");
+        //println!("# TransportUDPInternal().drop");
 
         // BUG NOTE: having to use a pretty extraordinary workaround here
         //           this horoughly horrible Option<Arc<Mutex<Option<>>> regime
@@ -252,14 +254,10 @@ impl Drop for TransportUDPInternal{
             tx.lock().unwrap().take();
         }
 
-        println!("# TransportUDPInternal.drop B");
-
         self.tx_thread.take().unwrap().join().unwrap();
-        println!("# TransportUDPInternal.drop C");
 
         //TODO: implement an atomic boolean and a timeout to close the receiver thread in an orderly fashion
         //self.rx_thread.take().unwrap().join().unwrap();
-        println!("# TransportUDPInternal.drop D");
 
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
     }
@@ -273,7 +271,7 @@ pub struct TransmitterUDP{
 }
 impl DynamicDispatchTransmitter for TransmitterUDP {
     fn send (&self, from: &SlabRef, memoref: MemoRef) {
-        println!("TransmitterUDP.send({:?},{:?})", from, memoref);
+        //println!("TransmitterUDP.send({:?},{:?})", from, memoref);
 
         if let Some(memo) = memoref.get_memo_if_resident(){
             let packet = Packet {
@@ -283,8 +281,7 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
                 peerlist:  memoref.get_peerlist_for_peer(from, Some(self.slab_id)),
             };
 
-
-            println!("UDP QUEUE FOR SEND {:?}", &packet);
+            //println!("UDP QUEUE FOR SEND {:?}", &packet);
 
             //use util::serde::SerializeHelper;
             //let helper = SerializeHelper{ transmitter: self };
@@ -300,6 +297,6 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
 }
 impl Drop for TransmitterUDP{
     fn drop(&mut self) {
-        println!("# TransmitterUDP.drop");
+        //println!("# TransmitterUDP.drop");
     }
 }

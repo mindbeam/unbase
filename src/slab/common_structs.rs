@@ -52,6 +52,9 @@ impl MemoPeerList {
             }
         }).collect())
     }
+    pub fn slab_ids (&self) -> Vec<SlabId> {
+        self.0.iter().map(|p| p.slabref.slab_id ).collect()
+    }
     pub fn apply_peer(&mut self, peer: MemoPeer) -> bool {
         //assert!(self.owning_slab_id == peer.slabref.owning_slab_id, "apply_peer for dissimilar owning_slab_id peer" );
 

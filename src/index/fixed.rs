@@ -28,7 +28,7 @@ impl IndexFixed {
         }
     }
     pub fn insert <'a> (&self, key: u64, subject: &Subject) {
-        println!("IndexFixed.insert({}, {:?})", key, subject );
+        //println!("IndexFixed.insert({}, {:?})", key, subject );
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
         let node = &self.root;
@@ -49,11 +49,11 @@ impl IndexFixed {
         let x = SUBJECT_MAX_RELATIONS.pow(exponent as u32);
         let y = ((key / (x as u64)) % SUBJECT_MAX_RELATIONS as u64) as RelationSlotId;
 
-        println!("Tier {}, {}, {}", tier, x, y );
+        //println!("Tier {}, {}, {}", tier, x, y );
 
         if exponent == 0 {
             // BUG: move this clause up
-            println!("]]] end of the line");
+            //println!("]]] end of the line");
             node.set_relation(y as RelationSlotId,&subject);
         }else{
             match node.get_relation(y) {

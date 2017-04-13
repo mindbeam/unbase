@@ -10,8 +10,10 @@ impl Slab {
         if let Some(memo) = memoref.get_memo_if_resident() {
             let needs_peers = self.check_peering_target(&memo);
 
+            //println!("Slab({}).consider_emit_memo {} - A ({:?})", self.id, memoref.id, &*self.peer_refs.read().unwrap() );
             for peer_ref in self.peer_refs.read().unwrap().iter().filter(|x| !memoref.is_peered_with_slabref(x) ).take( needs_peers as usize ) {
-                println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", self.my_ref.0.slab_id, memo.id, peer_ref.0.slab_id );
+
+                //println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", self.id, memo.id, peer_ref.slab_id );
                 peer_ref.send( &self.my_ref, memoref );
             }
         }

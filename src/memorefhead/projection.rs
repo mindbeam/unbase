@@ -49,7 +49,7 @@ impl MemoRefHead {
         //TODO: consider creating a consolidated projection routine for most/all uses
         for memo in self.causal_memo_iter(&context.slab) {
 
-            println!("# \t\\ Considering Memo {}", memo.id );
+            //println!("# \t\\ Considering Memo {}", memo.id );
             if let Some((values, materialized)) = memo.get_values() {
                 if let Some(v) = values.get(key) {
                     return Some(v.clone());
@@ -66,7 +66,7 @@ impl MemoRefHead {
         for memo in self.causal_memo_iter( &context.slab ) {
 
             if let Some((relations,materialized)) = memo.get_relations(){
-                println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
+                //println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
                 if let Some(&(subject_id, ref head)) = relations.get(&key) {
                     // BUG: the parent->child was formed prior to the revision of the child.
                     // TODO: Should be adding the new head memo to the query context
@@ -74,13 +74,13 @@ impl MemoRefHead {
 
                     return Ok((subject_id,head.clone()));
                 }else if materialized {
-                    println!("\n# \t\\ Not Found (materialized)" );
+                    //println!("\n# \t\\ Not Found (materialized)" );
                     return Err(RetrieveError::NotFound);
                 }
             }
         }
 
-        println!("\n# \t\\ Not Found" );
+        //println!("\n# \t\\ Not Found" );
         Err(RetrieveError::NotFound)
     }
 

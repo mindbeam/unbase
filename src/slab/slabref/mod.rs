@@ -43,7 +43,7 @@ impl SlabRef{
     //pub fn new (to_slab_id: SlabId, owning_slab_id: SlabId, presence: Vec<Slab) -> SlabRef {
     //}
     pub fn send (&self, from: &SlabRef, memoref: &MemoRef ) {
-        println!("# Slab({}).SlabRef({}).send_memo({})", self.owning_slab_id, self.slab_id, memoref.id );
+        //println!("# Slab({}).SlabRef({}).send_memo({:?})", self.owning_slab_id, self.slab_id, memoref );
 
         self.tx.lock().unwrap().send(from, memoref.clone());
     }
@@ -52,7 +52,7 @@ impl SlabRef{
         self.return_address.read().unwrap().clone()
     }
     pub fn apply_presence ( &self, presence: &SlabPresence ) -> bool {
-        if self.slab_id == self.owning_slab_id{        println!("MARK P2" );
+        if self.slab_id == self.owning_slab_id{
             return false; // the slab manages presence for its self-ref separately
         }
         let mut list = self.presence.write().unwrap();
@@ -91,7 +91,9 @@ impl SlabRef{
     }
     pub fn clone_for_slab(&self, to_slab: &Slab ) -> SlabRef {
         // For now, we don't seem to care what slabref we're being cloned from, just which one we point to
-        println!("Slab({}).SlabRef({}).clone_for_slab({})", self.owning_slab_id, self.slab_id, to_slab.id );
+
+        //println!("Slab({}).SlabRef({}).clone_for_slab({})", self.owning_slab_id, self.slab_id, to_slab.id );
+
         // IF this slabref points to the destination slab, then use to_sab.my_ref
         // because we know it exists already, and we're not allowed to assert a self-ref
         if self.slab_id == to_slab.id {
@@ -117,6 +119,6 @@ impl fmt::Debug for SlabRef {
 
 impl Drop for SlabRefInner{
     fn drop(&mut self) {
-        println!("# SlabRefInner({},{}).drop",self.owning_slab_id, self.slab_id);
+        //println!("# SlabRefInner({},{}).drop",self.owning_slab_id, self.slab_id);
     }
 }

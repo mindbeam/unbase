@@ -53,9 +53,11 @@ impl StatefulSerialize for MemoBody {
                 serializer.serialize_newtype_variant("MemoBody", 1, "Relation", &SerializeWrapper(&rhm.0, helper) )
             },
             Edit(ref e) => {
-                let mut sv = serializer.serialize_struct_variant("MemoBody", 2, "Edit", 1)?;
-                sv.serialize_field("e", e )?;
-                sv.end()
+                //let mut sv = serializer.serialize_struct_variant("MemoBody", 2, "Edit", 1)?;
+                //sv.serialize_field("e", e )?;
+                //sv.end()
+                serializer.serialize_newtype_variant("MemoBody", 2, "Edit", &e )
+
             },
             FullyMaterialized{ ref r, ref v }  => {
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 3, "FullyMaterialized", 2)?;

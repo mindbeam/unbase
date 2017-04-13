@@ -1,8 +1,36 @@
 use super::*;
 
 impl Slab {
+    // NOTE: this is run inside a dedicated thread, as fetches from other slabs may be required for
+    // apply_subject_head ( which calls descends, which calls get_memo, which blocks )
+    // QUESTION: could this be managed with a marker?
+    pub fn dispatch_memoref (&self, memoref : MemoRef){
+        //println!("# \t\\ Slab({}).dispatch_memoref({:?})", self.id, &memoref );
+
+        if let Some(subject_id) = memoref.subject_id {
+
+            let maybe_sub : Option<Vec<WeakContext>> = {
+                // we want to make sure the lock is released before continuing
+                if let Some(s) = self.subject_subscriptions.read().unwrap().get( &subject_id ) {
+                    Some(s.clone());
+                }
+                None
+            };
+
+            if let Some(subscribers) = maybe_sub {;
+                for weakcontext in subscribers {
+                    if let Some(context) = weakcontext.upgrade() {
+                        context.apply_subject_head( subject_id, &memoref.to_head() );
+                    }
+                }
+            }
+
+        }
+    }
+
+    //NOTE: nothing that calls get_memo, directly or indirectly is presently allowed here (but get_memo_if_resident is ok)
     pub fn handle_memo_from_other_slab( &self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef ){
-        println!("Slab({}).handle_memo_from_other_slab({})", self.id, memo.id );
+        //println!("Slab({}).handle_memo_from_other_slab({})", self.id, memo.id );
 
         match memo.body {
             // This Memo is a peering status update for another memo
@@ -21,32 +49,33 @@ impl Slab {
                     &None => {}
                 }
 
-                println!("Slab({}).handle_memo_from_other_slab({}) E", self.id, memo.id );
-                if let Ok(mentioned_slabref) = self.slabref_from_presence( presence ) {
-                    // TODO: should we be telling the origin slabref, or the presence slabref that we're here?
-                    //       these will usually be the same, but not always
+                let mut reply = false;
+                if let &None = opt_root_index_seed {
+                    reply = true;
+                }
 
-                    println!("Slab({}).handle_memo_from_other_slab({}) F", self.id, memo.id );
-                    let my_presence_memoref = self.new_memo_basic(
-                        None,
-                        memoref.to_head(),
-                        MemoBody::SlabPresence{
-                            p: self.presence_for_origin( origin_slabref ),
-                            r: self.get_root_index_seed()
-                        }
-                    );
+                if reply {
+                    if let Ok(mentioned_slabref) = self.slabref_from_presence( presence ) {
+                        // TODO: should we be telling the origin slabref, or the presence slabref that we're here?
+                        //       these will usually be the same, but not always
 
-                    println!("Slab({}).handle_memo_from_other_slab({}) G {:?}", self.id, memo.id, origin_slabref );
+                        let my_presence_memoref = self.new_memo_basic(
+                            None,
+                            memoref.to_head(),
+                            MemoBody::SlabPresence{
+                                p: self.presence_for_origin( origin_slabref ),
+                                r: self.get_root_index_seed()
+                            }
+                        );
 
-                    origin_slabref.send( &self.my_ref, &my_presence_memoref );
-                    println!("Slab({}).handle_memo_from_other_slab({}) H", self.id, memo.id);
+                        origin_slabref.send( &self.my_ref, &my_presence_memoref );
 
-                    let _ = mentioned_slabref;
-                    // needs PartialEq
-                    //if mentioned_slabref != origin_slabref {
-                    //   mentioned_slabref.send( &self.my_ref, &my_presence_memoref );
-                    //}
-
+                        let _ = mentioned_slabref;
+                        // needs PartialEq
+                        //if mentioned_slabref != origin_slabref {
+                        //   mentioned_slabref.send( &self.my_ref, &my_presence_memoref );
+                        //}
+                    }
                 }
             }
             MemoBody::Peering(memo_id, subject_id, ref peerlist ) => {

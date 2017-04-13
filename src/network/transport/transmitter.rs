@@ -53,7 +53,9 @@ impl Transmitter {
     }
     /// Send a Memo over to the target of this transmitter
     pub fn send(&self, from: &SlabRef, memoref: MemoRef) {
-        println!("Transmitter({} to: {}).send(from: {}, {:?})", self.internal.kind(), self.to_slab_id, from.slab_id, memoref );
+        //println!("Transmitter({} to: {}).send(from: {}, {:?})", self.internal.kind(), self.to_slab_id, from.slab_id, memoref );
+        let _ = self.internal.kind();
+        let _ = self.to_slab_id;
 
         use self::TransmitterInternal::*;
         match self.internal {
@@ -75,6 +77,6 @@ impl Transmitter {
 
 impl Drop for TransmitterInternal{
     fn drop(&mut self) {
-        println!("# TransmitterInternal().drop");
+        //println!("# TransmitterInternal().drop");
     }
 }

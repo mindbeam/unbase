@@ -7,7 +7,7 @@ impl Slab {
         counters.last_memo_id += 1;
         let memo_id = (self.id as u64).rotate_left(32) | counters.last_memo_id as u64;
 
-        println!("# Slab({}).new_memo(id: {},subject_id: {:?}, parents: {:?}, body: {:?})", self.id, memo_id, subject_id, parents.memo_ids(), body );
+        //println!("# Slab({}).new_memo(id: {},subject_id: {:?}, parents: {:?}, body: {:?})", self.id, memo_id, subject_id, parents.memo_ids(), body );
 
         let memo = Memo::new(MemoInner {
             id:    memo_id,
@@ -23,7 +23,7 @@ impl Slab {
         memoref
     }
     pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){
-        println!("Slab({}).reconstitute_memo({})", self.id, memo_id );
+        //println!("Slab({}).reconstitute_memo({})", self.id, memo_id );
         // TODO: find a way to merge this with assert_memoref to avoid doing duplicative work with regard to peerlist application
 
         let memo = Memo::new(MemoInner {
@@ -43,7 +43,7 @@ impl Slab {
                 counters.memos_redundantly_received += 1;
             }
         }
-        println!("Slab({}).reconstitute_memo({}) B -> {:?}", self.id, memo_id, memoref );
+        //println!("Slab({}).reconstitute_memo({}) B -> {:?}", self.id, memo_id, memoref );
 
 
         self.consider_emit_memo(&memoref);
@@ -56,14 +56,14 @@ impl Slab {
 
         }
 
-        if let Some(subject_id) = memoref.subject_id {
-            self.dispatch_subject_head( subject_id, &memoref.to_head());
+        if let Some(ref tx_mutex) = self.memoref_dispatch_tx_channel {
+            tx_mutex.lock().unwrap().send(memoref.clone()).unwrap()
         }
 
         (memo, memoref, had_memoref)
     }
     pub fn residentize_memoref(&self, memoref: &MemoRef, memo: Memo) -> bool {
-        println!("# Slab({}).MemoRef({}).residentize()", self.id, memoref.id);
+        //println!("# Slab({}).MemoRef({}).residentize()", self.id, memoref.id);
 
         assert!(memoref.owning_slab_id == self.id);
         assert!( memoref.id == memo.id );
@@ -104,36 +104,45 @@ impl Slab {
     pub fn remotize_memoref( &self, memoref: &MemoRef ) -> Result<(),String> {
         assert!(memoref.owning_slab_id == self.id);
 
-        println!("# Slab({}).MemoRef({}).remotize()", self.id, memoref.id );
+        //println!("# Slab({}).MemoRef({}).remotize()", self.id, memoref.id );
 
-        let mut ptr = memoref.ptr.write().unwrap();
+        // TODO: check peering minimums here, and punt if we're below threshold
 
-        if let MemoRefPtr::Resident(_) = *ptr {
-            let peerlist = memoref.peerlist.read().unwrap();
+        let send_peers;
+        {
+            let mut ptr = memoref.ptr.write().unwrap();
+            if let MemoRefPtr::Resident(_) = *ptr {
+                let peerlist = memoref.peerlist.read().unwrap();
 
-            if peerlist.len() == 0 {
-                return Err("Cannot remotize a zero-peer memo".to_string());
-            }
+                if peerlist.len() == 0 {
+                    return Err("Cannot remotize a zero-peer memo".to_string());
+                }
+                send_peers = peerlist.clone();
+                *ptr = MemoRefPtr::Remote;
 
-            let peering_memoref = self.new_memo_basic(
-                None,
-                MemoRefHead::from_memoref(memoref.clone()),
-                MemoBody::Peering(
-                    memoref.id,
-                    memoref.subject_id,
-                    MemoPeerList::new(vec![MemoPeer{
-                        slabref: self.my_ref.clone(),
-                        status: MemoPeeringStatus::Participating
-                    }])
-                )
-            );
-
-            for peer in peerlist.iter() {
-                peer.slabref.send( &self.my_ref, &peering_memoref );
+            }else{
+                return Ok(());
             }
         }
 
-        *ptr = MemoRefPtr::Remote;
+        let peering_memoref = self.new_memo_basic(
+            None,
+            MemoRefHead::from_memoref(memoref.clone()),
+            MemoBody::Peering(
+                memoref.id,
+                memoref.subject_id,
+                MemoPeerList::new(vec![MemoPeer{
+                    slabref: self.my_ref.clone(),
+                    status: MemoPeeringStatus::Participating
+                }])
+            )
+        );
+
+        //self.consider_emit_memo(&memoref);
+
+        for peer in send_peers.iter() {
+            peer.slabref.send( &self.my_ref, &peering_memoref );
+        }
 
         Ok(())
     }
@@ -184,8 +193,10 @@ impl Slab {
                 let mr = o.get();
                 had_memoref = true;
                 if let Some(m) = memo {
-                    if let MemoRefPtr::Remote = *mr.ptr.read().unwrap() {
-                        *mr.ptr.write().unwrap() = MemoRefPtr::Resident(m)
+
+                    let mut ptr = mr.ptr.write().unwrap();
+                    if let MemoRefPtr::Remote = *ptr {
+                        *ptr = MemoRefPtr::Resident(m)
                     }
                 }
                 mr.apply_peers( &peerlist );
@@ -196,7 +207,7 @@ impl Slab {
         (memoref, had_memoref)
     }
     pub fn assert_slabref(&self, slab_id: SlabId, presence: &[SlabPresence] ) -> SlabRef {
-        println!("# Slab({}).assert_slabref({}, {:?})", self.id, slab_id, presence );
+        //println!("# Slab({}).assert_slabref({}, {:?})", self.id, slab_id, presence );
 
         if slab_id == self.id {
             return self.my_ref.clone();

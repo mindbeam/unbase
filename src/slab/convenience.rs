@@ -8,7 +8,7 @@ impl Slab {
         self.new_memo(subject_id, MemoRefHead::new(), body)
     }
     pub fn remotize_memo_ids( &self, memo_ids: &[MemoId] ) -> Result<(),String>{
-        println!("# Slab({}).remotize_memo_ids({:?})", self.id, memo_ids);
+        //println!("# Slab({}).remotize_memo_ids({:?})", self.id, memo_ids);
 
         let mut memorefs : Vec<MemoRef> = Vec::with_capacity(memo_ids.len());
 

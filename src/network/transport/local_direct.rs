@@ -38,7 +38,7 @@ impl Transport for LocalDirect {
                 //let mut buf = [0; 65536];
                 //println!("Started TX Thread");
                 while let Ok((from_slabref, memoref)) = rx_channel.recv() {
-                    println!("LocalDirect Slab({}) RECEIVED {:?} from {}", slab.id, memoref, from_slabref.slab_id);
+                    //println!("LocalDirect Slab({}) RECEIVED {:?} from {}", slab.id, memoref, from_slabref.slab_id);
                     if let Some(slab) = slab.upgrade(){
                         // clone_for_slab adds the memo to the slab, because memos cannot exist outside of an owning slab
 
@@ -72,12 +72,12 @@ impl Transport for LocalDirect {
 
 impl Drop for Internal {
     fn drop (&mut self) {
-        println!("# LocalDirectInternal.drop");
+        //println!("# LocalDirectInternal.drop");
         for thread in self.tx_threads.drain(..) {
 
-            println!("# LocalDirectInternal.drop Thread pre join");
+            //println!("# LocalDirectInternal.drop Thread pre join");
             thread.join().expect("local_direct thread join");
-            println!("# LocalDirectInternal.drop Thread post join");
+            //println!("# LocalDirectInternal.drop Thread post join");
         }
     }
 }

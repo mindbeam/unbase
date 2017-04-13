@@ -76,7 +76,11 @@ impl Context{
         // as it must use the index directly. Therefore I need to make sure it doesn't have a hard link back to me.
         // This shouldn't be a problem, because the index is private, and not subject to direct use, so the context
         // should outlive it.
-        let index = IndexFixed::new_from_memorefhead(ContextRef::Weak(new_self.weak()), 5, slab.get_root_index_seed().expect("Uninitialized slab") );
+
+        let seed = slab.get_root_index_seed().expect("Uninitialized slab");
+
+        let index = IndexFixed::new_from_memorefhead(ContextRef::Weak(new_self.weak()), 5, seed );
+
         *new_self.root_index.write().unwrap() = Some(index);
 
         new_self
@@ -94,7 +98,7 @@ impl Context{
         let mut subject_heads = self.subject_heads.write().unwrap();
         for memoref in memorefs.drain(0..) {
             if let Some(subject_id) = memoref.subject_id {
-                println!("# Context calling apply_memoref");
+                //println!("# Context calling apply_memoref");
                 subject_heads.entry(subject_id).or_insert( MemoRefHead::new() ).apply_memoref(&memoref, &self.slab);
             }
         }
@@ -119,7 +123,8 @@ impl Context{
         self.slab.subscribe_subject( subject.id, self);
     }
     pub fn unsubscribe_subject (&self, subject_id: SubjectId ){
-        println!("# Context.unsubscribe_subject({})", subject_id);
+        //println!("# Context.unsubscribe_subject({})", subject_id);
+        let _ = subject_id;
 
     /*
     BUG/TODO: Temporarily disabled unsubscription
@@ -150,19 +155,19 @@ impl Context{
     }
 
     pub fn get_subject_with_head (&self, subject_id: SubjectId, mut head: MemoRefHead) -> Result<Subject, RetrieveError> {
-        println!("# Context.get_subject_with_head({},{:?})", subject_id, head.memo_ids() );
+        //println!("# Context.get_subject_with_head({},{:?})", subject_id, head.memo_ids() );
 
         if head.len() == 0 {
             return Err(RetrieveError::InvalidMemoRefHead);
         }
 
         if let Some(relevant_context_head) = self.subject_heads.read().unwrap().get(&subject_id) {
-            println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
+            //println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
 
             head.apply( relevant_context_head, &self.slab );
 
         }else{
-            println!("# \\ No relevant head found in context");
+            //println!("# \\ No relevant head found in context");
         }
 
         match self.get_subject_if_resident(subject_id) {
@@ -324,7 +329,7 @@ impl Context{
 
 impl Drop for ContextInner {
     fn drop (&mut self) {
-        println!("# ContextShared.drop");
+        //println!("# ContextShared.drop");
     }
 }
 impl fmt::Debug for Context {

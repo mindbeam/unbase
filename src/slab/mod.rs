@@ -19,6 +19,7 @@ use std::sync::mpsc::channel;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::fmt;
+use std::thread;
 
 
 // NOTE: All slab code is broken down into functional areas:
@@ -45,10 +46,13 @@ pub struct SlabInner{
 
     counters: RwLock<SlabCounters>,
 
+    memoref_dispatch_tx_channel: Option<Mutex<mpsc::Sender<MemoRef>>>,
+    memoref_dispatch_thread: RwLock<Option<thread::JoinHandle<()>>>,
+
     pub my_ref: SlabRef,
     peer_refs: RwLock<Vec<SlabRef>>,
     net: Network,
-    pub dropping: bool,
+    pub dropping: bool
 }
 
 struct SlabCounters{
@@ -65,19 +69,6 @@ pub struct WeakSlab{
 }
 
 impl Slab {
-
-    pub fn dispatch_subject_head (&self, subject_id: u64, head : &MemoRefHead){
-        println!("# \t\\ SlabShared({}).dispatch_subject_head({}, {:?})", self.id, subject_id, head.memo_ids() );
-        if let Some(subscribers) = self.subject_subscriptions.read().unwrap().get( &subject_id ) {
-            for weakcontext in subscribers {
-                if let Some(context) = weakcontext.upgrade() {
-                    context.apply_subject_head( subject_id, head );
-                }
-
-            }
-        }
-    }
-
     fn check_peering_target( &self, memo: &Memo ) -> u8 {
         if memo.does_peering() {
             5
@@ -155,7 +146,11 @@ impl Drop for SlabInner {
     fn drop(&mut self) {
         self.dropping = true;
 
-        println!("# SlabInner({}).drop", self.id);
+        //println!("# SlabInner({}).drop", self.id);
+        self.memoref_dispatch_tx_channel.take();
+        if let Some(t) = self.memoref_dispatch_thread.write().unwrap().take() {
+            t.join().expect("join memoref_dispatch_thread");
+        }
         self.net.deregister_local_slab(self.id);
         // TODO: Drop all observers? Or perhaps observers should drop the slab (weak ref directionality)
     }

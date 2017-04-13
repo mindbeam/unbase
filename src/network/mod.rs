@@ -147,7 +147,7 @@ impl Network {
         None
     }
     pub fn register_local_slab(&self, new_slab: &Slab) {
-        println!("# Network.register_slab {:?}", new_slab );
+        //println!("# Network.register_slab {:?}", new_slab );
 
         {
             self.slabs.write().unwrap().insert(0, new_slab.weak() );
@@ -164,7 +164,8 @@ impl Network {
             let mut slabs = self.slabs.write().expect("slabs write lock");
             if let Some(removed) = slabs.iter().position(|s| s.id == slab_id )
                 .map(|e| slabs.remove(e) ) {
-                    println!("Unbinding Slab {}", removed.id);
+                    //println!("Unbinding Slab {}", removed.id);
+                    let _ = removed.id;
                     // removed.unbind_network(self);
             }
         }

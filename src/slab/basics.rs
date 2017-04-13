@@ -20,6 +20,8 @@ impl Slab {
         };
 
         let my_ref = SlabRef(Arc::new(my_ref_inner));
+        // TODO: figure out how to reconcile this with the simulator
+        let (memoref_dispatch_tx_channel, memoref_dispatch_rx_channel) = mpsc::channel::<MemoRef>();
 
         let inner = SlabInner {
             id: slab_id,
@@ -34,6 +36,9 @@ impl Slab {
                 memos_redundantly_received: 0,
             }),
 
+            memoref_dispatch_tx_channel: Some(Mutex::new(memoref_dispatch_tx_channel)),
+            memoref_dispatch_thread: RwLock::new(None),
+
             my_ref: my_ref,
             peer_refs: RwLock::new(Vec::new()),
             net: net.clone(),
@@ -42,7 +47,20 @@ impl Slab {
 
         let me = Slab(Arc::new(inner));
         net.register_local_slab(&me);
+
+        let weak_self = me.weak();
+
+        // TODO: this should really be a thread pool, or get_memo should be changed to be nonblocking somhow
+        *me.memoref_dispatch_thread.write().unwrap() = Some(thread::spawn(move || {
+            while let Ok(memoref) = memoref_dispatch_rx_channel.recv() {
+                if let Some(slab) = weak_self.upgrade(){
+                    slab.dispatch_memoref(memoref);
+                }
+            }
+        }));
+
         net.conditionally_generate_root_index_seed(&me);
+
         me
     }
     pub fn weak (&self) -> WeakSlab {
