@@ -118,7 +118,7 @@ impl Transport for Simulator {
                 simulator: self.clone(),
                 dest: slab.weak()
             };
-            Some(Transmitter::new(Box::new(tx)))
+            Some(Transmitter::new(args.get_slab_id(), Box::new(tx)))
         }else{
             None
         }

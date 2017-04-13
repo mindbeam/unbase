@@ -149,12 +149,14 @@ impl Network {
     pub fn register_local_slab(&self, new_slab: &Slab) {
         println!("# Network.register_slab {:?}", new_slab );
 
+        {
+            self.slabs.write().unwrap().insert(0, new_slab.weak() );
+        }
+
         for prev_slab in self.get_all_local_slabs() {
             prev_slab.slabref_from_local_slab( new_slab );
             new_slab.slabref_from_local_slab( &prev_slab );
         }
-
-        self.slabs.write().unwrap().insert(0, new_slab.weak() );
     }
     pub fn deregister_local_slab(&self, slab_id: SlabId) {
         // Remove the deregistered slab so get_representative_slab doesn't return it

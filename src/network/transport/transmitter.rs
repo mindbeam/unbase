@@ -15,31 +15,45 @@ enum TransmitterInternal {
     Blackhole
 }
 
+impl TransmitterInternal {
+    pub fn kind (&self) -> &str {
+        match self {
+            &TransmitterInternal::Local(_)   => "Local",
+            &TransmitterInternal::Dynamic(_) => "Dynamic",
+            &TransmitterInternal::Blackhole  => "Blackhole"
+        }
+    }
+}
+
 pub struct Transmitter {
+    to_slab_id: SlabId,
     internal: TransmitterInternal
 }
 
 impl Transmitter {
     /// Create a new transmitter associated with a local slab.
-    pub fn new_local( tx: Mutex<mpsc::Sender<(SlabRef,MemoRef)>> ) -> Self {
+    pub fn new_local( to_slab_id: SlabId, tx: Mutex<mpsc::Sender<(SlabRef,MemoRef)>> ) -> Self {
         Self {
+            to_slab_id: to_slab_id,
             internal: TransmitterInternal::Local( tx )
         }
     }
-    pub fn new_blackhole() -> Self {
+    pub fn new_blackhole(to_slab_id: SlabId) -> Self {
         Self {
+            to_slab_id: to_slab_id,
             internal: TransmitterInternal::Blackhole
         }
     }
     /// Create a new transmitter capable of using any dynamic-dispatch transmitter.
-    pub fn new(dyn: Box<DynamicDispatchTransmitter + Send + Sync>) -> Self {
+    pub fn new(to_slab_id: SlabId, dyn: Box<DynamicDispatchTransmitter + Send + Sync>) -> Self {
         Self {
+            to_slab_id: to_slab_id,
             internal: TransmitterInternal::Dynamic(dyn)
         }
     }
     /// Send a Memo over to the target of this transmitter
     pub fn send(&self, from: &SlabRef, memoref: MemoRef) {
-        println!("Transmitter.send({:?}, {:?})", from, memoref );
+        println!("Transmitter({} to: {}).send(from: {}, {:?})", self.internal.kind(), self.to_slab_id, from.slab_id, memoref );
 
         use self::TransmitterInternal::*;
         match self.internal {

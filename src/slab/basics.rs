@@ -15,7 +15,7 @@ impl Slab {
             slab_id: slab_id,
             owning_slab_id: slab_id, // I own my own ref to me, obviously
             presence: RwLock::new(vec![]), // this bit is just for show
-            tx: Mutex::new(Transmitter::new_blackhole()),
+            tx: Mutex::new(Transmitter::new_blackhole(slab_id)),
             return_address: RwLock::new(TransportAddress::Local),
         };
 

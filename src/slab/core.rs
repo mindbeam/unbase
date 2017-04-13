@@ -63,7 +63,7 @@ impl Slab {
         (memo, memoref, had_memoref)
     }
     pub fn residentize_memoref(&self, memoref: &MemoRef, memo: Memo) -> bool {
-        println!("# MemoRef({}).residentize()", self.id);
+        println!("# Slab({}).MemoRef({}).residentize()", self.id, memoref.id);
 
         assert!(memoref.owning_slab_id == self.id);
         assert!( memoref.id == memo.id );
@@ -104,7 +104,7 @@ impl Slab {
     pub fn remotize_memoref( &self, memoref: &MemoRef ) -> Result<(),String> {
         assert!(memoref.owning_slab_id == self.id);
 
-        println!("# MemoRef({}).remotize()", self.id);
+        println!("# Slab({}).MemoRef({}).remotize()", self.id, memoref.id );
 
         let mut ptr = memoref.ptr.write().unwrap();
 
@@ -196,7 +196,7 @@ impl Slab {
         (memoref, had_memoref)
     }
     pub fn assert_slabref(&self, slab_id: SlabId, presence: &[SlabPresence] ) -> SlabRef {
-        println!("Slab.assert_slabref({}, {:?})", slab_id, presence );
+        println!("# Slab({}).assert_slabref({}, {:?})", self.id, slab_id, presence );
 
         if slab_id == self.id {
             return self.my_ref.clone();
@@ -223,7 +223,7 @@ impl Slab {
                 slab_id:        slab_id,
                 owning_slab_id: self.id, // for assertions only?
                 presence:       RwLock::new(Vec::new()),
-                tx:             Mutex::new(Transmitter::new_blackhole()),
+                tx:             Mutex::new(Transmitter::new_blackhole(slab_id)),
                 return_address: RwLock::new(TransportAddress::Blackhole),
             };
 
@@ -239,8 +239,9 @@ impl Slab {
             assert!(slab_id == p.slab_id, "presence slab_id does not match the provided slab_id");
 
             let mut _maybe_slab = None;
-
             let args = if p.address.is_local() {
+                // playing silly games with borrow lifetimes.
+                // TODO: make this less ugly
                 _maybe_slab = self.net.get_slab(p.slab_id);
 
                 if let Some(ref slab) = _maybe_slab {
@@ -255,6 +256,7 @@ impl Slab {
              // False if we've seen this presence already
 
             if slabref.apply_presence(p) {
+
                 let new_trans = self.net.get_transmitter( &args ).expect("assert_slabref net.get_transmitter");
                 let return_address = self.net.get_return_address( &p.address ).expect("return address not found");
 

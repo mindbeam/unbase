@@ -166,7 +166,7 @@ impl Transport for TransportUDP {
                         tx_channel: tx_channel.clone(),
                     };
 
-                    return Some(Transmitter::new( Box::new(tx) ))
+                    return Some(Transmitter::new( args.get_slab_id(), Box::new(tx) ))
                 }
             }
         }

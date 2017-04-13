@@ -43,7 +43,7 @@ impl SlabRef{
     //pub fn new (to_slab_id: SlabId, owning_slab_id: SlabId, presence: Vec<Slab) -> SlabRef {
     //}
     pub fn send (&self, from: &SlabRef, memoref: &MemoRef ) {
-        println!("# SlabRef({},{}).send_memo({})", self.owning_slab_id, self.slab_id, memoref.id );
+        println!("# Slab({}).SlabRef({}).send_memo({})", self.owning_slab_id, self.slab_id, memoref.id );
 
         self.tx.lock().unwrap().send(from, memoref.clone());
     }
