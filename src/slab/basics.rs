@@ -31,7 +31,7 @@ impl Slab {
 
             counters: RwLock::new(SlabCounters {
                 last_memo_id: 5000,
-                last_subject_id: 0,
+                last_subject_id: 9000,
                 memos_received: 0,
                 memos_redundantly_received: 0,
             }),
@@ -76,6 +76,7 @@ impl Slab {
         Context::new(self)
     }
     pub fn subscribe_subject (&self, subject_id: u64, context: &Context) {
+        //println!("Slab({}).subscribe_subject({})", self.id, subject_id );
         let weakcontext : WeakContext = context.weak();
 
         match self.subject_subscriptions.write().unwrap().entry(subject_id){

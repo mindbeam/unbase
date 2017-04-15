@@ -5,21 +5,25 @@ impl Slab {
     // apply_subject_head ( which calls descends, which calls get_memo, which blocks )
     // QUESTION: could this be managed with a marker?
     pub fn dispatch_memoref (&self, memoref : MemoRef){
-        //println!("# \t\\ Slab({}).dispatch_memoref({:?})", self.id, &memoref );
+        //println!("# \t\\ Slab({}).dispatch_memoref({})", self.id, &memoref.id );
 
         if let Some(subject_id) = memoref.subject_id {
 
             let maybe_sub : Option<Vec<WeakContext>> = {
                 // we want to make sure the lock is released before continuing
-                if let Some(s) = self.subject_subscriptions.read().unwrap().get( &subject_id ) {
-                    Some(s.clone());
+                if let Some(ref s) = self.subject_subscriptions.read().unwrap().get( &subject_id ) {
+                    Some((*s).clone())
+                }else{
+                    None
                 }
-                None
             };
 
             if let Some(subscribers) = maybe_sub {;
+
                 for weakcontext in subscribers {
+
                     if let Some(context) = weakcontext.upgrade() {
+
                         context.apply_subject_head( subject_id, &memoref.to_head() );
                     }
                 }

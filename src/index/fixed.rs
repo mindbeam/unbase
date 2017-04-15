@@ -6,9 +6,9 @@ use std::collections::HashMap;
 
 
 pub struct IndexFixed {
-    contextref: ContextRef,
-    root: Subject,
-    depth: u8
+    pub contextref: ContextRef,
+    pub root: Subject,
+    pub depth: u8
 }
 
 impl IndexFixed {

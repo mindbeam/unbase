@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use std::sync::{RwLock,Arc,Weak};
 
 #[derive(Clone)]
-pub struct Context(Arc<ContextInner>);
+pub struct Context(pub Arc<ContextInner>);
 
 impl Deref for Context {
     type Target = ContextInner;
@@ -25,7 +25,7 @@ impl Deref for Context {
 
 pub struct ContextInner {
     pub slab: Slab,
-    root_index: RwLock<Option<IndexFixed>>,
+    pub root_index: RwLock<Option<IndexFixed>>,
 
     //This is for consistency model enforcement
     subject_heads: RwLock<HashMap<SubjectId, MemoRefHead>>,
@@ -117,6 +117,7 @@ impl Context{
         None
     }
     pub fn subscribe_subject (&self, subject: &Subject) {
+        //println!("Context.subscribe_subject({})", subject.id );
         {
             self.subjects.write().unwrap().insert( subject.id, subject.weak() );
         }
@@ -197,6 +198,7 @@ impl Context{
     }
     // Called by the Slab whenever memos matching one of our subscriptions comes in
     pub fn apply_subject_head (&self, subject_id: SubjectId, head: &MemoRefHead){
+        //println!("Context.apply_subject_head({}, {:?}) ", subject_id, head.memo_ids() );
 
         // NOTE: In all liklihood, there is significant room to optimize this.
         //       We're applying heads to heads redundantly
@@ -240,6 +242,45 @@ impl Context{
         }
     }
 
+    // Magically transport subject heads into another context in the same process.
+    // This is a temporary hack for testing purposes until such time as proper context exchange is enabled
+    // QUESTION: should context exchanges be happening constantly, but often ignored? or requested? Probably the former,
+    //           sent based on an interval and/or compaction ( which would also likely be based on an interval and/or present context size)
+    pub fn hack_send_context(&self, other: &Self) {
+        let subject_heads = self.subject_heads.write().unwrap();
+        let mut other_subject_heads = other.subject_heads.write().unwrap();
+        let other_subjects = other.subjects.write().unwrap();
+
+        let from_slabref = self.slab.my_ref.clone_for_slab(&other.slab);
+
+        for (subject_id, mrh) in subject_heads.iter(){
+            let mut other_subject_head = other_subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
+            let mrh_for_other = &mrh.clone_for_slab( &from_slabref, &other.slab, false );
+            other_subject_head.apply( &mrh_for_other, &self.slab );
+            // HACK inside a hack - manually updating the remote subject is cheating, but necessary for now because subjects
+            //      have a separate MRH versus the context
+            if let Some(weak_other_subject) = other_subjects.get(&subject_id){
+                if let Some(other_subject) = weak_other_subject.upgrade() {
+                    other_subject.apply_head( &mrh_for_other );
+                }
+            }
+
+        }
+    }
+    pub fn get_subject_head(&self, subject_id: SubjectId) -> Option<MemoRefHead> {
+        if let Some(ref head) = self.subject_heads.read().unwrap().get(&subject_id) {
+            Some((*head).clone())
+        }else{
+            None
+        }
+    }
+    pub fn get_subject_head_memo_ids(&self, subject_id: SubjectId ) -> Vec<MemoId> {
+        if let Some(head) = self.get_subject_head(subject_id) {
+            head.memo_ids()
+        }else{
+            vec![]
+        }
+    }
     pub fn cmp (&self, other: &Self) -> bool{
         // stable way:
         &*(self.0) as *const _ != &*(other.0) as *const _
