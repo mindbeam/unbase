@@ -1,3 +1,5 @@
+#![doc(html_root_url = "https://unba.se")]
+
 extern crate core;
 extern crate linked_hash_map;
 extern crate itertools;
