@@ -9,7 +9,7 @@ fn init_blackhole() {
     net.add_transport( Box::new(blachole) );
     {
         let slab_a = unbase::Slab::new(&net);
-        let context_a = slab_a.create_context();
+        let _context_a = slab_a.create_context();
     }
 
     // Slabs should have been dropped by now
@@ -21,7 +21,7 @@ fn init_local_single() {
     let net = unbase::Network::create_new_system();
     {
         let slab_a = unbase::Slab::new(&net);
-        let context_a = slab_a.create_context();
+        let _context_a = slab_a.create_context();
     }
 
     // Slabs should have been dropped by now

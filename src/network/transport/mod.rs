@@ -2,7 +2,6 @@
 //! pluggable transports that allow connections between slabs. A `Transport` knows how to make
 //! `Transmitter`s which can be used to send `Memo`s.
 
-mod transmitter;
 mod local_direct;
 mod simulator;
 mod udp;
@@ -12,10 +11,9 @@ pub use self::udp::*;
 pub use self::simulator::Simulator;
 pub use self::local_direct::LocalDirect;
 pub use self::blackhole::Blackhole;
-pub use self::transmitter::{Transmitter, DynamicDispatchTransmitter};
+pub use super::transmitter::{Transmitter, DynamicDispatchTransmitter};
 
 use network::*;
-use slab::Slab;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum TransportAddress{
@@ -28,20 +26,6 @@ pub enum TransportAddress{
     SCMP,
     Bluetooth,
     ShamefulTCP // SHAME! SHAME! SHAME! ( yes, I _really_ want to discourage people from using TCP )
-}
-
-#[derive(Debug)]
-pub enum TransmitterArgs<'a>{
-    Local(&'a Slab),
-    Remote(&'a SlabId, &'a TransportAddress)
-}
-impl<'a> TransmitterArgs<'a>{
-    pub fn get_slab_id (&self) -> SlabId {
-        match self {
-            &TransmitterArgs::Local(ref s)     => s.id.clone(),
-            &TransmitterArgs::Remote(ref id,_) => *id.clone()
-        }
-    }
 }
 
 pub trait Transport {

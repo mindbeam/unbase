@@ -31,8 +31,8 @@ impl SimEvent {
         //println!("# SimEvent.deliver" );
         if let Some(to_slab) = self.dest.upgrade() {
 
-            let memo = &self.memoref.get_memo_if_resident().unwrap();
-            /*println!("Simulator.deliver FROM {} TO {} -> {}({:?}): {:?} {:?} {:?}",
+            /* let memo = &self.memoref.get_memo_if_resident().unwrap();
+            println!("Simulator.deliver FROM {} TO {} -> {}({:?}): {:?} {:?} {:?}",
                 &self.from_slabref.slab_id,
                 &to_slab.id,
                 &self.memoref.id,

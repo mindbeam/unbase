@@ -84,7 +84,7 @@ impl IndexFixed {
     }
     pub fn get (&self, key: u64 ) -> Result<Subject, RetrieveError> {
 
-        println!("IndexFixed.get({})", key );
+        //println!("IndexFixed.get({})", key );
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
         let mut node = self.root.clone();
@@ -95,10 +95,10 @@ impl IndexFixed {
             let exponent = (self.depth - 1) - tier;
             let x = max.pow(exponent as u32);
             let y = ((key / (x as u64)) % max) as RelationSlotId;
-            println!("Tier {}, {}, {}", tier, x, y );
+            //println!("Tier {}, {}, {}", tier, x, y );
 
             if exponent == 0 {
-                println!("]]] end of the line");
+                //println!("]]] end of the line");
                 return node.get_relation(y as RelationSlotId);
 
             }else{

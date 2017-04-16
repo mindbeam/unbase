@@ -147,7 +147,7 @@ impl Slab {
         Ok(())
     }
     pub fn request_memo (&self, memoref: &MemoRef) -> u8 {
-        println!("Slab({}).request_memo({})", self.id, memoref.id );
+        //println!("Slab({}).request_memo({})", self.id, memoref.id );
 
         let request_memo = self.new_memo_basic(
             None,

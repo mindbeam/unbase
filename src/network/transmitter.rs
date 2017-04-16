@@ -15,6 +15,21 @@ enum TransmitterInternal {
     Blackhole
 }
 
+#[derive(Debug)]
+pub enum TransmitterArgs<'a>{
+    Local(&'a Slab),
+    Remote(&'a SlabId, &'a TransportAddress)
+}
+impl<'a> TransmitterArgs<'a>{
+    pub fn get_slab_id (&self) -> SlabId {
+        match self {
+            &TransmitterArgs::Local(ref s)     => s.id.clone(),
+            &TransmitterArgs::Remote(ref id,_) => *id.clone()
+        }
+    }
+}
+
+
 impl TransmitterInternal {
     pub fn kind (&self) -> &str {
         match self {
