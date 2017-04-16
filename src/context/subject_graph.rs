@@ -1,39 +1,39 @@
-use std::collections::VecDeque;
+
+use petgraph::Graph;
+use petgraph::graph::NodeIndex;
+use super::*;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use super::*;
-use memorefhead::*;
-
-pub struct SubjectChildEdge{
-    child_id:    SubjectId,
-    parent_slot: RelationSlotId,
-}
-pub struct SubjectParentEdge{
-    parent_id:   SubjectId,
-    parent_slot: RelationSlotId,
-}
 
 pub struct SubjectGraph {
-    parent_cache: HashMap<SubjectId, [SubjectId; SUBJECT_MAX_RELATIONS]>,
-    vertices: HashMap<SubjectId, SubjectVertex>
-}
-
-pub struct SubjectVertex {
-    pub subject_id: SubjectId,
-    pub parents:  Vec<SubjectParentEdge>,
-    pub in_degree: usize,
-    pub children: Vec<SubjectChildEdge>,
+    graph: Graph<SubjectId,SubjectId>,
+    node_map: HashMap<SubjectId,NodeIndex<SubjectId>>
 }
 
 impl SubjectGraph {
     pub fn new () -> Self {
+
         Self {
-            parent_cache: HashMap::new(),
-            vertices:     HashMap::new()
+            graph:    Graph::new(),
+            node_map: HashMap::new()
         }
     }
-    //                                         Parent P \/       points to \/
-    pub fn update (&mut self, slab: &Slab, parent_id: SubjectId, links: &[SubjectId] ){
+    pub fn update (&mut self, subject_id: SubjectId, links: &[SubjectId] ){
+
+        let node = self.assert_node(subject_id);
+        for link in links.iter(){
+            let link_node = self.assert_node(*link);
+            node.add_edge(node, link_node);
+        }
+
+    }
+    pub fn assert_node(&mut self, subject_id: SubjectId) -> &NodeIndex<SubjectId> {
+        self.node_map.entry(subject_id).or_insert_with(|| self.graph.add_node(subject_id) )
+    }
+    pub fn remove(&mut self, subject_id: SubjectId){
+        //unimplemented!()
+    }
+    /*
         // TODO: Optimize this. Should probably be offset based, and incremental.
         //       Consider using SubjectHead Arc address instead of subject id.
         //       (will be useful for faster subjectHead retrieval too)
@@ -127,4 +127,5 @@ impl SubjectGraph {
         //vertices.sort_by(|a, b| a.in_degree.cmp(&b.in_degree) );
         //vertices.get(0)
     }
+    */
 }

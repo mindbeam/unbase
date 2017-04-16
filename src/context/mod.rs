@@ -1,4 +1,4 @@
-//mod subject_graph;
+mod subject_graph;
 //mod topo_subject_head_iter;
 
 use slab::*;
@@ -6,7 +6,7 @@ use subject::*;
 use memorefhead::MemoRefHead;
 use error::RetrieveError;
 use index::IndexFixed;
-//use self::subject_graph::*;
+use self::subject_graph::*;
 
 use std::ops::Deref;
 use std::fmt;
@@ -31,7 +31,7 @@ pub struct ContextInner {
     subject_heads: RwLock<HashMap<SubjectId, MemoRefHead>>,
 
     //This is for compaction of the subject_heads
-    //subject_graph : SubjectGraph,
+    subject_graph : RwLock<SubjectGraph>,
 
     //This is for active subjects / subject subscription management
     subjects: RwLock<HashMap<SubjectId, WeakSubject>>
@@ -64,7 +64,7 @@ impl Context{
             slab: slab.clone(),
             root_index: RwLock::new(None),
             subject_heads: RwLock::new(HashMap::new()),
-            //subject_graph: SubjectGraph::new(),
+            subject_graph: RwLock::new(SubjectGraph::new()),
             subjects: RwLock::new(HashMap::new()),
         }));
 
@@ -92,6 +92,7 @@ impl Context{
             panic!("no root index")
         }
     }
+    /// Add MemoRefs to this context
     pub fn add (&self, mut memorefs: Vec<MemoRef>) {
         // TODO: trim existing context based on descendants
 
@@ -104,6 +105,7 @@ impl Context{
         }
     }
 
+    /// Retrieves a subject by ID from this context only if it is currently resedent
     fn get_subject_if_resident (&self, subject_id: SubjectId) -> Option<Subject> {
 
         if let Some(weaksub) = self.subjects.read().unwrap().get(&subject_id) {
@@ -116,37 +118,7 @@ impl Context{
 
         None
     }
-    pub fn subscribe_subject (&self, subject: &Subject) {
-        //println!("Context.subscribe_subject({})", subject.id );
-        {
-            self.subjects.write().unwrap().insert( subject.id, subject.weak() );
-        }
-        self.slab.subscribe_subject( subject.id, self);
-    }
-    pub fn unsubscribe_subject (&self, subject_id: SubjectId ){
-        //println!("# Context.unsubscribe_subject({})", subject_id);
-        let _ = subject_id;
-
-    /*
-    BUG/TODO: Temporarily disabled unsubscription
-    1. Because it was causing deadlocks on the context AND slab mutexes
-       when the thread in the test case happened to drop the subject
-       when we were busy doing apply_subject_head, which locks context,
-       and is called by slab – so clearly this is untenable
-    2. It was always sort of a hack that the subject was managing subscriptions
-       in this way anyways. Lets put together a more final version of the subscriptions
-       before we bother with fixing unsubscription
-
-        {
-            let mut shared = self.inner.shared.lock().unwrap();
-            shared.subjects.remove( &subject_id );
-        }
-
-        self.inner.slab.unsubscribe_subject(subject_id, self);
-        println!("# Context.unsubscribe_subject({}) - FINISHED", subject_id);
-        */
-
-    }
+    /// Retrive a Subject from the root index by ID
     pub fn get_subject_by_id (&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
 
         match *self.root_index.read().unwrap() {
@@ -155,6 +127,8 @@ impl Context{
         }
     }
 
+    /// Retrieve a subject for a known MemoRefHead – ususally used for relationship traversal.
+    /// Any relevant context will also be applied when reconstituting the relevant subject to ensure that our consistency model invariants are met
     pub fn get_subject_with_head (&self, subject_id: SubjectId, mut head: MemoRefHead) -> Result<Subject, RetrieveError> {
         //println!("# Context.get_subject_with_head({},{:?})", subject_id, head.memo_ids() );
 
@@ -185,19 +159,46 @@ impl Context{
         return Ok(subject);
 
     }
-    // specifically for created/updated subjects
-    // Called by Subject::new, set_*
-    pub fn subject_updated (&self, subject_id: SubjectId, head: &MemoRefHead){
-        let mut subject_heads = self.subject_heads.write().unwrap();
-        let my_subject_head = subject_heads.entry(subject_id).or_insert( MemoRefHead::new() );
-        my_subject_head.apply(head, &self.slab);
+    /// Subscribes a resident subject struct to relevant updates from this context
+    /// Used by the subject constructor
+    pub fn subscribe_subject (&self, subject: &Subject) {
+        //println!("Context.subscribe_subject({})", subject.id );
+        {
+            self.subjects.write().unwrap().insert( subject.id, subject.weak() );
+        }
+        self.slab.subscribe_subject( subject.id, self);
+    }
+    /// Unsubscribes the subject from further updates. Used by Subject.drop
+    /// ( Temporarily defeated due to deadlocks. TODO )
+    pub fn unsubscribe_subject (&self, subject_id: SubjectId ){
+        //println!("# Context.unsubscribe_subject({})", subject_id);
+        let _ = subject_id;
+        self.subjects.write().unwrap().remove( &subject_id );
+        self.subject_graph.write().unwrap().remove( subject_id );
 
-        // Necessary bookkeeping for topological traversal
-        //shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links( &self.inner.slab ));
+    /*
+    BUG/TODO: Temporarily disabled unsubscription
+    1. Because it was causing deadlocks on the context AND slab mutexes
+       when the thread in the test case happened to drop the subject
+       when we were busy doing apply_subject_head, which locks context,
+       and is called by slab – so clearly this is untenable
+    2. It was always sort of a hack that the subject was managing subscriptions
+       in this way anyways. Lets put together a more final version of the subscriptions
+       before we bother with fixing unsubscription
+
+        {
+            let mut shared = self.inner.shared.lock().unwrap();
+            shared.subjects.remove( &subject_id );
+        }
+
+        self.inner.slab.unsubscribe_subject(subject_id, self);
+        println!("# Context.unsubscribe_subject({}) - FINISHED", subject_id);
+        */
 
     }
-    // Called by the Slab whenever memos matching one of our subscriptions comes in
-    pub fn apply_subject_head (&self, subject_id: SubjectId, head: &MemoRefHead){
+
+    /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is made
+    pub fn apply_subject_head (&self, subject_id: SubjectId, head: &MemoRefHead, notify_subject: bool ){
         //println!("Context.apply_subject_head({}, {:?}) ", subject_id, head.memo_ids() );
 
         // NOTE: In all liklihood, there is significant room to optimize this.
@@ -211,34 +212,21 @@ impl Context{
         //ANSWER:   It occurs to me that we're only getting subject heads from the slab which we expressly
         //          subscribed to, so this strengthens the case quite a bit
 
-        // Have to make sure the subject we retrieve
-        // doesn't go out of scope while we're locked, or we'll deadlock
-        let _maybe_subject : Option<Subject>;
-
         {
 
-            if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
-                subject.apply_head(head);
+            if notify_subject {
+                if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
+                    subject.apply_head(head);
+                }
             }
 
-            // TODO: It probably makes sense to stop playing telephone between the context and the subject
-            //       And simply use an Arc<Mutex<MemoRefHead>> which is shared between the subject and the context
-            //       We both have it around the same time really. To do otherwise would be silly
-            //       The main question is: what threading model do we want to optimize for?
-            //       Will the context usually / always be in the same thread as the subjects?
-            //       If so, then switch to Rc and screw this Arc<Mutex<>> business
-            //       If not, then this really makes me wonder about whether the clone of the MemoRefHead
-            //       and the duplicate work of merging it twice might actually make sense vs having to cross
-            //       the thread bountary to retrieve the data we want ( probably not, but asking anway)
+            use std::collections::hash_map::Entry;
+            let subject_head = self.subject_heads.write().unwrap().entry(subject_id).or_insert(MemoRefHead::new());
+            subject_head.apply(&head, &self.slab);
 
-            {
-                let mut subject_heads = self.subject_heads.write().unwrap();
-                let my_subject_head = subject_heads.entry(subject_id).or_insert( MemoRefHead::new() );
-                my_subject_head.apply(&head, &self.slab);
-            }
             // Necessary bookkeeping for topological traversal
-            // TODO: determine if it makes sense to calculate only the relationship diffs to minimize cost
-            //shared.subject_graph.update( &self.inner.slab, subject_id, my_subject_head.project_all_relation_links( &self.inner.slab ));
+            self.subject_graph.write().unwrap().update( subject_id, &subject_head.project_all_relation_links( &self.slab ));
+            // TODO: calculate only the relationship diffs to minimize cost
         }
     }
 
@@ -246,26 +234,23 @@ impl Context{
     // This is a temporary hack for testing purposes until such time as proper context exchange is enabled
     // QUESTION: should context exchanges be happening constantly, but often ignored? or requested? Probably the former,
     //           sent based on an interval and/or compaction ( which would also likely be based on an interval and/or present context size)
-    pub fn hack_send_context(&self, other: &Self) {
-        let subject_heads = self.subject_heads.write().unwrap();
-        let mut other_subject_heads = other.subject_heads.write().unwrap();
-        let other_subjects = other.subjects.write().unwrap();
+    pub fn hack_send_context(&self, other: &Self) -> usize {
+        //self.compress();
+
+        let subject_heads = self.subject_heads.read().unwrap();
 
         let from_slabref = self.slab.my_ref.clone_for_slab(&other.slab);
 
+        let mut memoref_count = 0;
         for (subject_id, mrh) in subject_heads.iter(){
-            let mut other_subject_head = other_subject_heads.entry(*subject_id).or_insert( MemoRefHead::new() );
-            let mrh_for_other = &mrh.clone_for_slab( &from_slabref, &other.slab, false );
-            other_subject_head.apply( &mrh_for_other, &self.slab );
+            memoref_count += mrh.len();
+
+            other.apply_subject_head( *subject_id, &mrh.clone_for_slab( &from_slabref, &other.slab, false ), true );
             // HACK inside a hack - manually updating the remote subject is cheating, but necessary for now because subjects
             //      have a separate MRH versus the context
-            if let Some(weak_other_subject) = other_subjects.get(&subject_id){
-                if let Some(other_subject) = weak_other_subject.upgrade() {
-                    other_subject.apply_head( &mrh_for_other );
-                }
-            }
-
         }
+
+        memoref_count
     }
     pub fn get_subject_head(&self, subject_id: SubjectId) -> Option<MemoRefHead> {
         if let Some(ref head) = self.subject_heads.read().unwrap().get(&subject_id) {
@@ -291,12 +276,14 @@ impl Context{
     pub fn weak (&self) -> WeakContext {
         WeakContext(Arc::downgrade(&self.0))
     }
+
+
+    // Putting this on hold for now
     /*
-    Putting this on hold for now
     pub fn topo_subject_head_iter (&self) -> TopoSubjectHeadIter {
         TopoSubjectHeadIter::new( &self )
-    }*/
-
+    }
+*/
     // Subject A -> B -> E
     //          \-> C -> F
     //          \-> D -> G
@@ -321,7 +308,7 @@ impl Context{
     // A: [B]
     // etc
 /*
-    pub fn fully_compress (&self) {
+    pub fn compress (&self) {
 
         let slab = self.get_slab();
 

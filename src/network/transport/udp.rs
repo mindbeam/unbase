@@ -41,6 +41,17 @@ impl TransportAddressUDP {
 }
 
 impl TransportUDP {
+
+    /// UDP Transport
+    ///
+    /// ```
+    /// let net  = unbase::Network::create_new_system(); // Typically one would use new here instead
+    /// let udp  = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
+    /// net.add_transport( Box::new(udp) );
+    ///
+    /// let slab = unbase::Slab::new(&net);
+    /// // udp.seed_address_from_string( "127.0.0.1:54321".to_string() ); // Join an existing system
+    /// ```
     pub fn new (address: String) -> Self{
 
         let bind_address = TransportAddressUDP{ address : address };

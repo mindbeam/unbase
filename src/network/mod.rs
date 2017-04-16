@@ -39,8 +39,9 @@ pub struct NetworkInner {
 pub struct WeakNetwork(Weak<NetworkInner>);
 
 impl Network {
-    /// Create a new network struct
-    /// In production, this is the one you want
+    /// Network handle
+    /// This represents your joining an existing unbase system.
+    /// (In production, this is the one you want)
     pub fn new () -> Network {
         Self::new_inner(false)
     }

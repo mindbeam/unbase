@@ -57,7 +57,7 @@ fn init_local_multi() {
     // kind of bug. There appears to be some occasional laggard thread which is causing a race condition
     // of some kind, and occasionally preventing one of the Slabs from destroying in time. All I know at
     // this point is that adding the sleep here seems to help, which implies that it's not a deadlock.
-    thread::sleep( time::Duration::from_millis(50) );
+    thread::sleep( time::Duration::from_millis(100) );
 
     // We should have zero slabs resident at this point
     assert!( net.get_all_local_slabs().len() == 0, "not all slabs have cleaned up" );
