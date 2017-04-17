@@ -27,13 +27,10 @@ pub struct ContextInner {
     pub slab: Slab,
     pub root_index: RwLock<Option<IndexFixed>>,
 
-    //This is for consistency model enforcement
-    subject_heads: RwLock<HashMap<SubjectId, MemoRefHead>>,
-
-    //This is for compaction of the subject_heads
+    ///For compaction of the subject_heads
     subject_graph : RwLock<SubjectGraph>,
 
-    //This is for active subjects / subject subscription management
+    ///For active subjects / subject subscription management
     subjects: RwLock<HashMap<SubjectId, WeakSubject>>
 }
 
@@ -63,7 +60,6 @@ impl Context{
         let new_self = Context(Arc::new(ContextInner {
             slab: slab.clone(),
             root_index: RwLock::new(None),
-            subject_heads: RwLock::new(HashMap::new()),
             subject_graph: RwLock::new(SubjectGraph::new()),
             subjects: RwLock::new(HashMap::new()),
         }));
@@ -96,11 +92,10 @@ impl Context{
     pub fn add (&self, mut memorefs: Vec<MemoRef>) {
         // TODO: trim existing context based on descendants
 
-        let mut subject_heads = self.subject_heads.write().unwrap();
-        for memoref in memorefs.drain(0..) {
+        let mut subject_graph = self.subject_graph.write().unwrap();
+        for memoref in memorefs.drain(..) {
             if let Some(subject_id) = memoref.subject_id {
-                //println!("# Context calling apply_memoref");
-                subject_heads.entry(subject_id).or_insert( MemoRefHead::new() ).apply_memoref(&memoref, &self.slab);
+                subject_graph.apply_memoref(subject_id, &memoref, &self.slab);
             }
         }
     }
@@ -136,7 +131,7 @@ impl Context{
             return Err(RetrieveError::InvalidMemoRefHead);
         }
 
-        if let Some(relevant_context_head) = self.subject_heads.read().unwrap().get(&subject_id) {
+        if let Some(ref relevant_context_head) = self.subject_graph.read().unwrap().get_head(subject_id) {
             //println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
 
             head.apply( relevant_context_head, &self.slab );
@@ -172,9 +167,8 @@ impl Context{
     /// ( Temporarily defeated due to deadlocks. TODO )
     pub fn unsubscribe_subject (&self, subject_id: SubjectId ){
         //println!("# Context.unsubscribe_subject({})", subject_id);
-        let _ = subject_id;
+        //let _ = subject_id;
         self.subjects.write().unwrap().remove( &subject_id );
-        self.subject_graph.write().unwrap().remove( subject_id );
 
     /*
     BUG/TODO: Temporarily disabled unsubscription
@@ -214,19 +208,14 @@ impl Context{
 
         {
 
+            self.subject_graph.write().unwrap().apply_head(subject_id, &head, &self.slab);
+
             if notify_subject {
                 if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
                     subject.apply_head(head);
                 }
             }
 
-            use std::collections::hash_map::Entry;
-            let subject_head = self.subject_heads.write().unwrap().entry(subject_id).or_insert(MemoRefHead::new());
-            subject_head.apply(&head, &self.slab);
-
-            // Necessary bookkeeping for topological traversal
-            self.subject_graph.write().unwrap().update( subject_id, &subject_head.project_all_relation_links( &self.slab ));
-            // TODO: calculate only the relationship diffs to minimize cost
         }
     }
 
@@ -237,15 +226,16 @@ impl Context{
     pub fn hack_send_context(&self, other: &Self) -> usize {
         //self.compress();
 
-        let subject_heads = self.subject_heads.read().unwrap();
+        let subject_graph = self.subject_graph.read().unwrap();
 
         let from_slabref = self.slab.my_ref.clone_for_slab(&other.slab);
 
         let mut memoref_count = 0;
-        for (subject_id, mrh) in subject_heads.iter(){
+
+        for (subject_id, mrh) in subject_graph.head_iter(){
             memoref_count += mrh.len();
 
-            other.apply_subject_head( *subject_id, &mrh.clone_for_slab( &from_slabref, &other.slab, false ), true );
+            other.apply_subject_head( subject_id, &mrh.clone_for_slab( &from_slabref, &other.slab, false ), true );
             // HACK inside a hack - manually updating the remote subject is cheating, but necessary for now because subjects
             //      have a separate MRH versus the context
         }
@@ -253,7 +243,7 @@ impl Context{
         memoref_count
     }
     pub fn get_subject_head(&self, subject_id: SubjectId) -> Option<MemoRefHead> {
-        if let Some(ref head) = self.subject_heads.read().unwrap().get(&subject_id) {
+        if let Some(ref head) = self.subject_graph.read().unwrap().get_head(subject_id) {
             Some((*head).clone())
         }else{
             None
@@ -344,7 +334,7 @@ impl Context{
     */
     pub fn is_fully_materialized (&self) -> bool {
 
-        for (_,head) in self.subject_heads.read().unwrap().iter() {
+        for (_,head) in self.subject_graph.read().unwrap().head_iter() {
             if ! head.is_fully_materialized(&self.slab) {
                 return false
             }
@@ -364,7 +354,7 @@ impl fmt::Debug for Context {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 
         fmt.debug_struct("ContextShared")
-            .field("subject_heads", &self.subject_heads)
+            .field("subject_heads", &self.subject_graph.read().unwrap().subject_ids() )
             // TODO: restore Debug for WeakSubject
             //.field("subjects", &self.subjects)
             .finish()
