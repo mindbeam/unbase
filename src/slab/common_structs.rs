@@ -111,6 +111,14 @@ impl RelationSlotSubjectHead {
 
         RelationSlotSubjectHead(new)
     }
+    pub fn empty () -> Self {
+        RelationSlotSubjectHead(HashMap::new());
+    }
+    pub fn easy(slot_id: RelationSlotId, subject_id: SubjectId, head: MemoRefHead) -> Self {
+        let hashmap = HashMap::new();
+        hashmap.insert(slot_id, (subject_id, head));
+        RelationSlotSubjectHead(hashmap);
+    }
 }
 
 impl Deref for RelationSlotSubjectHead {

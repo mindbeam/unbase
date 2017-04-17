@@ -1,4 +1,5 @@
-mod subject_graph;
+mod manager;
+//mod subject_graph;
 //mod topo_subject_head_iter;
 
 use slab::*;
@@ -6,12 +7,12 @@ use subject::*;
 use memorefhead::MemoRefHead;
 use error::RetrieveError;
 use index::IndexFixed;
-use self::subject_graph::*;
+use self::manager::ContextManager;
 
 use std::ops::Deref;
 use std::fmt;
 use std::collections::HashMap;
-use std::sync::{RwLock,Arc,Weak};
+use std::sync::{Mutex,RwLock,Arc,Weak};
 
 #[derive(Clone)]
 pub struct Context(pub Arc<ContextInner>);
@@ -28,7 +29,7 @@ pub struct ContextInner {
     pub root_index: RwLock<Option<IndexFixed>>,
 
     ///For compaction of the subject_heads
-    subject_graph : RwLock<SubjectGraph>,
+    manager : Arc<Mutex<ContextManager>>,
 
     ///For active subjects / subject subscription management
     subjects: RwLock<HashMap<SubjectId, WeakSubject>>
@@ -60,7 +61,7 @@ impl Context{
         let new_self = Context(Arc::new(ContextInner {
             slab: slab.clone(),
             root_index: RwLock::new(None),
-            subject_graph: RwLock::new(SubjectGraph::new()),
+            manager: Mutex::new(ContextManager::new()),
             subjects: RwLock::new(HashMap::new()),
         }));
 
@@ -88,17 +89,18 @@ impl Context{
             panic!("no root index")
         }
     }
-    /// Add MemoRefs to this context
+    // Add MemoRefs to this context
+    /*
     pub fn add (&self, mut memorefs: Vec<MemoRef>) {
-        // TODO: trim existing context based on descendants
-
-        let mut subject_graph = self.subject_graph.write().unwrap();
         for memoref in memorefs.drain(..) {
             if let Some(subject_id) = memoref.subject_id {
-                subject_graph.apply_memoref(subject_id, &memoref, &self.slab);
+                let relation_links =
+                let mut manager = self.manager.write().unwrap();
+                manager.set_subject_head(subject_id, &memoref, &self.slab);
             }
         }
     }
+    */
 
     /// Retrieves a subject by ID from this context only if it is currently resedent
     fn get_subject_if_resident (&self, subject_id: SubjectId) -> Option<Subject> {
@@ -131,9 +133,13 @@ impl Context{
             return Err(RetrieveError::InvalidMemoRefHead);
         }
 
-        if let Some(ref relevant_context_head) = self.subject_graph.read().unwrap().get_head(subject_id) {
-            //println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
+        let maybe_head = {
+            // Don't want to hold the lock while calling head.apply, as it could request a memo from a remote slab, and we'd deadlock
+            self.manager.lock().unwrap().get_head(subject_id).clone()
+        };
 
+        if let Some(relevant_context_head) = maybe_head {
+            //println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
             head.apply( relevant_context_head, &self.slab );
 
         }else{
@@ -208,7 +214,10 @@ impl Context{
 
         {
 
-            self.subject_graph.write().unwrap().apply_head(subject_id, &head, &self.slab);
+            let relation_links = head.project_all_relation_links(&self.slab);
+            {
+                self.manager.lock().unwrap().set_subject_head(subject_id, &head, relation_links );
+            }
 
             if notify_subject {
                 if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
@@ -226,13 +235,13 @@ impl Context{
     pub fn hack_send_context(&self, other: &Self) -> usize {
         //self.compress();
 
-        let subject_graph = self.subject_graph.read().unwrap();
+        let manager = self.manager.read().unwrap();
 
         let from_slabref = self.slab.my_ref.clone_for_slab(&other.slab);
 
         let mut memoref_count = 0;
 
-        for (subject_id, mrh) in subject_graph.head_iter(){
+        for (subject_id, mrh) in manager.head_iter(){
             memoref_count += mrh.len();
 
             other.apply_subject_head( subject_id, &mrh.clone_for_slab( &from_slabref, &other.slab, false ), true );
@@ -243,7 +252,7 @@ impl Context{
         memoref_count
     }
     pub fn get_subject_head(&self, subject_id: SubjectId) -> Option<MemoRefHead> {
-        if let Some(ref head) = self.subject_graph.read().unwrap().get_head(subject_id) {
+        if let Some(ref head) = self.manager.lock().unwrap().get_head(subject_id) {
             Some((*head).clone())
         }else{
             None
@@ -297,25 +306,30 @@ impl Context{
     // B: [E]
     // A: [B]
     // etc
-/*
+
+    /// Attempt to compress the present query context.
+    /// We do this by issuing Relation memos for any subject heads which reference other subject heads presently in the query context.
+    /// Then we can remove the now-referenced subject heads, and repeat the process in a topological fashion, confident that these
+    /// referenced subject heads will necessarily be included in subsequent projection as a result.
     pub fn compress (&self) {
 
-        let slab = self.get_slab();
+        // TODO: conditionalize this on the basis of the present context size
 
         // Iterate the contextualized subject heads in reverse topological order
-        for (head, ref_by, ref_to) in self.topo_subject_head_iter().rev() {
-            // Materialization not really necessary for compression ( I think )
-            // try to materialize it (create a memo that flattens known preceeding operations)
-            // head.fully_materialize( &slab );
+        for (to_subject_id, to_head, from_subject_ids) in self.manager.topo_subject_head_iter() {
 
-            // OK we did compress and issue a new "Materialized" memo
-            // ( it should really only be one Memo in the new MemoRefHead,
-            // but assuming that would limit flexibility, and destandardize our handling)
+            // TODO: implement MemoRefHead.conditionally_materialize such that the materialization threshold is selected dynamically.
+            //       It shold almost certainly not materialize with a single edit since the last FullyMaterialized memo
+            //head.conditionally_materialize( &self.slab );
 
-            if ref_by.len() > 0 {
+            if from_subject_ids.len() > 0 {
                 // OK, somebody is pointing to us, so lets issue an edit for them
                 // to point to the new materialized memo for their relevant relations
-                self.repoint_subject_relations(ref_by, materialized_head);
+                self.repoint_subject_relations(to_subject_id, to_head, from_subject_ids);
+
+
+                // NOTE: In order to remove a subject head from the context, we must ensure that
+                //       ALL referencing subject heads in the context get repointed. It's not enough to just do one
 
                 // Now that we know they are pointing to the new materialized MemoRefHead,
                 // and that the resident subject struct we have is already updated, we can
@@ -326,12 +340,14 @@ impl Context{
                 // this would continue all the way to the root index node, and we should be left
                 // with a very small context head
 
-                self.remove(subject) // should be removed from the context
             }
         }
 
     }
-    */
+    fn repoint_subject_relations(&self, to_subject_id: SubjectId, to_head: MemoRefHead, from_subject_ids: Vec<SubjectId>) {
+
+    }
+
     pub fn is_fully_materialized (&self) -> bool {
 
         for (_,head) in self.subject_graph.read().unwrap().head_iter() {

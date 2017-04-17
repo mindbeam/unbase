@@ -5,8 +5,8 @@ use std::{thread, time};
 #[test]
 fn init_blackhole() {
     let net = unbase::Network::create_new_system();
-    let blachole = unbase::network::transport::Blackhole::new();
-    net.add_transport( Box::new(blachole) );
+    let blackhole = unbase::network::transport::Blackhole::new();
+    net.add_transport( Box::new(blackhole) );
     {
         let slab_a = unbase::Slab::new(&net);
         let _context_a = slab_a.create_context();
