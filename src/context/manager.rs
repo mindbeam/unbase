@@ -5,7 +5,6 @@
 use super::*;
 use memorefhead::{RelationSlotId,RelationLink};
 
-use std::rc::Rc;
 use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry;
 
@@ -41,21 +40,20 @@ impl Item {
     fn set_relation (&mut self, link: RelationLink, manager: &mut ContextManager ){
 
         match self.relations.entry(link.slot_id) {
-            Entry::Vacant(mut e) => {
+            Entry::Vacant(e) => {
                 if let Some(subject_id) = link.subject_id {
-                    let mut rel_item = manager.assert_item(subject_id);
+                    let rel_item = manager.assert_item(subject_id);
 
                     let mut seen = HashSet::new();
                     rel_item.lock().unwrap().increment( &mut seen, 1 + self.indirect_references );
-                    e.insert(rel_item);
+                    let _ = e.insert(rel_item);
                 }else{
                     // Nothing do see here folks!
                     return;
                 }
             }
             Entry::Occupied(mut e) =>{
-                if let Some(subject_id) = link.subject_id {
-
+                if let Some(_) = link.subject_id {
                     let mut seen = HashSet::new();
                     e.get_mut().lock().unwrap().increment( &mut seen, 1 + self.indirect_references );
                 }else{
@@ -85,11 +83,13 @@ impl ContextManager {
     }
 
     /// Returns the number of elements in the `ContextManager`.
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.items.len()
     }
 
     /// Returns true if the `ContextManager` contains no entries.
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
@@ -109,13 +109,13 @@ impl ContextManager {
     /// Any mrh.apply to the previous head must be done externally, if desired
     /// relation_links must similarly be pre-calculated
     pub fn set_subject_head(&mut self, subject_id: SubjectId, head: MemoRefHead, relation_links: Vec<RelationLink> ) {
-        let mut item : Arc<Mutex<Item>> = match self.items.entry(subject_id) {
+        let item : Arc<Mutex<Item>> = match self.items.entry(subject_id) {
             Entry::Vacant(e) => {
                 let item = Arc::new(Mutex::new(Item::new(subject_id, Some(head))));
                 e.insert(item).clone()
             }
             Entry::Occupied(e) => {
-                let mut item = e.get();
+                let item = e.get();
                 item.lock().unwrap().head = Some(head);
                 item.clone()
             }
@@ -131,7 +131,7 @@ impl ContextManager {
         match self.items.entry(subject_id) {
             Entry::Vacant(e) => {
                 let item = Arc::new(Mutex::new(Item::new(subject_id, None)));
-                e.insert(item.clone());
+                let _ = e.insert(item.clone());
                 item
             }
             Entry::Occupied(e) => {
@@ -166,7 +166,7 @@ impl ContextManager {
 impl Drop for ContextManager {
     fn drop (&mut self) {
         // Have to de-link all the items, as they may have circular references.
-        for (subject_id,ref mut item) in self.items.iter_mut() {
+        for (_,ref mut item) in self.items.iter_mut() {
             item.lock().unwrap().relations.clear();
         }
     }
