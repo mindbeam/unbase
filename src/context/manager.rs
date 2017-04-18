@@ -9,15 +9,24 @@ use std::rc::Rc;
 use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry;
 
+//TODO: farm the guts of this out to it's own topo-sort accumulator crate
+//      using gratuitous Arc<Mutex<>> for now which will later be converted to unsafe Mutex<Rc<Item>>
+
 pub struct SubjectHead {
-    subject_id: SubjectId,
-    head:       MemoRefHead
+    pub subject_id: SubjectId,
+    pub head:       MemoRefHead,
+    pub from_subject_ids: Vec<SubjectId>
 }
 struct Item {
     subject_id: SubjectId,
     indirect_references: isize,
     head: Option<MemoRefHead>,
-    relations: HashMap<RelationSlotId,Rc<Item>>
+    relations: HashMap<RelationSlotId,Arc<Mutex<Item>>>
+}
+
+/// Performs topological sorting.
+pub struct ContextManager {
+    items: HashMap<SubjectId, Arc<Mutex<Item>>>,
 }
 
 impl Item {
@@ -31,30 +40,33 @@ impl Item {
     }
     fn set_relation (&mut self, link: RelationLink, manager: &mut ContextManager ){
 
-        let rel_item = match self.relations.entry(link.slot_id) {
-            Entry::Vacant(e) => {
+        match self.relations.entry(link.slot_id) {
+            Entry::Vacant(mut e) => {
                 if let Some(subject_id) = link.subject_id {
-                    let rel_item = manager.assert_item(subject_id);
-                    e.insert(rel_item.clone())
+                    let mut rel_item = manager.assert_item(subject_id);
+
+                    let mut seen = HashSet::new();
+                    rel_item.lock().unwrap().increment( &mut seen, 1 + self.indirect_references );
+                    e.insert(rel_item);
                 }else{
                     // Nothing do see here folks!
                     return;
                 }
             }
-            Entry::Occupied(e) =>{
+            Entry::Occupied(mut e) =>{
                 if let Some(subject_id) = link.subject_id {
-                    e.get()
+
+                    let mut seen = HashSet::new();
+                    e.get_mut().lock().unwrap().increment( &mut seen, 1 + self.indirect_references );
                 }else{
                     // TODO: decrement and remove
+                    unimplemented!()
                 }
             }
         };
-
-        let seen = HashSet::new();
-        rel_item.increment( seen, 1 + self.indirect_references );
     }
 
-    fn increment(&mut self, seen: HashSet<SubjectId>, increment: isize ) {
+    fn increment(&mut self, seen: &mut HashSet<SubjectId>, increment: isize ) {
         if seen.contains(&self.subject_id){
             return;
         }
@@ -62,14 +74,9 @@ impl Item {
         self.indirect_references += increment;
 
         for (_,rel_item) in self.relations.iter(){
-            rel_item.increment(seen, increment);
+            rel_item.lock().unwrap().increment(seen, increment);
         }
     }
-}
-
-/// Performs topological sorting.
-pub struct ContextManager {
-    items: HashMap<SubjectId, Rc<Item>>,
 }
 
 impl ContextManager {
@@ -79,40 +86,51 @@ impl ContextManager {
 
     /// Returns the number of elements in the `ContextManager`.
     pub fn len(&self) -> usize {
-        self.entries.len()
+        self.items.len()
     }
 
     /// Returns true if the `ContextManager` contains no entries.
     pub fn is_empty(&self) -> bool {
-        self.entries.is_empty()
+        self.items.is_empty()
     }
-    pub fn get_head (&self, subject_id: SubjectId) -> &MemoRefHead {
-        if let Some(item) = self.subject_heads.get( &subject_id ) {
-            &item.head
+
+    pub fn subject_ids(&self) -> Vec<SubjectId> {
+        self.items.keys().map(|id| *id ).collect()
+    }
+    pub fn get_head (&self, subject_id: SubjectId) -> Option<MemoRefHead> {
+        if let Some(item) = self.items.get( &subject_id ) {
+            item.lock().unwrap().head.clone() // item.head is itself an Option
+        }else{
+            None
         }
     }
+
+    /// Update the head for a given subject. The previous head is summarily overwritten.
+    /// Any mrh.apply to the previous head must be done externally, if desired
+    /// relation_links must similarly be pre-calculated
     pub fn set_subject_head(&mut self, subject_id: SubjectId, head: MemoRefHead, relation_links: Vec<RelationLink> ) {
-        let mut item = match self.items.entry(subject_id) {
+        let mut item : Arc<Mutex<Item>> = match self.items.entry(subject_id) {
             Entry::Vacant(e) => {
-                let mut item = Rc::new(Item::new(subject_id, Some(head)));
-                e.insert(item.clone());
-                item
+                let item = Arc::new(Mutex::new(Item::new(subject_id, Some(head))));
+                e.insert(item).clone()
             }
             Entry::Occupied(e) => {
-                e.get_mut()
+                let mut item = e.get();
+                item.lock().unwrap().head = Some(head);
+                item.clone()
             }
         };
 
-        for link in relation_links{
-            item.set_relation(link, self);
+        for link in relation_links {
+            item.lock().unwrap().set_relation(link, self);
         }
     }
 
     /// Creates or returns a ContextManager item for a given subject_id
-    fn assert_item( &mut self, subject_id: SubjectId ) -> Rc<Item> {
+    fn assert_item( &mut self, subject_id: SubjectId ) -> Arc<Mutex<Item>> {
         match self.items.entry(subject_id) {
             Entry::Vacant(e) => {
-                let item = Rc::new(Item::new(subject_id, None));
+                let item = Arc::new(Mutex::new(Item::new(subject_id, None)));
                 e.insert(item.clone());
                 item
             }
@@ -137,7 +155,7 @@ impl ContextManager {
                 key
             })
     }*/
-    pub fn head_iter(&self) -> SubjectHeadIter {
+    pub fn subject_head_iter(&self) -> SubjectHeadIter {
         // QUESTION: how to make this respond to context changes while we're mid-iteration?
         //           is it even worth it?
         SubjectHeadIter{
@@ -148,20 +166,20 @@ impl ContextManager {
 impl Drop for ContextManager {
     fn drop (&mut self) {
         // Have to de-link all the items, as they may have circular references.
-        for (subject_id,item) in self.items {
-            item.relations.clear();
+        for (subject_id,ref mut item) in self.items.iter_mut() {
+            item.lock().unwrap().relations.clear();
         }
     }
 }
 
 struct SubjectHeadIter {
-
 }
 impl Iterator for SubjectHeadIter {
     type Item = SubjectHead;
 
     fn next(&mut self) -> Option<SubjectHead> {
-        self.pop()
+        //self.pop()
+        unimplemented!()
     }
 }
 

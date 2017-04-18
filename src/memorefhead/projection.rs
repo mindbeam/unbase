@@ -43,11 +43,11 @@ impl MemoRefHead {
 
         // HACK
 
-        relation_links.iter().enumerate().map(|slot_id, subject_id|{
-            if subject_id == 0 {
-                RelationLink{ slot_id: slot_id, subject_id: None }
+        relation_links.iter().enumerate().map(|(slot_id,subject_id)| {
+            if *subject_id == 0 {
+                RelationLink{ slot_id: slot_id as RelationSlotId, subject_id: None }
             }else{
-                RelationLink{ slot_id: slot_id, subject_id: Some(subject_id) }
+                RelationLink{ slot_id: slot_id as RelationSlotId, subject_id: Some(*subject_id) }
             }
         }).collect()
     }

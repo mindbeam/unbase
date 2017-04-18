@@ -29,7 +29,7 @@ pub struct ContextInner {
     pub root_index: RwLock<Option<IndexFixed>>,
 
     ///For compaction of the subject_heads
-    manager : Arc<Mutex<ContextManager>>,
+    manager : Mutex<ContextManager>,
 
     ///For active subjects / subject subscription management
     subjects: RwLock<HashMap<SubjectId, WeakSubject>>
@@ -140,7 +140,7 @@ impl Context{
 
         if let Some(relevant_context_head) = maybe_head {
             //println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
-            head.apply( relevant_context_head, &self.slab );
+            head.apply( &relevant_context_head, &self.slab );
 
         }else{
             //println!("# \\ No relevant head found in context");
@@ -198,7 +198,7 @@ impl Context{
     }
 
     /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is made
-    pub fn apply_subject_head (&self, subject_id: SubjectId, head: &MemoRefHead, notify_subject: bool ){
+    pub fn apply_subject_head (&self, subject_id: SubjectId, apply_head: &MemoRefHead, notify_subject: bool ){
         //println!("Context.apply_subject_head({}, {:?}) ", subject_id, head.memo_ids() );
 
         // NOTE: In all liklihood, there is significant room to optimize this.
@@ -214,14 +214,22 @@ impl Context{
 
         {
 
+
+            let head : MemoRefHead = if let Some(mut head) = { self.manager.lock().unwrap().get_head(subject_id).clone() } {
+                head.apply(apply_head, &self.slab );
+                head
+            }else{
+                (*apply_head).clone()
+            };
             let relation_links = head.project_all_relation_links(&self.slab);
+
             {
-                self.manager.lock().unwrap().set_subject_head(subject_id, &head, relation_links );
+                self.manager.lock().unwrap().set_subject_head(subject_id, head.clone(), relation_links );
             }
 
             if notify_subject {
                 if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
-                    subject.apply_head(head);
+                    subject.apply_head(&head);
                 }
             }
 
@@ -233,18 +241,18 @@ impl Context{
     // QUESTION: should context exchanges be happening constantly, but often ignored? or requested? Probably the former,
     //           sent based on an interval and/or compaction ( which would also likely be based on an interval and/or present context size)
     pub fn hack_send_context(&self, other: &Self) -> usize {
-        //self.compress();
+        self.compress();
 
-        let manager = self.manager.read().unwrap();
+        let manager = self.manager.lock().unwrap();
 
         let from_slabref = self.slab.my_ref.clone_for_slab(&other.slab);
 
         let mut memoref_count = 0;
 
-        for (subject_id, mrh) in manager.head_iter(){
-            memoref_count += mrh.len();
+        for subject_head in manager.subject_head_iter(){
+            memoref_count += subject_head.head.len();
 
-            other.apply_subject_head( subject_id, &mrh.clone_for_slab( &from_slabref, &other.slab, false ), true );
+            other.apply_subject_head( subject_head.subject_id, &subject_head.head.clone_for_slab( &from_slabref, &other.slab, false ), true );
             // HACK inside a hack - manually updating the remote subject is cheating, but necessary for now because subjects
             //      have a separate MRH versus the context
         }
@@ -316,16 +324,16 @@ impl Context{
         // TODO: conditionalize this on the basis of the present context size
 
         // Iterate the contextualized subject heads in reverse topological order
-        for (to_subject_id, to_head, from_subject_ids) in self.manager.topo_subject_head_iter() {
+        for subject_head in { self.manager.lock().unwrap().subject_head_iter() } {
 
             // TODO: implement MemoRefHead.conditionally_materialize such that the materialization threshold is selected dynamically.
             //       It shold almost certainly not materialize with a single edit since the last FullyMaterialized memo
             //head.conditionally_materialize( &self.slab );
 
-            if from_subject_ids.len() > 0 {
+            if subject_head.from_subject_ids.len() > 0 {
                 // OK, somebody is pointing to us, so lets issue an edit for them
                 // to point to the new materialized memo for their relevant relations
-                self.repoint_subject_relations(to_subject_id, to_head, from_subject_ids);
+                self.repoint_subject_relations(subject_head.subject_id, subject_head.head, subject_head.from_subject_ids);
 
 
                 // NOTE: In order to remove a subject head from the context, we must ensure that
@@ -350,8 +358,8 @@ impl Context{
 
     pub fn is_fully_materialized (&self) -> bool {
 
-        for (_,head) in self.subject_graph.read().unwrap().head_iter() {
-            if ! head.is_fully_materialized(&self.slab) {
+        for subject_head in self.manager.lock().unwrap().subject_head_iter() {
+            if ! subject_head.head.is_fully_materialized(&self.slab) {
                 return false
             }
         }
@@ -370,7 +378,7 @@ impl fmt::Debug for Context {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 
         fmt.debug_struct("ContextShared")
-            .field("subject_heads", &self.subject_graph.read().unwrap().subject_ids() )
+            .field("subject_heads", &self.manager.lock().unwrap().subject_ids() )
             // TODO: restore Debug for WeakSubject
             //.field("subjects", &self.subjects)
             .finish()
