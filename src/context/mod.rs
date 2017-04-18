@@ -215,11 +215,11 @@ impl Context{
         {
 
 
-            let head : MemoRefHead = if let Some(mut head) = { self.manager.lock().unwrap().get_head(subject_id).clone() } {
+            let head : &MemoRefHead = if let Some(mut head) = { self.manager.lock().unwrap().get_head(subject_id).clone() } {
                 head.apply(apply_head, &self.slab );
                 head
             }else{
-                (*apply_head).clone()
+                apply_head
             };
             let relation_links = head.project_all_relation_links(&self.slab);
 
