@@ -23,6 +23,10 @@ pub type RelationSlotId = u8;
 #[derive(Clone, PartialEq)]
 pub struct MemoRefHead (Vec<MemoRef>);
 
+pub struct RelationLink{
+    pub slot_id:    RelationSlotId,
+    pub subject_id: Option<SubjectId>
+}
 
 impl MemoRefHead {
     pub fn new () -> Self {

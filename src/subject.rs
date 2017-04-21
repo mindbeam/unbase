@@ -45,8 +45,6 @@ impl Subject {
                 MemoBody::FullyMaterialized {v: vals, r: RelationSlotSubjectHead(HashMap::new()) }
             );
         let head = memoref.to_head();
-        // Not 100% sure we can do this before subscribing, but it saves us a clone, so lets try it!
-        context.subject_updated( subject_id, &head );
 
         let subject = Subject(Arc::new(SubjectInner{
             id: subject_id,
@@ -118,7 +116,7 @@ impl Subject {
         );
 
         head.apply_memoref(&memoref, &slab);
-        context.subject_updated( self.id,  &head );
+        context.apply_subject_head( self.id,  &head, false );
 
         true
     }
@@ -138,7 +136,7 @@ impl Subject {
         );
 
         head.apply_memoref(&memoref, &slab);
-        context.subject_updated( self.id, &head );
+        context.apply_subject_head( self.id, &head, false );
 
     }
     // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context

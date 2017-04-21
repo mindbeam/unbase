@@ -1,6 +1,5 @@
 sudo: false # run in a docker container
 language: rust
 rust:
-  #- stable
   - beta
-  - nightly
+  #- nightly

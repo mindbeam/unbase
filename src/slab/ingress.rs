@@ -24,7 +24,7 @@ impl Slab {
 
                     if let Some(context) = weakcontext.upgrade() {
 
-                        context.apply_subject_head( subject_id, &memoref.to_head() );
+                        context.apply_subject_head( subject_id, &memoref.to_head(), true );
                     }
                 }
             }
