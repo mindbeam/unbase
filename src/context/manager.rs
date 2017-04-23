@@ -45,8 +45,23 @@ impl ContextManager {
 
     /// Returns the number of elements in the `ContextManager`.
     #[allow(dead_code)]
-    pub fn len(&self) -> usize {
-        self.items.len()
+    pub fn subject_count(&self) -> usize {
+        self.items.iter().filter(|i| i.is_some()).count()
+    }
+    #[allow(dead_code)]
+    pub fn subject_head_count(&self) -> usize {
+        self.items.iter().filter(|i| {
+            if let &&Some(ref item) = i {
+                if let Some(_) = item.head{
+                    return true;
+                }
+            }
+            false
+        }).count()
+    }
+    #[allow(dead_code)]
+    pub fn vacancies(&self) -> usize {
+        self.vacancies.len()
     }
 
     /// Returns true if the `ContextManager` contains no entries.
@@ -266,10 +281,13 @@ impl ContextManager {
         seen[item_id] = true;
 
         let relations: Vec<ItemId>;
-
+        let mut remove = false;
         {
             if let &mut Some(ref mut item) = &mut self.items[item_id] {
                 item.indirect_references += increment;
+                if item.indirect_references == 0 && item.head.is_none(){
+                    remove = true;
+                }
                 assert!(item.indirect_references >= 0,
                         "sanity error. indirect_references below zero");
 
@@ -278,6 +296,11 @@ impl ContextManager {
                 panic!("sanity error. increment for item_id");
             }
         };
+
+        if remove {
+            self.items[item_id] = None;
+            self.vacancies.push(item_id);
+        }
 
         for rel_item_id in relations {
             self.increment(rel_item_id, increment, seen);
@@ -446,7 +469,7 @@ mod test {
         assert_eq!(2, iter.next().expect("iter result 2 should be present").subject_id);
         assert!(iter.next().is_none(), "iter should have ended");
     }
-        #[test]
+    #[test]
     fn context_manager_repoint_relation() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
@@ -519,6 +542,66 @@ mod test {
         // }
         assert_eq!(3, iter.next().expect("iter result 3 should be present").subject_id);
         assert_eq!(1, iter.next().expect("iter result 1 should be present").subject_id);
+        assert!(iter.next().is_none(), "iter should have ended");
+    }
+    #[test]
+    fn context_manager_add_remove_cycle() {
+        let net = Network::create_new_system();
+        let slab = Slab::new(&net);
+        let mut manager = ContextManager::new();
+
+        // Subject 1 is pointing to nooobody
+        let head1 = slab.new_memo_basic_noparent(Some(1), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::empty() }).to_head();
+        manager.set_subject_head(1, head1.project_all_relation_links(&slab), head1.clone());
+
+        assert_eq!(manager.subject_count(), 1);
+        assert_eq!(manager.subject_head_count(), 1);
+        assert_eq!(manager.vacancies(), 0);
+        manager.remove_subject_head(1);
+        assert_eq!(manager.subject_count(), 0);
+        assert_eq!(manager.subject_head_count(), 0);
+        assert_eq!(manager.vacancies(), 1);
+
+        // Subject 2 slot 0 is pointing to Subject 1
+        let head2 = slab.new_memo_basic_noparent(Some(2), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 1, head1.clone()) }).to_head();
+        manager.set_subject_head(2, head2.project_all_relation_links(&slab), head2.clone());
+
+        assert_eq!(manager.subject_count(), 2);
+        assert_eq!(manager.subject_head_count(), 1);
+        assert_eq!(manager.vacancies(), 0);
+        manager.remove_subject_head(2);
+        assert_eq!(manager.subject_count(), 0);
+        assert_eq!(manager.subject_head_count(), 0);
+        assert_eq!(manager.vacancies(), 2);
+
+        //Subject 3 slot 0 is pointing to nobody
+        let head3 = slab.new_memo_basic_noparent(Some(3), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::empty() }).to_head();
+        manager.set_subject_head(3, head3.project_all_relation_links(&slab), head3.clone());
+
+        assert_eq!(manager.subject_count(), 1);
+        assert_eq!(manager.subject_head_count(), 1);
+        assert_eq!(manager.vacancies(), 1);
+        manager.remove_subject_head(3);
+        assert_eq!(manager.subject_count(), 0);
+        assert_eq!(manager.subject_head_count(), 0);
+        assert_eq!(manager.vacancies(), 2);
+
+        // Subject 4 slot 0 is pointing to Subject 3
+        let head4 = slab.new_memo_basic_noparent(Some(4), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 3, head3.clone()) }).to_head();
+        manager.set_subject_head(4, head4.project_all_relation_links(&slab), head4);
+
+        assert_eq!(manager.subject_count(), 2);
+        assert_eq!(manager.subject_head_count(), 1);
+        assert_eq!(manager.vacancies(), 0);
+        manager.remove_subject_head(4);
+        assert_eq!(manager.subject_count(), 0);
+        assert_eq!(manager.subject_head_count(), 0);
+        assert_eq!(manager.vacancies(), 2);
+
+        let mut iter = manager.subject_head_iter();
+        // for subject_head in iter {
+        //     println!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
+        // }
         assert!(iter.next().is_none(), "iter should have ended");
     }
 }
