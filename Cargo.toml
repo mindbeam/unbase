@@ -7,6 +7,7 @@ documentation = "https://docs.rs/unbase/"
 homepage = "https://unba.se"
 repository = "https://github.com/unbase/unbase"
 readme = "README.md"
+categories = ["database"]
 license = "Apache-2.0"
 #build = "build.rs"
 exclude = [
