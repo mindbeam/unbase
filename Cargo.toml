@@ -6,6 +6,7 @@ description = "Unbase is an open-source concept for a causal, coordination-free 
 documentation = "https://docs.rs/unbase/"
 homepage = "https://unba.se"
 repository = "https://github.com/unbase/unbase"
+readme = "README.md"
 license = "Apache-2.0"
 #build = "build.rs"
 exclude = [
