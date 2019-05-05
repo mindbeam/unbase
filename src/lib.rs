@@ -39,8 +39,7 @@
 // enable the await! macro, async support, and the new std::Futures api.
 #![feature(await_macro, async_await)]
 
-// only needed to manually implement a std future:
-#![feature(arbitrary_self_types)]
+use wasm_bindgen::prelude::*;
 
 #[macro_use]
 extern crate serde_derive;
@@ -60,3 +59,9 @@ pub mod util;
 pub use crate::network::Network;
 pub use crate::subject::Subject;
 pub use crate::slab::Slab;
+
+#[wasm_bindgen]
+pub fn greet(name: &str) {
+    use web_sys::console;
+    console::log_1(&JsValue::from_str(format!("Hello, {}!", name).as_str()));
+}

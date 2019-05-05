@@ -33,9 +33,22 @@ tokio = { version = "0.1.20" }
 tokio-async-await = "0.1.7"
 futures = "0.1.26"
 
+wasm-bindgen = "0.2.44"
+wasm-bindgen-test = "0.2.44"
+js-sys = "0.3.21"
+
+[dependencies.web-sys]
+version = "0.3.21"
+features = [
+  "console"
+]
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [features]
 
