@@ -115,6 +115,8 @@ impl ContextManager {
             self.set_relation(item_id, link);
         }
     }
+
+    #[allow(dead_code)]
     pub fn remove_subject_head(&mut self, subject_id: SubjectId ) {
         if let Some(item_id) = self.items.iter().position(|i| {
             if let &Some(ref it) = i {

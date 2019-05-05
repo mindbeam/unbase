@@ -36,9 +36,11 @@
 //! ```
 #![doc(html_root_url = "https://unba.se")]
 
-extern crate core;
-extern crate itertools;
+// enable the await! macro, async support, and the new std::Futures api.
+#![feature(await_macro, async_await)]
 
+// only needed to manually implement a std future:
+#![feature(arbitrary_self_types)]
 
 #[macro_use]
 extern crate serde_derive;
