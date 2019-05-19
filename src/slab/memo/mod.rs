@@ -7,9 +7,9 @@ use std::collections::HashMap;
 use std::{fmt};
 use std::sync::Arc;
 
-use subject::{SubjectId};
-use slab::MemoRef;
-use network::{SlabRef,SlabPresence};
+use crate::subject::{SubjectId};
+use crate::slab::MemoRef;
+use crate::network::{SlabRef,SlabPresence};
 use super::*;
 
 //pub type MemoId = [u8; 32];

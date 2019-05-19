@@ -37,9 +37,7 @@
 #![doc(html_root_url = "https://unba.se")]
 
 extern crate core;
-extern crate linked_hash_map;
 extern crate itertools;
-extern crate petgraph;
 
 
 #[macro_use]
@@ -57,6 +55,6 @@ pub mod index;
 pub mod memorefhead;
 pub mod util;
 
-pub use network::Network;
-pub use subject::Subject;
-pub use slab::Slab;
+pub use crate::network::Network;
+pub use crate::subject::Subject;
+pub use crate::slab::Slab;

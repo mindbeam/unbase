@@ -1,10 +1,10 @@
 pub mod serde;
 mod projection;
 
-use slab::*;
-use subject::*;
-use context::*;
-use error::*;
+use crate::slab::*;
+use crate::subject::*;
+use crate::context::*;
+use crate::error::*;
 
 use std::mem;
 use std::fmt;

@@ -1,5 +1,5 @@
-use slab::memoref_serde::*;
-use util::serde::*;
+use crate::slab::memoref_serde::*;
+use crate::util::serde::*;
 use super::*;
 
 impl StatefulSerialize for MemoRefHead {

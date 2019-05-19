@@ -7,10 +7,10 @@ pub use self::memo::{MemoId,Memo,MemoInner,MemoBody};
 pub use self::memoref::serde as memoref_serde;
 pub use self::memo::serde as memo_serde;
 
-use subject::SubjectId;
-use memorefhead::*;
-use context::{Context,WeakContext};
-use network::{Network,Transmitter,TransmitterArgs,TransportAddress};
+use crate::subject::SubjectId;
+use crate::memorefhead::*;
+use crate::context::{Context,WeakContext};
+use crate::network::{Network,Transmitter,TransmitterArgs,TransportAddress};
 
 use std::ops::Deref;
 use std::sync::{Arc,Weak,RwLock,Mutex};

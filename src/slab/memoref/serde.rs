@@ -1,6 +1,6 @@
 use super::*;
-use slab::slabref::serde::*;
-use util::serde::*;
+use crate::slab::slabref::serde::*;
+use crate::util::serde::*;
 
 impl StatefulSerialize for MemoPeerList {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>

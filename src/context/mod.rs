@@ -2,11 +2,11 @@ mod manager;
 // mod subject_graph;
 // mod topo_subject_head_iter;
 
-use slab::*;
-use subject::*;
-use memorefhead::MemoRefHead;
-use error::RetrieveError;
-use index::IndexFixed;
+use crate::slab::*;
+use crate::subject::*;
+use crate::memorefhead::MemoRefHead;
+use crate::error::RetrieveError;
+use crate::index::IndexFixed;
 use self::manager::ContextManager;
 
 use std::ops::Deref;
@@ -225,7 +225,7 @@ impl Context {
         {
 
 
-            let head: MemoRefHead = if let Some(mut head) = {
+            let head: MemoRefHead = if let Some(head) = {
                 self.manager.lock().unwrap().get_head(subject_id)
             } {
                 head.apply(apply_head, &self.slab);

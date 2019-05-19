@@ -1,13 +1,13 @@
 use std::fmt;
-use network::{TransportAddress};
-use slab::SlabId;
+use crate::network::{TransportAddress};
+use crate::slab::SlabId;
 
-use serde::ser::{Serialize};
-pub use serde::ser::{Serializer,SerializeStruct,SerializeSeq,SerializeMap};
-pub use serde::de::{Deserializer,DeserializeSeed,Visitor,SeqVisitor};
+use ::serde::ser::{Serialize};
+pub use ::serde::ser::{Serializer,SerializeStruct,SerializeSeq,SerializeMap};
+pub use ::serde::de::{Deserializer,DeserializeSeed,Visitor,SeqVisitor};
 
-pub use serde::ser::Error as SerError;
-pub use serde::de::Error as DeError;
+pub use ::serde::ser::Error as SerError;
+pub use ::serde::de::Error as DeError;
 
 pub struct SerializeHelper<'a> {
     pub dest_slab_id: &'a SlabId,
@@ -78,9 +78,9 @@ impl<K,V,H> StatefulSerialize for HashMap<K,V,H>
             (lo, Some(hi)) if lo == hi => Some(lo),
             _ => None,
         };
-        let mut serializer = try!(serializer.serialize_map(hint));
+        let mut serializer = serializer.serialize_map(hint)?;
         for (key, value) in iter {
-            try!(serializer.serialize_entry(&key, &SerializeWrapper(value,helper)));
+            serializer.serialize_entry(&key, &SerializeWrapper(value,helper))?;
         }
         serializer.end()
 

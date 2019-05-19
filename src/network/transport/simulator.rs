@@ -2,9 +2,9 @@
 use std::fmt;
 use super::*;
 use std::sync::{Arc,Mutex};
-use slab::*;
+use crate::slab::*;
 use itertools::partition;
-use network::*;
+use crate::network::*;
 
 // Minkowski stuff: Still ridiculous, but necessary for our purposes.
 pub struct XYZPoint{

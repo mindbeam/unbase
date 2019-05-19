@@ -3,10 +3,10 @@ use std::fmt;
 use std::collections::HashMap;
 use std::sync::{Arc,RwLock,Weak};
 
-use slab::*;
-use memorefhead::*;
-use context::{Context,ContextRef};
-use error::*;
+use crate::slab::*;
+use crate::memorefhead::*;
+use crate::context::{Context,ContextRef};
+use crate::error::*;
 
 pub type SubjectId     = u64;
 pub type SubjectField  = String;

@@ -5,12 +5,12 @@ use std::str;
 use super::*;
 use std::sync::mpsc;
 use std::sync::{Arc,Mutex};
-use slab::*;
+use crate::slab::*;
 // use std::collections::BTreeMap;
 use super::packet::*;
-use util::serde::DeserializeSeed;
+use crate::util::serde::DeserializeSeed;
 
-use util::serde::{SerializeHelper,SerializeWrapper};
+use crate::util::serde::{SerializeHelper,SerializeWrapper};
 use super::packet::serde::PacketSeed;
 //use std::time;
 

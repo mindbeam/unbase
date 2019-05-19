@@ -3,7 +3,7 @@
         unused_qualifications, unused_results)]
 
 use super::*;
-use memorefhead::RelationLink;
+use crate::memorefhead::RelationLink;
 
 // TODO: farm the guts of this out to it's own topo-sort accumulator crate
 //      using gratuitous Arc<Mutex<>> for now which will later be converted to unsafe Mutex<Rc<Item>>
@@ -384,8 +384,8 @@ impl SubjectHeadIter {
 #[cfg(test)]
 mod test {
     use std::collections::HashMap;
-    use {Network, Slab};
-    use slab::{MemoBody, RelationSlotSubjectHead};
+    use crate::{Network, Slab};
+    use crate::slab::{MemoBody, RelationSlotSubjectHead};
     use super::ContextManager;
 
     #[test]

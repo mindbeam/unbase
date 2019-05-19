@@ -1,7 +1,7 @@
-use context::ContextRef;
-use subject::*;
-use memorefhead::{MemoRefHead,RelationSlotId};
-use error::RetrieveError;
+use crate::context::ContextRef;
+use crate::subject::*;
+use crate::memorefhead::{MemoRefHead,RelationSlotId};
+use crate::error::RetrieveError;
 use std::collections::HashMap;
 
 

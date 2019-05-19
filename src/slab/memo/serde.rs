@@ -1,14 +1,14 @@
 use super::*;
-use memorefhead::serde::*;
+use crate::memorefhead::serde::*;
 use super::memoref::serde::MemoPeerSeed;
 
-use slab::slabref::serde::SlabRefSeed;
-use util::serde::*;
+use crate::slab::slabref::serde::SlabRefSeed;
+use crate::util::serde::*;
 
 use std::fmt;
-use serde::*;
-use serde::ser::*;
-use serde::de::*;
+use ::serde::*;
+use ::serde::ser::*;
+use ::serde::de::*;
 
 
 struct RelationMRHSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
@@ -196,7 +196,7 @@ impl<'a> Visitor for MemoBodySeed<'a> {
         where V: EnumVisitor
     {
 
-        match try!(visitor.visit_variant()) {
+        match visitor.visit_variant()? {
             (MBVariant::SlabPresence,      variant) => variant.visit_newtype_seed(MBSlabPresenceSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }),
             (MBVariant::Relation,          variant) => variant.visit_newtype_seed(RelationMRHSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }).map(MemoBody::Relation),
             (MBVariant::Edit,              variant) => variant.visit_newtype().map(MemoBody::Edit),

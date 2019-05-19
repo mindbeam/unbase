@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use memorefhead::MemoRefHead;
-use slab::*;
+use crate::memorefhead::MemoRefHead;
+use crate::slab::*;
 
 pub struct SystemCreator;
 
