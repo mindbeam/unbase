@@ -1,0 +1,20 @@
+[package]
+name = "unbase_web"
+version = "0.1.0"
+authors = ["Daniel Norman <daniel@danielnorman.net>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4.6"
+wasm-bindgen = "0.2.44"
+wasm-bindgen-futures = { version = "0.3.22", features = ["futures_0_3"] }
+wasm-bindgen-test = "0.2.44"
+wasm-bindgen-console-logger = "0.1.1"
+js-sys = "0.3.21"
+futures = "0.1.27"
+
+[dependencies.web-sys]
+version = "0.3.21"
+features = [
+  "console"
+]
