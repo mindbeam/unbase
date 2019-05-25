@@ -4,6 +4,7 @@ use futures::prelude::*;
 use unbase_web::timeout::Timeout;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
+use log::*;
 
 //
 //#[cfg(target_os = "wasm32")]
@@ -29,18 +30,22 @@ use wasm_bindgen_test::*;
 //}
 
 #[wasm_bindgen_test]
-fn pass() {
-    assert_eq!(1, 1);
+fn pass(){
+    unbase_web::init_logger();
+    assert_eq!(1, 1)
+
 }
 
 
 #[wasm_bindgen_test(async)]
 fn pass_after_2s() -> impl Future<Item = (), Error = JsValue> {
-    console_log!("immediate log");
+    unbase_web::init_logger();
+
+    info!("immediate log");
     Timeout::new(Duration::new(1, 0)).and_then(|()| {
-        console_log!("log after 1s");
+        info!("log after 1s");
         Timeout::new(Duration::new(1, 0)).map(|()| {
-            console_log!("log at end");
+            info!("log at end");
         })
     })
 }
