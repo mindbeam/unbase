@@ -1,0 +1,21 @@
+[package]
+name = "timer"
+version = "0.1.1"
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[target.'cfg(any(target_arch = "wasm32"))'.dependencies]
+console_error_panic_hook = '0.1'
+#futures = "0.1"
+futures-preview = { version = "=0.3.0-alpha.16", features = ["async-await", "nightly", "compat"] }
+js-sys = "0.3.22"
+scoped-tls = "1.0"
+wasm-bindgen = "0.2.45"
+wasm-bindgen-futures="0.3.22"
+wasm-bindgen-test-macro = "0.2.45"
+
+[target.'cfg(not(any(target_arch = "wasm32")))'.dependencies]
+tokio-timer = "0.2"
+
+[lib]
+test = false

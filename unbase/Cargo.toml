@@ -20,6 +20,9 @@ exclude = [
 ]
 
 [dependencies]
+futures-preview = { version = "=0.3.0-alpha.16", features = ["async-await", "nightly", "compat"] }
+timer = { path = "../timer" }
+
 log = "0.4.6"
 sha2 = "0.8.0"
 itertools = "0.8.0"
@@ -30,7 +33,6 @@ serde_json = "0.9.9"
 #serde = "1.0.90"
 #serde_json = "1.0.39"
 #serde_derive = "1.0.91"
-futures = "0.1.26"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "0.1.20" }

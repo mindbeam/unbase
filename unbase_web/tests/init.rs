@@ -1,7 +1,13 @@
-use std::time::Duration;
+#![feature(await_macro, async_await)]
 
-use futures::prelude::*;
-use unbase_web::timeout::Timeout;
+//use futures::compat::Future01CompatExt;
+//use futures::compat::Compat;
+//use pin_utils::pin_mut;
+use futures::future::{FutureExt, TryFutureExt};
+
+use std::time::Duration;
+use timer::Timeout;
+
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 use log::*;
@@ -38,14 +44,29 @@ fn pass(){
 
 
 #[wasm_bindgen_test(async)]
-fn pass_after_2s() -> impl Future<Item = (), Error = JsValue> {
+fn pass_after_2s_shim() -> impl futures01::future::Future<Item = (), Error = JsValue> {
     unbase_web::init_logger();
 
+    pass_after_2s().boxed_local().compat()
+
+}
+
+async fn pass_after_2s() -> Result<(),JsValue> {
     info!("immediate log");
-    Timeout::new(Duration::new(1, 0)).and_then(|()| {
-        info!("log after 1s");
-        Timeout::new(Duration::new(1, 0)).map(|()| {
-            info!("log at end");
-        })
-    })
+
+    Timeout::new(Duration::from_secs(1)).await;
+
+    info!("log after 1s");
+
+
+    Timeout::new(Duration::from_secs(1)).await;
+
+    info!("second log after 1s");
+
+
+    Timeout::new(Duration::from_secs(1)).await;
+
+    info!("third log after 1s");
+
+    Ok(())
 }

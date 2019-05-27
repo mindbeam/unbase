@@ -1,4 +1,6 @@
-pub mod timeout;
+
+// enable the await! macro, async support, and the new std::Futures api.
+#![feature(await_macro, async_await)]
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::futures_0_3::*;
