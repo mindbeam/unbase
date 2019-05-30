@@ -20,8 +20,9 @@ exclude = [
 ]
 
 [dependencies]
-futures-preview = { version = "=0.3.0-alpha.16", features = ["async-await", "nightly", "compat"] }
+
 timer = { path = "../timer" }
+futures-preview = { version = "=0.3.0-alpha.16", features = ["async-await", "nightly", "compat"] }
 
 log = "0.4.6"
 sha2 = "0.8.0"
@@ -37,8 +38,10 @@ serde_json = "0.9.9"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "0.1.20" }
 tokio-async-await = "0.1.7"
+env_logger = "0.6.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-console-logger = "0.1.1"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

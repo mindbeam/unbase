@@ -5,6 +5,7 @@ authors = ["Daniel Norman <daniel@danielnorman.net>"]
 edition = "2018"
 
 [dependencies]
+unbase = { path = "../unbase" }
 futures01 = { package = "futures", version = "0.1" }
 futures-preview = { version = "=0.3.0-alpha.16", features = ["async-await", "nightly", "compat"] }
 pin-utils = "0.1.0-alpha.4"
@@ -16,10 +17,3 @@ wasm-bindgen-futures = { version = "0.3.22", features = ["futures_0_3"] }
 wasm-bindgen-test = "0.2.44"
 wasm-bindgen-console-logger = "0.1.1"
 js-sys = "0.3.21"
-
-
-[dependencies.web-sys]
-version = "0.3.21"
-features = [
-  "console"
-]
