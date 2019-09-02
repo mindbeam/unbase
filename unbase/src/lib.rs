@@ -36,9 +36,6 @@
 //! ```
 #![doc(html_root_url = "https://unba.se")]
 
-// enable the await! macro, async support, and the new std::Futures api.
-#![feature(await_macro, async_await)]
-
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;

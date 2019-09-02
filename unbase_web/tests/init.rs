@@ -1,4 +1,3 @@
-#![feature(await_macro, async_await)]
 
 use futures::future::{FutureExt, TryFutureExt};
 

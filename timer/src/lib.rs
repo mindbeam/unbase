@@ -1,5 +1,3 @@
-#![feature(await_macro, async_await)]
-
 #[cfg(not(target_arch = "wasm32"))]
 mod standard;
 
