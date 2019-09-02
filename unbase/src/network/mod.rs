@@ -30,7 +30,7 @@ impl Deref for Network {
 pub struct NetworkInner {
     next_slab_id: RwLock<u32>,
     slabs: RwLock<Vec<WeakSlab>>,
-    transports: RwLock<Vec<Box<Transport + Send + Sync>>>,
+    transports: RwLock<Vec<Box<dyn Transport + Send + Sync>>>,
     root_index_seed: RwLock<Option<(MemoRefHead, SlabRef)>>,
     create_new_system: bool,
 }
@@ -73,7 +73,7 @@ impl Network {
         WeakNetwork(Arc::downgrade(&self.0))
     }
 
-    pub fn add_transport(&self, transport: Box<Transport + Send + Sync>) {
+    pub fn add_transport(&self, transport: Box<dyn Transport + Send + Sync>) {
         if transport.is_local() {
             // Can only have one is_local transport at a time. Filter out any other local transports when adding this one
             let mut transports = self.transports.write().unwrap();

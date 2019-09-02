@@ -18,7 +18,7 @@ impl Slab {
                 }
             };
 
-            if let Some(subscribers) = maybe_sub {;
+            if let Some(subscribers) = maybe_sub {
 
                 for weakcontext in subscribers {
 

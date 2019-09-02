@@ -1,6 +1,4 @@
 
-use futures::future::{FutureExt, TryFutureExt};
-
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 use log::*;

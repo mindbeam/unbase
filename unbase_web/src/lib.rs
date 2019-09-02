@@ -4,7 +4,7 @@ pub mod util;
 //use wasm_bindgen::prelude::*;
 //use wasm_bindgen_futures::futures_0_3::*;
 
-use log::{error, info, warn};
+use log::{info};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
