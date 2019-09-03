@@ -7,16 +7,16 @@ edition = "2018"
 [dependencies]
 
 futures01 = { package = "futures", version = "0.1" }
-futures-preview = { version = "=0.3.0-alpha.16", features = ["async-await", "nightly", "compat"] }
+futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly", "compat"] }
 
 [target.'cfg(any(target_arch = "wasm32"))'.dependencies]
 console_error_panic_hook = '0.1'
-js-sys = "0.3.22"
-wasm-bindgen = "0.2.45"
-wasm-bindgen-test = "0.2.45"
+js-sys = "^0.3.27"
+wasm-bindgen = "^0.2.45"
+wasm-bindgen-test = "^0.2.45"
 wasm-bindgen-test-macro = "0.2.45"
-wasm-bindgen-futures = { version = "0.3.22", features = ["futures_0_3"] }
-wasm-bindgen-console-logger = "0.1.1"
+wasm-bindgen-futures = "^0.3.27"
+wasm-bindgen-console-logger = "^0.1.1"
 
 [target.'cfg(not(any(target_arch = "wasm32")))'.dependencies]
 futures-timer = "0.2"

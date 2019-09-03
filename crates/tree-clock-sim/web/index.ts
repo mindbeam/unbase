@@ -1,16 +1,17 @@
-function start(mymod: typeof import('../pkg/tree-clock-sim-rs')) {
-    console.log("All modules loaded");
-    mymod.hello_worlx();
-
-    init();
-    animate();
-}
-
 async function load() {
     start(await import('../pkg/tree-clock-sim-rs'));
 }
 
 load();
+
+async function start(mymod: typeof import('../pkg/tree-clock-sim-rs')) {
+
+    console.log("All modules loaded");
+    await mymod.hello_worlx();
+
+    init();
+    animate();
+}
 
 import './style.css'
 import * as DiscImage from './textures/sprites/disc.png';

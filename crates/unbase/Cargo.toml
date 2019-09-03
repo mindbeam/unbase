@@ -22,7 +22,7 @@ exclude = [
 [dependencies]
 
 timer = { path = "../timer" }
-futures-preview = { version = "=0.3.0-alpha.16", features = ["async-await", "nightly", "compat"] }
+futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly", "compat"] }
 
 log = "0.4.6"
 sha2 = "0.8.0"
