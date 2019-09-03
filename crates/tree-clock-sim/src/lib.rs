@@ -7,7 +7,6 @@
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-use futures::compat::Compat;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::futures_0_3::{JsFuture, future_to_promise, spawn_local};
 use web_sys::console;
