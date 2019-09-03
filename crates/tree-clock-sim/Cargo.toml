@@ -28,6 +28,7 @@ js-sys = "^0.3.27"
 timer = { path = "../timer" }
 futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly", "compat"] }
 wasm-bindgen-futures = { version = "0.3.27", features = ["futures_0_3"] }
+rand = "0.7.0"
 
 # `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
 # compared to the default allocator's ~10K. However, it is slower than the default

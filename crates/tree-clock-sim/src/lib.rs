@@ -39,3 +39,5 @@ async fn hello_worly () -> Result<JsValue,JsValue>{
 
         Ok(1.into())
 }
+
+pub mod slab;
