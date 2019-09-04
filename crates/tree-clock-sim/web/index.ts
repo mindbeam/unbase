@@ -8,9 +8,6 @@ async function start(mymod: typeof import('../pkg/tree-clock-sim-rs')) {
 
     console.log("All modules loaded");
     await mymod.hello_worlx();
-
-    init();
-    animate();
 }
 
 import './style.css'
@@ -46,7 +43,7 @@ var mouse;
 var trackBallControls;
 var dragControls;
 
-function init() {
+export function init() {
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 2, 4000 );
     camera.position.z = 1500;
     scene = new THREE.Scene();
@@ -163,8 +160,7 @@ function onDocumentTouchMove( event ) {
     }
 }
 
-function animate() {
-    requestAnimationFrame( animate );
+export function animate() {
     render();
     stats.update();
 }
