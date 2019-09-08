@@ -1,6 +1,6 @@
-node_modules
-/dist
 /target
-/pkg
-/wasm-pack.log
-.awcache
+**/*.rs.bk
+Cargo.lock
+bin/
+pkg/
+wasm-pack.log
