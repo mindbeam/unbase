@@ -10,16 +10,50 @@ crate-type = ["cdylib"]
 [dependencies]
 js-sys = "0.3.27"
 wasm-bindgen = "0.2.50"
+lazy_static = "1.4.0"
+bincode = "=1.0.1"
+blender-armature = "=0.1.7"
+blender-mesh = "=0.3.3"
+console_error_panic_hook = "=0.1.5"
+nalgebra = "=0.16.12"
+
+[build-dependencies]
+bincode = "=1.0.1"
+blender-armature = "=0.1.7"
+blender-mesh = "=0.3.3"
+landon = "=0.1.2"
 
 [dependencies.web-sys]
-version = "0.3.4"
+version = "^0.3.6"
 features = [
+  'CssStyleDeclaration',
   'Document',
   'Element',
+  'Event',
+  'EventTarget',
   'HtmlCanvasElement',
+  'HtmlElement',
+  'HtmlImageElement',
+  'HtmlInputElement',
+  'InputEvent',
+  'MouseEvent',
+  'Node',
+  'Touch',
+  'TouchEvent',
+  'TouchList',
   'WebGlBuffer',
-  'WebGlRenderingContext',
+  'WebGlFramebuffer',
   'WebGlProgram',
+  'WebGlRenderbuffer',
+  'WebGlRenderingContext',
   'WebGlShader',
+  'WebGlTexture',
+  'WebGlUniformLocation',
+  'WebGlVertexArrayObject',
+  'WheelEvent',
   'Window',
+  'console',
 ]
+
+[profile.release]
+lto = true

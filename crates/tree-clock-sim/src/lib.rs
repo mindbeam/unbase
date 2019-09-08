@@ -1,123 +1,161 @@
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
+//! An example of how to render water using WebGL + Rust + WebAssembly.
+//!
+//! We'll try to heavily over comment the code so that it's more accessible to those that
+//! are less familiar with the techniques that are used.
+//!
+//! In a real application you'd split things up into different modules and files,
+//! but I tend to prefer tutorials that are all in one file that you can scroll up and down in
+//! and soak up what you see vs. needing to hop around different files.
+//!
+//! If you have any questions or comments feel free to open an issue on GitHub!
+//!
+//! https://github.com/chinedufn/webgl-water-tutorial
+//!
+//! Heavily inspired by this @thinmatrix tutorial:
+//!   - https://www.youtube.com/watch?v=HusvGeEDU_U&list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh
 
+#![deny(missing_docs)]
+#![feature(custom_attribute)]
+
+extern crate wasm_bindgen;
+pub(in crate) use self::app::*;
+use self::canvas::*;
+use self::controls::*;
+use self::render::*;
+use crate::load_texture_img::load_texture_image;
+use console_error_panic_hook;
+use wasm_bindgen::{JsCast,prelude::*};
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use web_sys::*;
+//use std::time::{Duration, Instant};
+
+mod app;
+mod canvas;
+mod controls;
+mod load_texture_img;
+mod render;
+mod shader;
+
+fn window() -> web_sys::Window {
+    web_sys::window().expect("no global `window` exists")
+}
+
+fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+    window()
+        .request_animation_frame(f.as_ref().unchecked_ref())
+        .expect("should register `requestAnimationFrame` OK");
+}
+
+fn document() -> web_sys::Document {
+    window()
+        .document()
+        .expect("should have a document on window")
+}
+
+fn body() -> web_sys::HtmlElement {
+    document().body().expect("document should have a body")
+}
+
+/// This function is automatically invoked after the wasm module is instantiated.
 #[wasm_bindgen(start)]
-pub fn start() -> Result<(), JsValue> {
-    let document = web_sys::window().unwrap().document().unwrap();
-    let canvas = document.get_element_by_id("canvas").unwrap();
-    let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
+pub fn run() -> Result<(), JsValue> {
 
-    let context = canvas
-        .get_context("webgl")?
-        .unwrap()
-        .dyn_into::<WebGlRenderingContext>()?;
+    let mut webclient = WebClient::new();
 
-    let vert_shader = compile_shader(
-        &context,
-        WebGlRenderingContext::VERTEX_SHADER,
-        r#"
-        attribute vec4 position;
-        void main() {
-            gl_Position = position;
-        }
-    "#,
-    )?;
-    let frag_shader = compile_shader(
-        &context,
-        WebGlRenderingContext::FRAGMENT_SHADER,
-        r#"
-        void main() {
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-        }
-    "#,
-    )?;
-    let program = link_program(&context, &vert_shader, &frag_shader)?;
-    context.use_program(Some(&program));
+    webclient.start();
 
-    let vertices: [f32; 9] = [-0.7, -0.7, 0.0, 0.7, -0.7, 0.0, 0.0, 0.7, 0.0];
-
-    let buffer = context.create_buffer().ok_or("failed to create buffer")?;
-    context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&buffer));
-
-    // Note that `Float32Array::view` is somewhat dangerous (hence the
-    // `unsafe`!). This is creating a raw view into our module's
-    // `WebAssembly.Memory` buffer, but if we allocate more pages for ourself
-    // (aka do a memory allocation in Rust) it'll cause the buffer to change,
-    // causing the `Float32Array` to be invalid.
+    // Here we want to call `requestAnimationFrame` in a loop, but only a fixed
+    // number of times. After it's done we want all our resources cleaned up. To
+    // achieve this we're using an `Rc`. The `Rc` will eventually store the
+    // closure we want to execute on each frame, but to start out it contains
+    // `None`.
     //
-    // As a result, after `Float32Array::view` we have to be very careful not to
-    // do any memory allocations before it's dropped.
-    unsafe {
-        let vert_array = js_sys::Float32Array::view(&vertices);
+    // After the `Rc` is made we'll actually create the closure, and the closure
+    // will reference one of the `Rc` instances. The other `Rc` reference is
+    // used to store the closure, request the first frame, and then is dropped
+    // by this function.
+    //
+    // Inside the closure we've got a persistent `Rc` reference, which we use
+    // for all future iterations of the loop
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
 
-        context.buffer_data_with_array_buffer_view(
-            WebGlRenderingContext::ARRAY_BUFFER,
-            &vert_array,
-            WebGlRenderingContext::STATIC_DRAW,
-        );
-    }
+    let mut last_time = js_sys::Date::now();//Instant::now();
+    *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
 
-    context.vertex_attrib_pointer_with_i32(0, 3, WebGlRenderingContext::FLOAT, false, 0, 0);
-    context.enable_vertex_attrib_array(0);
+        let new_time = js_sys::Date::now(); // Instant::now();
+        let elapsed = last_time - new_time; //new_now.duration_since(last_time).as_millis();
+        webclient.update(elapsed as f32);
+        webclient.render();
 
-    context.clear_color(0.0, 0.0, 0.0, 1.0);
-    context.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
+        last_time = new_time;
 
-    context.draw_arrays(
-        WebGlRenderingContext::TRIANGLES,
-        0,
-        (vertices.len() / 3) as i32,
-    );
+        // Schedule ourself for another requestAnimationFrame callback.
+        request_animation_frame(f.borrow().as_ref().unwrap());
+    }) as Box<dyn FnMut()>));
+
+    request_animation_frame(g.borrow().as_ref().unwrap());
     Ok(())
+
 }
 
-pub fn compile_shader(
-    context: &WebGlRenderingContext,
-    shader_type: u32,
-    source: &str,
-) -> Result<WebGlShader, String> {
-    let shader = context
-        .create_shader(shader_type)
-        .ok_or_else(|| String::from("Unable to create shader object"))?;
-    context.shader_source(&shader, source);
-    context.compile_shader(&shader);
 
-    if context
-        .get_shader_parameter(&shader, WebGlRenderingContext::COMPILE_STATUS)
-        .as_bool()
-        .unwrap_or(false)
-    {
-        Ok(shader)
-    } else {
-        Err(context
-            .get_shader_info_log(&shader)
-            .unwrap_or_else(|| String::from("Unknown error creating shader")))
+/// Used to run the application from the web
+pub struct WebClient {
+    app: Rc<App>,
+    gl: Rc<WebGlRenderingContext>,
+    renderer: WebRenderer,
+}
+
+impl WebClient {
+    /// Create a new web client
+    pub fn new() -> WebClient {
+        console_error_panic_hook::set_once();
+
+        let app = Rc::new(App::new());
+
+        let gl = Rc::new(create_webgl_context(Rc::clone(&app)).unwrap());
+        append_controls(Rc::clone(&app)).expect("Append controls");
+
+        let renderer = WebRenderer::new(&gl);
+
+        WebClient { app, gl, renderer }
     }
-}
 
-pub fn link_program(
-    context: &WebGlRenderingContext,
-    vert_shader: &WebGlShader,
-    frag_shader: &WebGlShader,
-) -> Result<WebGlProgram, String> {
-    let program = context
-        .create_program()
-        .ok_or_else(|| String::from("Unable to create shader object"))?;
+    /// Start our WebGL Water application. `index.html` will call this function in order
+    /// to begin rendering.
+    pub fn start(&self) -> Result<(), JsValue> {
+        let gl = &self.gl;
 
-    context.attach_shader(&program, vert_shader);
-    context.attach_shader(&program, frag_shader);
-    context.link_program(&program);
+        load_texture_image(
+            Rc::clone(gl),
+            "/dudvmap.png",
+            TextureUnit::Dudv,
+        );
+        load_texture_image(
+            Rc::clone(gl),
+            "/normalmap.png",
+            TextureUnit::NormalMap,
+        );
+        load_texture_image(
+            Rc::clone(gl),
+            "/stone-texture.png",
+            TextureUnit::Stone,
+        );
 
-    if context
-        .get_program_parameter(&program, WebGlRenderingContext::LINK_STATUS)
-        .as_bool()
-        .unwrap_or(false)
-    {
-        Ok(program)
-    } else {
-        Err(context
-            .get_program_info_log(&program)
-            .unwrap_or_else(|| String::from("Unknown error creating program object")))
+        Ok(())
+    }
+
+    /// Update our simulation
+    pub fn update(&self, dt: f32) {
+        self.app.store.borrow_mut().msg(&Msg::AdvanceClock(dt));
+    }
+
+    /// Render the scene. `index.html` will call this once every requestAnimationFrame
+    pub fn render(&mut self) {
+        self.renderer
+            .render(&self.gl, &self.app.store.borrow().state, &self.app.assets());
     }
 }
