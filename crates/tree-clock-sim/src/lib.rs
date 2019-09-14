@@ -18,7 +18,8 @@
 #![feature(custom_attribute)]
 
 extern crate wasm_bindgen;
-pub(in crate) use self::app::*;
+
+pub (in crate) use self::app::*;
 use self::canvas::*;
 use self::controls::*;
 use self::render::*;
