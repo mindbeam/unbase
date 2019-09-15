@@ -1,12 +1,12 @@
 ---
 layout: page
-title: "Beacon Clock Simulation 1"
+title: "Beacon Clock Sim v1"
 category: simulation
 seq: 1
 ---
 
 
-***First attempt at modeling beacon clock pings, and infectious knowledge.***
+***First attempt at modeling beacon clock pings and infectious knowledge.***
 
 This is a very rudimentary first attempt. It does _not_ implement any node affinity, or graph traversal, or happens-before comparision.
 
