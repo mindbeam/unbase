@@ -20,6 +20,7 @@ codeurl: 'https://github.com/unbase/unbase'
 # Default categories (in order) to appear in the navigation
 sections: [
     ['design', 'Design'],
+    ['simulation','Simulation']
 ]
 
 # Keep as an empty string if served up at the root. If served up at a specific
