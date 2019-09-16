@@ -1,5 +1,5 @@
 [package]
-name = "tree-clock-sim"
+name = "beacon-clock-sim"
 version = "0.1.0"
 authors = ["Daniel Norman"]
 edition = "2018"

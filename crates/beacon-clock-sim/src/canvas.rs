@@ -7,7 +7,7 @@ use wasm_bindgen::JsValue;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
-pub static APP_DIV_ID: &'static str = "webgl-water-tutorial";
+pub static APP_DIV_ID: &'static str = "beacon-clock-sim";
 
 pub static CANVAS_WIDTH: i32 = 512;
 pub static CANVAS_HEIGHT: i32 = 512;

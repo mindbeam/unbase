@@ -1,10 +1,10 @@
 async function load() {
-    start(await import('../pkg/tree-clock-sim-rs'));
+    start(await import('../pkg/beacon-clock-sim-rs'));
 }
 
 load();
 
-async function start(mymod: typeof import('../pkg/tree-clock-sim-rs')) {
+async function start(mymod: typeof import('../pkg/beacon-clock-sim-rs')) {
 
     console.log("All modules loaded");
     await mymod.hello_worlx();

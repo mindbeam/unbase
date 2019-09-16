@@ -22,7 +22,7 @@ use std::process::Command;
 // landon blender install armature-to-json
 // ```
 fn main() {
-    let blender_files = vec!["./terrain.blend".to_string(), "./bird.blend".to_string()];
+    let blender_files = vec![];
 
     // Only re-run this build script if we change our blender file
     for blender_file in blender_files.iter() {

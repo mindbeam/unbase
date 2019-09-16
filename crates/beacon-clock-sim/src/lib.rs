@@ -1,18 +1,5 @@
-//! An example of how to render water using WebGL + Rust + WebAssembly.
+//! Unbase beacon clock simulator
 //!
-//! We'll try to heavily over comment the code so that it's more accessible to those that
-//! are less familiar with the techniques that are used.
-//!
-//! In a real application you'd split things up into different modules and files,
-//! but I tend to prefer tutorials that are all in one file that you can scroll up and down in
-//! and soak up what you see vs. needing to hop around different files.
-//!
-//! If you have any questions or comments feel free to open an issue on GitHub!
-//!
-//! https://github.com/chinedufn/webgl-water-tutorial
-//!
-//! Heavily inspired by this @thinmatrix tutorial:
-//!   - https://www.youtube.com/watch?v=HusvGeEDU_U&list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh
 
 #![deny(missing_docs)]
 #![feature(custom_attribute)]
