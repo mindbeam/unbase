@@ -2,14 +2,16 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 mod store;
+mod color;
 pub use self::store::*;
+pub use self::color::*;
 
-mod assets;
-pub use self::assets::*;
+//mod assets;
+//pub use self::assets::*;
 
 /// Used to instantiate our application
 pub struct App {
-    assets: Assets,
+    //assets: Assets,
     pub store: Rc<RefCell<Store>>,
 }
 
@@ -19,7 +21,7 @@ impl App {
         let assets = Assets::new();
 
         App {
-            assets,
+            //assets,
             store: Rc::new(RefCell::new(Store::new())),
         }
     }

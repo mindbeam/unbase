@@ -54,23 +54,10 @@ pub fn run() -> Result<(), JsValue> {
 
     webclient.start();
 
-    // Here we want to call `requestAnimationFrame` in a loop, but only a fixed
-    // number of times. After it's done we want all our resources cleaned up. To
-    // achieve this we're using an `Rc`. The `Rc` will eventually store the
-    // closure we want to execute on each frame, but to start out it contains
-    // `None`.
-    //
-    // After the `Rc` is made we'll actually create the closure, and the closure
-    // will reference one of the `Rc` instances. The other `Rc` reference is
-    // used to store the closure, request the first frame, and then is dropped
-    // by this function.
-    //
-    // Inside the closure we've got a persistent `Rc` reference, which we use
-    // for all future iterations of the loop
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
-    let mut last_time = js_sys::Date::now();//Instant::now();
+    let mut last_time = js_sys::Date::now();
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
 
         let new_time = js_sys::Date::now(); // Instant::now();
@@ -84,9 +71,10 @@ pub fn run() -> Result<(), JsValue> {
         request_animation_frame(f.borrow().as_ref().unwrap());
     }) as Box<dyn FnMut()>));
 
+    // Kick things off
     request_animation_frame(g.borrow().as_ref().unwrap());
-    Ok(())
 
+    Ok(())
 }
 
 
@@ -119,18 +107,8 @@ impl WebClient {
 
         load_texture_image(
             Rc::clone(gl),
-            "/dudvmap.png",
-            TextureUnit::Dudv,
-        );
-        load_texture_image(
-            Rc::clone(gl),
-            "/normalmap.png",
-            TextureUnit::NormalMap,
-        );
-        load_texture_image(
-            Rc::clone(gl),
-            "/stone-texture.png",
-            TextureUnit::Stone,
+            "/disc.png",
+            TextureUnit::Disc,
         );
 
         Ok(())
@@ -138,6 +116,7 @@ impl WebClient {
 
     /// Update our simulation
     pub fn update(&self, dt: f32) {
+        // TODO - change over to logical clock ticks
         self.app.store.borrow_mut().msg(&Msg::AdvanceClock(dt));
     }
 

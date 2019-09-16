@@ -8,19 +8,19 @@ use nalgebra::{Isometry3, Matrix4, Vector3};
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
-pub struct RenderableWaterTile<'a> {
+pub struct SlabRenderer<'a> {
     shader: &'a Shader,
 }
 
-impl<'a> RenderableWaterTile<'a> {
-    pub fn new(shader: &'a Shader) -> RenderableWaterTile<'a> {
-        RenderableWaterTile { shader }
+impl<'a> SlabRenderer<'a> {
+    pub fn new(shader: &'a Shader) -> SlabRenderer<'a> {
+        SlabRenderer { shader }
     }
 }
 
-impl<'a> Render<'a> for RenderableWaterTile<'a> {
+impl<'a> Render<'a> for SlabRenderer<'a> {
     fn shader_kind() -> ShaderKind {
-        ShaderKind::Water
+        ShaderKind::Slab
     }
 
     fn shader(&'a self) -> &'a Shader {
@@ -85,19 +85,19 @@ impl<'a> Render<'a> for RenderableWaterTile<'a> {
             refraction_texture_uni.as_ref(),
             TextureUnit::Refraction.texture_unit(),
         );
-        gl.uniform1i(
-            reflection_texture_uni.as_ref(),
-            TextureUnit::Reflection.texture_unit(),
-        );
-        gl.uniform1i(dudv_texture_uni.as_ref(), TextureUnit::Dudv.texture_unit());
-        gl.uniform1i(
-            normal_map_uni.as_ref(),
-            TextureUnit::NormalMap.texture_unit(),
-        );
-        gl.uniform1i(
-            water_depth_texture_uni.as_ref(),
-            TextureUnit::RefractionDepth.texture_unit(),
-        );
+//        gl.uniform1i(
+//            reflection_texture_uni.as_ref(),
+//            TextureUnit::Reflection.texture_unit(),
+//        );
+//        gl.uniform1i(dudv_texture_uni.as_ref(), TextureUnit::Dudv.texture_unit());
+//        gl.uniform1i(
+//            normal_map_uni.as_ref(),
+//            TextureUnit::NormalMap.texture_unit(),
+//        );
+//        gl.uniform1i(
+////            water_depth_texture_uni.as_ref(),
+////            TextureUnit::RefractionDepth.texture_unit(),
+//        );
 
         gl.uniform1f(water_reflectivity_uni.as_ref(), state.water().reflectivity);
 

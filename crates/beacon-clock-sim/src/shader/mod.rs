@@ -3,22 +3,16 @@ use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
 
-static TEXTURED_QUAD_VS: &'static str = include_str!("./textured-quad-vertex.glsl");
-static TEXTURED_QUAD_FS: &'static str = include_str!("./textured-quad-fragment.glsl");
+static SLAB_VS: &'static str = include_str!("./slab-vertex.glsl");
+static SLAB_FS: &'static str = include_str!("./slab-fragment.glsl");
 
-static MESH_SKINNED_VS: &'static str = include_str!("./mesh-skinned-vertex.glsl");
-static MESH_SKINNED_FS: &'static str = include_str!("./mesh-skinned-fragment.glsl");
-
-static MESH_NON_SKINNED_VS: &'static str = include_str!("./mesh-non-skinned-vertex.glsl");
-static MESH_NON_SKINNED_FS: &'static str = include_str!("./mesh-non-skinned-fragment.glsl");
-
-static WATER_VS: &'static str = include_str!("./water-vertex.glsl");
-static WATER_FS: &'static str = include_str!("./water-fragment.glsl");
+static MEMO_VS: &'static str = include_str!("./memo-vertex.glsl");
+static MEMO_FS: &'static str = include_str!("./memo-fragment.glsl");
 
 /// Powers retrieving and using our shaders
 pub struct ShaderSystem {
     programs: HashMap<ShaderKind, Shader>,
-    active_program: RefCell<ShaderKind>,
+    active_program: RefCell<Option<ShaderKind>>,
 }
 
 impl ShaderSystem {
@@ -26,23 +20,15 @@ impl ShaderSystem {
     pub fn new(gl: &WebGlRenderingContext) -> ShaderSystem {
         let mut programs = HashMap::new();
 
-        let water_shader = Shader::new(&gl, WATER_VS, WATER_FS).unwrap();
-        let non_skinned_shader =
-            Shader::new(&gl, MESH_NON_SKINNED_VS, MESH_NON_SKINNED_FS).unwrap();
-        let skinned_mesh_shader = Shader::new(&gl, MESH_SKINNED_VS, MESH_SKINNED_FS).unwrap();
-        let textured_quad_shader = Shader::new(&gl, TEXTURED_QUAD_VS, TEXTURED_QUAD_FS).unwrap();
+        let slab_shader = Shader::new(&gl, SLAB_VS, SLAB_FS).unwrap();
+        let memo_shader = Shader::new(&gl, MEMO_VS, MEMO_FS).unwrap();
 
-        let active_program = RefCell::new(ShaderKind::TexturedQuad);
-        gl.use_program(Some(&textured_quad_shader.program));
-
-        programs.insert(ShaderKind::Water, water_shader);
-        programs.insert(ShaderKind::NonSkinnedMesh, non_skinned_shader);
-        programs.insert(ShaderKind::SkinnedMesh, skinned_mesh_shader);
-        programs.insert(ShaderKind::TexturedQuad, textured_quad_shader);
+        programs.insert(ShaderKind::Slab, slab_shader);
+        programs.insert(ShaderKind::Memo, memo_shader);
 
         ShaderSystem {
             programs,
-            active_program,
+            active_program: RefCell::new(None),
         }
     }
 
@@ -54,22 +40,20 @@ impl ShaderSystem {
     /// Use a shader program. We cache the last used shader program to avoid unnecessary
     /// calls to the GPU.
     pub fn use_program(&self, gl: &WebGlRenderingContext, shader_kind: ShaderKind) {
-        if *self.active_program.borrow() == shader_kind {
+        if let Some(shader_kind) = *self.active_program.borrow() {
             return;
         }
 
         gl.use_program(Some(&self.programs.get(&shader_kind).unwrap().program));
-        *self.active_program.borrow_mut() = shader_kind;
+        *self.active_program.borrow_mut() = Some(shader_kind);
     }
 }
 
 /// Identifiers for our different shaders
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum ShaderKind {
-    Water,
-    NonSkinnedMesh,
-    SkinnedMesh,
-    TexturedQuad,
+    Slab,
+    Memo,
 }
 
 /// One per ShaderKind
