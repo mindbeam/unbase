@@ -15,4 +15,4 @@ Try the "Dropper" function to see how knowledge spreads throughout the network.
 
 <iframe style="height: 60vh; width:100%" src="/simulation/beacon-clock-1/">
 </iframe>
-[tree-clock-1](/simulation/beacon-clock-1/){:target="simulation"}
+[beacon-clock-1](/simulation/beacon-clock-1/){:target="simulation"}
