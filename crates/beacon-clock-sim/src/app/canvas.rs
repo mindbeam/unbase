@@ -1,37 +1,41 @@
-use crate::app::App;
+use super::App;
 //use crate::app::Msg;
 use std::rc::Rc;
 //use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use wasm_bindgen::JsValue;
+use wasm_bindgen::{JsCast,JsValue};
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
+use crate::util::*;
 
 pub static APP_DIV_ID: &'static str = "beacon-clock-sim";
 
 pub static CANVAS_WIDTH: i32 = 512;
 pub static CANVAS_HEIGHT: i32 = 512;
 
-pub fn create_webgl_context(app: Rc<App>) -> Result<WebGlRenderingContext, JsValue> {
-    let canvas = init_canvas(app)?;
-
-    let gl: WebGlRenderingContext = canvas.get_context("webgl")?.unwrap().dyn_into()?;
-
-    gl.clear_color(0.0, 0.0, 0.0, 1.0);
-    gl.enable(GL::DEPTH_TEST);
-
-    Ok(gl)
+pub struct Canvas {
+    gl: WebGlRenderingContext,
+    element: HtmlCanvasElement,
 }
 
-fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
-    let window = window().unwrap();
-    let document = window.document().unwrap();
+impl Canvas {
+    pub fn new() -> Result<Canvas, JsValue> {
 
-    let canvas: HtmlCanvasElement = document.create_element("canvas").unwrap().dyn_into()?;
+        let element: HtmlCanvasElement = document().create_element("canvas").unwrap().dyn_into()?;
 
-    canvas.set_width(CANVAS_WIDTH as u32);
-    canvas.set_height(CANVAS_HEIGHT as u32);
+        element.set_width(CANVAS_WIDTH as u32);
+        element.set_height(CANVAS_HEIGHT as u32);
 
+        let gl: WebGlRenderingContext = element.get_context("webgl")?.unwrap().dyn_into()?;
+
+        gl.clear_color(0.0, 0.0, 0.0, 1.0);
+        gl.enable(GL::DEPTH_TEST);
+
+        Ok(Canvas{gl, element})
+    }
+
+    pub fn init_app(&self, app: Rc<App>) -> Result<(), JsValue> {
+
+        let document = document();
 //    attach_mouse_down_handler(&canvas, Rc::clone(&app))?;
 //    attach_mouse_up_handler(&canvas, Rc::clone(&app))?;
 //    attach_mouse_move_handler(&canvas, Rc::clone(&app))?;
@@ -41,19 +45,20 @@ fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
 //    attach_touch_move_handler(&canvas, Rc::clone(&app))?;
 //    attach_touch_end_handler(&canvas, Rc::clone(&app))?;
 
-    let app_div: HtmlElement = match document.get_element_by_id(APP_DIV_ID) {
-        Some(container) => container.dyn_into()?,
-        None => {
-            let app_div = document.create_element("div")?;
-            app_div.set_id(APP_DIV_ID);
-            app_div.dyn_into()?
-        }
-    };
+        let app_div: HtmlElement = match document.get_element_by_id(APP_DIV_ID) {
+            Some(container) => container.dyn_into()?,
+            None => {
+                let app_div = document.create_element("div")?;
+                app_div.set_id(APP_DIV_ID);
+                app_div.dyn_into()?
+            }
+        };
 
-    app_div.style().set_property("display", "flex")?;
-    app_div.append_child(&canvas)?;
+        app_div.style().set_property("display", "flex")?;
+        app_div.append_child(&self.element)?;
 
-    Ok(canvas)
+        Ok(())
+    }
 }
 
 //fn attach_mouse_down_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Result<(), JsValue> {
