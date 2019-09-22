@@ -26,7 +26,7 @@ blender-mesh = "=0.3.3"
 landon = "=0.1.2"
 
 [dependencies.web-sys]
-version = "^0.3.6"
+version = "^0.3.27"
 features = [
   'CssStyleDeclaration',
   'Document',
@@ -35,6 +35,7 @@ features = [
   'EventTarget',
   'HtmlCanvasElement',
   'HtmlElement',
+  'HtmlButtonElement',
   'HtmlImageElement',
   'HtmlInputElement',
   'InputEvent',

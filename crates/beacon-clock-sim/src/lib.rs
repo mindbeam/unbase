@@ -22,6 +22,7 @@ use std::rc::Rc;
 use web_sys::*;
 //use std::time::{Duration, Instant};
 
+mod util;
 mod app;
 mod canvas;
 mod controls;
@@ -39,15 +40,15 @@ fn request_animation_frame(f: &Closure<dyn FnMut()>) {
         .expect("should register `requestAnimationFrame` OK");
 }
 
-fn document() -> web_sys::Document {
-    window()
-        .document()
-        .expect("should have a document on window")
-}
-
-fn body() -> web_sys::HtmlElement {
-    document().body().expect("document should have a body")
-}
+//fn document() -> web_sys::Document {
+//    window()
+//        .document()
+//        .expect("should have a document on window")
+//}
+//
+//fn body() -> web_sys::HtmlElement {
+//    document().body().expect("document should have a body")
+//}
 
 /// This function is automatically invoked after the wasm module is instantiated.
 #[wasm_bindgen(start)]
@@ -60,7 +61,7 @@ pub fn run() -> Result<(), JsValue> {
 
     let mut webclient = WebClient::new();
 
-    webclient.start();
+    webclient.start().unwrap();
 
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
