@@ -110,8 +110,14 @@ impl<'a> Render<'a> for RenderableWaterTile<'a> {
 //        gl.enable(GL::BLEND);
 //        gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
 
-        gl.draw_elements_with_i32(GL::TRIANGLES, 6, GL::UNSIGNED_SHORT, 0);
+        //gl.draw_elements_with_i32(GL::TRIANGLES, 6, GL::UNSIGNED_SHORT, 0);
 
-        gl.disable(GL::BLEND);
+        gl.draw_arrays(
+            GL::POINTS,
+            0,
+            (vertices.len() / 3) as i32,
+        );
+
+//        gl.disable(GL::BLEND);
     }
 }

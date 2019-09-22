@@ -60,7 +60,7 @@ fn attach_mouse_down_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Result
     let handler = move |event: web_sys::MouseEvent| {
         let x = event.client_x();
         let y = event.client_y();
-        app.store.borrow_mut().msg(&Msg::MouseDown(x, y));
+//        app.store.borrow_mut().msg(&Msg::MouseDown(x, y));
     };
 
     let handler = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
@@ -74,7 +74,7 @@ fn attach_mouse_down_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Result
 
 fn attach_mouse_up_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Result<(), JsValue> {
     let handler = move |_event: web_sys::MouseEvent| {
-        app.store.borrow_mut().msg(&Msg::MouseUp);
+//        app.store.borrow_mut().msg(&Msg::MouseUp);
     };
 
     let handler = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
@@ -89,7 +89,7 @@ fn attach_mouse_move_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Result
         event.prevent_default();
         let x = event.client_x();
         let y = event.client_y();
-        app.store.borrow_mut().msg(&Msg::MouseMove(x, y));
+//        app.store.borrow_mut().msg(&Msg::MouseMove(x, y));
     };
 
     let handler = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
@@ -105,7 +105,7 @@ fn attach_mouse_wheel_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Resul
 
         let zoom_amount = event.delta_y() / 50.;
 
-        app.store.borrow_mut().msg(&Msg::Zoom(zoom_amount as f32));
+//        app.store.borrow_mut().msg(&Msg::Zoom(zoom_amount as f32));
     };
 
     let handler = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
@@ -120,7 +120,7 @@ fn attach_touch_start_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Resul
         let touch = event.touches().item(0).expect("First Touch");
         let x = touch.client_x();
         let y = touch.client_y();
-        app.store.borrow_mut().msg(&Msg::MouseDown(x, y));
+//        app.store.borrow_mut().msg(&Msg::MouseDown(x, y));
     };
 
     let handler = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
@@ -136,7 +136,7 @@ fn attach_touch_move_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Result
         let touch = event.touches().item(0).expect("First Touch");
         let x = touch.client_x();
         let y = touch.client_y();
-        app.store.borrow_mut().msg(&Msg::MouseMove(x, y));
+//        app.store.borrow_mut().msg(&Msg::MouseMove(x, y));
     };
 
     let handler = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);
@@ -148,7 +148,7 @@ fn attach_touch_move_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Result
 
 fn attach_touch_end_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Result<(), JsValue> {
     let handler = move |_event: web_sys::TouchEvent| {
-        app.store.borrow_mut().msg(&Msg::MouseUp);
+//        app.store.borrow_mut().msg(&Msg::MouseUp);
     };
 
     let handler = Closure::wrap(Box::new(handler) as Box<FnMut(_)>);

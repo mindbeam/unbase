@@ -5,13 +5,6 @@ pub struct Behavior {
     chattyness: f32,
 }
 
-pub enum BehaviorChange{
-    Speed(u32),
-    Slabs(u32),
-    Neighbors(u32),
-    Chattyness(f32),
-}
-
 impl Behavior {
     pub fn new() -> Behavior {
         Behavior {

@@ -1,10 +1,10 @@
-use self::framebuffer::*;
-pub(self) use self::mesh::*;
-pub(self) use self::render_trait::*;
+//use self::framebuffer::*;
+//pub(self) use self::mesh::*;
+//pub(self) use self::render_trait::*;
 pub use self::texture_unit::*;
 use self::water_tile::*;
-use crate::app::Assets;
-use crate::app::State;
+//use crate::app::Assets;
+//use crate::app::State;
 use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
 use crate::render::textured_quad::TexturedQuad;
 use crate::shader::ShaderKind;
@@ -17,10 +17,10 @@ use web_sys::*;
 
 //pub static WATER_TILE_Y_POS: f32 = 0.0;
 
-mod framebuffer;
+//mod framebuffer;
 mod render_trait;
-mod render_slab;
-mod render_transmission;
+//mod render_slab;
+//mod render_transmission;
 
 struct VaoExtension {
     oes_vao_ext: js_sys::Object,

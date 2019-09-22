@@ -6,11 +6,14 @@
 
 extern crate wasm_bindgen;
 
+use log::{info};
+
+
 pub (in crate) use self::app::*;
-use self::canvas::*;
-use self::controls::*;
-use self::render::*;
-use crate::load_texture_img::load_texture_image;
+use self::canvas::{create_webgl_context};
+//use self::controls::*;
+//use self::render::*;
+//use crate::load_texture_img::load_texture_image;
 use console_error_panic_hook;
 use wasm_bindgen::{JsCast,prelude::*};
 use std::cell::RefCell;
@@ -21,10 +24,10 @@ use web_sys::*;
 
 mod app;
 mod canvas;
-mod controls;
-mod load_texture_img;
-mod render;
-mod shader;
+//mod controls;
+//mod load_texture_img;
+//mod render;
+//mod shader;
 
 fn window() -> web_sys::Window {
     web_sys::window().expect("no global `window` exists")
@@ -49,6 +52,11 @@ fn body() -> web_sys::HtmlElement {
 /// This function is automatically invoked after the wasm module is instantiated.
 #[wasm_bindgen(start)]
 pub fn run() -> Result<(), JsValue> {
+    log::set_logger(&wasm_bindgen_console_logger::DEFAULT_LOGGER).unwrap();
+    log::set_max_level(log::LevelFilter::Info);
+
+    info!("beacon-clock-sim loaded");
+
 
     let mut webclient = WebClient::new();
 
@@ -80,9 +88,9 @@ pub fn run() -> Result<(), JsValue> {
 
 /// Used to run the application from the web
 pub struct WebClient {
-    app: Rc<App>,
+    //app: Rc<App>,
     gl: Rc<WebGlRenderingContext>,
-    renderer: WebRenderer,
+//    renderer: WebRenderer,
 }
 
 impl WebClient {
@@ -93,11 +101,12 @@ impl WebClient {
         let app = Rc::new(App::new());
 
         let gl = Rc::new(create_webgl_context(Rc::clone(&app)).unwrap());
-        append_controls(Rc::clone(&app)).expect("Append controls");
+//        append_controls(Rc::clone(&app)).expect("Append controls");
 
-        let renderer = WebRenderer::new(&gl);
+//        let renderer = WebRenderer::new(&gl);
 
-        WebClient { app, gl, renderer }
+        //WebClient { app, gl, renderer }
+        WebClient{ gl }
     }
 
     /// Start our WebGL Water application. `index.html` will call this function in order
@@ -105,11 +114,13 @@ impl WebClient {
     pub fn start(&self) -> Result<(), JsValue> {
         let gl = &self.gl;
 
-        load_texture_image(
-            Rc::clone(gl),
-            "/disc.png",
-            TextureUnit::Disc,
-        );
+        info!("beacon-clock-sim WebClient started");
+
+//        load_texture_image(
+//            Rc::clone(gl),
+//            "/disc.png",
+//            TextureUnit::Disc,
+//        );
 
         Ok(())
     }
@@ -117,12 +128,12 @@ impl WebClient {
     /// Update our simulation
     pub fn update(&self, dt: f32) {
         // TODO - change over to logical clock ticks
-        self.app.store.borrow_mut().msg(&Msg::AdvanceClock(dt));
+//        self.app.store.borrow_mut().msg(&Msg::AdvanceClock(dt));
     }
 
     /// Render the scene. `index.html` will call this once every requestAnimationFrame
     pub fn render(&mut self) {
-        self.renderer
-            .render(&self.gl, &self.app.store.borrow().state, &self.app.assets());
+//        info!("beacon-clock-sim render");
+//        self.renderer.render(&self.gl, &self.app.store.borrow().state, &self.app.assets());
     }
 }
