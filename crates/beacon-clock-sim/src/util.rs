@@ -1,4 +1,9 @@
 pub mod panel;
+pub mod color;
+pub mod position;
+
+pub use self::color::Color;
+pub use self::position::Position;
 
 use wasm_bindgen::{prelude::*, JsCast};
 
@@ -18,6 +23,6 @@ pub fn document() -> web_sys::Document {
         .expect("should have a document on window")
 }
 
-pub fn body() -> web_sys::HtmlElement {
-    document().body().expect("document should have a body")
-}
+//pub fn body() -> web_sys::HtmlElement {
+//    document().body().expect("document should have a body")
+//}

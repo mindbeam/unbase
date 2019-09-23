@@ -1,6 +1,6 @@
 use crate::app::State;
-use crate::render::Render;
-use crate::render::TextureUnit;
+use super::Render;
+use super::texture_unit::TextureUnit;
 use crate::shader::Shader;
 use crate::shader::ShaderKind;
 use nalgebra;

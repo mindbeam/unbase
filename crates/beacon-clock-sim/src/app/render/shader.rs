@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
 
-static SLAB_VS: &'static str = include_str!("./slab-vertex.glsl");
-static SLAB_FS: &'static str = include_str!("./slab-fragment.glsl");
+static SLAB_VS: &'static str = include_str!("./shader/slab-vertex.glsl");
+static SLAB_FS: &'static str = include_str!("./shader/slab-fragment.glsl");
 
-static MEMO_VS: &'static str = include_str!("./memo-vertex.glsl");
-static MEMO_FS: &'static str = include_str!("./memo-fragment.glsl");
+static MEMO_VS: &'static str = include_str!("./shader/memo-vertex.glsl");
+static MEMO_FS: &'static str = include_str!("./shader/memo-fragment.glsl");
 
 /// Powers retrieving and using our shaders
 pub struct ShaderSystem {

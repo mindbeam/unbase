@@ -1,35 +1,65 @@
-use std::ops::Deref;
+use log::{info};
+use crate::util::{Position};
 
-//mod mouse;
-//use self::mouse::*;
+
+mod mouse;
+use self::mouse::*;
 //
-//mod camera;
-//use self::camera::*;
+mod camera;
+use self::camera::*;
+
+mod slab;
+use self::slab::{Slab,MemoRefHead};
 //
 //mod behavior;
 //use self::behavior::*;
 
 pub struct State {
     pub (crate) run: bool,
-//    clock: f32,
-//    camera: Camera,
-//    mouse: Mouse,
-//    slabs: Vec<Slab>,
+    clock: f32,
+    camera: Camera,
+    mouse: Mouse,
+    slabcount: u32,
+    slabs: Vec<Slab>,
+    threedim: bool,
 //    memoemissions: Vec<MemoEmission>,
 }
+
+#[derive(Debug)]
+pub enum Message {
+    AdvanceClock(f32),
+    MouseDown(i32, i32),
+    MouseUp,
+    MouseMove(i32, i32),
+    Zoom(f32),
+//    BehaviorChange(BehaviorChange),
+    Reset,
+    Slabs(u32),
+}
+//
+//
+//pub enum BehaviorChange{
+//    Speed(u32),
+//    Slabs(u32),
+//    Neighbors(u32),
+//    Chattyness(f32),
+//}
 
 impl State {
     pub fn new() -> State {
         State {
             run: false,
-//            clock: 0.,
-//            camera: Camera::new(),
-//            mouse: Mouse::default(),
+            camera: Camera::new(),
+            mouse: Mouse::new(),
+            clock: 0.,
+            slabcount: 30,
+            slabs: Vec::new(),
+            threedim: false,
 //            behavior: Behavior::new(),
         }
     }
 
-//    pub fn camera(&self) -> &Camera {
+    //    pub fn camera(&self) -> &Camera {
 //        &self.camera
 //    }
 //
@@ -46,47 +76,73 @@ impl State {
 //        self.show_scenery
 //    }
 //
-//    pub fn msg(&mut self, msg: &Msg) {
-//        match msg {
-//            Msg::AdvanceClock(dt) => {
-//                self.clock += dt;
-//            }
-//            Msg::MouseDown(x, y) => {
-//                self.mouse.set_pressed(true);
-//                self.mouse.set_pos(*x, *y);
-//            }
-//            Msg::MouseUp => {
-//                self.mouse.set_pressed(false);
-//            }
-//            Msg::MouseMove(x, y) => {
-//                if !self.mouse.get_pressed() {
-//                    return;
-//                }
-//
-//                let (old_x, old_y) = self.mouse.get_pos();
-//
-//                let x_delta = old_x as i32 - x;
-//                let y_delta = y - old_y as i32;
-//
-//                self.camera.orbit_left_right(x_delta as f32 / 50.0);
-//                self.camera.orbit_up_down(y_delta as f32 / 50.0);
-//
-//                self.mouse.set_pos(*x, *y);
-//            }
-//            Msg::Zoom(zoom) => {
-//                self.camera.zoom(*zoom);
-//            }
-//            Msg::Behavior(change) => {
+    pub fn message(&mut self, message: &Message) {
+        info!("message {:?}", message);
+
+        match message {
+            Message::AdvanceClock(dt) => {
+                self.clock += dt;
+            }
+            Message::MouseDown(x, y) => {
+                self.mouse.set_pressed(true);
+                self.mouse.set_pos(*x, *y);
+            }
+            Message::MouseUp => {
+                self.mouse.set_pressed(false);
+            }
+            Message::MouseMove(x, y) => {
+                if !self.mouse.get_pressed() {
+                    return;
+                }
+
+                let (old_x, old_y) = self.mouse.get_pos();
+
+                let x_delta = old_x as i32 - x;
+                let y_delta = y - old_y as i32;
+
+                self.camera.orbit_left_right(x_delta as f32 / 50.0);
+                self.camera.orbit_up_down(y_delta as f32 / 50.0);
+
+                self.mouse.set_pos(*x, *y);
+            }
+            Message::Zoom(zoom) => {
+                self.camera.zoom(*zoom);
+            }
+//            Message::ThreeDim(bool)
+//            Message::BehaviorChange(change) => {
 //                self.behavior.applychange(change);
 //            },
-//            Msg::Reset => {
-//                self.slabs.truncate(0);
-//                self.memoemissions.truncate(0);
-//            }
-//        }
-//    }
-}
+            Message::Reset => {
+                self.slabs.truncate(0);
+                self.create_random_slabs(self.slabcount)
+            },
+            Message::Slabs(n) => {
+                self.slabcount = *n;
+                self.slabs.truncate(0);
+                self.create_random_slabs(self.slabcount)
+            }
+        }
+    }
+    pub fn create_random_slabs(&mut self, count: u32) {
 
+        // TODO call init_new_system here
+        let seed = MemoRefHead::blank();
+
+        if self.threedim {
+            for i in 0..count {
+                let position = Position::random_3d();
+                self.slabs.push(Slab::new(position, seed.clone()));
+            }
+        } else {
+            for i in 0..count {
+                let position = Position::random_2d(0f32);
+                self.slabs.push(Slab::new(position, seed.clone()));
+            }
+        }
+
+//        this.update_attributes();
+    }
+}
 //pub struct StateWrapper(State);
 //
 //impl Deref for StateWrapper {
@@ -98,8 +154,8 @@ impl State {
 //}
 
 //impl StateWrapper {
-//    pub fn msg(&mut self, msg: &Msg) {
-//        &self.0.msg(msg);
+//    pub fn Message(&mut self, Message: &Message) {
+//        &self.0.Message(Message);
 //    }
 //}
 
@@ -126,17 +182,7 @@ impl State {
 //this.memoemissionset = new MemoEmissionSet(scene, status);
 //}
 //
-//create_random_slabs( count: number, threedim: boolean ) {
-//var seed_slab = new Slab(this,0, threedim, new MemoHead([]));
-//seed_slab.init_new_system();
-//this.slabs.push(seed_slab);
-//
-//for (var i = 1; i < count; i++) {
-//var slab = new Slab(this, i, threedim, seed_slab.clockstate);
-//this.slabs.push(slab);
-//}
-//this.update_attributes();
-//}
+
 //select_random_slab() : Slab {
 //return this.slabs[Math.floor(Math.random() * this.slabs.length )];
 //}
@@ -230,3 +276,4 @@ impl State {
 //
 //
 //}
+

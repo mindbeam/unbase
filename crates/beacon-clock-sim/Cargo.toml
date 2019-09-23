@@ -18,6 +18,9 @@ blender-armature = "=0.1.7"
 blender-mesh = "=0.3.3"
 console_error_panic_hook = "=0.1.5"
 nalgebra = "=0.16.12"
+uuid = { version = "0.7", features = ["serde", "v4", "wasm-bindgen"] }
+rand = { version =  "0.7.2", features = ["wasm-bindgen"] }
+
 
 [build-dependencies]
 bincode = "=1.0.1"

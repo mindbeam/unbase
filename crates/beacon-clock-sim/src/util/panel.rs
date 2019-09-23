@@ -1,9 +1,9 @@
-use std::rc::Rc;
+//use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use web_sys::window;
-use web_sys::{EventTarget, Element, HtmlElement, HtmlInputElement, HtmlButtonElement};
+use web_sys::{Element, HtmlElement, HtmlInputElement, HtmlButtonElement};
 
 // TODO: inject style sheet and remove the inline CSS
 

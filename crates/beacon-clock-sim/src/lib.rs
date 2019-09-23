@@ -11,18 +11,13 @@ use log::{info};
 pub (in crate) use self::app::*;
 
 use console_error_panic_hook;
-use wasm_bindgen::{JsCast,prelude::*};
-use std::cell::RefCell;
-use std::rc::Rc;
+use wasm_bindgen::{prelude::*};
 
-use web_sys::*;
+//use web_sys::*;
 //use std::time::{Duration, Instant};
 
 mod util;
 mod app;
-//mod load_texture_img;
-//mod render;
-//mod shader;
 
 /// This function is automatically invoked after the wasm module is instantiated.
 #[wasm_bindgen(start)]
@@ -33,7 +28,7 @@ pub fn run() -> Result<(), JsValue> {
 
     info!("beacon-clock-sim loaded");
 
-    let mut app = App::new()?;
+    let app = App::new()?;
 
     app.start()?;
 

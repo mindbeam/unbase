@@ -1,18 +1,20 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use log::{info};
-use wasm_bindgen::{JsCast,prelude::*};
-use web_sys::{WebGlRenderingContext};
+use wasm_bindgen::{prelude::*};
+use std::ops::Deref;
 
 mod state;
-mod color;
 mod controls;
 mod canvas;
 
-pub use self::state::State;
+//mod render;
+
+pub use self::state::{State,Message};
 pub use self::color::Color;
 pub use self::controls::Controls;
 pub use self::canvas::Canvas;
+use crate::util::*;
 
 //mod assets;
 //pub use self::assets::*;
@@ -22,32 +24,35 @@ pub use self::canvas::Canvas;
 //use crate::load_texture_img::load_texture_image;
 
 /// Used to instantiate our application
-pub struct App {
+#[derive(Clone)]
+pub struct App( Rc<AppInner> );
+
+pub struct AppInner {
     //assets: Assets,
     state: RefCell<State>,
-    canvas: Canvas,
-    controls: Controls
+    canvas: RefCell<Canvas>,
+    controls: RefCell<Controls>,
 //    renderer: WebRenderer,
 }
 
 impl App {
     /// Create a new instance of the Beacon Clock Sim application
-    pub fn new() -> Result<Rc<App>, JsValue> {
-        let me = Rc::new(App {
+    pub fn new() -> Result<App, JsValue> {
+        let inner = AppInner {
             state: RefCell::new(State::new()),
-            canvas: Canvas::new()?,
-            controls: Controls::new()?
+            canvas: RefCell::new(Canvas::new()?),
+            controls: RefCell::new(Controls::new()?)
             //assets,
-        });
+        };
 
-        me.canvas.init_app(me.clone())?;
-        me.controls.init_app(me.clone())?;
+        let app = App( Rc::new(inner) );
 
-        Ok(me)
+        app.canvas.borrow_mut().init_app(app.clone())?;
+        app.controls.borrow_mut().init_app(app.clone())?;
+
+        Ok(app)
     }
-}
 
-impl Rc<App> {
     /// Start our WebGL Water application. `index.html` will call this function in order
     /// to begin rendering.
     pub fn start(&self) -> Result<(), JsValue> {
@@ -61,6 +66,8 @@ impl Rc<App> {
 //            TextureUnit::Disc,
 //        );
 
+        self.message(&Message::Reset);
+        self.run(true);
         Ok(())
     }
 
@@ -76,10 +83,12 @@ impl Rc<App> {
             state.run = run;
         }
 
-        let app = *self.clone();
+        let app = self.clone();
         let mut last_time = js_sys::Date::now();
         *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-
+            if !app.state.borrow().run {
+                return;
+            }
             let new_time = js_sys::Date::now(); // Instant::now();
             info!("animation frame");
             let elapsed = last_time - new_time; //new_now.duration_since(last_time).as_millis();
@@ -89,9 +98,7 @@ impl Rc<App> {
             last_time = new_time;
 
             // Schedule ourself for another requestAnimationFrame callback.
-            if app.state.borrow().run {
-                request_animation_frame(f.borrow().as_ref().unwrap());
-            }
+            request_animation_frame(f.borrow().as_ref().unwrap());
         }) as Box<dyn FnMut()>));
 
         // Kick things off
@@ -99,8 +106,12 @@ impl Rc<App> {
 
     }
 
+    pub fn message (&self, message: &Message ) {
+        self.state.borrow_mut().message(message);
+    }
+
     /// Update our simulation
-    pub fn update(&self, dt: f32) {
+    pub fn update(&self, _dt: f32) {
         // TODO - change over to logical clock ticks
 //        self.app.store.borrow_mut().msg(&Msg::AdvanceClock(dt));
     }
@@ -112,30 +123,9 @@ impl Rc<App> {
     }
 }
 
-pub enum Msg {
-    AdvanceClock(f32),
-    MouseDown(i32, i32),
-    MouseUp,
-    MouseMove(i32, i32),
-    Zoom(f32),
-    BehaviorChange(BehaviorChange),
-    Reset()
-}
-
-
-pub enum BehaviorChange{
-    Speed(u32),
-    Slabs(u32),
-    Neighbors(u32),
-    Chattyness(f32),
-}
-
-fn window() -> web_sys::Window {
-    web_sys::window().expect("no global `window` exists")
-}
-
-fn request_animation_frame(f: &Closure<dyn FnMut()>) {
-    window()
-        .request_animation_frame(f.as_ref().unchecked_ref())
-        .expect("should register `requestAnimationFrame` OK");
+impl Deref for App {
+    type Target = AppInner;
+    fn deref(&self) -> &AppInner {
+        &*self.0
+    }
 }
