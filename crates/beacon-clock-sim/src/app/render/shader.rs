@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
+use log::{info};
 
 static SLAB_VS: &'static str = include_str!("./shader/slab-vertex.glsl");
 static SLAB_FS: &'static str = include_str!("./shader/slab-fragment.glsl");
@@ -20,11 +21,11 @@ impl ShaderSystem {
     pub fn new(gl: &WebGlRenderingContext) -> ShaderSystem {
         let mut programs = HashMap::new();
 
-        let slab_shader = Shader::new(&gl, SLAB_VS, SLAB_FS).unwrap();
-        let memo_shader = Shader::new(&gl, MEMO_VS, MEMO_FS).unwrap();
+        let slab_shader = Shader::new(&gl, SLAB_VS, SLAB_FS).expect("slab shader new");
+//        let memo_shader = Shader::new(&gl, MEMO_VS, MEMO_FS).expect("memo_shader_new);
 
         programs.insert(ShaderKind::Slab, slab_shader);
-        programs.insert(ShaderKind::Memo, memo_shader);
+//        programs.insert(ShaderKind::Memo, memo_shader);
 
         ShaderSystem {
             programs,
@@ -69,8 +70,14 @@ impl Shader {
         vert_shader: &str,
         frag_shader: &str,
     ) -> Result<Shader, JsValue> {
+        info!("pre vertex");
+
         let vert_shader = compile_shader(&gl, WebGlRenderingContext::VERTEX_SHADER, vert_shader)?;
+        info!("pre frag");
+
         let frag_shader = compile_shader(&gl, WebGlRenderingContext::FRAGMENT_SHADER, frag_shader)?;
+        info!("pre program");
+
         let program = link_program(&gl, &vert_shader, &frag_shader)?;
 
         let uniforms = RefCell::new(HashMap::new());

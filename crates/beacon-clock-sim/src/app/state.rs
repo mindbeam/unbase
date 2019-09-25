@@ -16,9 +16,9 @@ use self::slab::{Slab,MemoRefHead};
 
 pub struct State {
     pub (crate) run: bool,
-    clock: f32,
-    camera: Camera,
-    mouse: Mouse,
+    pub clock: f32,
+    pub camera: Camera,
+    pub mouse: Mouse,
     slabcount: u32,
     slabs: Vec<Slab>,
     threedim: bool,

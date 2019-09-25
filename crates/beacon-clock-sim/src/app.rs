@@ -8,7 +8,7 @@ mod state;
 mod controls;
 mod canvas;
 
-//mod render;
+mod render;
 
 pub use self::state::{State,Message};
 pub use self::color::Color;
@@ -19,8 +19,7 @@ use crate::util::*;
 //mod assets;
 //pub use self::assets::*;
 
-
-//use self::render::*;
+use self::render::WebRenderer;
 //use crate::load_texture_img::load_texture_image;
 
 /// Used to instantiate our application
@@ -32,16 +31,20 @@ pub struct AppInner {
     state: RefCell<State>,
     canvas: RefCell<Canvas>,
     controls: RefCell<Controls>,
-//    renderer: WebRenderer,
+    renderer: RefCell<WebRenderer>,
 }
 
 impl App {
     /// Create a new instance of the Beacon Clock Sim application
     pub fn new() -> Result<App, JsValue> {
+
+        let canvas = Canvas::new()?;
+        let renderer = WebRenderer::new( &canvas.gl );
         let inner = AppInner {
             state: RefCell::new(State::new()),
-            canvas: RefCell::new(Canvas::new()?),
-            controls: RefCell::new(Controls::new()?)
+            canvas: RefCell::new(canvas),
+            controls: RefCell::new(Controls::new()?),
+            renderer: RefCell::new(renderer),
             //assets,
         };
 
@@ -90,7 +93,7 @@ impl App {
                 return;
             }
             let new_time = js_sys::Date::now(); // Instant::now();
-            info!("animation frame");
+//            info!("animation frame");
             let elapsed = last_time - new_time; //new_now.duration_since(last_time).as_millis();
             app.update(elapsed as f32);
             app.render();
@@ -103,23 +106,24 @@ impl App {
 
         // Kick things off
         request_animation_frame(g.borrow().as_ref().unwrap());
-
     }
 
     pub fn message (&self, message: &Message ) {
+        info!("app message {:?}", message);
+
         self.state.borrow_mut().message(message);
     }
 
     /// Update our simulation
-    pub fn update(&self, _dt: f32) {
+    pub fn update(&self, dt: f32) {
         // TODO - change over to logical clock ticks
-//        self.app.store.borrow_mut().msg(&Msg::AdvanceClock(dt));
+        //self.message(&Message::AdvanceClock(dt));
     }
 
-    /// Render the scene. `index.html` will call this once every requestAnimationFrame
+    /// Render the scene
     pub fn render(&self) {
 //        info!("beacon-clock-sim render");
-//        self.renderer.render(&self.gl, &self.app.store.borrow().state, &self.app.assets());
+        self.renderer.borrow_mut().render(&*self.canvas.borrow(), &*self.state.borrow() ); //, self.app.assets());
     }
 }
 

@@ -1,33 +1,23 @@
-//use self::framebuffer::*;
-//pub(self) use self::mesh::*;
-//pub(self) use self::render_trait::*;
-pub use self::texture_unit::*;
-use self::water_tile::*;
-//use crate::app::Assets;
-//use crate::app::State;
-//use crate::render::textured_quad::TexturedQuad;
-use self::shader::ShaderKind;
-use self::shader::ShaderSystem;
-use js_sys::Reflect;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
-
-//pub static WATER_TILE_Y_POS: f32 = 0.0;
+use js_sys::{Reflect,WebAssembly};
+use wasm_bindgen::JsCast;
 
 
 //mod load_texture_img;
 
-mod shader;
+pub mod texture_unit;
+pub mod shader;
 mod render_slabs;
 //mod render_transmission;
 
-use super::shader::Shader;
-use super::shader::ShaderKind;
-use super::app::State;
-use js_sys::WebAssembly;
-use wasm_bindgen::JsCast;
+pub use self::texture_unit::*;
+use self::shader::{Shader,ShaderKind,ShaderSystem};
+use self::render_slabs::SlabRenderer;
+use super::State;
+use super::Canvas;
 
 pub trait Render<'a> {
     fn shader_kind() -> ShaderKind;
@@ -104,8 +94,8 @@ struct Vao(js_sys::Object);
 
 pub struct WebRenderer {
     shader_sys: ShaderSystem,
-    #[allow(unused)]
-    depth_texture_ext: Option<js_sys::Object>,
+//    #[allow(unused)]
+//    depth_texture_ext: Option<js_sys::Object>,
 //    refraction_framebuffer: Framebuffer,
 //    reflection_framebuffer: Framebuffer,
     vao_ext: VaoExtension,
@@ -114,10 +104,10 @@ pub struct WebRenderer {
 impl WebRenderer {
     pub fn new(gl: &WebGlRenderingContext) -> WebRenderer {
         let shader_sys = ShaderSystem::new(&gl);
-
-        let depth_texture_ext = gl
-            .get_extension("WEBGL_depth_texture")
-            .expect("Depth texture extension");
+//
+//        let depth_texture_ext = gl
+//            .get_extension("WEBGL_depth_texture")
+//            .expect("Depth texture extension");
 
         let oes_vao_ext = gl
             .get_extension("OES_vertex_array_object")
@@ -133,7 +123,7 @@ impl WebRenderer {
 //        let reflection_framebuffer = WebRenderer::create_reflection_framebuffer(&gl).unwrap();
 
         WebRenderer {
-            depth_texture_ext,
+//            depth_texture_ext,
             shader_sys,
 //            refraction_framebuffer,
 //            reflection_framebuffer,
@@ -141,7 +131,9 @@ impl WebRenderer {
         }
     }
 
-    pub fn render(&mut self, gl: &WebGlRenderingContext, state: &State, assets: &Assets) {
+    pub fn render(&mut self, canvas: &Canvas, state: &State){ //}, assets: &Assets) {
+        let gl = &canvas.gl;
+
         gl.clear_color(0.53, 0.8, 0.98, 1.);
         gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
@@ -152,10 +144,10 @@ impl WebRenderer {
 //        self.render_refraction_fbo(gl, state, assets);
 //        self.render_reflection_fbo(gl, state, assets);
 
-        gl.viewport(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        gl.viewport(0, 0, canvas.width() as i32, canvas.height() as i32);
 
         self.render_slabs(gl,state);
-        self.render_memos(gl,state);
+//        self.render_memos(gl,state);
     }
 
     fn render_slabs(&mut self, gl: &WebGlRenderingContext, state: &State) {
@@ -171,17 +163,18 @@ impl WebRenderer {
         renderer.render(gl, state);
     }
     fn render_memos(&mut self, gl: &WebGlRenderingContext, state: &State) {
-        gl.bind_framebuffer(GL::FRAMEBUFFER, None);
-
-        let memo_shader = self.shader_sys.get_shader(&ShaderKind::Memo).unwrap();
-
-        self.shader_sys.use_program(gl, ShaderKind::Memo);
-
-        let renderer = SlabRenderer::new(memo_shader);
-
-        self.prepare_for_render(gl, &renderer, "memos");
-
-        renderer.render(gl, state);
+        unimplemented!()
+//        gl.bind_framebuffer(GL::FRAMEBUFFER, None);
+//
+//        let memo_shader = self.shader_sys.get_shader(&ShaderKind::Memo).unwrap();
+//
+//        self.shader_sys.use_program(gl, ShaderKind::Memo);
+//
+//        let renderer = SlabRenderer::new(memo_shader);
+//
+//        self.prepare_for_render(gl, &renderer, "memos");
+//
+//        renderer.render(gl, state);
     }
 
 //    fn render_water(&mut self, gl: &WebGlRenderingContext, state: &State) {

@@ -12,7 +12,7 @@ pub static CANVAS_WIDTH: i32 = 512;
 pub static CANVAS_HEIGHT: i32 = 512;
 
 pub struct Canvas {
-    gl: WebGlRenderingContext,
+    pub gl: WebGlRenderingContext,
     element: HtmlCanvasElement,
 }
 
@@ -58,6 +58,12 @@ impl Canvas {
         app_div.append_child(&self.element)?;
 
         Ok(())
+    }
+    pub fn width(&self) -> u32 {
+        self.element.width()
+    }
+    pub fn height(&self) -> u32 {
+        self.element.height()
     }
 
     fn attach_mouse_down_handler(&mut self, app: App) -> Result<(), JsValue> {
