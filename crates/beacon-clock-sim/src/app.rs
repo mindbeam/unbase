@@ -63,11 +63,12 @@ impl App {
 
         info!("beacon-clock-sim WebClient started");
 
-//        load_texture_image(
-//            Rc::clone(gl),
-//            "/disc.png",
-//            TextureUnit::Disc,
-//        );
+        use crate::util::texture::TextureUnit;
+        crate::util::texture::load_texture_image(
+            self.canvas.borrow().gl.clone(),
+            "/disc.png",
+            TextureUnit::Disc,
+        );
 
         self.message(&Message::Reset);
         self.run(true);

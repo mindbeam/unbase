@@ -1,6 +1,6 @@
 use crate::app::State;
 use super::Render;
-use super::texture_unit::TextureUnit;
+use crate::util::texture::TextureUnit;
 use super::shader::Shader;
 use super::shader::ShaderKind;
 //use nalgebra;
@@ -30,21 +30,10 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
     fn buffer_attributes(&self, gl: &WebGlRenderingContext) {
         let shader = self.shader();
 
-        //let pos_attrib = gl.get_attrib_location(&shader.program, "position");
-
         let pos_attrib = gl.get_attrib_location(&shader.program, "position");
         gl.enable_vertex_attrib_array(pos_attrib as u32);
 
-        // These vertices are the x and z values that create a flat square tile on the `y = 0`
-        // plane. In our render function we'll scale this quad into the water size that we want.
-        // x and z values, y is omitted since this is a flat surface. We set it in the vertex shader
-        let vertices: [f32; 8] = [
-            -0.5, 0.5, // Bottom Left
-            0.5, 0.5, // Bottom Right
-            0.5, -0.5, // Top Right
-            -0.5, -0.5, // Top Left
-        ];
-
+        let vertices: [f32; 9] = [-0.7, -0.7, 0.0, 0.7, -0.7, 0.0, 0.0, 0.7, 0.0];
 //        let mut indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
 
         Self::buffer_f32_data(&gl, &vertices, pos_attrib as u32, 3);
@@ -54,11 +43,20 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
     fn render(&self, gl: &WebGlRenderingContext, state: &State) {
         let shader = self.shader();
 
+        gl.clear_color(0.0, 0.0, 0.0, 1.0);
+        gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
+
+        gl.draw_arrays(
+            WebGlRenderingContext::TRIANGLES,
+            0,
+            3, //(vertices.len() / 3) as i32,
+        );
+
         //let time_uni = shader.get_uniform_location(gl, "time");
-        let view_uni = shader.get_uniform_location(gl, "modelViewMatrix");
+//        let view_uni = shader.get_uniform_location(gl, "modelViewMatrix");
 //        let camera_pos_uni = shader.get_uniform_location(gl, "cameraPosition");
-        let perspective_uni = shader.get_uniform_location(gl, "projectionMatrix");
-        let disc_texture_uni = shader.get_uniform_location(gl, "disc_texture");
+//        let perspective_uni = shader.get_uniform_location(gl, "projectionMatrix");
+//        let disc_texture_uni = shader.get_uniform_location(gl, "disc_texture");
 
 
 //        let pos = (0., 0.0, 0.);
@@ -74,13 +72,13 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
 //        model_array.copy_from_slice(model.as_slice());
 //        gl.uniform_matrix4fv_with_f32_array(model_uni.as_ref(), false, &mut model_array);
 
-        let mut view = state.camera.view();
-        gl.uniform_matrix4fv_with_f32_array(view_uni.as_ref(), false, &mut view);
+//        let mut view = state.camera.view();
+//        gl.uniform_matrix4fv_with_f32_array(view_uni.as_ref(), false, &mut view);
 
-        gl.uniform1i(
-            disc_texture_uni.as_ref(),
-            TextureUnit::Disc.texture_unit(),
-        );
+//        gl.uniform1i(
+//            disc_texture_uni.as_ref(),
+//            TextureUnit::Disc.texture_unit(),
+//        );
 
 //        let seconds_elapsed = state.clock / 1000.;
 //        gl.uniform1f(time_uni.as_ref(), seconds_elapsed);
@@ -89,14 +87,20 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
 //        let mut camera_pos = [camera_pos.x, camera_pos.y, camera_pos.z];
 //        gl.uniform3fv_with_f32_array(camera_pos_uni.as_ref(), &mut camera_pos);
 
-        let mut perspective = state.camera.projection();
-        gl.uniform_matrix4fv_with_f32_array(perspective_uni.as_ref(), false, &mut perspective);
-
-        gl.enable(GL::BLEND);
-        gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
-
-        gl.draw_elements_with_i32(GL::TRIANGLES, 6, GL::UNSIGNED_SHORT, 0);
-
-        gl.disable(GL::BLEND);
+//        let mut perspective = state.camera.projection();
+////        gl.uniform_matrix4fv_with_f32_array(perspective_uni.as_ref(), false, &mut perspective);
+//
+//        //gl.enable(GL::BLEND);
+//        //gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
+//
+////        gl.draw_elements_with_i32(GL::POINTS, 3, GL::UNSIGNED_SHORT, 0);
+//
+//        gl.draw_arrays(
+//            GL::POINTS,
+//            0,
+//            4 as i32//(vertices.len() / 3) as i32,
+//        );
+//
+//        gl.disable(GL::BLEND);
     }
 }

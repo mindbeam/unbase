@@ -5,9 +5,6 @@ use web_sys::*;
 use js_sys::{Reflect,WebAssembly};
 use wasm_bindgen::JsCast;
 
-
-//mod load_texture_img;
-
 pub mod texture_unit;
 pub mod shader;
 mod render_slabs;
@@ -29,21 +26,51 @@ pub trait Render<'a> {
     fn render(&self, gl: &GL, state: &State);
 
     fn buffer_f32_data(gl: &GL, data: &[f32], attrib: u32, size: i32) {
-        let memory_buffer = wasm_bindgen::memory()
-            .dyn_into::<WebAssembly::Memory>()
-            .unwrap()
-            .buffer();
 
-        let data_location = data.as_ptr() as u32 / 4;
 
-        let data_array = js_sys::Float32Array::new(&memory_buffer)
-            .subarray(data_location, data_location + data.len() as u32);
-
-        let buffer = gl.create_buffer().unwrap();
+        let buffer = gl.create_buffer().ok_or("failed to create buffer").unwrap();
 
         gl.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer));
-        gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &data_array, GL::STATIC_DRAW);
+
+        // Note that `Float32Array::view` is somewhat dangerous (hence the
+        // `unsafe`!). This is creating a raw view into our module's
+        // `WebAssembly.Memory` buffer, but if we allocate more pages for ourself
+        // (aka do a memory allocation in Rust) it'll cause the buffer to change,
+        // causing the `Float32Array` to be invalid.
+        //
+        // As a result, after `Float32Array::view` we have to be very careful not to
+        // do any memory allocations before it's dropped.
+        unsafe {
+            let vert_array = js_sys::Float32Array::view(&data);
+
+            gl.buffer_data_with_array_buffer_view(
+                WebGlRenderingContext::ARRAY_BUFFER,
+                &vert_array,
+                WebGlRenderingContext::STATIC_DRAW,
+            );
+        }
+
         gl.vertex_attrib_pointer_with_i32(attrib, size, GL::FLOAT, false, 0, 0);
+//        gl.enable_vertex_attrib_array(0);
+
+        // -----
+
+
+//        let memory_buffer = wasm_bindgen::memory()
+//            .dyn_into::<WebAssembly::Memory>()
+//            .unwrap()
+//            .buffer();
+//
+//        let data_location = data.as_ptr() as u32 / 4;
+//
+//        let data_array = js_sys::Float32Array::new(&memory_buffer)
+//            .subarray(data_location, data_location + data.len() as u32);
+//
+//        let buffer = gl.create_buffer().unwrap();
+//
+//        gl.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer));
+//        gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &data_array, GL::STATIC_DRAW);
+//        gl.vertex_attrib_pointer_with_i32(attrib, size, GL::FLOAT, false, 0, 0);
     }
 
     fn buffer_u8_data(gl: &GL, data: &[u8], attrib: u32, size: i32) {
@@ -141,9 +168,6 @@ impl WebRenderer {
         // Position is positive instead of negative for.. mathematical reasons..
         let clip_plane = [0., 1., 0., above];
 
-//        self.render_refraction_fbo(gl, state, assets);
-//        self.render_reflection_fbo(gl, state, assets);
-
         gl.viewport(0, 0, canvas.width() as i32, canvas.height() as i32);
 
         self.render_slabs(gl,state);
@@ -151,13 +175,14 @@ impl WebRenderer {
     }
 
     fn render_slabs(&mut self, gl: &WebGlRenderingContext, state: &State) {
-        gl.bind_framebuffer(GL::FRAMEBUFFER, None);
+//        gl.bind_framebuffer(GL::FRAMEBUFFER, None);
 
         let slab_shader = self.shader_sys.get_shader(&ShaderKind::Slab).unwrap();
         self.shader_sys.use_program(gl, ShaderKind::Slab);
 
         let renderer = SlabRenderer::new(slab_shader);
 
+//        renderer.buffer_attributes(gl);
         self.prepare_for_render(gl, &renderer, "slabs");
 
         renderer.render(gl, state);
@@ -278,6 +303,7 @@ impl WebRenderer {
                 .expect("Created vao")
                 .into(),
         )
+
     }
 
     fn prepare_for_render<'a>(

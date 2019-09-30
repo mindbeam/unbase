@@ -1,11 +1,11 @@
 //uniform float time;
-uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
+//uniform mat4 modelViewMatrix;
+//uniform mat4 projectionMatrix;
 //uniform vec3 cameraPosition;
 
-attribute vec3 position;
+//attribute vec3 position;
 
-precision mediump float;
+//precision mediump float;
 
 
 //attribute float last_memo_time;
@@ -14,20 +14,25 @@ precision mediump float;
 //${THREE.ShaderChunk[ "fog_pars_vertex" ]}
 
 
-float cubicPulse( float c, float w, float x ){
-    x = abs(x - c);
-    if( x>w ) return 0.0;
-    x /= w;
-    return 1.0 - x*x*(3.0-2.0*x);
-}
-void main() {
+//float cubicPulse( float c, float w, float x ){
+//    x = abs(x - c);
+//    if( x>w ) return 0.0;
+//    x /= w;
+//    return 1.0 - x*x*(3.0-2.0*x);
+//}
+//void main() {
     //vColor = customColor;
-    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+    //vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
     //float size = 100.0 + (100.0 * cubicPulse(0.5,0.5,smoothstep(-50.0,50.0, time - last_memo_time)));
-    float size = 100.0;
-    gl_PointSize = size * ( 300.0 / -mvPosition.z );
-    gl_Position = projectionMatrix * mvPosition;
+    //float size = 100.0;
+//    gl_PointSize = 100.0;//size * ( 300.0 / -mvPosition.z );
+//    gl_Position = vec4(0.0,0.0,0.0,0.0);//projectionMatrix * mvPosition;
 
     // ${THREE.ShaderChunk[ "fog_vertex" ]}
 
+//}
+
+attribute vec4 position;
+void main() {
+    gl_Position = position;
 }

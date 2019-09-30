@@ -1,6 +1,7 @@
 pub mod panel;
 pub mod color;
 pub mod position;
+pub mod texture;
 
 pub use self::color::Color;
 pub use self::position::Position;

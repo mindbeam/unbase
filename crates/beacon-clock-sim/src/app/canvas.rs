@@ -1,6 +1,7 @@
 use super::{App,Message};
 use wasm_bindgen::{JsCast,JsValue};
 use web_sys::WebGlRenderingContext as GL;
+use std::rc::Rc;
 use web_sys::*;
 use wasm_bindgen::prelude::Closure;
 
@@ -12,7 +13,7 @@ pub static CANVAS_WIDTH: i32 = 512;
 pub static CANVAS_HEIGHT: i32 = 512;
 
 pub struct Canvas {
-    pub gl: WebGlRenderingContext,
+    pub gl: Rc<WebGlRenderingContext>,
     element: HtmlCanvasElement,
 }
 
@@ -23,7 +24,7 @@ impl Canvas {
         element.set_width(CANVAS_WIDTH as u32);
         element.set_height(CANVAS_HEIGHT as u32);
 
-        let gl: WebGlRenderingContext = element.get_context("webgl")?.unwrap().dyn_into()?;
+        let gl: Rc<WebGlRenderingContext> = Rc::new(element.get_context("webgl")?.unwrap().dyn_into()?);
 
         gl.clear_color(0.0, 0.0, 0.0, 1.0);
         gl.enable(GL::DEPTH_TEST);

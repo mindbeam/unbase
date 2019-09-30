@@ -1,4 +1,3 @@
-use crate::render::TextureUnit;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
@@ -6,6 +5,29 @@ use wasm_bindgen::JsCast;
 use web_sys::HtmlImageElement;
 use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
+
+//TODO: consider refactoring this to be less hardcode-ey
+
+#[derive(Clone, Copy)]
+pub enum TextureUnit {
+    Disc = 0,
+}
+
+impl TextureUnit {
+    /// gl.TEXTURE1, gl.TEXTURE2 ... etc. Useful for `gl.active_texture`
+    #[allow(non_snake_case)]
+    pub fn TEXTURE_N(&self) -> u32 {
+        match self {
+            TextureUnit::Disc => GL::TEXTURE0,
+        }
+    }
+
+    /// 0, 1, 2, ... etc. Useful for `gl.uniform1i` calls
+    pub fn texture_unit(&self) -> i32 {
+        *self as i32
+    }
+}
+
 
 pub fn load_texture_image(gl: Rc<WebGlRenderingContext>, src: &str, texture_unit: TextureUnit) {
     let image = Rc::new(RefCell::new(HtmlImageElement::new().unwrap()));
