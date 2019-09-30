@@ -32,7 +32,11 @@
 
 //}
 
+varying  vec4 color;
 attribute vec4 position;
+attribute vec4 vRgbaColor;
 void main() {
+    gl_PointSize = 100.0;
     gl_Position = position;
+    color = vRgbaColor;
 }

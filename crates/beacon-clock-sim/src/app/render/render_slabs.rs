@@ -33,24 +33,29 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
         let pos_attrib = gl.get_attrib_location(&shader.program, "position");
         gl.enable_vertex_attrib_array(pos_attrib as u32);
 
+        let color_attrib = gl.get_attrib_location(&shader.program, "vRgbaColor");
+        gl.enable_vertex_attrib_array(color_attrib as u32);
+
         let vertices: [f32; 9] = [-0.7, -0.7, 0.0, 0.7, -0.7, 0.0, 0.0, 0.7, 0.0];
 //        let mut indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
 
+        let colors: [f32; 12] = [
+            1.0, 0.0, 0.0, 1.0,
+            0.7, 0.0, 0.0, 1.0,
+            1.0, 0.0, 0.0, 1.0,
+        ];
+
+        Self::buffer_f32_data(&gl, &colors, color_attrib as u32, 4);
+
+
         Self::buffer_f32_data(&gl, &vertices, pos_attrib as u32, 3);
+
+//        Self::buffer_f32_data(&gl, &vertices, pos_attrib as u32, 3);
 //        Self::buffer_u16_indices(&gl, &mut indices);
     }
 
     fn render(&self, gl: &WebGlRenderingContext, state: &State) {
         let shader = self.shader();
-
-        gl.clear_color(0.0, 0.0, 0.0, 1.0);
-        gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
-
-        gl.draw_arrays(
-            WebGlRenderingContext::TRIANGLES,
-            0,
-            3, //(vertices.len() / 3) as i32,
-        );
 
         //let time_uni = shader.get_uniform_location(gl, "time");
 //        let view_uni = shader.get_uniform_location(gl, "modelViewMatrix");
@@ -100,6 +105,20 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
 //            0,
 //            4 as i32//(vertices.len() / 3) as i32,
 //        );
+
+//        gl.enable(GL::BLEND);
+//        gl.enable(GL::DEPTH_TEST);
+
+        gl.disable(GL::DEPTH_TEST);
+        gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA); // To disable the background color of the canvas element
+        gl.enable(GL::BLEND);
+
+        gl.draw_arrays(
+            WebGlRenderingContext::POINTS,
+            0,
+            3, //(vertices.len() / 3) as i32,
+        );
+
 //
 //        gl.disable(GL::BLEND);
     }

@@ -27,7 +27,6 @@ pub trait Render<'a> {
 
     fn buffer_f32_data(gl: &GL, data: &[f32], attrib: u32, size: i32) {
 
-
         let buffer = gl.create_buffer().ok_or("failed to create buffer").unwrap();
 
         gl.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer));
@@ -161,6 +160,8 @@ impl WebRenderer {
     pub fn render(&mut self, canvas: &Canvas, state: &State){ //}, assets: &Assets) {
         let gl = &canvas.gl;
 
+//        gl.clear_color(0.0, 0.0, 0.0, 1.0);
+
         gl.clear_color(0.53, 0.8, 0.98, 1.);
         gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
@@ -182,8 +183,9 @@ impl WebRenderer {
 
         let renderer = SlabRenderer::new(slab_shader);
 
-//        renderer.buffer_attributes(gl);
-        self.prepare_for_render(gl, &renderer, "slabs");
+        renderer.buffer_attributes(gl);
+        // TODO: Figure out what the point of VAO is, and maybe reenable
+        // self.prepare_for_render(gl, &renderer, "slabs");
 
         renderer.render(gl, state);
     }
