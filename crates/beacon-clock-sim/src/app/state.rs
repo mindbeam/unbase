@@ -9,10 +9,11 @@ mod camera;
 use self::camera::*;
 
 mod slab;
-use self::slab::{Slab,MemoRefHead};
+use self::slab::{SlabSystem,MemoRefHead};
 //
 //mod behavior;
 //use self::behavior::*;
+
 
 pub struct State {
     pub (crate) run: bool,
@@ -20,7 +21,7 @@ pub struct State {
     pub camera: Camera,
     pub mouse: Mouse,
     slabcount: u32,
-    slabs: Vec<Slab>,
+    pub slabsystem: SlabSystem,
     threedim: bool,
 //    memoemissions: Vec<MemoEmission>,
 }
@@ -53,7 +54,7 @@ impl State {
             mouse: Mouse::new(),
             clock: 0.,
             slabcount: 30,
-            slabs: Vec::new(),
+            slabsystem: SlabSystem::new(),
             threedim: false,
 //            behavior: Behavior::new(),
         }
@@ -113,34 +114,15 @@ impl State {
 //                self.behavior.applychange(change);
 //            },
             Message::Reset => {
-                self.slabs.truncate(0);
-                self.create_random_slabs(self.slabcount)
+                self.slabsystem.truncate();
+                self.slabsystem.create_random_slabs(self.slabcount,self.threedim)
             },
             Message::Slabs(n) => {
                 self.slabcount = *n;
-                self.slabs.truncate(0);
-                self.create_random_slabs(self.slabcount)
+                self.slabsystem.truncate();
+                self.slabsystem.create_random_slabs(self.slabcount,self.threedim)
             }
         }
-    }
-    pub fn create_random_slabs(&mut self, count: u32) {
-
-        // TODO call init_new_system here
-        let seed = MemoRefHead::blank();
-
-        if self.threedim {
-            for i in 0..count {
-                let position = Position::random_3d();
-                self.slabs.push(Slab::new(position, seed.clone()));
-            }
-        } else {
-            for i in 0..count {
-                let position = Position::random_2d(0f32);
-                self.slabs.push(Slab::new(position, seed.clone()));
-            }
-        }
-
-//        this.update_attributes();
     }
 }
 //pub struct StateWrapper(State);

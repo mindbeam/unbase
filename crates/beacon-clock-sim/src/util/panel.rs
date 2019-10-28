@@ -73,7 +73,7 @@ impl Control for Slider {
         slider.set_step(&format!("{}",  self.step));
         slider.set_value(&format!("{}", self.start));
 
-        slider.set_oninput(Some(closure.as_ref().unchecked_ref()));
+        slider.set_onchange(Some(closure.as_ref().unchecked_ref()));
         closure.forget();
 
         let label = document.create_element("div")?;

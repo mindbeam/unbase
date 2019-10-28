@@ -21,7 +21,7 @@ pub trait Render<'a> {
 
     fn shader(&'a self) -> &'a Shader;
 
-    fn buffer_attributes(&self, gl: &GL);
+    fn buffer_attributes(&self, gl: &GL, state: &State);
 
     fn render(&self, gl: &GL, state: &State);
 
@@ -183,7 +183,7 @@ impl WebRenderer {
 
         let renderer = SlabRenderer::new(slab_shader);
 
-        renderer.buffer_attributes(gl);
+        renderer.buffer_attributes(gl, state);
         // TODO: Figure out what the point of VAO is, and maybe reenable
         // self.prepare_for_render(gl, &renderer, "slabs");
 
@@ -311,13 +311,14 @@ impl WebRenderer {
     fn prepare_for_render<'a>(
         &self,
         gl: &WebGlRenderingContext,
+        state: &State,
         renderable: &impl Render<'a>,
         key: &str,
     ) {
         if self.vao_ext.vaos.borrow().get(key).is_none() {
             let vao = self.create_vao();
             self.bind_vao(&vao);
-            renderable.buffer_attributes(gl);
+            renderable.buffer_attributes(gl,state);
             self.vao_ext.vaos.borrow_mut().insert(key.to_string(), vao);
             return;
         }

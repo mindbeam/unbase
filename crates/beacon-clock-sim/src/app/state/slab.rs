@@ -1,5 +1,6 @@
 use crate::util::{Color, Position};
 use uuid::Uuid;
+use log::info;
 
 #[derive(Clone)]
 pub struct MemoRefHead;
@@ -10,25 +11,73 @@ impl MemoRefHead {
     }
 }
 
+pub struct SlabSystem{
+    pub id: Vec<Uuid>,
+    pub position: Vec<f32>,
+    pub color: Vec<f32>,
+    pub clockstate: Vec<MemoRefHead>
+}
+
+impl SlabSystem {
+    pub fn new() -> Self {
+        SlabSystem {
+            id: Vec::new(),
+            position: Vec::new(),
+            color: Vec::new(),
+            clockstate: Vec::new(),
+        }
+    }
+    pub fn len (&self) -> usize {
+        self.id.len()
+    }
+    pub fn new_slab(&mut self, position: Position, seed: MemoRefHead) -> usize {
+        let offset = self.id.len();
+
+        let color = Color::from(0xffffffff);
+
+        self.id.push(Uuid::new_v4());
+        self.position.push(position.x as f32 / 1000.0);
+        self.position.push(position.y as f32 / 1000.0);
+        self.position.push(position.z as f32 / 1000.0);
+        self.color.push(color.r as f32 / 255.0);
+        self.color.push(color.g as f32 / 255.0);
+        self.color.push(color.b as f32 / 255.0);
+        self.color.push(color.a as f32 / 255.0);
+        self.clockstate.push(seed);
+
+        offset
+    }
+    pub fn truncate (&mut self) {
+        self.id.truncate(0);
+        self.position.truncate(0);
+        self.color.truncate(0);
+        self.clockstate.truncate(0);
+    }
+    pub fn create_random_slabs(&mut self, count: u32, threedim: bool) {
+
+        info!("create_random_slabs {}, {}",count,threedim);
+        // TODO call init_new_system here
+        let seed = MemoRefHead::blank();
+
+        if threedim {
+            for i in 0..count {
+                let position = Position::random_3d();
+                self.new_slab(position, seed.clone());
+            }
+        } else {
+            for i in 0..count {
+                let position = Position::random_2d(0f32);
+                self.new_slab(position, seed.clone());
+            }
+        }
+    }
+}
+
 pub struct Slab {
-    pub id: Uuid,
-    pub position: Position,
-    pub color: Color,
-//    pub neighbors: Array<[f32,Slab]>,
-//    pub beacon_increment: u64,
-    pub clockstate: MemoRefHead,
+    pub offset: usize
 }
 
 impl Slab {
-    pub fn new(position: Position, seed: MemoRefHead) -> Self {
-        Slab {
-            id: Uuid::new_v4(),
-            position,
-            color: Color::from(0xffffff),
-//            beacon_increment: 0,
-            clockstate: seed
-        }
-    }
 
 //    pub fn init_new_system(){
 //        this.clockstate = new MemoHead([]);
