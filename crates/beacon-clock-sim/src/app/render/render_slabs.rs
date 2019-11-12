@@ -7,6 +7,7 @@ use super::shader::ShaderKind;
 //use nalgebra::{Isometry3, Matrix4, Vector3};
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
+use log::info;
 
 pub struct SlabRenderer<'a> {
     shader: &'a Shader,
@@ -37,14 +38,14 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
         gl.enable_vertex_attrib_array(color_attrib as u32);
 
 
-        let vertices: [f32; 9] = [-0.7, -0.7, 0.0, 0.7, -0.7, 0.0, 0.0, 0.7, 0.0];
+//        let vertices: [f32; 9] = [-0.7, -0.7, 0.0, 0.7, -0.7, 0.0, 0.0, 0.7, 0.0];
 //        let mut indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
-
-        let colors: [f32; 12] = [
-            1.0, 0.0, 0.0, 1.0,
-            0.7, 0.0, 0.0, 1.0,
-            1.0, 0.0, 0.5, 1.0,
-        ];
+//
+//        let colors: [f32; 12] = [
+//            1.0, 0.0, 0.0, 1.0,
+//            0.7, 0.0, 0.0, 1.0,
+//            1.0, 0.0, 0.5, 1.0,
+//        ];
 
         Self::buffer_f32_data(&gl, &state.slabsystem.color[..], color_attrib as u32, 4);
         Self::buffer_f32_data(&gl, &state.slabsystem.position[..], pos_attrib as u32, 3);
@@ -57,9 +58,9 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
         let shader = self.shader();
 
         //let time_uni = shader.get_uniform_location(gl, "time");
-//        let view_uni = shader.get_uniform_location(gl, "modelViewMatrix");
+        let view_uni = shader.get_uniform_location(gl, "modelViewMatrix");
+        let perspective_uni = shader.get_uniform_location(gl, "projectionMatrix");
 //        let camera_pos_uni = shader.get_uniform_location(gl, "cameraPosition");
-//        let perspective_uni = shader.get_uniform_location(gl, "projectionMatrix");
 //        let disc_texture_uni = shader.get_uniform_location(gl, "disc_texture");
 
 
@@ -76,8 +77,9 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
 //        model_array.copy_from_slice(model.as_slice());
 //        gl.uniform_matrix4fv_with_f32_array(model_uni.as_ref(), false, &mut model_array);
 
-//        let mut view = state.camera.view();
-//        gl.uniform_matrix4fv_with_f32_array(view_uni.as_ref(), false, &mut view);
+        let mut view = state.camera.view();
+//        info!("view: {:?}", view);
+        gl.uniform_matrix4fv_with_f32_array(view_uni.as_ref(), false, &mut view);
 
 //        gl.uniform1i(
 //            disc_texture_uni.as_ref(),
@@ -91,8 +93,8 @@ impl<'a> Render<'a> for SlabRenderer<'a> {
 //        let mut camera_pos = [camera_pos.x, camera_pos.y, camera_pos.z];
 //        gl.uniform3fv_with_f32_array(camera_pos_uni.as_ref(), &mut camera_pos);
 
-//        let mut perspective = state.camera.projection();
-//        gl.uniform_matrix4fv_with_f32_array(perspective_uni.as_ref(), false, &mut perspective);
+        let mut perspective = state.camera.projection();
+        gl.uniform_matrix4fv_with_f32_array(perspective_uni.as_ref(), false, &mut perspective);
 //
         gl.enable(GL::BLEND);
         gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);

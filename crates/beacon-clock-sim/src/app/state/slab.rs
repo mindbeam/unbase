@@ -36,9 +36,9 @@ impl SlabSystem {
         let color = Color::from(0xffffffff);
 
         self.id.push(Uuid::new_v4());
-        self.position.push(position.x as f32 / 1000.0);
-        self.position.push(position.y as f32 / 1000.0);
-        self.position.push(position.z as f32 / 1000.0);
+        self.position.push(position.x as f32 / 100.0);
+        self.position.push(position.y as f32 / 100.0);
+        self.position.push(position.z as f32 / 100.0);
         self.color.push(color.r as f32 / 255.0);
         self.color.push(color.g as f32 / 255.0);
         self.color.push(color.b as f32 / 255.0);

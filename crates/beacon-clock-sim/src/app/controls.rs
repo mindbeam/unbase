@@ -42,7 +42,7 @@ impl Controls {
         {
             let app = app.clone();
             panel.add_control(
-                Slider { min: 0.0, max: 10000.0, step: 1.0, start: 0.5, label: "Slabs" },
+                Slider { min: 0.0, max: 10000.0, step: 1.0, start: 300.0, label: "Slabs" },
                 Box::new(move |_event: Event, element: HtmlInputElement| {
                     let value: u32 = element.value().parse().unwrap();
                     info!("slabs change {}", value);
@@ -51,14 +51,31 @@ impl Controls {
             )?;
         }
 
-        // 3D
-        panel.add_control(
-            Checkbox { start_checked: false, label: "3D" },
-            Box::new(move |_event: Event, element: HtmlInputElement| {
-                let value: bool = element.checked();
-                info!("3d change {}", value);
-            })
-        )?;
+        {
+            // 3D
+            let app = app.clone();
+            panel.add_control(
+                Checkbox { start_checked: false, label: "3D" },
+                Box::new(move |_event: Event, element: HtmlInputElement| {
+                    let value: bool = element.checked();
+                    info!("3d change {}", value);
+                    app.message(&Message::ThreeDim(value));
+                })
+            )?;
+        }
+
+        // Cull elements +/- Z-axis coordinates to show waves in a 3d system (or camera aligned perhaps?)
+//        {
+//            let app = app.clone();
+//            panel.add_control(
+//                Slider { min: 0.0, max: 10000.0, step: 1.0, start: 300.0, label: "Z-axis cull" },
+//                Box::new(move |_event: Event, element: HtmlInputElement| {
+//                    let value: u32 = element.value().parse().unwrap();
+//                    info!("slabs change {}", value);
+//                    app.message(&Message::Slabs(value));
+//                })
+//            )?;
+//        }
 
         // Dropper
         panel.add_control(

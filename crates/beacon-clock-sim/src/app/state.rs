@@ -36,6 +36,7 @@ pub enum Message {
 //    BehaviorChange(BehaviorChange),
     Reset,
     Slabs(u32),
+    ThreeDim(bool)
 }
 //
 //
@@ -53,7 +54,7 @@ impl State {
             camera: Camera::new(),
             mouse: Mouse::new(),
             clock: 0.,
-            slabcount: 30,
+            slabcount: 300,
             slabsystem: SlabSystem::new(),
             threedim: false,
 //            behavior: Behavior::new(),
@@ -109,10 +110,11 @@ impl State {
             Message::Zoom(zoom) => {
                 self.camera.zoom(*zoom);
             }
-//            Message::ThreeDim(bool)
-//            Message::BehaviorChange(change) => {
-//                self.behavior.applychange(change);
-//            },
+            Message::ThreeDim(v) => {
+                self.threedim = *v;
+                self.slabsystem.truncate();
+                self.slabsystem.create_random_slabs(self.slabcount,self.threedim)
+            },
             Message::Reset => {
                 self.slabsystem.truncate();
                 self.slabsystem.create_random_slabs(self.slabcount,self.threedim)
