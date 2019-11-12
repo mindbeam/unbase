@@ -42,7 +42,7 @@ void main() {
 //    gl_PointSize = size * ( 300.0 / -mvPosition.z );
 //    gl_Position = projectionMatrix * mvPosition;
 
-    gl_PointSize = 10.0;
+    gl_PointSize = 100.0;
     gl_Position = vec4( position, 1.0 );
     color = vRgbaColor;
 }
