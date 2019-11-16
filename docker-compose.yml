@@ -1,0 +1,14 @@
+version: '3.4'
+
+x-base:
+  &base
+  build: .
+  image: unbase_core
+  volumes:
+    - .:/unbase
+  working_dir: /unbase/
+
+services:
+  example:
+    << : *base
+    command: cargo run --example ping-pong
