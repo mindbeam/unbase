@@ -1,0 +1,2 @@
+# Docker override for Windows ( https://tonyho.net/jekyll-docker-windows-and-0-0-0-0/ )
+url: "http://localhost:4000/"
