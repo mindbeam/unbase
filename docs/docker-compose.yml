@@ -1,0 +1,12 @@
+version: '3'
+services:
+  generator:
+    environment:
+      - JEKYLL_ENV=docker
+    command: jekyll serve --force_polling --config _config.yml,_config.docker.yml
+    image: unbase_docs
+    build: .
+    volumes:
+      - .:/srv/jekyll
+    ports:
+      - 4000:4000
