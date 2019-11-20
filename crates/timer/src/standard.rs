@@ -3,30 +3,26 @@ pub use futures_timer::Delay;
 #[cfg(test)]
 mod tests {
     use super::Delay;
-    use std::io::Error;
     use std::time::Duration;
 
-    #[test]
-    fn timeout_std() {
+    use futures_await_test::async_test;
 
-        futures::executor::block_on(three_one_second_delays_future()).unwrap();
-    }
-
-    async fn three_one_second_delays_future() -> Result<(), Error> {
+    #[async_test]
+    async fn three_one_second_delays_future() {
         println!("immediate log");
 
-        Delay::new(Duration::from_secs(1)).await?;
+        Delay::new(Duration::from_secs(1)).await;
 
-        println!("log after 1s");
+        println!("log after 10ms");
 
-        Delay::new(Duration::from_secs(1)).await?;
+        Delay::new(Duration::from_millis(10)).await;
 
-        println!("second log after 1s");
+        println!("second log after 10ms");
 
-        Delay::new(Duration::from_secs(1)).await?;
+        Delay::new(Duration::from_micros(10)).await;
 
-        println!("third log after 1s");
+        println!("third log after 10ms");
 
-        Ok(())
+        ()
     }
 }

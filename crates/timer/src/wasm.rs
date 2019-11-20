@@ -1,18 +1,17 @@
 
 use std::time::Duration;
 use wasm_bindgen::prelude::*;
-use futures::{Future,Poll};
+use futures::{Future,task::Poll};
 use futures::task::{Context,AtomicWaker};
 use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::{Ordering,AtomicBool};
-use std::io;
 
 
 pub struct Delay {
     id: u32,
     inner: Arc<Inner>,
-    _closure: Closure<FnMut()>,
+    _closure: Closure<dyn FnMut()>,
 }
 
 pub struct Inner {
@@ -23,7 +22,7 @@ pub struct Inner {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_name = setTimeout)]
-    fn set_timeout(closure: &Closure<FnMut()>, millis: u32) -> u32;
+    fn set_timeout(closure: &Closure<dyn FnMut()>, millis: u32) -> u32;
 
     #[wasm_bindgen(js_name = clearTimeout)]
     fn clear_timeout(id: u32);
@@ -49,7 +48,7 @@ impl Delay {
             inner2.set.store(true, Ordering::SeqCst);
             inner2.waker.wake();
 
-        }) as Box<FnMut()>);
+        }) as Box<dyn FnMut()>);
 
         let id = set_timeout(&cb, millis);
 
@@ -62,15 +61,15 @@ impl Delay {
 }
 
 impl Future for Delay {
-    type Output = io::Result<()>;
+    type Output = ();
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
         // Register **before** checking `set` to avoid a race condition
         // that would result in lost notifications.
         self.inner.waker.register(cx.waker());
 
         if self.inner.set.load(Ordering::SeqCst) {
-            Poll::Ready(Ok(()))
+            Poll::Ready(())
         } else {
             Poll::Pending
         }
@@ -86,40 +85,33 @@ impl Drop for Delay {
 #[cfg(test)]
 mod tests {
 
-    use futures::future::{FutureExt, TryFutureExt};
-    use wasm_bindgen_test::*;
     use web_sys::console::log_1;
-    use wasm_bindgen::JsValue;
 
     use super::Delay;
     use std::time::Duration;
 
-//    use wasm_bindgen::prelude::*;
-//    use wasm_bindgen_futures::futures_0_3::*;
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen_test::*;
 
+    extern crate futures;
+    extern crate js_sys;
+    extern crate wasm_bindgen_futures;
 
-    #[wasm_bindgen_test(async)]
-    fn timeout_wasm() -> impl futures01::future::Future<Item=(), Error=JsValue> {
-
-        three_one_second_delays_future().boxed_local().compat()
-    }
-
-
-    async fn three_one_second_delays_future() -> Result<(), JsValue> {
+    #[wasm_bindgen_test]
+    async fn three_one_second_delays_future()  {
         log_1(&JsValue::from_str("immediate log"));
 
-        Delay::new(Duration::from_secs(1)).await.map_err(|e| e.to_string() )?;
+        Delay::new(Duration::from_millis(10)).await;
 
-        log_1(&JsValue::from_str("log after 1s"));
+        log_1(&JsValue::from_str("log after 10ms"));
 
-        Delay::new(Duration::from_secs(1)).await.map_err(|e| e.to_string() )?;
+        Delay::new(Duration::from_millis(10)).await;
 
-        log_1(&JsValue::from_str("second log after 1s"));
+        log_1(&JsValue::from_str("second log after 10ms"));
 
-        Delay::new(Duration::from_secs(1)).await.map_err(|e| e.to_string() )?;
+        Delay::new(Duration::from_millis(10)).await;
 
-        log_1(&JsValue::from_str("third log after 1s"));
-
-        Ok(())
+        log_1(&JsValue::from_str("third log after 10ms"));
     }
 }
