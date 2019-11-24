@@ -3,5 +3,4 @@ members = [
     "crates/unbase",
     "crates/unbase_web",
     "crates/timer",
-    "crates/tree-clock-sim"
 ]
