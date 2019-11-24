@@ -22,7 +22,8 @@ exclude = [
 [dependencies]
 
 timer = { path = "../timer" }
-futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly", "compat"] }
+futures = "0.3.1"
+futures-await-test = "0.3.0"
 
 log = "0.4.6"
 sha2 = "0.8.0"
@@ -36,8 +37,7 @@ serde_json = "0.9.9"
 #serde_derive = "1.0.91"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { version = "0.1.20" }
-tokio-async-await = "0.1.7"
+tokio = "0.2.0-alpha.6"
 env_logger = "0.6.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

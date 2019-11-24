@@ -6,14 +6,12 @@ edition = "2018"
 
 [dependencies]
 unbase = { path = "../unbase" }
-futures01 = { package = "futures", version = "0.1" }
-futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly", "compat"] }
-pin-utils = "0.1.0-alpha.4"
+futures = "0.3.1"
 timer = { path = "../timer" }
 
-log = "0.4.6"
-wasm-bindgen = "0.2.44"
-wasm-bindgen-futures = { version = "0.3.27", features = ["futures_0_3"] }
-wasm-bindgen-test = "0.2.44"
+log = "0.4.8"
+wasm-bindgen = "0.2.55"
+wasm-bindgen-futures = "0.4.5"
+wasm-bindgen-test = "0.3.5"
 wasm-bindgen-console-logger = "0.1.1"
-js-sys = "0.3.21"
+js-sys = "0.3.32"
