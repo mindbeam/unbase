@@ -2,9 +2,11 @@ extern crate unbase;
 use unbase::subject::Subject;
 use unbase::error::*;
 use std::{thread, time};
+use futures_await_test::async_test;
+use futures::executor::block_on;
 
-#[test]
-fn basic_eventual() {
+#[async_test]
+async fn basic_eventual() {
 
     let net = unbase::Network::create_new_system();
     let simulator = unbase::network::transport::Simulator::new();
@@ -27,12 +29,12 @@ fn basic_eventual() {
     let context_b = slab_b.create_context();
     let context_c = slab_c.create_context();
 
-    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo");
+    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").await;
 
     assert!(rec_a1.is_ok(), "New subject should be created");
     let rec_a1 = rec_a1.unwrap();
 
-    assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
+    assert!(rec_a1.get_value("animal_sound").await.unwrap() == "Moo", "New subject should be internally consistent");
 
     // consolidation is necessary for eventual consistency to work
     //context_a.fully_consolidate();
@@ -47,7 +49,7 @@ fn basic_eventual() {
 
     let record_id = rec_a1.id;
     let root_index_subject_id = if let Some(ref s) = *context_a.root_index.read().unwrap() {
-        s.root.id
+        s.get_root_id()
     }else{
         panic!("sanity error - uninitialized context");
     };
@@ -55,8 +57,10 @@ fn basic_eventual() {
     let context_b_copy = context_b.clone();
     let context_c_copy = context_c.clone();
     let thread = thread::spawn(move ||{
-        assert!(context_b_copy.get_subject_by_id( record_id ).unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab B");
-        assert!(context_c_copy.get_subject_by_id( record_id ).unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab C");
+        block_on(async {
+            assert!(context_b_copy.get_subject_by_id(record_id).await.unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab B");
+            assert!(context_c_copy.get_subject_by_id(record_id).await.unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab C");
+        })
     });
 
     // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
@@ -107,50 +111,52 @@ fn basic_eventual() {
     let simulator_copy = simulator.clone();
     let thread = thread::spawn(move ||{
 
-        let simulator = simulator_copy;
+        block_on(async {
+            let simulator = simulator_copy;
 
-        let rec_b1 = context_b_copy.get_subject_by_id( record_id );
-        let rec_c1 = context_c_copy.get_subject_by_id( record_id );
+            let rec_b1 = context_b_copy.get_subject_by_id( record_id ).await;
+            let rec_c1 = context_c_copy.get_subject_by_id( record_id ).await;
 
-        assert!(rec_b1.is_ok(), "new subject should now have conveyed to slab B");
-        assert!(rec_c1.is_ok(), "new subject should now have conveyed to slab C");
+            assert!(rec_b1.is_ok(), "new subject should now have conveyed to slab B");
+            assert!(rec_c1.is_ok(), "new subject should now have conveyed to slab C");
 
-        let rec_b1 = rec_b1.unwrap();
-        let rec_c1 = rec_c1.unwrap();
+            let rec_b1 = rec_b1.unwrap();
+            let rec_c1 = rec_c1.unwrap();
 
-        assert!(rec_b1.get_value("animal_sound").unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
-        assert!(rec_c1.get_value("animal_sound").unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
+            assert!(rec_b1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
+            assert!(rec_c1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
 
-        simulator.advance_clock(1); // advance the simulator clock by one tick
+            simulator.advance_clock(1); // advance the simulator clock by one tick
 
-        assert_eq!(rec_a1.get_value("animal_sound").unwrap(), "Moo");
-        assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Moo");
-        assert_eq!(rec_c1.get_value("animal_sound").unwrap(), "Moo");
+            assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(), "Moo");
+            assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(), "Moo");
+            assert_eq!(rec_c1.get_value("animal_sound").await.unwrap(), "Moo");
 
 
-        rec_b1.set_value("animal_type","Bovine");
-        assert_eq!(rec_b1.get_value("animal_type").unwrap(), "Bovine");
-        assert_eq!(rec_b1.get_value("animal_sound").unwrap(),   "Moo");
+            rec_b1.set_value("animal_type","Bovine");
+            assert_eq!(rec_b1.get_value("animal_type").await.unwrap(), "Bovine");
+            assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(),   "Moo");
 
-        rec_b1.set_value("animal_sound","Woof");
-        rec_b1.set_value("animal_type","Kanine");
-        assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Woof");
-        assert_eq!(rec_b1.get_value("animal_type").unwrap(),  "Kanine");
+            rec_b1.set_value("animal_sound","Woof");
+            rec_b1.set_value("animal_type","Kanine");
+            assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(), "Woof");
+            assert_eq!(rec_b1.get_value("animal_type").await.unwrap(),  "Kanine");
 
-        // Should not yet have propagated to slab A
-        assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Moo");
-        assert!(rec_a1.get_value("animal_type").is_none(), "Should not yet have a value on Slab A for animal_type");
+            // Should not yet have propagated to slab A
+            assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Moo");
+            assert!(rec_a1.get_value("animal_type").await.is_none(), "Should not yet have a value on Slab A for animal_type");
 
-        simulator.advance_clock(1); // advance the simulator clock by one tick
-        // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
-        thread::sleep(time::Duration::from_millis(10));
-        simulator.advance_clock(1); // advance the simulator clock by one tick
-        // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
-        thread::sleep(time::Duration::from_millis(10));
+            simulator.advance_clock(1); // advance the simulator clock by one tick
+            // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
+            thread::sleep(time::Duration::from_millis(10));
+            simulator.advance_clock(1); // advance the simulator clock by one tick
+            // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
+            thread::sleep(time::Duration::from_millis(10));
 
-        // Nowwww it should have propagated
-        assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Woof");
-        assert_eq!(rec_a1.get_value("animal_type").unwrap(),    "Kanine");
+            // Nowwww it should have propagated
+            assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Woof");
+            assert_eq!(rec_a1.get_value("animal_type").await.unwrap(),    "Kanine");
+        })
     });
 
     // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model

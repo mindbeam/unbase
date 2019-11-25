@@ -1,9 +1,13 @@
 extern crate unbase;
 use unbase::subject::Subject;
 use std::{thread, time};
+use futures::executor::block_on;
 
 fn main() {
+    block_on(run())
+}
 
+async fn run (){
     let simulator = unbase::network::transport::Simulator::new();
     let net = unbase::Network::create_new_system();
     net.add_transport( Box::new(simulator.clone()) );
@@ -14,7 +18,7 @@ fn main() {
     let context_a = slab_a.create_context();
     let context_b = slab_b.create_context();
 
-    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Meow").unwrap();
+    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Meow").await.unwrap();
     let rec_id = rec_a1.id; // useful for cross-context retrieval
 
     // ************************************************************************
@@ -30,22 +34,25 @@ fn main() {
 
     // spawn thread 1
     let t1 = thread::spawn(move || {
-        // use the original copy of the subject, or look it up by sub
-        let rec_a1 = context_a.get_subject_by_id( rec_id ).unwrap();
 
-        for _ in 1..5 {
-            // Hacky-polling approach for now, push notification coming sooooon!
-            loop {
-                if "Meow".to_string() == rec_a1.get_value("animal_sound").unwrap() {
-                    // set a value when a change is detected
+        block_on(async {
+            // use the original copy of the subject, or look it up by sub
+            let rec_a1 = context_a.get_subject_by_id(rec_id).await.unwrap();
 
-                    println!("[[[ Woof ]]]");
-                    rec_a1.set_value("animal_sound","Woof");
-                    break;
+            for _ in 1..5 {
+                // Hacky-polling approach for now, push notification coming sooooon!
+                loop {
+                    if "Meow".to_string() == rec_a1.get_value("animal_sound").await.unwrap() {
+                        // set a value when a change is detected
+
+                        println!("[[[ Woof ]]]");
+                        rec_a1.set_value("animal_sound", "Woof");
+                        break;
+                    }
+                    thread::sleep(ten_ms);
                 }
-                thread::sleep(ten_ms);
             }
-        }
+        })
     });
 
 
@@ -57,12 +64,12 @@ fn main() {
         thread::sleep(ten_ms);
 
         // Get a new copy of the same subject from context_b (requires communication)
-        let rec_b1 = context_b.get_subject_by_id( rec_id ).unwrap();
+        let rec_b1 = block_on(context_b.get_subject_by_id( rec_id )).unwrap();
 
         for _ in 1..5 {
             // Hacky-polling approach for now, push notification coming sooooon!
             loop {
-                if "Woof".to_string() == rec_b1.get_value("animal_sound").unwrap() {
+                if "Woof".to_string() == block_on(rec_b1.get_value("animal_sound")).unwrap() {
                     // set a value when a change is detected
                     println!("[[[ Meow ]]]");
                     rec_b1.set_value("animal_sound","Meow");

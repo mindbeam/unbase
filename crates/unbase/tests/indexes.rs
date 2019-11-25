@@ -3,9 +3,10 @@ use unbase::subject::*;
 use unbase::context::ContextRef;
 use unbase::index::IndexFixed;
 use std::collections::HashMap;
+use futures_await_test::async_test;
 
-#[test]
-fn index_construction() {
+#[async_test]
+async fn index_construction() {
 
     let net = unbase::Network::create_new_system();
     let simulator = unbase::network::transport::Simulator::new();
@@ -16,7 +17,7 @@ fn index_construction() {
 
     // Create a new fixed tier index (fancier indexes not necessary for the proof of concept)
 
-    let index = IndexFixed::new(&ContextRef::Strong(context_a.clone()), 5);
+    let index = IndexFixed::new(&ContextRef::Strong(context_a.clone()), 5).await;
 
     assert_eq!( context_a.is_fully_materialized(), true );
 
@@ -25,10 +26,10 @@ fn index_construction() {
     let mut vals = HashMap::new();
     vals.insert("record number".to_string(), i.to_string());
 
-    let record = Subject::new(&context_a, vals, false).unwrap();
-    index.insert(i, &record);
+    let record = Subject::new(&context_a, vals, false).await.unwrap();
+    index.insert(i, &record).await;
 
-    assert_eq!( index.get(1234).unwrap().get_value("record number").unwrap(), "1234");
+    assert_eq!( index.get(1234).await.unwrap().get_value("record number").await.unwrap(), "1234");
 
 
     // Ok, now lets torture it a little
@@ -36,12 +37,12 @@ fn index_construction() {
         let mut vals = HashMap::new();
         vals.insert("record number".to_string(), i.to_string());
 
-        let record = Subject::new(&context_a, vals, false).unwrap();
-        index.insert(i, &record);
+        let record = Subject::new(&context_a, vals, false).await.unwrap();
+        index.insert(i, &record).await;
     }
 
     for i in 0..10 {
-        assert_eq!( index.get(i).unwrap().get_value("record number").unwrap(), i.to_string() );
+        assert_eq!( index.get(i).await.unwrap().get_value("record number").await.unwrap(), i.to_string() );
     }
 
     //assert_eq!( context_a.is_fully_materialized(), false );

@@ -82,12 +82,12 @@ impl Context {
 
         new_self
     }
-    pub fn insert_into_root_index(&self, subject_id: SubjectId, subject: &Subject) {
-        if let Some(ref index) = *self.root_index.write().unwrap() {
-            index.insert(subject_id, subject);
-        } else {
-            panic!("no root index")
-        }
+    pub async fn insert_into_root_index(&self, subject_id: SubjectId, subject: &Subject) {
+        let index = {
+            self.root_index.read().unwrap().as_ref().expect("no root index").clone()
+        };
+
+        index.insert(subject_id, subject).await;
     }
     // Add MemoRefs to this context
     //
@@ -117,10 +117,10 @@ impl Context {
         None
     }
     /// Retrive a Subject from the root index by ID
-    pub fn get_subject_by_id(&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
+    pub async fn get_subject_by_id(&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
 
         match *self.root_index.read().unwrap() {
-            Some(ref index) => index.get(subject_id),
+            Some(ref index) => index.get(subject_id).await,
             None => Err(RetrieveError::IndexNotInitialized),
         }
     }

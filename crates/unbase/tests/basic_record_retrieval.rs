@@ -1,8 +1,9 @@
 extern crate unbase;
 use unbase::subject::*;
+use futures_await_test::async_test;
 
-#[test]
-fn basic_record_retrieval() {
+#[async_test]
+async fn basic_record_retrieval() {
 
     let net = unbase::Network::create_new_system();
     let slab_a = unbase::Slab::new(&net);
@@ -10,19 +11,20 @@ fn basic_record_retrieval() {
 
     let record_id;
     {
-        let record = Subject::new_kv(&context_a, "animal_type","Cat").unwrap();
+        let record = Subject::new_kv(&context_a, "animal_type","Cat").await.unwrap();
 
         println!("Record {:?}", record );
         record_id = record.id;
     }
 
-    let record_retrieved = context_a.get_subject_by_id(record_id);
+    let record_retrieved = context_a.get_subject_by_id(record_id).await;
 
     assert!(record_retrieved.is_ok(), "Failed to retrieve record")
 
 }
-#[test]
-fn basic_record_retrieval_simulator() {
+
+#[async_test]
+async fn basic_record_retrieval_simulator() {
 
     let net = unbase::Network::create_new_system();
     let simulator = unbase::network::transport::Simulator::new();
@@ -33,13 +35,13 @@ fn basic_record_retrieval_simulator() {
 
     let record_id;
     {
-        let record = Subject::new_kv(&context_a, "animal_type","Cat").unwrap();
+        let record = Subject::new_kv(&context_a, "animal_type","Cat").await.unwrap();
 
         println!("Record {:?}", record );
         record_id = record.id;
     }
 
-    let record_retrieved = context_a.get_subject_by_id(record_id);
+    let record_retrieved = context_a.get_subject_by_id(record_id).await;
 
     assert!(record_retrieved.is_ok(), "Failed to retrieve record")
 

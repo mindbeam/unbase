@@ -29,10 +29,10 @@ pub struct SubjectInner {
 }
 
 impl Subject {
-    pub fn new ( context: &Context, vals: HashMap<String, String>, is_index: bool ) -> Result<Subject,String> {
-        Self::new_with_contextref( ContextRef::Strong(context.clone()), vals, is_index )
+    pub async fn new ( context: &Context, vals: HashMap<String, String>, is_index: bool ) -> Result<Subject,String> {
+        Self::new_with_contextref( ContextRef::Strong(context.clone()), vals, is_index ).await
     }
-    pub fn new_with_contextref ( contextref: ContextRef, vals: HashMap<String, String>, is_index: bool ) -> Result<Subject,String> {
+    pub async fn new_with_contextref ( contextref: ContextRef, vals: HashMap<String, String>, is_index: bool ) -> Result<Subject,String> {
         // don't store this
         let context = contextref.get_context();
 
@@ -57,7 +57,7 @@ impl Subject {
         // HACK HACK HACK - this should not be a flag on the subject, but something in the payload I think
         if !is_index {
             // NOTE: important that we do this after the subject.shared.lock is released
-            context.insert_into_root_index( subject_id, &subject );
+            context.insert_into_root_index( subject_id, &subject ).await;
         }
         Ok(subject)
     }
@@ -77,21 +77,21 @@ impl Subject {
 
         subject
     }
-    pub fn new_blank ( context: &Context ) -> Result<Subject,String> {
-        Self::new( context, HashMap::new(), false )
+    pub async fn new_blank ( context: &Context ) -> Result<Subject,String> {
+        Self::new( context, HashMap::new(), false ).await
     }
-    pub fn new_kv ( context: &Context, key: &str, value: &str ) -> Result<Subject,String> {
+    pub async fn new_kv ( context: &Context, key: &str, value: &str ) -> Result<Subject,String> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        Self::new( context, vals, false )
+        Self::new( context, vals, false ).await
     }
-    pub fn get_value ( &self, key: &str ) -> Option<String> {
+    pub async fn get_value ( &self, key: &str ) -> Option<String> {
         //println!("# Subject({}).get_value({})",self.id,key);
 
         self.head.read().unwrap().project_value(&self.contextref.get_context(), key)
     }
-    pub fn get_relation ( &self, key: RelationSlotId ) -> Result<Subject, RetrieveError> {
+    pub async fn get_relation ( &self, key: RelationSlotId ) -> Result<Subject, RetrieveError> {
         //println!("# Subject({}).get_relation({})",self.id,key);
 
         let context = self.contextref.get_context();
@@ -120,7 +120,7 @@ impl Subject {
 
         true
     }
-    pub fn set_relation (&self, key: RelationSlotId, relation: &Self) {
+    pub async fn set_relation (&self, key: RelationSlotId, relation: &Self) {
         //println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
         let mut memoref_map : HashMap<RelationSlotId, (SubjectId,MemoRefHead)> = HashMap::new();
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
