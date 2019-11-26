@@ -7,9 +7,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::{Ordering,AtomicBool};
 
-
 pub struct Delay {
-    id: u32,
+    id: JsValue,
     inner: Arc<Inner>,
     _closure: Closure<dyn FnMut()>,
 }
@@ -22,10 +21,10 @@ pub struct Inner {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_name = setTimeout)]
-    fn set_timeout(closure: &Closure<dyn FnMut()>, millis: u32) -> u32;
+    fn set_timeout(closure: &Closure<dyn FnMut()>, millis: i32) -> JsValue;
 
     #[wasm_bindgen(js_name = clearTimeout)]
-    fn clear_timeout(id: u32);
+    fn clear_timeout(id: &JsValue);
 }
 
 impl Delay {
@@ -35,7 +34,7 @@ impl Delay {
             .checked_mul(1000)
             .unwrap()
             .checked_add(dur.subsec_millis() as u64)
-            .unwrap() as u32; // TODO: checked cast
+            .unwrap() as i32; // TODO: checked cast
 
         let inner = Arc::new(Inner {
             waker: AtomicWaker::new(),
@@ -78,7 +77,7 @@ impl Future for Delay {
 
 impl Drop for Delay {
     fn drop(&mut self) {
-        clear_timeout(self.id);
+        clear_timeout(&self.id);
     }
 }
 
@@ -90,7 +89,6 @@ mod tests {
     use super::Delay;
     use std::time::Duration;
 
-    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use wasm_bindgen::prelude::*;
     use wasm_bindgen_test::*;
 
