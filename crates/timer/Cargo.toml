@@ -6,18 +6,22 @@ edition = "2018"
 
 [dependencies]
 futures = "0.3.1"
+unbase_util = { path = "../unbase_util" }
 
 [target.'cfg(any(target_arch = "wasm32"))'.dependencies]
 console_error_panic_hook = '0.1'
 js-sys = "0.3.32"
 wasm-bindgen = "0.2.55"
-wasm-bindgen-test = "0.3.5"
 wasm-bindgen-futures = "0.4.5"
-wasm-bindgen-console-logger = "^0.1.1"
 
 [target.'cfg(not(any(target_arch = "wasm32")))'.dependencies]
 futures-timer = "2.0.2"
+
+#Need this for a macro reexport bug? TODO: figure out how to remove this
 futures-await-test = "0.3.0"
 
 [target.'cfg(any(target_arch = "wasm32"))'.dev-dependencies]
 web-sys = { version = "0.3.32", features = ["console"] }
+
+#Need this for a macro reexport bug? TODO: figure out how to remove this
+wasm-bindgen-test = "0.3.5"

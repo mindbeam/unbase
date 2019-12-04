@@ -84,32 +84,32 @@ impl Drop for Delay {
 #[cfg(test)]
 mod tests {
 
-    use web_sys::console::log_1;
-
-    use super::Delay;
-    use std::time::Duration;
-
-    use wasm_bindgen::prelude::*;
-    use wasm_bindgen_test::*;
-
-    extern crate futures;
-    extern crate js_sys;
-    extern crate wasm_bindgen_futures;
-
-    #[wasm_bindgen_test]
-    async fn three_one_second_delays_future()  {
-        log_1(&JsValue::from_str("immediate log"));
-
-        Delay::new(Duration::from_millis(10)).await;
-
-        log_1(&JsValue::from_str("log after 10ms"));
-
-        Delay::new(Duration::from_millis(10)).await;
-
-        log_1(&JsValue::from_str("second log after 10ms"));
-
-        Delay::new(Duration::from_millis(10)).await;
-
-        log_1(&JsValue::from_str("third log after 10ms"));
-    }
+//    use web_sys::console::log_1;
+//
+//    use super::Delay;
+//    use std::time::Duration;
+//
+//    use wasm_bindgen::prelude::*;
+//    use wasm_bindgen_test::*;
+//
+//    extern crate futures;
+//    extern crate js_sys;
+//    extern crate wasm_bindgen_futures;
+//
+//    #[wasm_bindgen_test]
+//    async fn three_one_second_delays_future()  {
+//        log_1(&JsValue::from_str("immediate log"));
+//
+//        Delay::new(Duration::from_millis(10)).await;
+//
+//        log_1(&JsValue::from_str("log after 10ms"));
+//
+//        Delay::new(Duration::from_millis(10)).await;
+//
+//        log_1(&JsValue::from_str("second log after 10ms"));
+//
+//        Delay::new(Duration::from_millis(10)).await;
+//
+//        log_1(&JsValue::from_str("third log after 10ms"));
+//    }
 }

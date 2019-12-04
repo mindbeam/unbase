@@ -1,6 +1,14 @@
 extern crate unbase;
 
+use wasm_bindgen_test::*;
 use std::{thread, time};
+
+#[test]
+#[wasm_bindgen_test]
+fn logger(){
+    unbase::util::init_basic_logger();
+    assert_eq!(1, 1);
+}
 
 #[test]
 fn init_blackhole() {

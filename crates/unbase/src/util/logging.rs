@@ -5,9 +5,9 @@ pub fn init_basic_logger() {
 }
 
 #[cfg(target_arch = "wasm32")]
-use std::sync::{Once, ONCE_INIT};
+use std::sync::Once;
 #[cfg(target_arch = "wasm32")]
-static INIT: Once = ONCE_INIT;
+static INIT: Once = Once::new();
 
 #[cfg(target_arch = "wasm32")]
 pub fn init_basic_logger() {
