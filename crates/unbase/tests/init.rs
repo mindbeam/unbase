@@ -3,18 +3,23 @@ extern crate unbase;
 use wasm_bindgen_test::*;
 use std::{thread, time};
 
-#[test]
-#[wasm_bindgen_test]
-fn logger(){
-    unbase::util::init_basic_logger();
-    assert_eq!(1, 1);
-}
+#[unbase_test_util::async_test]
+async fn init_blackhole() {
+    unbase_test_util::init_test_logger();
 
-#[test]
-fn init_blackhole() {
     let net = unbase::Network::create_new_system();
     let blackhole = unbase::network::transport::Blackhole::new();
     net.add_transport( Box::new(blackhole) );
+
+}
+
+#[test]
+fn init_blackhole_slab() {
+
+    let net = unbase::Network::create_new_system();
+    let blackhole = unbase::network::transport::Blackhole::new();
+    net.add_transport( Box::new(blackhole) );
+
     {
         let slab_a = unbase::Slab::new(&net);
         let _context_a = slab_a.create_context();

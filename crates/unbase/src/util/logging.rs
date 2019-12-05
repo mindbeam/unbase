@@ -1,13 +1,12 @@
+use std::sync::Once;
+static INIT: Once = Once::new();
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn init_basic_logger() {
-    env_logger::init();
+    INIT.call_once(|| {
+        env_logger::init();
+    });
 }
-
-#[cfg(target_arch = "wasm32")]
-use std::sync::Once;
-#[cfg(target_arch = "wasm32")]
-static INIT: Once = Once::new();
 
 #[cfg(target_arch = "wasm32")]
 pub fn init_basic_logger() {
