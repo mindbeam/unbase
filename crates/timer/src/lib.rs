@@ -1,5 +1,3 @@
-extern crate unbase_util;
-
 #[cfg(not(target_arch = "wasm32"))]
 mod standard;
 
@@ -16,18 +14,24 @@ pub use crate::wasm::Delay;
 mod tests {
     use crate::Delay;
     use std::time::Duration;
+    use log::info;
 
-//    use unbase_util::test::async_test;
-
-    #[unbase_util::test::async_test]
+    #[unbase_test_util::async_test]
     async fn three_one_second_delays_future() {
+        unbase_test_util::init_test_logger();
 
+        info!("immediate log");
         let dur = Duration::from_millis(10);
         Delay::new(dur).await;
 
-        Delay::new(dur).await;
+        info!("log after 10ms");
 
         Delay::new(dur).await;
 
+        info!("log after 10ms");
+
+        Delay::new(dur).await;
+
+        info!("done");
     }
 }

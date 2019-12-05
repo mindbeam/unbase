@@ -6,7 +6,10 @@ edition = "2018"
 
 [dependencies]
 futures = "0.3.1"
-unbase_util = { path = "../unbase_util" }
+log = "0.4.6"
+
+[dev-dependencies]
+unbase_test_util = { path = "../unbase_test_util" }
 
 [target.'cfg(any(target_arch = "wasm32"))'.dependencies]
 console_error_panic_hook = '0.1'
