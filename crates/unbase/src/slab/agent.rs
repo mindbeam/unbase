@@ -1,11 +1,38 @@
+use std::sync::{Arc,RwLock,Mutex};
+use std::collections::hash_map::Entry;
 
-use super::*;
+use crate::slab::{SlabId, MemoRef, MemoBody, Memo, MemoInner, SlabRefInner, MemoRefInner, MemoRefPtr, MemoPeerList, MemoPeeringStatus, MemoId, MemoPeer, SlabPresence};
+use crate::slab::state::SlabState;
+use crate::network::{SlabRef, TransmitterArgs, Transmitter, TransportAddress};
+use crate::Network;
+use crate::subject::SubjectId;
+use crate::memorefhead::MemoRefHead;
+use crate::context::WeakContext;
 
-impl Slab {
+pub struct SlabAgent {
+    pub id: SlabId,
+    state: RwLock<SlabState>,
+    net: Network,
+    my_ref: SlabRef,
+}
+
+impl SlabAgent {
+    pub fn new ( net: &Network, my_ref: SlabRef ) -> Self {
+        let state = RwLock::new(SlabState::new() );
+
+        SlabAgent {
+            id: my_ref.slab_id,
+            state: state,
+            net: net.clone(),
+            my_ref: my_ref
+        }
+    }
     pub fn new_memo ( &self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
-        let mut counters = self.counters.write().unwrap();
-        counters.last_memo_id += 1;
-        let memo_id = (self.id as u64).rotate_left(32) | counters.last_memo_id as u64;
+        let memo_id = {
+            let mut state = self.state.write().unwrap();
+            state.counters.last_memo_id += 1;
+            (self.id as u64).rotate_left(32) | state.counters.last_memo_id as u64
+        };
 
         //println!("# Slab({}).new_memo(id: {},subject_id: {:?}, parents: {:?}, body: {:?})", self.id, memo_id, subject_id, parents.memo_ids(), body );
 
@@ -22,6 +49,36 @@ impl Slab {
 
         memoref
     }
+    pub fn consider_emit_memo(&self, memoref: &MemoRef) {
+        // Emit memos for durability and notification purposes
+        // At present, some memos like peering and slab presence are emitted manually.
+        // TODO: This will almost certainly have to change once gossip/plumtree functionality is added
+
+        // TODO: test each memo for durability_score and emit accordingly
+        if let Some(memo) = memoref.get_memo_if_resident() {
+            let needs_peers = self.check_peering_target(&memo);
+
+
+            //println!("Slab({}).consider_emit_memo {} - A ({:?})", self.id, memoref.id, &*self.peer_refs.read().unwrap() );
+            let state = self.state.read().unwrap();
+            for peer_ref in state.peer_refs.iter().filter(|x| !memoref.is_peered_with_slabref(x) ).take( needs_peers as usize ) {
+
+                //println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", self.id, memo.id, peer_ref.slab_id );
+                peer_ref.send( &self.my_ref, memoref );
+            }
+        }
+    }
+    fn check_peering_target( &self, memo: &Memo ) -> u8 {
+        if memo.does_peering() {
+            5
+        }else{
+            // This is necessary to prevent memo routing loops for now, as
+            // memoref.is_peered_with_slabref() obviously doesn't work for non-peered memos
+            // something here should change when we switch to gossip/plumtree, but
+            // I'm not sufficiently clear on that at the time of this writing
+            0
+        }
+    }
     pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){
         //println!("Slab({}).reconstitute_memo({})", self.id, memo_id );
         // TODO: find a way to merge this with assert_memoref to avoid doing duplicative work with regard to peerlist application
@@ -37,10 +94,10 @@ impl Slab {
         let (memoref, had_memoref) = self.assert_memoref(memo.id, memo.subject_id, peerlist.clone(), Some(memo.clone()) );
 
         {
-            let mut counters = self.counters.write().unwrap();
-            counters.memos_received += 1;
+            let mut state = self.state.write().unwrap();
+            state.counters.memos_received += 1;
             if had_memoref {
-                counters.memos_redundantly_received += 1;
+                state.counters.memos_redundantly_received += 1;
             }
         }
         //println!("Slab({}).reconstitute_memo({}) B -> {:?}", self.id, memo_id, memoref );
@@ -61,6 +118,33 @@ impl Slab {
         }
 
         (memo, memoref, had_memoref)
+    }
+    pub fn recv_memoref (&self, memoref : MemoRef){
+        //println!("# \t\\ Slab({}).dispatch_memoref({})", self.id, &memoref.id );
+
+        if let Some(subject_id) = memoref.subject_id {
+
+            let maybe_sub : Option<Vec<WeakContext>> = {
+                // we want to make sure the lock is released before continuing
+                if let Some(ref s) = self.subject_subscriptions.read().unwrap().get( &subject_id ) {
+                    Some((*s).clone())
+                }else{
+                    None
+                }
+            };
+
+            if let Some(subscribers) = maybe_sub {
+
+                for weakcontext in subscribers {
+
+                    if let Some(context) = weakcontext.upgrade() {
+
+                        context.apply_subject_head( subject_id, &memoref.to_head(), true );
+                    }
+                }
+            }
+
+        }
     }
     pub fn residentize_memoref(&self, memoref: &MemoRef, memo: Memo) -> bool {
         //println!("# Slab({}).MemoRef({}).residentize()", self.id, memoref.id);
@@ -170,7 +254,7 @@ impl Slab {
     pub fn assert_memoref( &self, memo_id: MemoId, subject_id: Option<SubjectId>, peerlist: MemoPeerList, memo: Option<Memo>) -> (MemoRef, bool) {
 
         let had_memoref;
-        let memoref = match self.memorefs_by_id.write().unwrap().entry(memo_id) {
+        let memoref = match self.state.write().unwrap().memorefs_by_id.entry(memo_id) {
             Entry::Vacant(o)   => {
                 let mr = MemoRef(Arc::new(
                     MemoRefInner {
@@ -255,7 +339,7 @@ impl Slab {
             let args = if p.address.is_local() {
                 // playing silly games with borrow lifetimes.
                 // TODO: make this less ugly
-                _maybe_slab = self.net.get_slab(p.slab_id);
+                _maybe_slab = self.net.get_slabhandle(p.slab_id);
 
                 if let Some(ref slab) = _maybe_slab {
                     TransmitterArgs::Local(slab)
@@ -280,5 +364,11 @@ impl Slab {
 
         return slabref;
 
+    }
+}
+
+impl Drop for SlabAgent {
+    fn drop(&mut self) {
+        self.net.deregister_local_slab(self.id);
     }
 }

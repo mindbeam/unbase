@@ -1,3 +1,5 @@
+use core::ops::Deref;
+
 pub mod serde;
 use super::*;
 use crate::memorefhead::MemoRefHead;
@@ -203,7 +205,7 @@ impl MemoRef {
 
         acted
     }
-    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, include_memo: bool ) -> Self{
+    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &SlabHandle, include_memo: bool ) -> Self{
         assert!(from_slabref.owning_slab_id == to_slab.id,"MemoRef clone_for_slab owning slab should be identical");
         assert!(from_slabref.slab_id != to_slab.id,       "MemoRef clone_for_slab dest slab should not be identical");
         //println!("Slab({}).Memoref.clone_for_slab({})", self.owning_slab_id, self.id);

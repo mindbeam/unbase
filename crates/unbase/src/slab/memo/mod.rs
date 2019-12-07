@@ -3,6 +3,7 @@
 */
 pub mod serde;
 
+use core::ops::Deref;
 use std::collections::HashMap;
 use std::{fmt};
 use std::sync::Arc;
@@ -133,7 +134,7 @@ impl Memo {
         }
         return false;
     }
-    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, peerlist: &MemoPeerList) -> Memo {
+    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &SlabHandle, peerlist: &MemoPeerList) -> Memo {
         assert!(from_slabref.owning_slab_id == to_slab.id, "Memo clone_for_slab owning slab should be identical");
 
         //println!("Slab({}).Memo.clone_for_slab(memo: {}, from: {}, to: {}, peers: {:?})", self.owning_slab_id, self.id, from_slabref.slab_id, to_slab.id, peerlist );
@@ -149,7 +150,7 @@ impl Memo {
 }
 
 impl MemoBody {
-    fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &Slab ) -> MemoBody {
+    fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &SlabHandle ) -> MemoBody {
         assert!(from_slabref.owning_slab_id == to_slab.id, "MemoBody clone_for_slab owning slab should be identical");
 
         match self {

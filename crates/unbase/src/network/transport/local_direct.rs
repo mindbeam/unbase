@@ -31,7 +31,7 @@ impl Transport for LocalDirect {
     }
     fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
         if let &TransmitterArgs::Local(rcv_slab) = args {
-            let slab = rcv_slab.weak();
+            let slab = rcv_slab.handle();
             let (tx_channel, rx_channel) = mpsc::channel::<(SlabRef,MemoRef)>();
 
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {

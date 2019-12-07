@@ -22,7 +22,7 @@ struct SimEvent {
     _source_point: MinkowskiPoint,
     dest_point:    MinkowskiPoint,
     from_slabref:  SlabRef,
-    dest:          WeakSlab,
+    dest:          SlabHandle,
     memoref:       MemoRef
 }
 
@@ -154,7 +154,7 @@ pub struct SimulatorTransmitter{
     pub source_point: XYZPoint,
     pub dest_point: XYZPoint,
     pub simulator: Simulator,
-    pub dest: WeakSlab
+    pub dest: SlabHandle
 }
 
 impl DynamicDispatchTransmitter for SimulatorTransmitter {

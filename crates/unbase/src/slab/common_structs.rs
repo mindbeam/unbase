@@ -1,5 +1,11 @@
-use super::*;
-use crate::network::TransportAddress;
+use std::ops::Deref;
+use std::fmt;
+use std::collections::HashMap;
+
+use crate::network::{TransportAddress, SlabRef};
+use crate::slab::{SlabId, SlabHandle};
+use crate::memorefhead::{RelationSlotId, MemoRefHead};
+use crate::subject::SubjectId;
 
 /// SlabPresence represents the expected reachability of a given Slab
 /// Including Transport address and anticipated lifetime
@@ -44,7 +50,7 @@ impl MemoPeerList {
     pub fn clone(&self) -> Self {
         MemoPeerList(self.0.clone())
     }
-    pub fn clone_for_slab(&self, to_slab: &Slab) -> Self {
+    pub fn clone_for_slab(&self, to_slab: &SlabHandle) -> Self {
         MemoPeerList(self.0
             .iter()
             .map(|p| {
@@ -105,7 +111,7 @@ pub enum MemoPeeringStatus {
 pub struct RelationSlotSubjectHead(pub HashMap<RelationSlotId, (SubjectId, MemoRefHead)>);
 
 impl RelationSlotSubjectHead {
-    pub fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &Slab) -> Self {
+    pub fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &SlabHandle) -> Self {
 
         // HERE HERE HERE TODO
         // panic!("check here to make sure that peers are being properly constructed for the root_index_seed");

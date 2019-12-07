@@ -13,7 +13,7 @@ pub use self::transmitter::{Transmitter, TransmitterArgs};
 use std::ops::Deref;
 use std::sync::{Arc, Weak, Mutex, RwLock};
 use std::fmt;
-use crate::slab::{Slab, WeakSlab, SlabId};
+use crate::slab::{Slab, SlabId, SlabHandle};
 use crate::memorefhead::MemoRefHead;
 
 
@@ -29,7 +29,9 @@ impl Deref for Network {
 
 pub struct NetworkInner {
     next_slab_id: RwLock<u32>,
-    slabs: RwLock<Vec<WeakSlab>>,
+
+    // inducing a memory leak out of expedience TODO - Replace this with SlabHandle/SlabRef
+    slabs: RwLock<Vec<SlabHandle>>,
     transports: RwLock<Vec<Box<dyn Transport + Send + Sync>>>,
     root_index_seed: RwLock<Option<(MemoRefHead, SlabRef)>>,
     create_new_system: bool,
@@ -96,39 +98,34 @@ impl Network {
 
         id
     }
-    pub fn get_slab(&self, slab_id: SlabId) -> Option<Slab> {
-        if let Some(weak) = self.slabs.read().unwrap().iter().find(|s| s.id == slab_id) {
-            if let Some(slab) = weak.upgrade() {
-                return Some(slab);
+    pub fn get_slabhandle(&self, slab_id: SlabId) -> Option<SlabHandle> {
+        if let Some(slabhandle) = self.slabs.read().unwrap().iter().find(|s| s.id == slab_id) {
+            if slabhandle.is_resident() {
+                return Some((*slabhandle).clone());
             }
+            // TODO - scrub non-resident slabs
         }
         return None;
     }
-    fn get_representative_slab(&self) -> Option<Slab> {
-        for weak in self.slabs.read().unwrap().iter() {
-            if let Some(slab) = weak.upgrade() {
-                if !slab.dropping {
-                    return Some(slab);
-                }
+    fn get_representative_slab(&self) -> Option<SlabHandle> {
+        for slabhandle in self.slabs.read().unwrap().iter() {
+            if slabhandle.is_resident() {
+                return Some((*slabhandle).clone());
             }
+            // TODO - scrub non-resident slabs
         }
         return None;
     }
-    pub fn get_all_local_slabs(&self) -> Vec<Slab> {
+    pub fn get_all_local_slabs(&self) -> Vec<SlabHandle> {
         // TODO: convert this into a iter generator that automatically expunges missing slabs.
-        let mut res: Vec<Slab> = Vec::new();
+        let mut res: Vec<SlabHandle> = Vec::new();
         // let mut missing : Vec<usize> = Vec::new();
 
-        for slab in self.slabs.read().unwrap().iter() {
-            match slab.upgrade() {
-                Some(s) => {
-                    res.push(s);
-                }
-                None => {
-                    // TODO: expunge freed slabs
-                }
+        for slabhandle in self.slabs.read().unwrap().iter() {
+            if slabhandle.is_resident() {
+                res.push(*slabhandle.clone());
             }
-
+            // TODO - scrub non-resident slabs
         }
 
         res
@@ -149,16 +146,16 @@ impl Network {
         }
         None
     }
-    pub fn register_local_slab(&self, new_slab: &Slab) {
+    pub fn register_local_slab(&self, new_slab: SlabHandle) {
         // println!("# Network.register_slab {:?}", new_slab );
 
-        {
-            self.slabs.write().unwrap().insert(0, new_slab.weak());
+        for prev_slab in self.get_all_local_slabs() {
+            prev_slab.slabref_from_local_slab(&new_slab);
+            new_slab.slabref_from_local_slab(&prev_slab);
         }
 
-        for prev_slab in self.get_all_local_slabs() {
-            prev_slab.slabref_from_local_slab(new_slab);
-            new_slab.slabref_from_local_slab(&prev_slab);
+        {
+            self.slabs.write().unwrap().insert(0, new_slab);
         }
     }
     pub fn deregister_local_slab(&self, slab_id: SlabId) {
@@ -198,7 +195,7 @@ impl Network {
         // No slabs left
         root_index_seed.take();
     }
-    pub fn get_root_index_seed(&self, slab: &Slab) -> Option<MemoRefHead> {
+    pub fn get_root_index_seed(&self, slab: &SlabHandle) -> Option<MemoRefHead> {
         let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");
 
         match *root_index_seed {

@@ -17,7 +17,7 @@ enum TransmitterInternal {
 
 #[derive(Debug)]
 pub enum TransmitterArgs<'a>{
-    Local(&'a Slab),
+    Local(&'a SlabHandle),
     Remote(&'a SlabId, &'a TransportAddress)
 }
 impl<'a> TransmitterArgs<'a>{

@@ -28,7 +28,7 @@ use log::*;
 
 #[wasm_bindgen_test]
 fn pass(){
-    unbase_web::util::init_basic_logger();
+    unbase_test_util::init_test_logger();
     assert_eq!(1, 1)
 
 }

@@ -40,6 +40,9 @@
 //! ```
 #![doc(html_root_url = "https://unba.se")]
 
+#![feature(type_alias_impl_trait)]
+#![feature(async_closure)]
+
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
