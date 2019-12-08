@@ -14,7 +14,7 @@ use std::ops::Deref;
 use std::sync::{Arc, Weak, Mutex, RwLock};
 use std::fmt;
 use crate::slab::{Slab, SlabId, SlabHandle};
-use crate::memorefhead::MemoRefHead;
+use crate::memorefhead::{MemoRefHead, ExtMemoRefHead};
 
 
 #[derive(Clone)]
@@ -159,58 +159,55 @@ impl Network {
         }
     }
     pub fn deregister_local_slab(&self, slab_id: SlabId) {
-        // Remove the deregistered slab so get_representative_slab doesn't return it
-        {
-            let mut slabs = self.slabs.write().expect("slabs write lock");
-            if let Some(removed) = slabs.iter()
-                .position(|s| s.id == slab_id)
-                .map(|e| slabs.remove(e)) {
-                // println!("Unbinding Slab {}", removed.id);
-                let _ = removed.id;
-                // removed.unbind_network(self);
-            }
-        }
-
-        // If the deregistered slab is the one that's holding the root_index_seed
-        // then we need to move it to a different slab
-
-        let mut root_index_seed = self.root_index_seed.write().expect("root_index_seed write lock");
-        {
-            if let Some(ref mut r) = *root_index_seed {
-                if r.1.slab_id == slab_id {
-                    if let Some(new_slab) = self.get_representative_slab() {
-
-                        let owned_slabref = r.1.clone_for_slab(&new_slab);
-                        r.0 = r.0.clone_for_slab(&owned_slabref, &new_slab, false);
-                        r.1 = new_slab.my_ref.clone();
-                        return;
-                    }
-                    // don't return
-                } else {
-                    return;
-                }
-            }
-        }
-
-        // No slabs left
-        root_index_seed.take();
+        unimplemented!()
+//        // Remove the deregistered slab so get_representative_slab doesn't return it
+//        {
+//            let mut slabs = self.slabs.write().expect("slabs write lock");
+//            if let Some(removed) = slabs.iter()
+//                .position(|s| s.id == slab_id)
+//                .map(|e| slabs.remove(e)) {
+//                // println!("Unbinding Slab {}", removed.id);
+//                let _ = removed.id;
+//                // removed.unbind_network(self);
+//            }
+//        }
+//
+//        // If the deregistered slab is the one that's holding the root_index_seed
+//        // then we need to move it to a different slab
+//
+//        let mut root_index_seed = self.root_index_seed.write().expect("root_index_seed write lock");
+//        {
+//            if let Some(ref mut r) = *root_index_seed {
+//                if r.1.slab_id == slab_id {
+//                    if let Some(new_slab) = self.get_representative_slab() {
+//
+//                        let owned_slabref = r.1.clone_for_slab(&new_slab);
+//                        r.0 = r.0.clone_for_slab(&owned_slabref, &new_slab, false);
+//                        r.1 = new_slab.my_ref.clone();
+//                        return;
+//                    }
+//                    // don't return
+//                } else {
+//                    return;
+//                }
+//            }
+//        }
+//
+//        // No slabs left
+//        root_index_seed.take();
     }
-    pub fn get_root_index_seed(&self, slab: &SlabHandle) -> Option<MemoRefHead> {
+    pub fn get_root_index_seed(&self) -> Option<ExtMemoRefHead> {
         let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");
 
         match *root_index_seed {
             Some((ref seed, ref from_slabref)) => {
-                if from_slabref.owning_slab_id == slab.id {
-                    // seed is resident on the requesting slab
-                    Some(seed.clone())
-                } else {
-                    let owned_slabref = from_slabref.clone_for_slab(&slab);
-                    Some(seed.clone_for_slab(&owned_slabref, slab, true))
-                }
+                Some(ExtMemoRefHead {
+                    memorefhead: seed.clone(),
+                    slabref: from_slabref.clone()
+                })
             }
             None => None,
         }
-
     }
     pub fn conditionally_generate_root_index_seed(&self, slab: &Slab) -> bool {
         {

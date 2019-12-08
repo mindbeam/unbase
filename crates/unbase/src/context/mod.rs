@@ -25,7 +25,7 @@ impl Deref for Context {
 }
 
 pub struct ContextInner {
-    pub slab: Slab,
+    pub slab: SlabHandle,
     pub root_index: RwLock<Option<IndexFixed>>,
 
     /// For compaction of the subject_heads
@@ -260,7 +260,7 @@ impl Context {
 
         let manager = self.manager.lock().unwrap();
 
-        let from_slabref = self.slab.my_ref.clone_for_slab(&other.slab);
+        let from_slabref = other.slab.agent.localize_slabref(&self.slab.my_ref);
 
         let mut memoref_count = 0;
 
@@ -268,8 +268,7 @@ impl Context {
             memoref_count += subject_head.head.len();
 
             other.apply_subject_head(subject_head.subject_id,
-                                     &subject_head.head
-                                         .clone_for_slab(&from_slabref, &other.slab, false),
+                                     &other.slab.agent.localize_memorefhead(&subject_head.head, &from_slabref, false),
                                      true);
             // HACK inside a hack - manually updating the remote subject is cheating, but necessary for now because subjects
             //      have a separate MRH versus the context

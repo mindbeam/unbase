@@ -1,13 +1,15 @@
 use std::collections::HashMap;
+use futures::channel::oneshot;
 //use std::collections::hash_map::Entry;
 
-use crate::slab::{MemoId, MemoRef};
+use crate::slab::{MemoId, MemoRef, Memo};
 use crate::network::SlabRef;
 
 pub struct SlabState{
     pub memorefs_by_id: HashMap<MemoId,MemoRef>,
     pub counters: SlabCounters,
     pub peer_refs: Vec<SlabRef>,
+    pub memo_wait_channels: HashMap<MemoId,Vec<oneshot::Sender<Memo>>>,
 }
 
 struct SlabCounters{
@@ -31,6 +33,7 @@ impl SlabState{
                 memos_redundantly_received: 0,
             },
             peer_refs: Vec::new(),
+            memo_wait_channels: HashMap::new(),
         }
     }
 }

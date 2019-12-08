@@ -20,8 +20,15 @@ use std::collections::VecDeque;
 
 pub type RelationSlotId = u8;
 
+//TODO: consider renaming to OwnedMemoRefHead
 #[derive(Clone, PartialEq)]
-pub struct MemoRefHead (Vec<MemoRef>);
+pub struct MemoRefHead (pub Vec<MemoRef>);
+
+// TODO: consider renaming to ExternalMemoRefHead or something like that
+pub struct ExtMemoRefHead {
+    pub memorefhead: MemoRefHead,
+    pub slabref: SlabRef,
+}
 
 pub struct RelationLink{
     pub slot_id:    RelationSlotId,
@@ -145,10 +152,10 @@ impl MemoRefHead {
     pub fn iter (&self) -> slice::Iter<MemoRef> {
         self.0.iter()
     }
-    pub fn causal_memo_iter(&self, slab: &Slab ) -> CausalMemoIter {
+    pub fn causal_memo_iter(&self, slab: &SlabHandle ) -> CausalMemoIter {
         CausalMemoIter::from_head( &self, slab )
     }
-    pub fn is_fully_materialized(&self, slab: &Slab ) -> bool {
+    pub fn is_fully_materialized(&self, slab: &SlabHandle ) -> bool {
         // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
         //       as part of the list management. That way we won't have to incur the below computational effort.
 
@@ -166,10 +173,6 @@ impl MemoRefHead {
 
         true
     }
-    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &SlabHandle, include_memos: bool ) -> Self {
-        assert!(from_slabref.slab_id != to_slab.id, "slab id should differ");
-        MemoRefHead( self.iter().map(|mr| mr.clone_for_slab(from_slabref, to_slab, include_memos )).collect() )
-    }
 }
 
 impl fmt::Debug for MemoRefHead{
@@ -184,7 +187,7 @@ impl fmt::Debug for MemoRefHead{
 
 pub struct CausalMemoIter {
     queue: VecDeque<MemoRef>,
-    slab:  Slab
+    slab:  SlabHandle
 }
 
 /*
@@ -198,12 +201,12 @@ head ^    \- F -> D -/
      Going with the iterator for now in the interest of simplicity
 */
 impl CausalMemoIter {
-    pub fn from_head ( head: &MemoRefHead, slab: &Slab) -> Self {
+    pub fn from_head ( head: &MemoRefHead, slab: &SlabHandle) -> Self {
         //println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
 
         CausalMemoIter {
             queue: head.to_vecdeque(),
-            slab:  slab.clone()
+            slab:  (*slab).clone()
         }
     }
 }
@@ -219,13 +222,13 @@ impl Iterator for CausalMemoIter {
         if let Some(memoref) = self.queue.pop_front() {
             // this is wrong - Will result in G, E, F, C, D, B, A
 
-            match memoref.get_memo( &self.slab ){
+            match memoref.get_memo( &self.slab ) {
                 Ok(memo) => {
                     self.queue.append(&mut memo.get_parent_head().to_vecdeque());
                     return Some(memo)
                 },
-                Err(err) => {
-                    panic!("Failed to retrieve memo {} ({:?})", memoref.id, err );
+                Err(e) => {
+                    panic!("Failed to retrieve memo {} ({:?})", memoref.id, e );
                 }
             }
             //TODO: memoref.get_memo needs to be able to fail

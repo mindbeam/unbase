@@ -105,7 +105,7 @@ impl MemoRef {
 
         status
     }
-    pub fn get_memo (&self, slab: &Slab) -> Result<Memo,RetrieveError> {
+    pub async fn get_memo (&self, slab: &SlabHandle) -> Result<Memo,RetrieveError> {
 //        println!("Slab({}).MemoRef({}).get_memo()", self.owning_slab_id, self.id );
         assert!(self.owning_slab_id == slab.id,"requesting slab does not match owning slab");
 
@@ -115,12 +115,12 @@ impl MemoRef {
             if let MemoRefPtr::Resident(ref memo) = *self.ptr.read().unwrap() {
                 return Ok(memo.clone());
             }
+        }
 
-            if slab.request_memo(self) > 0 {
-                channel = slab.memo_wait_channel(self.id);
-            }else{
-                return Err(RetrieveError::NotFound)
-            }
+        if slab.request_memo(self) > 0 {
+            channel = slab.memo_wait_channel(self.id);
+        }else{
+            return Err(RetrieveError::NotFound)
         }
 
         // By sending the memo itself through the channel
@@ -204,34 +204,6 @@ impl MemoRef {
         }
 
         acted
-    }
-    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &SlabHandle, include_memo: bool ) -> Self{
-        assert!(from_slabref.owning_slab_id == to_slab.id,"MemoRef clone_for_slab owning slab should be identical");
-        assert!(from_slabref.slab_id != to_slab.id,       "MemoRef clone_for_slab dest slab should not be identical");
-        //println!("Slab({}).Memoref.clone_for_slab({})", self.owning_slab_id, self.id);
-
-        // Because our from_slabref is already owned by the destination slab, there is no need to do peerlist.clone_for_slab
-        let peerlist = self.get_peerlist_for_peer(from_slabref, Some(to_slab.id));
-        //println!("Slab({}).Memoref.clone_for_slab({}) C -> {:?}", self.owning_slab_id, self.id, peerlist);
-
-        // TODO - reduce the redundant work here. We're basically asserting the memoref twice
-        let memoref = to_slab.assert_memoref(
-            self.id,
-            self.subject_id,
-            peerlist.clone(),
-            match include_memo {
-                true => match *self.ptr.read().unwrap() {
-                    MemoRefPtr::Resident(ref m) => Some(m.clone_for_slab(from_slabref, to_slab, &peerlist)),
-                    MemoRefPtr::Remote          => None
-                },
-                false => None
-            }
-        ).0;
-
-
-        //println!("MemoRef.clone_for_slab({},{}) peerlist: {:?} -> MemoRef({:?})", from_slabref.slab_id, to_slab.id, &peerlist, &memoref );
-
-        memoref
     }
 }
 

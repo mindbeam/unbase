@@ -89,22 +89,6 @@ impl SlabRef{
         // When comparing equality, we can skip the transmitter
         self.slab_id == other.slab_id && *self.presence.read().unwrap() == *other.presence.read().unwrap()
     }
-    pub fn clone_for_slab(&self, to_slab: &SlabHandle ) -> SlabRef {
-        // For now, we don't seem to care what slabref we're being cloned from, just which one we point to
-
-        //println!("Slab({}).SlabRef({}).clone_for_slab({})", self.owning_slab_id, self.slab_id, to_slab.id );
-
-        // IF this slabref points to the destination slab, then use to_sab.my_ref
-        // because we know it exists already, and we're not allowed to assert a self-ref
-        if self.slab_id == to_slab.id {
-            to_slab.my_ref.clone()
-        }else{
-            //let address = &*self.return_address.read().unwrap();
-            //let args = TransmitterArgs::Remote( &self.slab_id, address );
-            to_slab.assert_slabref( self.slab_id, &*self.presence.read().unwrap() )
-        }
-
-    }
 }
 
 impl fmt::Debug for SlabRef {

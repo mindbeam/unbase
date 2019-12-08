@@ -3,7 +3,7 @@ use std::fmt;
 use std::collections::HashMap;
 
 use crate::network::{TransportAddress, SlabRef};
-use crate::slab::{SlabId, SlabHandle};
+use crate::slab::SlabId;
 use crate::memorefhead::{RelationSlotId, MemoRefHead};
 use crate::subject::SubjectId;
 
@@ -49,17 +49,6 @@ impl MemoPeerList {
     }
     pub fn clone(&self) -> Self {
         MemoPeerList(self.0.clone())
-    }
-    pub fn clone_for_slab(&self, to_slab: &SlabHandle) -> Self {
-        MemoPeerList(self.0
-            .iter()
-            .map(|p| {
-                MemoPeer {
-                    slabref: p.slabref.clone_for_slab(to_slab),
-                    status: p.status.clone(),
-                }
-            })
-            .collect())
     }
     pub fn slab_ids(&self) -> Vec<SlabId> {
         self.0.iter().map(|p| p.slabref.slab_id).collect()
@@ -111,19 +100,6 @@ pub enum MemoPeeringStatus {
 pub struct RelationSlotSubjectHead(pub HashMap<RelationSlotId, (SubjectId, MemoRefHead)>);
 
 impl RelationSlotSubjectHead {
-    pub fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &SlabHandle) -> Self {
-
-        // HERE HERE HERE TODO
-        // panic!("check here to make sure that peers are being properly constructed for the root_index_seed");
-        let new = self.0
-            .iter()
-            .map(|(slot_id, &(subject_id, ref mrh))| {
-                (*slot_id, (subject_id, mrh.clone_for_slab(from_slabref, to_slab, false)))
-            })
-            .collect();
-
-        RelationSlotSubjectHead(new)
-    }
     pub fn empty() -> Self {
         RelationSlotSubjectHead(HashMap::new())
     }
