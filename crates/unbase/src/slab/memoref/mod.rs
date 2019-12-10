@@ -7,6 +7,8 @@ use crate::error::RetrieveError;
 
 use std::sync::{Arc,RwLock};
 use std::fmt;
+use futures::future::{select,Either};
+use timer::Delay;
 
 
 #[derive(Clone)]
@@ -107,7 +109,7 @@ impl MemoRef {
     }
     pub async fn get_memo (&self, slab: &SlabHandle) -> Result<Memo,RetrieveError> {
 //        println!("Slab({}).MemoRef({}).get_memo()", self.owning_slab_id, self.id );
-        assert!(self.owning_slab_id == slab.id,"requesting slab does not match owning slab");
+        assert!(self.owning_slab_id == slab.my_ref.slab_id,"requesting slab does not match owning slab");
 
         // This seems pretty crude, but using channels for now in the interest of expediency
         let channel;
@@ -128,23 +130,16 @@ impl MemoRef {
 
 
         use std::time;
-        let timeout = time::Duration::from_millis(1000);
+        let duration = time::Duration::from_millis(1000);
 
         for _ in 0..3 {
-            match channel.recv_timeout(timeout) {
-                Ok(memo)       =>{
-                    //println!("Slab({}).MemoRef({}).get_memo() received memo: {}", self.owning_slab_id, self.id, memo.id );
+            let timeout = Delay::new( duration );
+            match select(channel, timeout).await {
+                Either::Left((Ok(memo),_)) => {
                     return Ok(memo)
-                }
-                Err(rcv_error) => {
-
-                    use std::sync::mpsc::RecvTimeoutError::*;
-                    match rcv_error {
-                        Timeout => {}
-                        Disconnected => {
-                            return Err(RetrieveError::SlabError)
-                        }
-                    }
+                },
+                _ => {
+                    // timed out or canceled
                 }
             }
 
@@ -158,12 +153,13 @@ impl MemoRef {
         Err(RetrieveError::NotFoundByDeadline)
 
     }
-    pub fn descends (&self, memoref: &MemoRef, slab: &Slab) -> bool {
-        assert!(self.owning_slab_id == slab.id);
-        match self.get_memo( slab ) {
+    pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> bool {
+        assert!(self.owning_slab_id == slab.my_ref.slab_id);
+        match self.get_memo( slab ).await {
             Ok(my_memo) => {
-                if my_memo.descends(&memoref, slab) {
-                    return true }
+                if my_memo.descends(&memoref, slab).await {
+                    return true
+                }
             }
             Err(_) => {
                 // TODO: convert this into a Result<>

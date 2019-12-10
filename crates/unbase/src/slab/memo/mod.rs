@@ -113,7 +113,7 @@ impl Memo {
             }
         }
     }
-    pub fn descends (&self, memoref: &MemoRef, slab: &Slab) -> bool {
+    pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> bool {
         //TODO: parallelize this
         //TODO: Use sparse-vector/beacon to avoid having to trace out the whole lineage
         //      Should be able to stop traversal once happens-before=true. Cannot descend a thing that happens after
@@ -128,7 +128,7 @@ impl Memo {
 
         // Ok now depth
         for parent in self.parents.iter() {
-            if parent.descends(&memoref,slab) {
+            if parent.descends(&memoref,slab).await {
                 return true
             }
         }

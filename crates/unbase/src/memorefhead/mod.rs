@@ -25,7 +25,7 @@ pub type RelationSlotId = u8;
 pub struct MemoRefHead (pub Vec<MemoRef>);
 
 // TODO: consider renaming to ExternalMemoRefHead or something like that
-pub struct ExtMemoRefHead {
+pub struct MemoRefHeadWithProvenance {
     pub memorefhead: MemoRefHead,
     pub slabref: SlabRef,
 }

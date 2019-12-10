@@ -4,12 +4,15 @@ use futures::channel::oneshot;
 
 use crate::slab::{MemoId, MemoRef, Memo};
 use crate::network::SlabRef;
+use crate::context::WeakContext;
+use crate::subject::SubjectId;
 
 pub struct SlabState{
     pub memorefs_by_id: HashMap<MemoId,MemoRef>,
     pub counters: SlabCounters,
     pub peer_refs: Vec<SlabRef>,
     pub memo_wait_channels: HashMap<MemoId,Vec<oneshot::Sender<Memo>>>,
+    pub subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
 }
 
 struct SlabCounters{
@@ -34,6 +37,7 @@ impl SlabState{
             },
             peer_refs: Vec::new(),
             memo_wait_channels: HashMap::new(),
+            subject_subscriptions: HashMap::new(),
         }
     }
 }

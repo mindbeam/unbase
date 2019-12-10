@@ -14,7 +14,7 @@ use std::ops::Deref;
 use std::sync::{Arc, Weak, Mutex, RwLock};
 use std::fmt;
 use crate::slab::{Slab, SlabId, SlabHandle};
-use crate::memorefhead::{MemoRefHead, ExtMemoRefHead};
+use crate::memorefhead::MemoRefHead;
 
 
 #[derive(Clone)]
@@ -196,15 +196,12 @@ impl Network {
 //        // No slabs left
 //        root_index_seed.take();
     }
-    pub fn get_root_index_seed(&self) -> Option<ExtMemoRefHead> {
+    pub fn get_root_index_seed(&self) -> Option<(MemoRefHead,SlabRef)> {
         let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");
 
         match *root_index_seed {
             Some((ref seed, ref from_slabref)) => {
-                Some(ExtMemoRefHead {
-                    memorefhead: seed.clone(),
-                    slabref: from_slabref.clone()
-                })
+                Some((seed.clone(), from_slabref.clone()))
             }
             None => None,
         }

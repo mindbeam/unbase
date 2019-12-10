@@ -6,7 +6,7 @@ use crate::slab::state::SlabState;
 use crate::network::{SlabRef, TransmitterArgs, Transmitter, TransportAddress};
 use crate::Network;
 use crate::subject::SubjectId;
-use crate::memorefhead::{MemoRefHead, ExtMemoRefHead};
+use crate::memorefhead::MemoRefHead;
 use crate::context::WeakContext;
 
 pub struct SlabAgent {
@@ -134,7 +134,7 @@ impl SlabAgent {
                             memoref.to_head(),
                             MemoBody::SlabPresence{
                                 p: self.presence_for_origin( origin_slabref ),
-                                r: self.net.get_root_index_seed().map(|seed| self.localize_memorefhead(seed) )
+                                r: self.net.get_root_index_seed().map(|(seed,from_sr)| self.localize_memorefhead(&seed, &from_sr,true) )
                             }
                         );
 
@@ -214,14 +214,14 @@ impl SlabAgent {
                 return Err("Invalid - Cannot create local slabref from presence")
             }
             _ => {
-                unimplemented!()
+                //let args = TransmitterArgs::Remote( &presence.slab_id, &presence.address );
+                Ok(self.assert_slabref( presence.slab_id, &vec![presence.clone()] ))
             }
-        };
+        }
 
 
-        //let args = TransmitterArgs::Remote( &presence.slab_id, &presence.address );
 
-        Ok(self.assert_slabref( presence.slab_id, &vec![presence.clone()] ))
+
     }
     pub fn do_peering(&self, memoref: &MemoRef, origin_slabref: &SlabRef) {
 
@@ -258,14 +258,15 @@ impl SlabAgent {
         }
 
     }
-    pub fn recv_memoref (&self, memoref : MemoRef){
+    pub async fn recv_memoref (&self, memoref : MemoRef){
         //println!("# \t\\ Slab({}).dispatch_memoref({})", self.id, &memoref.id );
 
         if let Some(subject_id) = memoref.subject_id {
 
             let maybe_sub : Option<Vec<WeakContext>> = {
                 // we want to make sure the lock is released before continuing
-                if let Some(ref s) = self.subject_subscriptions.read().unwrap().get( &subject_id ) {
+                let state = self.state.read().unwrap();
+                if let Some(ref s) = state.subject_subscriptions.get( &subject_id ) {
                     Some((*s).clone())
                 }else{
                     None
@@ -304,7 +305,7 @@ impl SlabAgent {
     pub fn localize_memorefhead (&self, mrh: &MemoRefHead, from_slabref: &SlabRef, include_memos: bool ) -> MemoRefHead {
 
         let slabref = self.localize_slabref(from_slabref);
-        MemoRefHead( self.iter().map(|mr| self.localize_memoref(mr, from_slabref, include_memos )).collect() )
+        MemoRefHead( mrh.iter().map(|mr| self.localize_memoref(mr, from_slabref, include_memos )).collect() )
     }
     pub fn localize_memoref (&self, memoref: &MemoRef, from_slabref: &SlabRef, include_memo: bool ) -> MemoRef {
 //        assert!(from_slabref.owning_slab_id == self.id,"MemoRef clone_for_slab owning slab should be identical");
@@ -323,10 +324,10 @@ impl SlabAgent {
         // TODO - reduce the redundant work here. We're basically asserting the memoref twice
         let memoref = self.assert_memoref(
             memoref.id,
-            self.subject_id,
+            memoref.subject_id,
             peerlist.clone(),
             match include_memo {
-                true => match *self.ptr.read().unwrap() {
+                true => match *memoref.ptr.read().unwrap() {
                     MemoRefPtr::Resident(ref m) => Some(self.localize_memo(m, from_slabref, &peerlist)),
                     MemoRefPtr::Remote          => None
                 },
@@ -352,11 +353,49 @@ impl SlabAgent {
             peerlist
         ).0
     }
+    pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){
+        //println!("Slab({}).reconstitute_memo({})", self.id, memo_id );
+        // TODO: find a way to merge this with assert_memoref to avoid doing duplicative work with regard to peerlist application
 
+        let memo = Memo::new(MemoInner {
+            id:             memo_id,
+            owning_slab_id: self.id,
+            subject_id:     subject_id,
+            parents:        parents,
+            body:           body
+        });
+
+        let (memoref, had_memoref) = self.assert_memoref(memo.id, memo.subject_id, peerlist.clone(), Some(memo.clone()) );
+
+        {
+            let mut state = self.state.write().unwrap();
+            state.counters.memos_received += 1;
+            if had_memoref {
+                state.counters.memos_redundantly_received += 1;
+            }
+        }
+        //println!("Slab({}).reconstitute_memo({}) B -> {:?}", self.id, memo_id, memoref );
+
+
+        self.consider_emit_memo(&memoref);
+
+        if let Some(ref memo) = memoref.get_memo_if_resident() {
+
+            self.check_memo_waiters(memo);
+            self.handle_memo_from_other_slab(memo, &memoref, &origin_slabref);
+            self.do_peering(&memoref, &origin_slabref);
+
+        }
+
+        self.recv_memoref(memoref.clone());
+
+        // TODO: reconcile localize_memoref, reconstitute_memo, and recv_memoref
+        (memo, memoref, had_memoref)
+    }
     fn localize_memobody(&self, mb: &MemoBody, from_slabref: &SlabRef ) -> MemoBody {
         assert!(from_slabref.owning_slab_id == self.id, "MemoBody clone_for_slab owning slab should be identical");
 
-        match self {
+        match mb {
             &MemoBody::SlabPresence{ ref p, ref r } => {
                 MemoBody::SlabPresence{
                     p: p.clone(),
@@ -400,9 +439,8 @@ impl SlabAgent {
             .collect())
     }
     pub fn localize_relationslothead(&self, rsh: &RelationSlotSubjectHead, from_slabref: &SlabRef) -> RelationSlotSubjectHead {
-        // HERE HERE HERE TODO
         // panic!("check here to make sure that peers are being properly constructed for the root_index_seed");
-        let new = self.0
+        let new = rsh.0
             .iter()
             .map(|(slot_id, &(subject_id, ref mrh))| {
                 (*slot_id, (subject_id, self.localize_memorefhead(mrh, from_slabref,false)))
@@ -570,7 +608,8 @@ impl SlabAgent {
         let maybe_slabref = {
             // Instead of having to scope our read lock, and getting a write lock later
             // should we be using a single write lock for the full function scope?
-            if let Some(slabref) = self.peer_refs.read().expect("peer_refs.read()").iter().find(|r| r.0.slab_id == slab_id ){
+            let state = self.state.read().unwrap();
+            if let Some(slabref) = state.peer_refs.iter().find(|r| r.0.slab_id == slab_id ){
                 Some(slabref.clone())
             }else{
                 None
@@ -590,7 +629,8 @@ impl SlabAgent {
             };
 
             slabref = SlabRef(Arc::new(inner));
-            self.peer_refs.write().expect("peer_refs.write()").push(slabref.clone());
+            let state = self.state.read().unwrap();
+            state.peer_refs.push(slabref.clone());
         }
 
         if slab_id == slabref.owning_slab_id {
