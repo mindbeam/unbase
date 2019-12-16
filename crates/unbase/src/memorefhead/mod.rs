@@ -45,7 +45,7 @@ impl MemoRefHead {
     pub fn from_memoref (memoref: MemoRef) -> Self {
         MemoRefHead( vec![memoref] )
     }
-    pub fn apply_memoref(&mut self, new: &MemoRef, slab: &Slab ) -> bool {
+    pub async fn apply_memoref(&mut self, new: &MemoRef, slab: &SlabHandle ) -> bool {
         //println!("# MemoRefHead({:?}).apply_memoref({})", self.memo_ids(), &new.id);
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
@@ -62,6 +62,7 @@ impl MemoRefHead {
         // new items are more likely to be at the end, and that's more likely to trigger
         // the cheapest case: (existing descends new)
 
+        // TODO - make this more async friendly.
         'existing: for i in (0..self.0.len()).rev() {
             let mut remove = false;
             {
@@ -69,7 +70,7 @@ impl MemoRefHead {
                 if existing == new {
                     return false; // we already had this
 
-                } else if existing.descends(&new,&slab) {
+                } else if existing.descends(&new,&slab).await {
                     new_is_descended = true;
 
                     // IMPORTANT: for the purposes of the boolean return,
@@ -79,7 +80,7 @@ impl MemoRefHead {
                     // then it doesn't get applied at all punt the whole thing
                     break 'existing;
 
-                } else if new.descends(&existing, &slab) {
+                } else if new.descends(&existing, &slab).await {
                     new_descends = true;
                     applied = true; // descends
 
@@ -119,12 +120,12 @@ impl MemoRefHead {
 
         applied
     }
-    pub fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &Slab) {
+    pub fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) {
         for new in new_memorefs.iter(){
             self.apply_memoref(new, slab);
         }
     }
-    pub fn apply (&mut self, other: &MemoRefHead, slab: &Slab){
+    pub fn apply (&mut self, other: &MemoRefHead, slab: &SlabHandle){
         for new in other.iter(){
             self.apply_memoref( new, slab );
         }
@@ -155,12 +156,12 @@ impl MemoRefHead {
     pub fn causal_memo_iter(&self, slab: &SlabHandle ) -> CausalMemoIter {
         CausalMemoIter::from_head( &self, slab )
     }
-    pub fn is_fully_materialized(&self, slab: &SlabHandle ) -> bool {
+    pub async fn is_fully_materialized(&self, slab: &SlabHandle ) -> bool {
         // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
         //       as part of the list management. That way we won't have to incur the below computational effort.
 
         for memoref in self.iter(){
-            if let Ok(memo) = memoref.get_memo(slab) {
+            if let Ok(memo) = memoref.get_memo(slab).await {
                 match memo.body {
                     MemoBody::FullyMaterialized { v: _, r: _ } => {},
                     _                           => { return false }
@@ -210,6 +211,8 @@ impl CausalMemoIter {
         }
     }
 }
+
+// NEXT TODO - update this to be a stream
 impl Iterator for CausalMemoIter {
     type Item = Memo;
 
@@ -222,7 +225,7 @@ impl Iterator for CausalMemoIter {
         if let Some(memoref) = self.queue.pop_front() {
             // this is wrong - Will result in G, E, F, C, D, B, A
 
-            match memoref.get_memo( &self.slab ) {
+            match memoref.get_memo( &self.slab ).await {
                 Ok(memo) => {
                     self.queue.append(&mut memo.get_parent_head().to_vecdeque());
                     return Some(memo)

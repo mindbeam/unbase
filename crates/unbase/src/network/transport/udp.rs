@@ -123,14 +123,14 @@ impl TransportUDP {
         for slab in net.get_all_local_slabs() {
 
             let presence = SlabPresence {
-                slab_id: slab.id,
+                slab_id: slab.my_ref.slab_id,
                 address: TransportAddress::UDP( my_address.clone() ),
                 lifetime: SlabAnticipatedLifetime::Unknown
             };
 
-            let hello = slab.new_memo_basic_noparent(
+            let hello = slab.agent.new_memo_basic_noparent(
                 None,
-                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed(&slab) }
+                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed().map(|(m,_)| m ) }
             );
 
             self.send_to_addr(

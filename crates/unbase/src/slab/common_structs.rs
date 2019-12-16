@@ -11,7 +11,7 @@ use crate::subject::SubjectId;
 /// Including Transport address and anticipated lifetime
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SlabPresence {
-    pub slab_id: SlabId,
+    pub slab_id: SlabId, // TODO replace this witl SlabRef
     pub address: TransportAddress,
     pub lifetime: SlabAnticipatedLifetime,
 }

@@ -31,7 +31,7 @@ impl Transport for LocalDirect {
     }
     fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
         if let &TransmitterArgs::Local(rcv_slab) = args {
-            let slab = rcv_slab.handle();
+            let slab = rcv_slab.clone();
             let (tx_channel, rx_channel) = mpsc::channel::<(SlabRef,MemoRef)>();
 
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
@@ -39,12 +39,10 @@ impl Transport for LocalDirect {
                 //println!("Started TX Thread");
                 while let Ok((from_slabref, memoref)) = rx_channel.recv() {
                     //println!("LocalDirect Slab({}) RECEIVED {:?} from {}", slab.id, memoref, from_slabref.slab_id);
-                    if let Some(slab) = slab.upgrade(){
-                        // clone_for_slab adds the memo to the slab, because memos cannot exist outside of an owning slab
+                    // clone_for_slab adds the memo to the slab, because memos cannot exist outside of an owning slab
 
-                        let owned_slabref = from_slabref.clone_for_slab(&slab);
-                        memoref.clone_for_slab(&owned_slabref, &slab, true);
-                    }
+                    let owned_slabref = slab.agent.localize_slabref(&from_slabref);
+                    slab.agent.localize_memoref(&memoref, &owned_slabref, true);
                 }
             });
 

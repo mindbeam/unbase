@@ -12,6 +12,7 @@ use crate::subject::{SubjectId};
 use crate::slab::MemoRef;
 use crate::network::{SlabRef,SlabPresence};
 use super::*;
+use futures::future::{BoxFuture, FutureExt};
 
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
@@ -113,26 +114,28 @@ impl Memo {
             }
         }
     }
-    pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> bool {
+    pub fn descends<'a>  (&'a self, memoref: &'a MemoRef, slab: &'a SlabHandle) -> BoxFuture<'a, bool> {
+        // Not really sure if this is right
+
         //TODO: parallelize this
         //TODO: Use sparse-vector/beacon to avoid having to trace out the whole lineage
         //      Should be able to stop traversal once happens-before=true. Cannot descend a thing that happens after
 
-
-        // breadth-first
-        for parent in self.parents.iter() {
-            if parent == memoref {
-                return true
-            };
-        }
-
-        // Ok now depth
-        for parent in self.parents.iter() {
-            if parent.descends(&memoref,slab).await {
-                return true
+        async move {
+            // breadth-first
+            for parent in self.parents.iter() {
+                if parent == memoref {
+                    return true.into()
+                };
             }
-        }
-        return false;
+            // Ok now depth
+            for parent in self.parents.iter() {
+                if parent.descends(&memoref, slab).await {
+                    return true.into()
+                }
+            }
+            return false.into();
+        }.boxed()
     }
 }
 

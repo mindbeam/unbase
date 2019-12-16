@@ -49,7 +49,7 @@ impl SimEvent {
 impl fmt::Debug for SimEvent{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SimEvent")
-            .field("dest", &self.dest.id )
+            .field("dest", &self.dest.my_ref.slab_id )
             .field("memo", &self.memoref.id )
             .field("t", &self.dest_point.t )
             .finish()
@@ -126,7 +126,7 @@ impl Transport for Simulator {
                 source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
                 dest_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
                 simulator: self.clone(),
-                dest: slab.weak()
+                dest: (*slab).clone()
             };
             Some(Transmitter::new(args.get_slab_id(), Box::new(tx)))
         }else{

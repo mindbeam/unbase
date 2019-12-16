@@ -13,7 +13,7 @@ pub use self::transmitter::{Transmitter, TransmitterArgs};
 use std::ops::Deref;
 use std::sync::{Arc, Weak, Mutex, RwLock};
 use std::fmt;
-use crate::slab::{Slab, SlabId, SlabHandle};
+use crate::slab::{SlabId, SlabHandle};
 use crate::memorefhead::MemoRefHead;
 
 
@@ -99,7 +99,7 @@ impl Network {
         id
     }
     pub fn get_slabhandle(&self, slab_id: SlabId) -> Option<SlabHandle> {
-        if let Some(slabhandle) = self.slabs.read().unwrap().iter().find(|s| s.id == slab_id) {
+        if let Some(slabhandle) = self.slabs.read().unwrap().iter().find(|s| s.my_ref.slab_id == slab_id) {
             if slabhandle.is_resident() {
                 return Some((*slabhandle).clone());
             }
@@ -123,7 +123,7 @@ impl Network {
 
         for slabhandle in self.slabs.read().unwrap().iter() {
             if slabhandle.is_resident() {
-                res.push(*slabhandle.clone());
+                res.push(slabhandle.clone());
             }
             // TODO - scrub non-resident slabs
         }
@@ -155,8 +155,10 @@ impl Network {
         }
 
         {
-            self.slabs.write().unwrap().insert(0, new_slab);
+            self.slabs.write().unwrap().insert(0, new_slab.clone());
         }
+
+        self.conditionally_generate_root_index_seed(&new_slab);
     }
     pub fn deregister_local_slab(&self, slab_id: SlabId) {
         unimplemented!()
@@ -206,7 +208,7 @@ impl Network {
             None => None,
         }
     }
-    pub fn conditionally_generate_root_index_seed(&self, slab: &Slab) -> bool {
+    pub fn conditionally_generate_root_index_seed(&self, slab: &SlabHandle) -> bool {
         {
             if let Some(_) = *self.root_index_seed.read().unwrap() {
                 return false;

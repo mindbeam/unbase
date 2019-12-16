@@ -7,8 +7,6 @@ use crate::error::RetrieveError;
 
 use std::sync::{Arc,RwLock};
 use std::fmt;
-use futures::future::{select,Either};
-use timer::Delay;
 
 
 #[derive(Clone)]
@@ -112,46 +110,13 @@ impl MemoRef {
         assert!(self.owning_slab_id == slab.my_ref.slab_id,"requesting slab does not match owning slab");
 
         // This seems pretty crude, but using channels for now in the interest of expediency
-        let channel;
         {
             if let MemoRefPtr::Resident(ref memo) = *self.ptr.read().unwrap() {
                 return Ok(memo.clone());
             }
         }
 
-        if slab.request_memo(self) > 0 {
-            channel = slab.memo_wait_channel(self.id);
-        }else{
-            return Err(RetrieveError::NotFound)
-        }
-
-        // By sending the memo itself through the channel
-        // we guarantee that there's no funny business with request / remotize timing
-
-
-        use std::time;
-        let duration = time::Duration::from_millis(1000);
-
-        for _ in 0..3 {
-            let timeout = Delay::new( duration );
-            match select(channel, timeout).await {
-                Either::Left((Ok(memo),_)) => {
-                    return Ok(memo)
-                },
-                _ => {
-                    // timed out or canceled
-                }
-            }
-
-            // have another go around
-            if slab.request_memo( &self ) == 0 {
-                return Err(RetrieveError::NotFound)
-            }
-
-        }
-
-        Err(RetrieveError::NotFoundByDeadline)
-
+        slab.request_memo(self).await
     }
     pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> bool {
         assert!(self.owning_slab_id == slab.my_ref.slab_id);

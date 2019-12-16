@@ -56,10 +56,12 @@ impl ContextRef {
 }
 
 impl Context {
-    pub fn new(slab: &Slab) -> Context {
+    pub fn new(slab: SlabHandle) -> Context {
+
+        let seed = slab.net.get_root_index_seed().expect("Uninitialized slab").0;
 
         let new_self = Context(Arc::new(ContextInner {
-            slab: slab.clone(),
+            slab: slab,
             root_index: RwLock::new(None),
             manager: Mutex::new(ContextManager::new()),
             subjects: RwLock::new(HashMap::new()),
@@ -73,8 +75,6 @@ impl Context {
         // as it must use the index directly. Therefore I need to make sure it doesn't have a hard link back to me.
         // This shouldn't be a problem, because the index is private, and not subject to direct use, so the context
         // should outlive it.
-
-        let seed = slab.get_root_index_seed().expect("Uninitialized slab");
 
         let index = IndexFixed::new_from_memorefhead(ContextRef::Weak(new_self.weak()), 5, seed);
 
@@ -382,10 +382,11 @@ impl Context {
 
     }
 
-    pub fn is_fully_materialized(&self) -> bool {
+    pub async fn is_fully_materialized(&self) -> bool {
 
+        // TODO - locking + async = :(
         for subject_head in self.manager.lock().unwrap().subject_head_iter() {
-            if !subject_head.head.is_fully_materialized(&self.slab) {
+            if !subject_head.head.is_fully_materialized(&self.slab).await {
                 return false;
             }
         }

@@ -40,7 +40,7 @@ impl Subject {
         let subject_id = slab.generate_subject_id();
         //println!("# Subject({}).new()",subject_id);
 
-        let memoref = slab.new_memo_basic_noparent(
+        let memoref = slab.agent.new_memo_basic_noparent(
                 Some(subject_id),
                 MemoBody::FullyMaterialized {v: vals, r: RelationSlotSubjectHead(HashMap::new()) }
             );
@@ -109,7 +109,7 @@ impl Subject {
         let slab = &context.slab;
         let mut head = self.head.write().unwrap();
 
-        let memoref = slab.new_memo_basic(
+        let memoref = slab.agent.new_memo_basic(
             Some(self.id),
             head.clone(),
             MemoBody::Edit(vals)
@@ -129,7 +129,7 @@ impl Subject {
         let slab = &context.slab;
         let mut head = self.head.write().unwrap();
 
-        let memoref = slab.new_memo(
+        let memoref = slab.agent.new_memo(
             Some(self.id),
             head.clone(),
             MemoBody::Relation(RelationSlotSubjectHead(memoref_map))
@@ -161,9 +161,9 @@ impl Subject {
     pub fn weak (&self) -> WeakSubject {
         WeakSubject(Arc::downgrade(&self.0))
     }
-    pub fn is_fully_materialized (&self) -> bool {
+    pub async fn is_fully_materialized (&self) -> bool {
         let context = self.contextref.get_context();
-        self.head.read().unwrap().is_fully_materialized(&context.slab)
+        self.head.read().unwrap().is_fully_materialized(&context.slab).await
     }
     pub fn fully_materialize (&self, _slab: &Slab) -> bool {
         unimplemented!();

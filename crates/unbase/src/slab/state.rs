@@ -15,6 +15,7 @@ pub struct SlabState{
     pub subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
 }
 
+#[derive(Debug)]
 struct SlabCounters{
     pub last_memo_id: u32,
     pub last_subject_id: u32,
@@ -39,5 +40,16 @@ impl SlabState{
             memo_wait_channels: HashMap::new(),
             subject_subscriptions: HashMap::new(),
         }
+    }
+}
+
+impl std::fmt::Debug for SlabState {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+//        use itertools::join;
+
+        fmt.debug_struct("SlabState")
+            .field("counters", &self.counters)
+//            .field( "memorefs_by_id", &(self.memorefs_by_id.keys().join(",")) )
+            .finish()
     }
 }

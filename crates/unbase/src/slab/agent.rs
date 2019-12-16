@@ -7,7 +7,7 @@ use crate::network::{SlabRef, TransmitterArgs, Transmitter, TransportAddress};
 use crate::Network;
 use crate::subject::SubjectId;
 use crate::memorefhead::MemoRefHead;
-use crate::context::WeakContext;
+use crate::context::{WeakContext, Context};
 
 pub struct SlabAgent {
     pub id: SlabId,
@@ -27,6 +27,24 @@ impl SlabAgent {
             my_ref: my_ref
         }
     }
+    // Counters,stats, reporting
+    pub fn count_of_memorefs_resident( &self ) -> u32 {
+        let state = self.state.read().unwrap();
+        state.memorefs_by_id.len() as u32
+    }
+    pub fn count_of_memos_received( &self ) -> u64 {
+        let state = self.state.read().unwrap();
+        state.counters.memos_received as u64
+    }
+    pub fn count_of_memos_reduntantly_received( &self ) -> u64 {
+        let state = self.state.read().unwrap();
+        state.counters.memos_redundantly_received as u64
+    }
+    pub fn peer_slab_count (&self) -> usize {
+        let state = self.state.read().unwrap();
+        state.peer_refs.len() as usize
+    }
+
     pub fn new_memo ( &self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
         let memo_id = {
             let mut state = self.state.write().unwrap();
@@ -54,6 +72,38 @@ impl SlabAgent {
     }
     pub fn new_memo_basic_noparent (&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
         self.new_memo(subject_id, MemoRefHead::new(), body)
+    }
+    pub fn generate_subject_id (&self) -> SubjectId {
+
+        let state = self.state.write().unwrap();
+        state.counters.last_subject_id += 1;
+        (self.id as u64).rotate_left(32) | state.counters.last_subject_id as u64
+    }
+    pub fn subscribe_subject (&self, subject_id: u64, context: &Context) {
+        let weakcontext : WeakContext = context.weak();
+
+        let state = self.state.write().unwrap();
+
+        match state.subject_subscriptions.entry(subject_id){
+            Entry::Occupied(mut e) => {
+                e.get_mut().push(weakcontext)
+            }
+            Entry::Vacant(e) => {
+                e.insert(vec![weakcontext]);
+            }
+        }
+        return;
+    }
+    pub fn unsubscribe_subject (&self,  subject_id: u64, context: &Context ){
+        let state = self.state.write().unwrap();
+
+        if let Some(subs) = state.subject_subscriptions.get_mut(&subject_id) {
+            let weak_context = context.weak();
+            subs.retain(|c| {
+                c.cmp(&weak_context)
+            });
+            return;
+        }
     }
     pub fn consider_emit_memo(&self, memoref: &MemoRef) {
         // Emit memos for durability and notification purposes
@@ -84,6 +134,18 @@ impl SlabAgent {
             // I'm not sufficiently clear on that at the time of this writing
             0
         }
+    }
+    pub fn memo_wait_channel (&self, memo_id: MemoId ) -> futures::channel::oneshot::Receiver<Memo> {
+        let (tx, rx) = futures::channel::oneshot::channel();
+
+        // TODO this should be moved to agent
+        let state = self.state.write().unwrap();
+        match state.memo_wait_channels.entry(memo_id) {
+            Entry::Vacant(o)       => { o.insert( vec![tx] ); }
+            Entry::Occupied(mut o) => { o.get_mut().push(tx); }
+        };
+
+        rx
     }
     pub fn check_memo_waiters ( &self, memo: &Memo) {
         let state = self.state.write().unwrap();
@@ -533,27 +595,6 @@ impl SlabAgent {
 
         Ok(())
     }
-    pub fn request_memo (&self, memoref: &MemoRef) -> u8 {
-        //println!("Slab({}).request_memo({})", self.id, memoref.id );
-
-        let request_memo = self.new_memo_basic(
-            None,
-            MemoRefHead::new(), // TODO: how should this be parented?
-            MemoBody::MemoRequest(
-                vec![memoref.id],
-                self.my_ref.clone()
-            )
-        );
-
-        let mut sent = 0u8;
-        for peer in memoref.peerlist.read().unwrap().iter().take(5) {
-            //println!("Slab({}).request_memo({}) from {}", self.id, memoref.id, peer.slabref.slab_id );
-            peer.slabref.send( &self.my_ref, &request_memo.clone() );
-            sent += 1;
-        }
-
-        sent
-    }
     pub fn assert_memoref( &self, memo_id: MemoId, subject_id: Option<SubjectId>, peerlist: MemoPeerList, memo: Option<Memo>) -> (MemoRef, bool) {
 
         let had_memoref;
@@ -670,10 +711,38 @@ impl SlabAgent {
         return slabref;
 
     }
+    pub fn remotize_memo_ids( &self, memo_ids: &[MemoId] ) -> Result<(),String>{
+        //println!("# Slab({}).remotize_memo_ids({:?})", self.id, memo_ids);
+
+        let mut memorefs : Vec<MemoRef> = Vec::with_capacity(memo_ids.len());
+
+        {
+            let state = self.state.read().unwrap();
+            for memo_id in memo_ids.iter() {
+                if let Some(memoref) = state.memorefs_by_id.get(memo_id) {
+                    memorefs.push( memoref.clone() )
+                }
+            }
+        }
+
+        for memoref in memorefs {
+            self.remotize_memoref(&memoref)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl Drop for SlabAgent {
     fn drop(&mut self) {
         self.net.deregister_local_slab(self.id);
+    }
+}
+
+impl std::fmt::Debug for SlabAgent {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fmt.debug_struct("Slab")
+            .field("state", &self.state.read().unwrap())
+            .finish()
     }
 }
