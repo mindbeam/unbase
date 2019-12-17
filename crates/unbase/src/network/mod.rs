@@ -161,42 +161,41 @@ impl Network {
         self.conditionally_generate_root_index_seed(&new_slab);
     }
     pub fn deregister_local_slab(&self, slab_id: SlabId) {
-        unimplemented!()
 //        // Remove the deregistered slab so get_representative_slab doesn't return it
-//        {
-//            let mut slabs = self.slabs.write().expect("slabs write lock");
-//            if let Some(removed) = slabs.iter()
-//                .position(|s| s.id == slab_id)
-//                .map(|e| slabs.remove(e)) {
-//                // println!("Unbinding Slab {}", removed.id);
-//                let _ = removed.id;
-//                // removed.unbind_network(self);
-//            }
-//        }
-//
-//        // If the deregistered slab is the one that's holding the root_index_seed
-//        // then we need to move it to a different slab
-//
-//        let mut root_index_seed = self.root_index_seed.write().expect("root_index_seed write lock");
-//        {
-//            if let Some(ref mut r) = *root_index_seed {
-//                if r.1.slab_id == slab_id {
-//                    if let Some(new_slab) = self.get_representative_slab() {
-//
-//                        let owned_slabref = r.1.clone_for_slab(&new_slab);
-//                        r.0 = r.0.clone_for_slab(&owned_slabref, &new_slab, false);
-//                        r.1 = new_slab.my_ref.clone();
-//                        return;
-//                    }
-//                    // don't return
-//                } else {
-//                    return;
-//                }
-//            }
-//        }
-//
-//        // No slabs left
-//        root_index_seed.take();
+        {
+            let mut slabs = self.slabs.write().expect("slabs write lock");
+            if let Some(removed) = slabs.iter()
+                .position(|s| s.my_ref.slab_id == slab_id)
+                .map(|e| slabs.remove(e)) {
+                // println!("Unbinding Slab {}", removed.id);
+                let _ = removed.my_ref.slab_id;
+                // removed.unbind_network(self);
+            }
+        }
+
+        // If the deregistered slab is the one that's holding the root_index_seed
+        // then we need to move it to a different slab
+
+        let mut root_index_seed = self.root_index_seed.write().expect("root_index_seed write lock");
+        {
+            if let Some(ref mut r) = *root_index_seed {
+                if r.1.slab_id == slab_id {
+                    if let Some(new_slab) = self.get_representative_slab() {
+
+                        let owned_slabref = new_slab.agent.localize_slabref(&r.1 );
+                        r.0 = new_slab.agent.localize_memorefhead(&r.0, &owned_slabref, false);
+                        r.1 = new_slab.my_ref.clone();
+                        return;
+                    }
+                    // don't return
+                } else {
+                    return;
+                }
+            }
+        }
+
+        // No slabs left
+        root_index_seed.take();
     }
     pub fn get_root_index_seed(&self) -> Option<(MemoRefHead,SlabRef)> {
         let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");

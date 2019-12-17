@@ -8,6 +8,7 @@ use crate::Network;
 use crate::subject::SubjectId;
 use crate::memorefhead::MemoRefHead;
 use crate::context::{WeakContext, Context};
+use async_std::task::block_on;
 
 pub struct SlabAgent {
     pub id: SlabId,
@@ -28,18 +29,22 @@ impl SlabAgent {
         }
     }
     // Counters,stats, reporting
+    #[allow(unused)]
     pub fn count_of_memorefs_resident( &self ) -> u32 {
         let state = self.state.read().unwrap();
         state.memorefs_by_id.len() as u32
     }
+    #[allow(unused)]
     pub fn count_of_memos_received( &self ) -> u64 {
         let state = self.state.read().unwrap();
         state.counters.memos_received as u64
     }
+    #[allow(unused)]
     pub fn count_of_memos_reduntantly_received( &self ) -> u64 {
         let state = self.state.read().unwrap();
         state.counters.memos_redundantly_received as u64
     }
+    #[allow(unused)]
     pub fn peer_slab_count (&self) -> usize {
         let state = self.state.read().unwrap();
         state.peer_refs.len() as usize
@@ -369,8 +374,8 @@ impl SlabAgent {
     }
     pub fn localize_memorefhead (&self, mrh: &MemoRefHead, from_slabref: &SlabRef, include_memos: bool ) -> MemoRefHead {
 
-        let slabref = self.localize_slabref(from_slabref);
-        MemoRefHead( mrh.iter().map(|mr| self.localize_memoref(mr, from_slabref, include_memos )).collect() )
+        let from_slabref = self.localize_slabref(from_slabref);
+        MemoRefHead( mrh.iter().map(|mr| self.localize_memoref(mr, &from_slabref, include_memos )).collect() )
     }
     pub fn localize_memoref (&self, memoref: &MemoRef, from_slabref: &SlabRef, include_memo: bool ) -> MemoRef {
 //        assert!(from_slabref.owning_slab_id == self.id,"MemoRef clone_for_slab owning slab should be identical");
@@ -452,7 +457,7 @@ impl SlabAgent {
 
         }
 
-        self.recv_memoref(memoref.clone());
+        block_on( self.recv_memoref(memoref.clone()) );
 
         // TODO: reconcile localize_memoref, reconstitute_memo, and recv_memoref
         (memo, memoref, had_memoref)
@@ -514,6 +519,7 @@ impl SlabAgent {
 
         RelationSlotSubjectHead(new)
     }
+    #[allow(unused)]
     pub fn residentize_memoref(&self, memoref: &MemoRef, memo: Memo) -> bool {
         //println!("# Slab({}).MemoRef({}).residentize()", self.id, memoref.id);
 
@@ -553,6 +559,7 @@ impl SlabAgent {
             false
         }
     }
+    #[allow(unused)]
     pub fn remotize_memoref( &self, memoref: &MemoRef ) -> Result<(),String> {
         assert!(memoref.owning_slab_id == self.id);
 
@@ -714,6 +721,7 @@ impl SlabAgent {
         return slabref;
 
     }
+    #[allow(unused)]
     pub fn remotize_memo_ids( &self, memo_ids: &[MemoId] ) -> Result<(),String>{
         //println!("# Slab({}).remotize_memo_ids({:?})", self.id, memo_ids);
 

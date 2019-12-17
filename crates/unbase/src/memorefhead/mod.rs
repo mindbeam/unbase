@@ -10,7 +10,7 @@ use std::mem;
 use std::fmt;
 use std::slice;
 use std::collections::VecDeque;
-use futures::executor::block_on;
+use async_std::task::block_on;
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -123,13 +123,17 @@ impl MemoRefHead {
     }
     pub fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) {
         for new in new_memorefs.iter(){
-            self.apply_memoref(new, slab);
+            block_on( self.apply_memoref(new, slab) );
         }
     }
-    pub fn apply (&mut self, other: &MemoRefHead, slab: &SlabHandle){
+    pub async fn apply (mut self, other: &MemoRefHead, slab: &SlabHandle) -> MemoRefHead {
+        // TODO make this concurrent?
         for new in other.iter(){
-            self.apply_memoref( new, slab );
+            self.apply_memoref( new, slab ).await;
         }
+
+        //TODO reimplement this with immutability
+        self
     }
     pub fn memo_ids (&self) -> Vec<MemoId> {
         self.0.iter().map(|m| m.id).collect()

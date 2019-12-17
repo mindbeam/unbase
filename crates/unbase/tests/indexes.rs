@@ -19,7 +19,7 @@ async fn index_construction() {
 
     let index = IndexFixed::new(&ContextRef::Strong(context_a.clone()), 5).await;
 
-    assert_eq!( context_a.is_fully_materialized(), true );
+    assert_eq!( context_a.is_fully_materialized().await, true );
 
     // First lets do a single index test
     let i = 1234;

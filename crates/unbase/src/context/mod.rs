@@ -13,6 +13,7 @@ use std::ops::Deref;
 use std::fmt;
 use std::collections::HashMap;
 use std::sync::{Mutex, RwLock, Arc, Weak};
+use async_std::task::block_on;
 
 #[derive(Clone)]
 pub struct Context(pub Arc<ContextInner>);
@@ -127,7 +128,7 @@ impl Context {
 
     /// Retrieve a subject for a known MemoRefHead – ususally used for relationship traversal.
     /// Any relevant context will also be applied when reconstituting the relevant subject to ensure that our consistency model invariants are met
-    pub fn get_subject_with_head(&self,
+    pub async fn get_subject_with_head(&self,
                                  subject_id: SubjectId,
                                  mut head: MemoRefHead)
                                  -> Result<Subject, RetrieveError> {
@@ -148,7 +149,7 @@ impl Context {
 
         if let Some(relevant_context_head) = maybe_head {
             // println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
-            head.apply(&relevant_context_head, &self.slab);
+            head = head.apply(&relevant_context_head, &self.slab).await;
 
         } else {
             // println!("# \\ No relevant head found in context");
@@ -156,7 +157,7 @@ impl Context {
 
         match self.get_subject_if_resident(subject_id) {
             Some(ref mut subject) => {
-                subject.apply_head(&head);
+                subject.apply_head(head);
                 return Ok(subject.clone());
             }
             None => {}
@@ -225,11 +226,9 @@ impl Context {
         {
 
 
-            let head: MemoRefHead = if let Some(head) = {
-                self.manager.lock().unwrap().get_head(subject_id)
-            } {
-                head.apply(apply_head, &self.slab);
-                head.clone()
+            let head: MemoRefHead = if let Some(head) = { self.manager.lock().unwrap().get_head(subject_id) } {
+                // HACK
+                block_on( head.clone().apply(apply_head, &self.slab) )
             } else {
                 apply_head.clone()
             };
@@ -244,7 +243,7 @@ impl Context {
 
             if notify_subject {
                 if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
-                    subject.apply_head(&head);
+                    subject.apply_head(head);
                 }
             }
 

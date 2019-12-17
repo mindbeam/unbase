@@ -3,7 +3,7 @@
 extern crate unbase;
 use unbase::subject::Subject;
 use std::{thread, time};
-use futures::executor::block_on;
+use async_std::task::block_on;
 use futures_await_test::async_test;
 
 #[async_test]

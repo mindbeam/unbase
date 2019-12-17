@@ -14,7 +14,7 @@ async fn init_blackhole() {
 }
 
 #[unbase_test_util::async_test]
-fn init_blackhole_slab() {
+async fn init_blackhole_slab() {
 
     let net = unbase::Network::create_new_system();
     let blackhole = unbase::network::transport::Blackhole::new();

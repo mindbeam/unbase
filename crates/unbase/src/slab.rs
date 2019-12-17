@@ -12,6 +12,7 @@ use crate::context::Context;
 use crate::network::{Network,Transmitter,TransportAddress};
 
 use std::sync::{Arc,RwLock,Mutex};
+use std::ops::Deref;
 use futures::channel::mpsc;
 
 mod state;
@@ -28,7 +29,7 @@ pub use handle::SlabHandle;
 pub type SlabId = u32;
 
 use crate::slab::agent::SlabAgent;
-use futures::{StreamExt, Future};
+use futures::StreamExt;
 use futures::future::RemoteHandle;
 
 // Opaque type + defining use site
@@ -49,6 +50,14 @@ pub struct Slab{
     pub my_ref: SlabRef,
     dispatch_channel: mpsc::Sender<MemoRef>,
     dispatcher: Arc<RemoteHandle<()>>,
+    handle: SlabHandle,
+}
+
+impl Deref for Slab {
+    type Target = SlabHandle;
+    fn deref(&self) -> &SlabHandle {
+        &self.handle
+    }
 }
 
 impl Slab {
@@ -68,7 +77,7 @@ impl Slab {
 
         let (dispatch_tx_channel, dispatch_rx_channel) = mpsc::channel::<MemoRef>(10);
 
-        let agent = Arc::new(SlabAgent::new( net, my_ref.clone() ));
+        let agent = Arc::new(SlabAgent::new(net, my_ref.clone()));
 
 //        let dispatcher_task = make_dispatcher( dispatch_rx_channel,agent.clone() );
 //        let dispatcher  = crate::util::task::spawn_with_handle(dispatcher_task );
@@ -77,32 +86,40 @@ impl Slab {
         let dispatcher_task = (async move || {
             let mut dispatch_rx_channel = dispatch_rx_channel;
             while let Some(memoref) = dispatch_rx_channel.next().await {
-                agent2.recv_memoref(memoref);
+                agent2.recv_memoref(memoref).await;
             }
         })();
 
-        let dispatcher : RemoteHandle<()>  = crate::util::task::spawn_with_handle( dispatcher_task );
+        let dispatcher: RemoteHandle<()> = crate::util::task::spawn_with_handle(dispatcher_task);
 
-        let me = Slab{
+        let handle = SlabHandle {
+            my_ref: my_ref.clone(),
+            net: net.clone(),
+            dispatch_channel: dispatch_tx_channel.clone(),
+            agent: agent.clone()
+        };
+
+        let me = Slab {
             id,
             dispatch_channel: dispatch_tx_channel,
             dispatcher: Arc::new(dispatcher),
             net: net.clone(),
             my_ref: my_ref,
+            handle,
             agent
         };
 
-        net.register_local_slab(me.handle() );
+        net.register_local_slab(me.handle());
 
         me
     }
     pub fn handle(&self) -> SlabHandle {
-        SlabHandle::new(self )
+        self.handle.clone()
     }
-    pub fn create_context (&self) -> Context {
-        Context::new(self.handle() )
+    pub fn create_context(&self) -> Context {
+        Context::new(self.handle())
     }
-    fn _memo_durability_score( &self, _memo: &Memo ) -> u8 {
+    fn _memo_durability_score(&self, _memo: &Memo) -> u8 {
         // TODO: devise durability_score algo
         //       Should this number be inflated for memos we don't care about?
         //       Or should that be a separate signal?

@@ -2,7 +2,7 @@ extern crate unbase;
 
 use std::{thread, time};
 use futures_await_test::async_test;
-use futures::executor::block_on;
+use async_std::task::block_on;
 
 #[async_test]
 async fn test_udp() {

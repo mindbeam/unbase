@@ -7,7 +7,7 @@ pub fn spawn_with_handle<F> (f: F) -> RemoteHandle<F::Output>
     <F as Future>::Output: std::marker::Send {
     let (remote, handle) = f.remote_handle();
 
-    tokio::spawn( remote );
+    async_std::task::spawn( remote );
 
     handle
 }

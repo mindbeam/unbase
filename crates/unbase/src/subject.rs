@@ -2,6 +2,7 @@ use core::ops::Deref;
 use std::fmt;
 use std::collections::HashMap;
 use std::sync::{Arc,RwLock,Weak};
+use async_std::task::block_on;
 
 use crate::slab::*;
 use crate::memorefhead::*;
@@ -95,10 +96,13 @@ impl Subject {
         //println!("# Subject({}).get_relation({})",self.id,key);
 
         let context = self.contextref.get_context();
-        match self.head.read().unwrap().project_relation(&context, key) {
-            Ok((subject_id, head)) => context.get_subject_with_head(subject_id,head),
-            Err(e)   => Err(e)
+        let head = {
+            self.head.read().unwrap().clone()
+        };
 
+        match head.project_relation(&context, key) {
+            Ok((subject_id, relhead)) => context.get_subject_with_head(subject_id,relhead).await,
+            Err(e)   => Err(e)
         }
     }
     pub fn set_value (&self, key: &str, value: &str) -> bool {
@@ -115,7 +119,7 @@ impl Subject {
             MemoBody::Edit(vals)
         );
 
-        head.apply_memoref(&memoref, &slab);
+        block_on( head.apply_memoref(&memoref, &slab) );
         context.apply_subject_head( self.id,  &head, false );
 
         true
@@ -135,19 +139,25 @@ impl Subject {
             MemoBody::Relation(RelationSlotSubjectHead(memoref_map))
         );
 
-        head.apply_memoref(&memoref, &slab);
+        block_on( head.apply_memoref(&memoref, &slab) );
         context.apply_subject_head( self.id, &head, false );
 
     }
     // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
-    pub fn apply_head (&self, new: &MemoRefHead){
+    pub fn apply_head (&self, new: MemoRefHead){
         //println!("# Subject({}).apply_head({:?})", &self.id, new.memo_ids() );
 
         let context = self.contextref.get_context();
         let slab = context.slab.clone(); // TODO: find a way to get rid of this clone
 
         //println!("# Record({}) calling apply_memoref", self.id);
-        self.head.write().unwrap().apply(&new, &slab);
+        let head = {
+            self.head.read().unwrap().clone()
+        };
+
+        let newhead = block_on( head.apply(&new, &slab) );
+
+        *(self.head.write().unwrap()) = newhead;
     }
     pub fn get_head (&self) -> MemoRefHead {
         self.head.read().unwrap().clone()
