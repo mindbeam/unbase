@@ -41,7 +41,7 @@ impl SlabHandle {
     pub async fn request_memo(&self, memoref: &MemoRef) -> Result<Memo,RetrieveError> {
 
         // we're looking for this memo
-        let channel = self.agent.memo_wait_channel(memoref.id);
+        let mut channel = self.agent.memo_wait_channel(memoref.id);
 
         // send the request
         let request_memo = self.agent.new_memo_basic(
@@ -75,9 +75,15 @@ impl SlabHandle {
                 Either::Left((Ok(memo),_)) => {
                     return Ok(memo)
                 },
-                _ => {
-                    // timed out or canceled
+                Either::Left((Err(_canceled),_)) => {
+                    // the channel was canceled by the sender
+                    return Err(RetrieveError::NotFound);
+                },
+                Either::Right((_,ch)) => {
+                    // timed out. Preserve the memo wait channel
+                    channel = ch;
                 }
+
             }
         }
 

@@ -75,14 +75,14 @@ impl SlabAgent {
     }
     pub fn generate_subject_id (&self) -> SubjectId {
 
-        let state = self.state.write().unwrap();
+        let mut state = self.state.write().unwrap();
         state.counters.last_subject_id += 1;
         (self.id as u64).rotate_left(32) | state.counters.last_subject_id as u64
     }
     pub fn subscribe_subject (&self, subject_id: u64, context: &Context) {
         let weakcontext : WeakContext = context.weak();
 
-        let state = self.state.write().unwrap();
+        let mut state = self.state.write().unwrap();
 
         match state.subject_subscriptions.entry(subject_id){
             Entry::Occupied(mut e) => {
@@ -95,7 +95,7 @@ impl SlabAgent {
         return;
     }
     pub fn unsubscribe_subject (&self,  subject_id: u64, context: &Context ){
-        let state = self.state.write().unwrap();
+        let mut state = self.state.write().unwrap();
 
         if let Some(subs) = state.subject_subscriptions.get_mut(&subject_id) {
             let weak_context = context.weak();
@@ -139,7 +139,7 @@ impl SlabAgent {
         let (tx, rx) = futures::channel::oneshot::channel();
 
         // TODO this should be moved to agent
-        let state = self.state.write().unwrap();
+        let mut state = self.state.write().unwrap();
         match state.memo_wait_channels.entry(memo_id) {
             Entry::Vacant(o)       => { o.insert( vec![tx] ); }
             Entry::Occupied(mut o) => { o.get_mut().push(tx); }
@@ -148,15 +148,15 @@ impl SlabAgent {
         rx
     }
     pub fn check_memo_waiters ( &self, memo: &Memo) {
-        let state = self.state.write().unwrap();
+        let mut state = self.state.write().unwrap();
         match state.memo_wait_channels.entry(memo.id) {
             Entry::Occupied(o) => {
-                for sender in o.get() {
+                let (_, v) = o.remove_entry();
+                for sender in v {
                     // we don't care if it worked or not.
                     // if the channel is closed, we're scrubbing it anyway
                     sender.send(memo.clone()).ok();
                 }
-                o.remove();
             },
             Entry::Vacant(_) => {}
         };
@@ -224,14 +224,17 @@ impl SlabAgent {
                     for desired_memo_id in desired_memo_ids {
 
                         let maybe_desired_memoref = {
-                            let state = self.state.write().unwrap();
-                            state.memorefs_by_id.get(&desired_memo_id).clone()
+                            let state = self.state.read().unwrap();
+                            match state.memorefs_by_id.get(&desired_memo_id){
+                                Some(mr) => Some(mr.clone()),
+                                None => None
+                            }
                         };
 
                         if let Some(desired_memoref) = maybe_desired_memoref {
 
                             if desired_memoref.is_resident() {
-                                requesting_slabref.send(&self.my_ref, desired_memoref);
+                                requesting_slabref.send(&self.my_ref, &desired_memoref);
                             } else {
                                 // Somebody asked me for a memo I don't have
                                 // It would be neighborly to tell them I don't have it
@@ -670,7 +673,7 @@ impl SlabAgent {
             };
 
             slabref = SlabRef(Arc::new(inner));
-            let state = self.state.read().unwrap();
+            let mut state = self.state.write().unwrap();
             state.peer_refs.push(slabref.clone());
         }
 

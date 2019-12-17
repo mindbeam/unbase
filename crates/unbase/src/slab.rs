@@ -32,12 +32,14 @@ use futures::{StreamExt, Future};
 use futures::future::RemoteHandle;
 
 // Opaque type + defining use site
-type Dispatcher = impl Future;
-fn make_dispatcher ( dispatch_rx_channel: mpsc::Receiver<MemoRef>,  agent: Arc<SlabAgent> ) -> Dispatcher {
-    dispatch_rx_channel.for_each(async move |memoref| {
-        agent.recv_memoref(memoref).await;
-    })
-}
+//type Dispatcher = impl Future;
+//fn make_dispatcher ( dispatch_rx_channel: mpsc::Receiver<MemoRef>,  agent: Arc<SlabAgent> ) -> Dispatcher {
+//    let foo = dispatch_rx_channel.for_each(async move |memoref| {
+//        agent.recv_memoref(memoref).await
+//    });
+//
+//    unimplemented!()
+//}
 
 #[derive(Clone)]
 pub struct Slab{
@@ -46,7 +48,7 @@ pub struct Slab{
     pub (crate) net: Network,
     pub my_ref: SlabRef,
     dispatch_channel: mpsc::Sender<MemoRef>,
-    dispatcher: Arc<RemoteHandle<Dispatcher>>,
+    dispatcher: Arc<RemoteHandle<()>>,
 }
 
 impl Slab {
@@ -68,15 +70,18 @@ impl Slab {
 
         let agent = Arc::new(SlabAgent::new( net, my_ref.clone() ));
 
-        let dispatcher_task = make_dispatcher( dispatch_rx_channel,agent.clone() );
-        let dispatcher  = crate::util::task::spawn_with_handle(dispatcher_task );
+//        let dispatcher_task = make_dispatcher( dispatch_rx_channel,agent.clone() );
+//        let dispatcher  = crate::util::task::spawn_with_handle(dispatcher_task );
 
-//        let dispatcher  = crate::util::task::spawn_with_handle( async move || {
-//            let mut dispatch_rx_channel = dispatch_rx_channel;
-//            while let Some(memoref) = dispatch_rx_channel.next().await {
-//                agent2.recv_memoref(memoref);
-//            }
-//        }.into());
+        let agent2 = agent.clone();
+        let dispatcher_task = (async move || {
+            let mut dispatch_rx_channel = dispatch_rx_channel;
+            while let Some(memoref) = dispatch_rx_channel.next().await {
+                agent2.recv_memoref(memoref);
+            }
+        })();
+
+        let dispatcher : RemoteHandle<()>  = crate::util::task::spawn_with_handle( dispatcher_task );
 
         let me = Slab{
             id,

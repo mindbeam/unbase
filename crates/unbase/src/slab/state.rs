@@ -9,14 +9,14 @@ use crate::subject::SubjectId;
 
 pub struct SlabState{
     pub memorefs_by_id: HashMap<MemoId,MemoRef>,
-    pub counters: SlabCounters,
+    pub (crate) counters: SlabCounters,
     pub peer_refs: Vec<SlabRef>,
     pub memo_wait_channels: HashMap<MemoId,Vec<oneshot::Sender<Memo>>>,
     pub subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
 }
 
 #[derive(Debug)]
-struct SlabCounters{
+pub (crate) struct SlabCounters{
     pub last_memo_id: u32,
     pub last_subject_id: u32,
     pub memos_received: u64,

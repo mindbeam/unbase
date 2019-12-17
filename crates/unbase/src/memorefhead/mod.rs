@@ -10,6 +10,7 @@ use std::mem;
 use std::fmt;
 use std::slice;
 use std::collections::VecDeque;
+use futures::executor::block_on;
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -225,7 +226,8 @@ impl Iterator for CausalMemoIter {
         if let Some(memoref) = self.queue.pop_front() {
             // this is wrong - Will result in G, E, F, C, D, B, A
 
-            match memoref.get_memo( &self.slab ).await {
+            // HACK
+            match block_on( memoref.get_memo( &self.slab ) ) {
                 Ok(memo) => {
                     self.queue.append(&mut memo.get_parent_head().to_vecdeque());
                     return Some(memo)
