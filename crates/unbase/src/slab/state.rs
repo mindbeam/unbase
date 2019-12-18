@@ -8,11 +8,12 @@ use crate::context::WeakContext;
 use crate::subject::SubjectId;
 
 pub struct SlabState{
-    pub memorefs_by_id: HashMap<MemoId,MemoRef>,
+    pub (crate) memorefs_by_id: HashMap<MemoId,MemoRef>,
     pub (crate) counters: SlabCounters,
-    pub peer_refs: Vec<SlabRef>,
-    pub memo_wait_channels: HashMap<MemoId,Vec<oneshot::Sender<Memo>>>,
-    pub subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
+    pub (crate) peer_refs: Vec<SlabRef>,
+    pub (crate) memo_wait_channels: HashMap<MemoId,Vec<oneshot::Sender<Memo>>>,
+    pub (crate) subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
+    pub (crate) running: bool,
 }
 
 #[derive(Debug)]
@@ -20,7 +21,7 @@ pub (crate) struct SlabCounters{
     pub last_memo_id: u32,
     pub last_subject_id: u32,
     pub memos_received: u64,
-    pub memos_redundantly_received: u64,
+    pub memos_redundantly_received: u64
 }
 
 // SlabState is forbidden from any blocking operations
@@ -39,6 +40,7 @@ impl SlabState{
             peer_refs: Vec::new(),
             memo_wait_channels: HashMap::new(),
             subject_subscriptions: HashMap::new(),
+            running: true,
         }
     }
 }

@@ -14,7 +14,7 @@ pub struct SlabAgent {
     pub id: SlabId,
     state: RwLock<SlabState>,
     net: Network,
-    my_ref: SlabRef,
+    my_ref: SlabRef
 }
 
 impl SlabAgent {
@@ -27,6 +27,14 @@ impl SlabAgent {
             net: net.clone(),
             my_ref: my_ref
         }
+    }
+    pub (crate) fn stop (&self){
+        let mut state = self.state.write().unwrap();
+        state.running = false;
+    }
+    pub (crate) fn is_running (&self) -> bool {
+        let state = self.state.read().unwrap();
+        state.running
     }
     // Counters,stats, reporting
     #[allow(unused)]
@@ -375,7 +383,11 @@ impl SlabAgent {
     pub fn localize_memorefhead (&self, mrh: &MemoRefHead, from_slabref: &SlabRef, include_memos: bool ) -> MemoRefHead {
 
         let from_slabref = self.localize_slabref(from_slabref);
-        MemoRefHead( mrh.iter().map(|mr| self.localize_memoref(mr, &from_slabref, include_memos )).collect() )
+        MemoRefHead{
+            head: mrh.iter().map(|mr| self.localize_memoref(mr, &from_slabref, include_memos )).collect(),
+            owning_slab_id: self.my_ref.slab_id
+        }
+
     }
     pub fn localize_memoref (&self, memoref: &MemoRef, from_slabref: &SlabRef, include_memo: bool ) -> MemoRef {
 //        assert!(from_slabref.owning_slab_id == self.id,"MemoRef clone_for_slab owning slab should be identical");
@@ -713,6 +725,7 @@ impl SlabAgent {
                 let new_trans = self.net.get_transmitter( &args ).expect("assert_slabref net.get_transmitter");
                 let return_address = self.net.get_return_address( &p.address ).expect("return address not found");
 
+                println!("{:?}", new_trans);
                 *slabref.0.tx.lock().expect("tx.lock()") = new_trans;
                 *slabref.0.return_address.write().expect("return_address write lock") = return_address;
             }
@@ -741,12 +754,6 @@ impl SlabAgent {
         }
 
         Ok(())
-    }
-}
-
-impl Drop for SlabAgent {
-    fn drop(&mut self) {
-        self.net.deregister_local_slab(self.id);
     }
 }
 

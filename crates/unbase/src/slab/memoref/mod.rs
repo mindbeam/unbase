@@ -107,7 +107,9 @@ impl MemoRef {
     }
     pub async fn get_memo (&self, slab: &SlabHandle) -> Result<Memo,RetrieveError> {
 //        println!("Slab({}).MemoRef({}).get_memo()", self.owning_slab_id, self.id );
-        assert!(self.owning_slab_id == slab.my_ref.slab_id,"requesting slab does not match owning slab");
+        if(self.owning_slab_id != slab.my_ref.slab_id) {
+            assert!(self.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
+        }
 
         // This seems pretty crude, but using channels for now in the interest of expediency
         {

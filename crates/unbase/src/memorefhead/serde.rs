@@ -42,6 +42,9 @@ impl<'a> Visitor for MemoRefHeadSeed<'a> {
             memorefs.push(memopeer);
         };
 
-        Ok(MemoRefHead(memorefs))
+        Ok(MemoRefHead{
+            head: memorefs,
+            owning_slab_id: self.dest_slab.my_ref.slab_id
+        })
     }
 }

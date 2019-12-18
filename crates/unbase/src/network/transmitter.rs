@@ -29,7 +29,6 @@ impl<'a> TransmitterArgs<'a>{
     }
 }
 
-
 impl TransmitterInternal {
     pub fn kind (&self) -> &str {
         match self {
@@ -87,6 +86,17 @@ impl Transmitter {
                 println!("WARNING! Transmitter Blackhole transmitter used. from {:?}, memoref {:?}", from, memoref );
             }
         }
+    }
+}
+
+use std::fmt;
+impl fmt::Debug for Transmitter{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+
+        fmt.debug_struct("Transmitter")
+            .field("to_slab_id", &self.to_slab_id )
+            .field("kind", &self.internal.kind() )
+            .finish()
     }
 }
 

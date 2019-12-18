@@ -100,7 +100,7 @@ impl Network {
     }
     pub fn get_slabhandle(&self, slab_id: SlabId) -> Option<SlabHandle> {
         if let Some(slabhandle) = self.slabs.read().unwrap().iter().find(|s| s.my_ref.slab_id == slab_id) {
-            if slabhandle.is_resident() {
+            if slabhandle.is_running() {
                 return Some((*slabhandle).clone());
             }
             // TODO - scrub non-resident slabs
@@ -109,7 +109,7 @@ impl Network {
     }
     fn get_representative_slab(&self) -> Option<SlabHandle> {
         for slabhandle in self.slabs.read().unwrap().iter() {
-            if slabhandle.is_resident() {
+            if slabhandle.is_running() {
                 return Some((*slabhandle).clone());
             }
             // TODO - scrub non-resident slabs
@@ -122,7 +122,7 @@ impl Network {
         // let mut missing : Vec<usize> = Vec::new();
 
         for slabhandle in self.slabs.read().unwrap().iter() {
-            if slabhandle.is_resident() {
+            if slabhandle.is_running() {
                 res.push(slabhandle.clone());
             }
             // TODO - scrub non-resident slabs
@@ -149,13 +149,13 @@ impl Network {
     pub fn register_local_slab(&self, new_slab: SlabHandle) {
         // println!("# Network.register_slab {:?}", new_slab );
 
+        {
+            self.slabs.write().unwrap().insert(0, new_slab.clone());
+        }
+
         for prev_slab in self.get_all_local_slabs() {
             prev_slab.slabref_from_local_slab(&new_slab);
             new_slab.slabref_from_local_slab(&prev_slab);
-        }
-
-        {
-            self.slabs.write().unwrap().insert(0, new_slab.clone());
         }
 
         self.conditionally_generate_root_index_seed(&new_slab);

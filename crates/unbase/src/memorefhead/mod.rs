@@ -23,7 +23,10 @@ pub type RelationSlotId = u8;
 
 //TODO: consider renaming to OwnedMemoRefHead
 #[derive(Clone, PartialEq)]
-pub struct MemoRefHead (pub Vec<MemoRef>);
+pub struct MemoRefHead {
+    owning_slab_id: SlabId,
+    head: Vec<MemoRef>
+}
 
 // TODO: consider renaming to ExternalMemoRefHead or something like that
 pub struct MemoRefHeadWithProvenance {
@@ -37,13 +40,13 @@ pub struct RelationLink{
 }
 
 impl MemoRefHead {
-    pub fn new () -> Self {
+    pub fn new ( owning_slab: &SlabHandle ) -> Self {
         MemoRefHead( Vec::with_capacity(5) )
     }
-    pub fn new_from_vec ( vec: Vec<MemoRef> ) -> Self {
+    pub fn new_from_vec ( vec: Vec<MemoRef>, owning_slab: &SlabHandle ) -> Self {
         MemoRefHead( vec )
     }
-    pub fn from_memoref (memoref: MemoRef) -> Self {
+    pub fn from_memoref (memoref: MemoRef, owning_slab: &SlabHandle) -> Self {
         MemoRefHead( vec![memoref] )
     }
     pub async fn apply_memoref(&mut self, new: &MemoRef, slab: &SlabHandle ) -> bool {
@@ -209,6 +212,7 @@ head ^    \- F -> D -/
 impl CausalMemoIter {
     pub fn from_head ( head: &MemoRefHead, slab: &SlabHandle) -> Self {
         //println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
+        assert!(head.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
 
         CausalMemoIter {
             queue: head.to_vecdeque(),

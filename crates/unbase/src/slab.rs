@@ -131,6 +131,13 @@ impl Slab {
     }
 }
 
+impl Drop for Slab {
+    fn drop(&mut self) {
+        self.agent.stop();
+        self.net.deregister_local_slab(self.id);
+    }
+}
+
 impl std::fmt::Debug for Slab {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         fmt.debug_struct("Slab")

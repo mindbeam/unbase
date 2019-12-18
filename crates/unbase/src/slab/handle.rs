@@ -22,8 +22,8 @@ pub struct SlabHandle {
 }
 
 impl SlabHandle {
-    pub fn is_resident(&self) -> bool {
-        true
+    pub fn is_running(&self) -> bool {
+        self.agent.is_running()
     }
 //    pub fn assert_memoref(&self, memo_id: MemoId, subject_id: Option<SubjectId>, peerlist: MemoPeerList, memo: Option<Memo>) -> (MemoRef, bool) {
 //        // agent.rs
