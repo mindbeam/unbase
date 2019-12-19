@@ -128,9 +128,9 @@ impl TransportUDP {
                 lifetime: SlabAnticipatedLifetime::Unknown
             };
 
-            let hello = slab.agent.new_memo_basic_noparent(
+            let hello = slab.new_memo_basic_noparent(
                 None,
-                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed().map(|(m,_)| m ) }
+                MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed(&slab) }
             );
 
             self.send_to_addr(

@@ -36,9 +36,9 @@ impl SlabHandle {
         let mut channel = self.agent.memo_wait_channel(memoref.id);
 
         // send the request
-        let request_memo = self.agent.new_memo_basic(
+        let request_memo = self.new_memo_basic(
             None,
-            MemoRefHead::new(), // TODO: how should this be parented?
+            MemoRefHead::new( self ), // TODO: how should this be parented?
             MemoBody::MemoRequest(
                 vec![memoref.id],
                 self.my_ref.clone()
@@ -80,6 +80,12 @@ impl SlabHandle {
 
         Err(RetrieveError::NotFoundByDeadline)
     }
+    pub fn new_memo_basic (&self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
+        self.agent.new_memo(subject_id, parents, body)
+    }
+    pub fn new_memo_basic_noparent (&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
+        self.agent.new_memo(subject_id, MemoRefHead::new(self), body)
+    }
     pub fn generate_subject_id(&self) -> SubjectId {
         self.agent.generate_subject_id()
     }
@@ -102,12 +108,6 @@ impl SlabHandle {
     }
     pub fn remotize_memo_ids(&self, memo_ids: &[MemoId]) -> Result<(), String> {
         self.agent.remotize_memo_ids(memo_ids)
-    }
-    pub fn new_memo_basic_noparent(&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
-        self.agent.new_memo_basic_noparent(subject_id, body)
-    }
-    pub fn new_memo_basic(&self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
-        self.agent.new_memo_basic( subject_id, parents, body )
     }
     pub fn peer_slab_count (&self) -> usize {
         self.agent.peer_slab_count()

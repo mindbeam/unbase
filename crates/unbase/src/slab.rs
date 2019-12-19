@@ -16,7 +16,7 @@ use std::ops::Deref;
 use futures::channel::mpsc;
 
 mod state;
-mod agent;
+pub (crate) mod agent;
 mod common_structs;
 mod handle;
 

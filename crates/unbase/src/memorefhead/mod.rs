@@ -24,8 +24,8 @@ pub type RelationSlotId = u8;
 //TODO: consider renaming to OwnedMemoRefHead
 #[derive(Clone, PartialEq)]
 pub struct MemoRefHead {
-    owning_slab_id: SlabId,
-    head: Vec<MemoRef>
+    pub (crate) owning_slab_id: SlabId,
+    pub (crate) head: Vec<MemoRef>
 }
 
 // TODO: consider renaming to ExternalMemoRefHead or something like that
@@ -41,13 +41,22 @@ pub struct RelationLink{
 
 impl MemoRefHead {
     pub fn new ( owning_slab: &SlabHandle ) -> Self {
-        MemoRefHead( Vec::with_capacity(5) )
+        MemoRefHead{
+            head: Vec::with_capacity(5),
+            owning_slab_id: owning_slab.my_ref.slab_id
+        }
     }
     pub fn new_from_vec ( vec: Vec<MemoRef>, owning_slab: &SlabHandle ) -> Self {
-        MemoRefHead( vec )
+        MemoRefHead{
+            head: vec,
+            owning_slab_id: owning_slab.my_ref.slab_id
+        }
     }
-    pub fn from_memoref (memoref: MemoRef, owning_slab: &SlabHandle) -> Self {
-        MemoRefHead( vec![memoref] )
+    pub fn from_memoref (memoref: MemoRef) -> Self {
+        MemoRefHead {
+            owning_slab_id: memoref.owning_slab_id,
+            head: vec![memoref],
+        }
     }
     pub async fn apply_memoref(&mut self, new: &MemoRef, slab: &SlabHandle ) -> bool {
         //println!("# MemoRefHead({:?}).apply_memoref({})", self.memo_ids(), &new.id);
@@ -67,10 +76,10 @@ impl MemoRefHead {
         // the cheapest case: (existing descends new)
 
         // TODO - make this more async friendly.
-        'existing: for i in (0..self.0.len()).rev() {
+        'existing: for i in (0..self.head.len()).rev() {
             let mut remove = false;
             {
-                let ref mut existing = self.0[i];
+                let ref mut existing = self.head[i];
                 if existing == new {
                     return false; // we already had this
 
@@ -102,7 +111,7 @@ impl MemoRefHead {
 
             if remove {
                 // because we're descending, we know the offset of the next items won't change
-                self.0.remove(i);
+                self.head.remove(i);
             }
         }
 
@@ -110,7 +119,7 @@ impl MemoRefHead {
             // if the new memoref neither descends nor is descended
             // then it must be concurrent
 
-            self.0.push(new.clone());
+            self.head.push(new.clone());
             applied = true; // The memoref was "applied" to the MemoRefHead
         }
 
@@ -139,7 +148,7 @@ impl MemoRefHead {
         self
     }
     pub fn memo_ids (&self) -> Vec<MemoId> {
-        self.0.iter().map(|m| m.id).collect()
+        self.head.iter().map(|m| m.id).collect()
     }
     pub fn first_subject_id (&self) -> Option<SubjectId> {
         if let Some(memoref) = self.iter().next() {
@@ -150,16 +159,16 @@ impl MemoRefHead {
         }
     }
     pub fn to_vec (&self) -> Vec<MemoRef> {
-        self.0.clone()
+        self.head.clone()
     }
     pub fn to_vecdeque (&self) -> VecDeque<MemoRef> {
-        VecDeque::from(self.0.clone())
+        VecDeque::from(self.head.clone())
     }
     pub fn len (&self) -> usize {
-        self.0.len()
+        self.head.len()
     }
     pub fn iter (&self) -> slice::Iter<MemoRef> {
-        self.0.iter()
+        self.head.iter()
     }
     pub fn causal_memo_iter(&self, slab: &SlabHandle ) -> CausalMemoIter {
         CausalMemoIter::from_head( &self, slab )
@@ -188,7 +197,7 @@ impl fmt::Debug for MemoRefHead{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 
         fmt.debug_struct("MemoRefHead")
-            .field("memo_refs", &self.0 )
+            .field("memo_refs", &self.head )
             //.field("memo_ids", &self.memo_ids() )
             .finish()
     }
@@ -212,8 +221,9 @@ head ^    \- F -> D -/
 impl CausalMemoIter {
     pub fn from_head ( head: &MemoRefHead, slab: &SlabHandle) -> Self {
         //println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
-        assert!(head.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
-
+        if head.owning_slab_id != slab.my_ref.slab_id {
+            assert!(head.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
+        }
         CausalMemoIter {
             queue: head.to_vecdeque(),
             slab:  (*slab).clone()

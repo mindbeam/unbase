@@ -59,7 +59,7 @@ impl ContextRef {
 impl Context {
     pub fn new(slab: SlabHandle) -> Context {
 
-        let seed = slab.net.get_root_index_seed().expect("Uninitialized slab").0;
+        let seed = slab.net.get_root_index_seed(&slab).expect("Uninitialized slab");
 
         let new_self = Context(Arc::new(ContextInner {
             slab: slab,

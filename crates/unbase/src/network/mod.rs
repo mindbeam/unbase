@@ -4,7 +4,7 @@ mod transmitter;
 pub mod transport;
 pub mod packet;
 
-pub use crate::slab::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
+pub use crate::slab::{SlabRef, SlabPresence, agent::SlabAgent, SlabAnticipatedLifetime};
 pub use self::transport::{Transport, TransportAddress};
 pub use self::packet::Packet;
 use crate::util::system_creator::SystemCreator;
@@ -197,12 +197,26 @@ impl Network {
         // No slabs left
         root_index_seed.take();
     }
-    pub fn get_root_index_seed(&self) -> Option<(MemoRefHead,SlabRef)> {
+    pub fn get_root_index_seed(&self, slab: &SlabHandle) -> Option<MemoRefHead> {
+        let root_index_seed = {
+            self.root_index_seed.read().expect("root_index_seed read lock").clone()
+        };
+
+        match root_index_seed {
+            Some((ref seed, ref from_slabref)) => {
+                let local_seed = slab.agent.localize_memorefhead(seed, from_slabref, true);
+                Some(local_seed)
+            }
+            None => None,
+        }
+    }
+    pub fn get_root_index_seed_for_agent(&self, agent: &SlabAgent ) -> Option<MemoRefHead> {
         let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");
 
         match *root_index_seed {
             Some((ref seed, ref from_slabref)) => {
-                Some((seed.clone(), from_slabref.clone()))
+                let local_seed = agent.localize_memorefhead(seed, from_slabref, true);
+                Some(local_seed)
             }
             None => None,
         }

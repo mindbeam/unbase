@@ -41,7 +41,7 @@ impl Subject {
         let subject_id = slab.generate_subject_id();
         //println!("# Subject({}).new()",subject_id);
 
-        let memoref = slab.agent.new_memo_basic_noparent(
+        let memoref = slab.new_memo_basic_noparent(
                 Some(subject_id),
                 MemoBody::FullyMaterialized {v: vals, r: RelationSlotSubjectHead(HashMap::new()) }
             );
@@ -113,7 +113,7 @@ impl Subject {
         let slab = &context.slab;
         let mut head = self.head.write().unwrap();
 
-        let memoref = slab.agent.new_memo_basic(
+        let memoref = slab.new_memo_basic(
             Some(self.id),
             head.clone(),
             MemoBody::Edit(vals)

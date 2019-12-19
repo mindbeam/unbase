@@ -80,12 +80,6 @@ impl SlabAgent {
 
         memoref
     }
-    pub fn new_memo_basic (&self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
-        self.new_memo(subject_id, parents, body)
-    }
-    pub fn new_memo_basic_noparent (&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
-        self.new_memo(subject_id, MemoRefHead::new(), body)
-    }
     pub fn generate_subject_id (&self) -> SubjectId {
 
         let mut state = self.state.write().unwrap();
@@ -204,12 +198,12 @@ impl SlabAgent {
                         // TODO: should we be telling the origin slabref, or the presence slabref that we're here?
                         //       these will usually be the same, but not always
 
-                        let my_presence_memoref = self.new_memo_basic(
+                        let my_presence_memoref = self.new_memo(
                             None,
                             memoref.to_head(),
                             MemoBody::SlabPresence{
                                 p: self.presence_for_origin( origin_slabref ),
-                                r: self.net.get_root_index_seed().map(|(seed,from_sr)| self.localize_memorefhead(&seed, &from_sr,true) )
+                                r: self.net.get_root_index_seed_for_agent(&self)
                             }
                         );
 
@@ -376,11 +370,18 @@ impl SlabAgent {
         }else{
             //let address = &*self.return_address.read().unwrap();
             //let args = TransmitterArgs::Remote( &self.slab_id, address );
-            self.assert_slabref( slabref.slab_id, &*slabref.presence.read().unwrap() )
+            let presence = {
+                slabref.presence.read().unwrap().clone()
+            };
+            self.assert_slabref( slabref.slab_id, &presence )
         }
 
     }
     pub fn localize_memorefhead (&self, mrh: &MemoRefHead, from_slabref: &SlabRef, include_memos: bool ) -> MemoRefHead {
+
+        if from_slabref.slab_id == self.my_ref.slab_id {
+            return mrh.clone();
+        }
 
         let from_slabref = self.localize_slabref(from_slabref);
         MemoRefHead{
@@ -394,7 +395,7 @@ impl SlabAgent {
 //        assert!(from_slabref.slab_id != self.id,       "MemoRef clone_for_slab dest slab should not be identical");
 
         // TODO compare SlabRef pointer address rather than id
-        if memoref.owning_slab_id != self.id {
+        if memoref.owning_slab_id == self.id {
             return (*memoref).clone()
         }
         //println!("Slab({}).Memoref.clone_for_slab({})", self.owning_slab_id, self.id);
@@ -596,7 +597,7 @@ impl SlabAgent {
             }
         }
 
-        let peering_memoref = self.new_memo_basic(
+        let peering_memoref = self.new_memo(
             None,
             MemoRefHead::from_memoref(memoref.clone()),
             MemoBody::Peering(
