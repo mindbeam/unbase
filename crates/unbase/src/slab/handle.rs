@@ -65,14 +65,17 @@ impl SlabHandle {
             let timeout = Delay::new(duration);
             match select(channel, timeout).await {
                 Either::Left((Ok(memo), _)) => {
+                    println!("SLAB {} GOT memo {}", self.my_ref.slab_id, memoref.id );
                     return Ok(memo)
                 },
                 Either::Left((Err(_canceled), _)) => {
                     // the channel was canceled by the sender
+                    println!("CANCELED");
                     return Err(RetrieveError::NotFound);
                 },
                 Either::Right((_, ch)) => {
                     // timed out. Preserve the memo wait channel
+                    println!("SLAB {} TIMEOUT retrieving memo {}", self.my_ref.slab_id, memoref.id );
                     channel = ch;
                 }
             }

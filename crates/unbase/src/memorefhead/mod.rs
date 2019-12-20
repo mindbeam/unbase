@@ -203,6 +203,7 @@ impl fmt::Debug for MemoRefHead{
     }
 }
 
+#[derive(Debug)]
 pub struct CausalMemoIter {
     queue: VecDeque<MemoRef>,
     slab:  SlabHandle
@@ -231,10 +232,12 @@ impl CausalMemoIter {
     }
 }
 
+use tracing::info;
 // NEXT TODO - update this to be a stream
 impl Iterator for CausalMemoIter {
     type Item = Memo;
 
+    #[tracing::instrument]
     fn next (&mut self) -> Option<Memo> {
         // iterate over head memos
         // Unnecessarly complex because we're not always dealing with MemoRefs
@@ -244,6 +247,7 @@ impl Iterator for CausalMemoIter {
         if let Some(memoref) = self.queue.pop_front() {
             // this is wrong - Will result in G, E, F, C, D, B, A
 
+            info!("blocking on get_memo");
             // HACK
             match block_on( memoref.get_memo( &self.slab ) ) {
                 Ok(memo) => {

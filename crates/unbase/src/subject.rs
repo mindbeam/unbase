@@ -87,6 +87,7 @@ impl Subject {
 
         Self::new( context, vals, false ).await
     }
+    #[tracing::instrument]
     pub async fn get_value ( &self, key: &str ) -> Option<String> {
         //println!("# Subject({}).get_value({})",self.id,key);
 
@@ -212,8 +213,8 @@ impl fmt::Debug for SubjectInner {
 impl fmt::Debug for Subject {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("Subject")
-            .field("subject_id", &self.id)
-            .field("head", &self.head)
+            .field("id", &self.id)
+//            .field("head", &self.head)
             .finish()
     }
 }

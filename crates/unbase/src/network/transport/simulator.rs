@@ -28,7 +28,6 @@ struct SimEvent {
 
 impl SimEvent {
     pub fn deliver (self) {
-        //println!("# SimEvent.deliver" );
 
         /* let memo = &self.memoref.get_memo_if_resident().unwrap();
         println!("Simulator.deliver FROM {} TO {} -> {}({:?}): {:?} {:?} {:?}",
@@ -41,6 +40,8 @@ impl SimEvent {
             &self.memoref.peerlist.read().unwrap().slab_ids()
         );*/
         let slabref = self.dest.agent.localize_slabref(&self.from_slabref);
+        println!("# SimEvent.deliver MEMO {} from SLAB {} to SLAB {}", self.memoref.id, slabref.slab_id, self.dest.my_ref.slab_id );
+
         self.dest.agent.localize_memoref( &self.memoref, &slabref, true );
 
         // we all have to learn to deal with loss sometime
