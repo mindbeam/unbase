@@ -1,7 +1,8 @@
 extern crate unbase;
 
 use wasm_bindgen_test::*;
-use std::{thread, time};
+use timer::Delay;
+use std::time::Duration;
 
 #[unbase_test_util::async_test]
 async fn init_blackhole() {
@@ -60,7 +61,7 @@ fn init_local_multi() {
         assert!(slab_c.peer_slab_count() == 2, "Slab C Should know two peers" );
 
         let _context_a = slab_a.create_context();
-        thread::sleep( time::Duration::from_millis(50) );
+        Delay::new(Duration::from_millis(50)).await;
 
         let _context_b = slab_b.create_context();
         let _context_c = slab_c.create_context();
@@ -69,8 +70,8 @@ fn init_local_multi() {
     // TODO: Sometimes not all slabs clean up immediately. This is almost certainly indicative of some
     // kind of bug. There appears to be some occasional laggard thread which is causing a race condition
     // of some kind, and occasionally preventing one of the Slabs from destroying in time. All I know at
-    // this point is that adding the sleep here seems to help, which implies that it's not a deadlock.
-    //thread::sleep( time::Duration::from_millis(5000) );
+    // this point is that adding the delay here seems to help, which implies that it's not a deadlock.
+    //Delay::new(Duration::from_millis(5000)).await;
 
     // We should have zero slabs resident at this point
     //assert!( net.get_all_local_slabs().len() == 0, "not all slabs have cleaned up" );
@@ -86,7 +87,7 @@ fn init_udp() {
             let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
             net1.add_transport( Box::new(udp1.clone()) );
             let slab_a = unbase::Slab::new(&net1);
-            thread::sleep( time::Duration::from_millis(150) );
+            Delay::new(Duration::from_millis(150)).await;
             assert_eq!( slab_a.peer_slab_count(), 1 );
         }
 
@@ -97,7 +98,7 @@ fn init_udp() {
 
     });
 
-    thread::sleep( time::Duration::from_millis(50) );
+    Delay::new(Duration::from_millis(50)).await;
 
     let t2 = thread::spawn(|| {
         {
@@ -111,7 +112,7 @@ fn init_udp() {
                 let slab_b = unbase::Slab::new(&net2);
 
                 udp2.seed_address_from_string( "127.0.0.1:12345".to_string() );
-                thread::sleep( time::Duration::from_millis(50) );
+                Delay::new(Duration::from_millis(50)).await;
 
                 assert_eq!( slab_b.peer_slab_count(), 1 );
             }
@@ -136,7 +137,7 @@ fn avoid_unnecessary_chatter() {
         let _context_a = slab_a.create_context();
         let _context_b = slab_b.create_context();
 
-        thread::sleep(time::Duration::from_millis(100));
+        Delay::new(Duration::from_millis(100)).await;
 
         println!("Slab A count of MemoRefs present {}", slab_a.count_of_memorefs_resident() );
         println!("Slab A count of MemoRefs present {}", slab_b.count_of_memorefs_resident() );

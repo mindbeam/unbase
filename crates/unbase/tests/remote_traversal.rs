@@ -1,13 +1,18 @@
 #![feature(async_closure)]
 
 extern crate unbase;
+use timer::Delay;
 use unbase::subject::Subject;
-use std::{thread, time};
+use std::time::Duration;
 use async_std::task::block_on;
 use futures_await_test::async_test;
+use futures::future::RemoteHandle;
+use tracing::{debug, span, Level};
 
 #[async_test]
 async fn remote_traversal_simulated() {
+
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     let simulator = unbase::network::transport::Simulator::new();
@@ -32,21 +37,22 @@ async fn remote_traversal_simulated() {
 
     simulator.advance_clock(1);
 
-    // Thread is necessary to prevent retrieval deadlock, as the simulator is controlled in this thead
     // This should be reconsidered when the simulator is reworked per https://github.com/unbase/unbase/issues/6
-    let handle = thread::spawn(move || {
-        assert_eq!(block_on(rec_a1.get_value("animal_sound")).unwrap(), "Meow");
-    });
 
-    // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
-    let ten_millis = time::Duration::from_millis(10);
-    thread::sleep(ten_millis);
+    let handle: RemoteHandle<()> = unbase::util::task::spawn_with_handle(  (async move || {
+        let span = span!(Level::DEBUG, "value retrieval");
+        let _guard = span.enter();
+        debug!("MEOW");
+        let value = rec_a1.get_value("animal_sound").await.expect("get_value");
+
+        assert_eq!(value, "Meow");
+    })());
 
     simulator.advance_clock(1);
 
     simulator.advance_clock(1);
 
-    handle.join().unwrap();
+    handle.await
 
 }
 
@@ -69,31 +75,21 @@ async fn remote_traversal_nondeterministic() {
     rec_a1.set_value("animal_sound","Woof");
     rec_a1.set_value("animal_sound","Meow");
 
-    thread::sleep(time::Duration::from_millis(50));
+    Delay::new(Duration::from_millis(10)).await;
 
     slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() ).expect("failed to remotize memos");
 
-    thread::sleep(time::Duration::from_millis(50));
+    Delay::new(Duration::from_millis(10)).await;
 
+    let handle: RemoteHandle<()> = unbase::util::task::spawn_with_handle(  (async move || {
+        let value = rec_a1.get_value("animal_sound").await.unwrap();
+        assert_eq!(value,   "Meow");
+    })());
 
-    let handle = thread::spawn( move || {
-
-        assert_eq!(block_on(rec_a1.get_value("animal_sound")).unwrap(),   "Meow");
-
-    });
-
-    thread::sleep(time::Duration::from_millis(50));
-
-    handle.join().unwrap();
+    handle.await;
 
 }
 
-/// Playing silly games with timing here in order to make it to work Initially
-/// Should be make substantially more robust.
-///
-/// TODO: Remove the sleeps and ensure it still does the right thing ;)
-///       this will entail several essential changes like reevaluating
-///       memo peering when new SlabPresence is received, etc
 #[async_test]
 async fn remote_traversal_nondeterministic_udp() {
 
@@ -109,7 +105,7 @@ async fn remote_traversal_nondeterministic_udp() {
             let context_a = slab_a.create_context();
 
             // wait for slab_b to be on the peer list, and to be hooked in to our root_index_seed
-            thread::sleep(time::Duration::from_millis(150));
+            Delay::new(Duration::from_millis(150)).await;
 
             // Do some stuff
             let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
@@ -117,25 +113,26 @@ async fn remote_traversal_nondeterministic_udp() {
             rec_a1.set_value("animal_sound", "Meow");
 
             // Wait until it's been replicated
-            thread::sleep(time::Duration::from_millis(150));
+            Delay::new(Duration::from_millis(150)).await;
 
             // manually remove the memos
             slab_a.remotize_memo_ids(&rec_a1.get_all_memo_ids()).expect("failed to remotize memos");
 
             // Not really any strong reason to wait here, except just to play nice and make sure slab_b's peering is updated
             // TODO: test memo expungement/de-peering, followed immediately by MemoRequest for same
-            thread::sleep(time::Duration::from_millis(50));
+            Delay::new(Duration::from_millis(50)).await;
 
             // now lets see if we can project rec_a1 animal_sound. This will require memo retrieval from slab_b
             assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(), "Meow");
 
+            Delay::new(Duration::from_millis(500)).await;
 
-            thread::sleep(time::Duration::from_millis(500));
+            // slab_a drops and goes away
         })
     });
 
     // Ensure slab_a is listening
-    thread::sleep( time::Duration::from_millis(50) );
+    Delay::new(Duration::from_millis(50)).await;
 
     let t2 = thread::spawn(|| {
         let net2 = unbase::Network::new();
@@ -147,11 +144,11 @@ async fn remote_traversal_nondeterministic_udp() {
         let slab_b = unbase::Slab::new(&net2);
         udp2.seed_address_from_string( "127.0.0.1:12001".to_string() );
 
-        thread::sleep( time::Duration::from_millis(50) );
+        Delay::new(Duration::from_millis(50)).await;
         let _context_b = slab_b.create_context();
         // hang out to keep stuff in scope, and hold off calling the destructors
         // necessary in order to be online so we can answer slab_a's inquiries
-        thread::sleep(time::Duration::from_millis(1500));
+        Delay::new(Duration::from_millis(1500)).await;
 
 
     });

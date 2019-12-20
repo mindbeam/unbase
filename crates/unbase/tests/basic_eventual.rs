@@ -1,7 +1,8 @@
 extern crate unbase;
 use unbase::subject::Subject;
 use unbase::error::*;
-use std::{thread, time};
+use timer::Delay;
+use std::time;
 use futures_await_test::async_test;
 use futures::executor::block_on;
 
@@ -63,20 +64,8 @@ async fn basic_eventual() {
         })
     });
 
-    // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
-    thread::sleep(time::Duration::from_millis(10));
-
     simulator.advance_clock(1); // advance the simulator clock by one tick
     simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-
-    // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
-    thread::sleep(time::Duration::from_millis(10));
-
     simulator.advance_clock(1); // advance the simulator clock by one tick
     simulator.advance_clock(1); // advance the simulator clock by one tick
     simulator.advance_clock(1); // advance the simulator clock by one tick
@@ -96,8 +85,6 @@ async fn basic_eventual() {
     // We've made the index artificially chatty for now, but this will
     // change to a timeout-based process once context::subject_graph is working
     simulator.advance_clock(1); // advance the simulator clock by one tick
-
-    thread::sleep( time::Duration::from_millis(500) );
 
     println!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
     // Temporary way to magically, instantly send context
@@ -147,11 +134,6 @@ async fn basic_eventual() {
             assert!(rec_a1.get_value("animal_type").await.is_none(), "Should not yet have a value on Slab A for animal_type");
 
             simulator.advance_clock(1); // advance the simulator clock by one tick
-            // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
-            thread::sleep(time::Duration::from_millis(10));
-            simulator.advance_clock(1); // advance the simulator clock by one tick
-            // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
-            thread::sleep(time::Duration::from_millis(10));
 
             // Nowwww it should have propagated
             assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Woof");
@@ -159,20 +141,7 @@ async fn basic_eventual() {
         })
     });
 
-    // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
-    thread::sleep(time::Duration::from_millis(10));
-
     simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-    simulator.advance_clock(1); // advance the simulator clock by one tick
-
-    // HACK HACK HACK HACK - clearly we have a deficiency in the simulator / threading model
-    thread::sleep(time::Duration::from_millis(10));
-
     simulator.advance_clock(1); // advance the simulator clock by one tick
     simulator.advance_clock(1); // advance the simulator clock by one tick
     simulator.advance_clock(1); // advance the simulator clock by one tick

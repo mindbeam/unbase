@@ -1,6 +1,7 @@
 extern crate unbase;
 
-use std::{thread, time};
+use timer::Delay;
+use std::time::Duration;
 use futures_await_test::async_test;
 use async_std::task::block_on;
 
@@ -13,12 +14,10 @@ async fn test_udp() {
             let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
             net1.add_transport(Box::new(udp1.clone()));
             let _slab_a = unbase::Slab::new(&net1);
-
-            //    thread::sleep( time::Duration::from_secs(5) );
         })
     });
 
-    thread::sleep( time::Duration::from_millis(50) );
+    Delay::new(Duration::from_millis(50)).await;
 
     let t2 = thread::spawn(|| {
         block_on(async {
@@ -31,7 +30,7 @@ async fn test_udp() {
             let _slab_b = unbase::Slab::new(&net2);
 
             udp2.seed_address_from_string("127.0.0.1:12345".to_string());
-            thread::sleep(time::Duration::from_millis(500));
+            Delay::new(Duration::from_millis(500)).await;
         })
     });
 
