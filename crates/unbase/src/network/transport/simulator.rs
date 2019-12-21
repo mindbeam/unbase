@@ -115,12 +115,10 @@ impl <P: SimEventPayload + fmt::Debug> Simulator<P> {
 
     fn add_event(&self, event: SimEvent<P>) {
         let mut shared = self.shared.lock().unwrap();
-        shared.queue.push(event);
-//        let seek = event.dest_point.t;
-//        let idx = s.binary_search(&num).unwrap_or_else(|x| x);
-//        s.insert(idx, num);
-//        shared.queue.binary_search_by(|probe| probe.dest_point.t.cmp(&seek));
-//        shared.queue.push(event);
+
+        let seek = event.dest_point.t;
+        let idx = shared.queue.binary_search_by(|probe| probe.dest_point.t.cmp(&seek)).unwrap_or_else(|x| x);
+        shared.queue.insert(idx, event);
     }
     pub fn get_clock(&self) -> u64 {
         self.shared.lock().unwrap().clock
