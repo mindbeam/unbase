@@ -203,10 +203,17 @@ impl fmt::Debug for MemoRefHead{
     }
 }
 
-#[derive(Debug)]
 pub struct CausalMemoIter {
     queue: VecDeque<MemoRef>,
     slab:  SlabHandle
+}
+
+impl fmt::Debug for CausalMemoIter {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("CausalMemoIter")
+            .field("remaining",&self.queue.len())
+            .finish()
+    }
 }
 
 /*

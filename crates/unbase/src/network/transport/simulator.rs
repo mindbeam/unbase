@@ -1,10 +1,10 @@
-
 use std::fmt;
 use super::*;
 use std::sync::{Arc,Mutex};
 use crate::slab::*;
 use itertools::partition;
 use crate::network::*;
+use tracing::debug;
 
 // Minkowski stuff: Still ridiculous, but necessary for our purposes.
 pub struct XYZPoint{
@@ -18,16 +18,30 @@ pub struct MinkowskiPoint {
     pub z: i64,
     pub t: u64
 }
-struct SimEvent {
-    _source_point: MinkowskiPoint,
-    dest_point:    MinkowskiPoint,
+
+pub trait SimEventPayload {
+    fn fire(self);
+}
+
+pub struct MemoDelivery {
     from_slabref:  SlabRef,
     dest:          SlabHandle,
     memoref:       MemoRef
 }
 
-impl SimEvent {
-    pub fn deliver (self) {
+struct SimEvent<SimEventPayload> {
+    _source_point: MinkowskiPoint,
+    dest_point:    MinkowskiPoint,
+    payload: SimEventPayload
+}
+
+impl <P: SimEventPayload> SimEvent<P> {
+    pub fn fire (self) {
+        self.payload.fire();
+    }
+}
+impl SimEventPayload for MemoDelivery {
+    fn fire (self) {
 
         /* let memo = &self.memoref.get_memo_if_resident().unwrap();
         println!("Simulator.deliver FROM {} TO {} -> {}({:?}): {:?} {:?} {:?}",
@@ -47,28 +61,44 @@ impl SimEvent {
         // we all have to learn to deal with loss sometime
     }
 }
-impl fmt::Debug for SimEvent{
+impl <P: std::fmt::Debug> fmt::Debug for SimEvent<P>{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SimEvent")
-            .field("dest", &self.dest.my_ref.slab_id )
-            .field("memo", &self.memoref.id )
             .field("t", &self.dest_point.t )
+            .field("payload", &self.payload)
             .finish()
     }
 }
 
-#[derive(Clone)]
-pub struct Simulator {
-    shared: Arc<Mutex<SimulatorInternal>>,
-    speed_of_light: u64,
-}
-struct SimulatorInternal {
-    clock: u64,
-    queue: Vec<SimEvent>
+impl fmt::Debug for MemoDelivery {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("MemoDelivery")
+            .field("dest", &self.dest.my_ref.slab_id)
+            .field("memo", &self.memoref.id)
+            .finish()
+    }
 }
 
-impl Simulator {
-    pub fn new() -> Self{
+pub struct Simulator<P: SimEventPayload> {
+    shared: Arc<Mutex<SimulatorInternal<P>>>,
+    speed_of_light: u64,
+}
+
+impl <P:SimEventPayload> Clone for Simulator<P>{
+    fn clone(&self) -> Self {
+        Self{
+            shared: self.shared.clone(),
+            speed_of_light: self.speed_of_light
+        }
+    }
+}
+struct SimulatorInternal<P: SimEventPayload> {
+    clock: u64,
+    queue: Vec<SimEvent<P>>
+}
+
+impl <P: SimEventPayload> Simulator<P> {
+    pub fn new() -> Self {
         Simulator {
             speed_of_light: 1, // 1 distance unit per time unit
             shared: Arc::new(Mutex::new(
@@ -80,44 +110,62 @@ impl Simulator {
         }
     }
 
-    fn add_event(&self, event: SimEvent) {
+    fn add_event(&self, event: SimEvent<P>) {
         let mut shared = self.shared.lock().unwrap();
         shared.queue.push(event);
+//        let seek = event.dest_point.t;
+//        let idx = s.binary_search(&num).unwrap_or_else(|x| x);
+//        s.insert(idx, num);
+//        shared.queue.binary_search_by(|probe| probe.dest_point.t.cmp(&seek));
+//        shared.queue.push(event);
     }
     pub fn get_clock(&self) -> u64 {
         self.shared.lock().unwrap().clock
     }
+
+    #[tracing::instrument(level = "debug")]
     pub fn advance_clock (&self, ticks: u64) {
-
-        println!("# Simulator.advance_clock({})", ticks);
-
+        debug!("advancing clock {} ticks", ticks);
         let t;
-        let events : Vec<SimEvent>;
+        let events : Vec<SimEvent<P>>;
         {
             let mut shared = self.shared.lock().unwrap();
             shared.clock += ticks;
             t = shared.clock;
 
-            let split_index = partition(&mut shared.queue, |evt| evt.dest_point.t >= t );
+            let split_index = partition(&mut shared.queue, |evt| evt.dest_point.t <= t );
 
+            debug!(%split_index);
             events = shared.queue.drain(0..split_index).collect();
         }
         for event in events {
-            event.deliver();
+            event.fire();
         }
     }
 }
 
-impl fmt::Debug for Simulator {
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn delivery_order() {
+        let sim = Simulator::new();
+
+    }
+}
+
+impl <P: SimEventPayload + fmt::Debug> fmt::Debug for Simulator<P> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let shared = self.shared.lock().unwrap();
         fmt.debug_struct("Simulator")
+            .field("clock",&shared.clock)
             .field("queue", &shared.queue)
             .finish()
     }
 }
 
-impl Transport for Simulator {
+impl Transport for Simulator<MemoDelivery> {
     fn is_local (&self) -> bool {
         true
     }
@@ -126,7 +174,7 @@ impl Transport for Simulator {
             let tx = SimulatorTransmitter{
                 source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
                 dest_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
-                simulator: self.clone(),
+                simulator: (*self).clone(),
                 dest: (*slab).clone()
             };
             Some(Transmitter::new(args.get_slab_id(), Box::new(tx)))
@@ -147,13 +195,10 @@ impl Transport for Simulator {
 }
 
 
-
-
-
 pub struct SimulatorTransmitter{
     pub source_point: XYZPoint,
     pub dest_point: XYZPoint,
-    pub simulator: Simulator,
+    pub simulator: Simulator<MemoDelivery>,
     pub dest: SlabHandle
 }
 
@@ -181,10 +226,11 @@ impl DynamicDispatchTransmitter for SimulatorTransmitter {
         let evt = SimEvent {
             _source_point: source_point,
             dest_point: dest_point,
-            from_slabref: from_slabref.clone(),
-
-            dest: self.dest.clone(),
-            memoref: memoref
+            payload: MemoDelivery {
+                from_slabref: from_slabref.clone(),
+                dest: self.dest.clone(),
+                memoref: memoref
+            }
         };
 
         self.simulator.add_event( evt );
