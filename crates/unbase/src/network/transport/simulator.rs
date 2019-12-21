@@ -24,6 +24,8 @@ pub trait SimEventPayload {
     fn fire(self);
 }
 
+// TODO: determine how to account for execution time in a deterministic way
+// suggest each operation be assigned a delay factor, such that some or all resultant events are deterministically delayed
 pub struct MemoPayload {
     from_slabref:  SlabRef,
     dest:          SlabHandle,
@@ -127,6 +129,9 @@ impl <P: SimEventPayload + fmt::Debug> Simulator<P> {
     #[tracing::instrument(level = "debug")]
     pub fn advance_clock (&self, ticks: u64) {
         debug!("advancing clock {} ticks", ticks);
+        //TODO: advance only one tick at a time (skipping forward when gaps exist)
+        //TODO: determine how to simulate processing time for the event.fire, and how/if to consider that slab busy until processing is completed
+        //TODO: add automatic clock advancement mode
         let events : Vec<SimEvent<P>> = self.advance_and_fetch(ticks);
         for event in events {
             event.fire();
@@ -179,16 +184,23 @@ mod test {
         });
         sim.add_event(SimEvent {
             _source_point: MinkowskiPoint { x: 0, y: 0, z: 0, t: 1 },
-            dest_point:    MinkowskiPoint { x: 0, y: 0, z: 0, t: 2 },
+            dest_point:    MinkowskiPoint { x: 2, y: 0, z: 0, t: 2 },
             payload:       DummyPayload{},
         });
 
-//        let seq : Vec<u64> = sim.shared.lock().unwrap().queue.iter().map(|e| e.dest_point.t ).collect();
-//        assert_eq!(seq, vec![1u64,1,1,2,3]);
+        let seq : Vec<u64> = sim.shared.lock().unwrap().queue.iter().map(|e| e.dest_point.t ).collect();
+        assert_eq!(seq, vec![1u64,1,1,2,3]);
 
         let dests : Vec<MinkowskiPoint>= sim.advance_and_fetch(1).into_iter().map(|e| e.dest_point ).collect();
-        assert_eq!( dests , vec![]);
+        // NOTE: at present, we are reversing the event order for identical timeslots.
+        // In theory this shouldn't matter, as no communications should arrive in less than one clock tick
+        assert_eq!( dests , vec![MinkowskiPoint { x: -1, y: 0, z: 0, t: 1 }, MinkowskiPoint { x: 0, y: 1, z: 0, t: 1 }, MinkowskiPoint { x: 1, y: 0, z: 0, t: 1 }]);
 
+        let dests : Vec<MinkowskiPoint>= sim.advance_and_fetch(1).into_iter().map(|e| e.dest_point ).collect();
+        assert_eq!( dests , vec![MinkowskiPoint { x: 2, y: 0, z: 0, t: 2 }] );
+
+        let dests : Vec<MinkowskiPoint>= sim.advance_and_fetch(1).into_iter().map(|e| e.dest_point ).collect();
+        assert_eq!( dests , vec![MinkowskiPoint { x: 3, y: 0, z: 0, t: 3 }] );
     }
 }
 
