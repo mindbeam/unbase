@@ -5,6 +5,7 @@ use timer::Delay;
 use std::time;
 use futures_await_test::async_test;
 use futures::executor::block_on;
+use futures::future::RemoteHandle;
 
 #[async_test]
 async fn basic_eventual() {
@@ -57,12 +58,10 @@ async fn basic_eventual() {
 
     let context_b_copy = context_b.clone();
     let context_c_copy = context_c.clone();
-    let thread = thread::spawn(move ||{
-        block_on(async {
+    let handle: RemoteHandle<()> = unbase::util::task::spawn_with_handle(  (async move || {
             assert!(context_b_copy.get_subject_by_id(record_id).await.unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab B");
             assert!(context_c_copy.get_subject_by_id(record_id).await.unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab C");
-        })
-    });
+    })());
 
     simulator.advance_clock(1); // advance the simulator clock by one tick
     simulator.advance_clock(1); // advance the simulator clock by one tick
@@ -74,7 +73,7 @@ async fn basic_eventual() {
     simulator.advance_clock(1); // advance the simulator clock by one tick
     simulator.advance_clock(1); // advance the simulator clock by one tick
 
-    thread.join().unwrap();
+    handle.await;
 
     //assert!(slab_a.count_of_memorefs_resident() == 2, "Slab A should have 2 memorefs resident");
     //assert!(slab_b.count_of_memorefs_resident() == 2, "Slab B should have 2 memorefs resident");
@@ -96,50 +95,47 @@ async fn basic_eventual() {
     let context_b_copy = context_b.clone();
     let context_c_copy = context_c.clone();
     let simulator_copy = simulator.clone();
-    let thread = thread::spawn(move ||{
+    let handle: RemoteHandle<()> = unbase::util::task::spawn_with_handle(  (async move || {
+        let simulator = simulator_copy;
 
-        block_on(async {
-            let simulator = simulator_copy;
+        let rec_b1 = context_b_copy.get_subject_by_id( record_id ).await;
+        let rec_c1 = context_c_copy.get_subject_by_id( record_id ).await;
 
-            let rec_b1 = context_b_copy.get_subject_by_id( record_id ).await;
-            let rec_c1 = context_c_copy.get_subject_by_id( record_id ).await;
+        assert!(rec_b1.is_ok(), "new subject should now have conveyed to slab B");
+        assert!(rec_c1.is_ok(), "new subject should now have conveyed to slab C");
 
-            assert!(rec_b1.is_ok(), "new subject should now have conveyed to slab B");
-            assert!(rec_c1.is_ok(), "new subject should now have conveyed to slab C");
+        let rec_b1 = rec_b1.unwrap();
+        let rec_c1 = rec_c1.unwrap();
 
-            let rec_b1 = rec_b1.unwrap();
-            let rec_c1 = rec_c1.unwrap();
+        assert!(rec_b1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
+        assert!(rec_c1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
 
-            assert!(rec_b1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
-            assert!(rec_c1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
+        simulator.advance_clock(1); // advance the simulator clock by one tick
 
-            simulator.advance_clock(1); // advance the simulator clock by one tick
-
-            assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(), "Moo");
-            assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(), "Moo");
-            assert_eq!(rec_c1.get_value("animal_sound").await.unwrap(), "Moo");
+        assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(), "Moo");
+        assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(), "Moo");
+        assert_eq!(rec_c1.get_value("animal_sound").await.unwrap(), "Moo");
 
 
-            rec_b1.set_value("animal_type","Bovine");
-            assert_eq!(rec_b1.get_value("animal_type").await.unwrap(), "Bovine");
-            assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(),   "Moo");
+        rec_b1.set_value("animal_type","Bovine");
+        assert_eq!(rec_b1.get_value("animal_type").await.unwrap(), "Bovine");
+        assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(),   "Moo");
 
-            rec_b1.set_value("animal_sound","Woof");
-            rec_b1.set_value("animal_type","Kanine");
-            assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(), "Woof");
-            assert_eq!(rec_b1.get_value("animal_type").await.unwrap(),  "Kanine");
+        rec_b1.set_value("animal_sound","Woof");
+        rec_b1.set_value("animal_type","Kanine");
+        assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(), "Woof");
+        assert_eq!(rec_b1.get_value("animal_type").await.unwrap(),  "Kanine");
 
-            // Should not yet have propagated to slab A
-            assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Moo");
-            assert!(rec_a1.get_value("animal_type").await.is_none(), "Should not yet have a value on Slab A for animal_type");
+        // Should not yet have propagated to slab A
+        assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Moo");
+        assert!(rec_a1.get_value("animal_type").await.is_none(), "Should not yet have a value on Slab A for animal_type");
 
-            simulator.advance_clock(1); // advance the simulator clock by one tick
+        simulator.advance_clock(1); // advance the simulator clock by one tick
 
-            // Nowwww it should have propagated
-            assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Woof");
-            assert_eq!(rec_a1.get_value("animal_type").await.unwrap(),    "Kanine");
-        })
-    });
+        // Nowwww it should have propagated
+        assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Woof");
+        assert_eq!(rec_a1.get_value("animal_type").await.unwrap(),    "Kanine");
+    })());
 
     simulator.advance_clock(1); // advance the simulator clock by one tick
     simulator.advance_clock(1); // advance the simulator clock by one tick
@@ -150,7 +146,7 @@ async fn basic_eventual() {
     simulator.advance_clock(1); // advance the simulator clock by one tick
     simulator.advance_clock(1); // advance the simulator clock by one tick
 
-    thread.join().unwrap();
+    handle.await;
 /*
 
     let idx_node = Subject::new_kv(&context_b, "dummy","value").unwrap();
