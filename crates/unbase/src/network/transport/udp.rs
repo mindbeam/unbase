@@ -1,6 +1,7 @@
 use std::net::UdpSocket;
 use std::thread;
 use std::str;
+use tracing::{debug,trace};
 
 use super::*;
 use std::sync::mpsc;
@@ -13,6 +14,7 @@ use crate::util::serde::DeserializeSeed;
 use crate::util::serde::{SerializeHelper,SerializeWrapper};
 use super::packet::serde::PacketSeed;
 //use std::time;
+use tracing::error;
 
 use serde_json;// {serialize as bin_serialize, deserialize as bin_deserialize};
 
@@ -90,14 +92,11 @@ impl TransportUDP {
                     dest_slab_id:   &packet.to_slab_id,
                 };
 
-                // KEEP THIS - This is the most useful memo trace
-                //println!("UDP SEND FROM {} TO {} -> {}: {:?} {:?} {:?}", &packet.from_slab_id, &packet.to_slab_id, &packet.memo.id, &packet.memo.body, &packet.memo.parents.memo_ids(), &packet.peerlist.slab_ids() );
+                debug!("UDP SEND FROM {} TO {} -> {}: {:?} {:?} {:?}", &packet.from_slab_id, &packet.to_slab_id, &packet.memo.id, &packet.memo.body, &packet.memo.parents.memo_ids(), &packet.peerlist.slab_ids() );
                 let b = serde_json::to_vec( &SerializeWrapper(&packet, &helper) ).expect("serde_json::to_vec");
-                //println!("UDP SEND {}", String::from_utf8(b.clone()).unwrap());
 
                 //HACK: we're trusting that each memo is smaller than 64k
                 socket.send_to(&b, &to_address.address).expect("Failed to send");
-                //println!("SENT UDP PACKET ({}) {}", &to_address.address, &String::from_utf8(b).unwrap());
             }
     });
 
@@ -141,6 +140,7 @@ impl TransportUDP {
         }
 
     }
+    #[tracing::instrument]
     pub fn send_to_addr (&self, from_slabref: &SlabRef, memoref: MemoRef, address : TransportAddressUDP) {
 
         // HACK - should actually retrieve the memo and sent it
@@ -152,8 +152,6 @@ impl TransportUDP {
                 memo: memo.clone(),
                 peerlist: memoref.get_peerlist_for_peer(from_slabref, None)
             };
-
-            //println!("TransportUDP.send({:?})", packet );
 
             if let Some(ref tx_channel) = self.shared.lock().unwrap().tx_channel {
                 if let Some(ref tx_channel) = *(tx_channel.lock().unwrap()) {
@@ -208,7 +206,7 @@ impl Transport for TransportUDP {
 
                     //TODO: create a protocol encode/decode module and abstract away the serde stuff
                     //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
-                    //println!("DESERIALIZE          {}", String::from_utf8(buf.to_vec()).unwrap());
+                    trace!("DESERIALIZE          {}", String::from_utf8(buf.to_vec()).unwrap());
                     let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
 
                     let packet_seed : PacketSeed = PacketSeed{
@@ -221,10 +219,9 @@ impl Transport for TransportUDP {
                             // PacketSeed actually does everything
                         },
                         Err(e) =>{
-                            println!("DESERIALIZE ERROR {}", e);
+                            error!("DESERIALIZE ERROR {}", e);
                         }
                     }
-                    //println!("DESERIALIZE COMPLETE {}", String::from_utf8(buf.to_vec()).unwrap());
                 }
             };
         });
@@ -255,7 +252,6 @@ impl Transport for TransportUDP {
 
 impl Drop for TransportUDPInternal{
     fn drop(&mut self) {
-        //println!("# TransportUDPInternal().drop");
 
         // BUG NOTE: having to use a pretty extraordinary workaround here
         //           this horoughly horrible Option<Arc<Mutex<Option<>>> regime
@@ -281,8 +277,8 @@ pub struct TransmitterUDP{
     tx_channel: Arc<Mutex<Option<mpsc::Sender<(TransportAddressUDP,Packet)>>>>
 }
 impl DynamicDispatchTransmitter for TransmitterUDP {
+    #[tracing::instrument]
     fn send (&self, from: &SlabRef, memoref: MemoRef) {
-        //println!("TransmitterUDP.send({:?},{:?})", from, memoref);
 
         if let Some(memo) = memoref.get_memo_if_resident(){
             let packet = Packet {
@@ -292,13 +288,10 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
                 peerlist:  memoref.get_peerlist_for_peer(from, Some(self.slab_id)),
             };
 
-            //println!("UDP QUEUE FOR SEND {:?}", &packet);
-
             //use util::serde::SerializeHelper;
             //let helper = SerializeHelper{ transmitter: self };
             //wrapper = SerializeWrapper<Packet>
     //        let b = serde_json::to_vec(&packet).expect("serde_json::to_vec");
-    //        println!("UDP QUEUE FOR SEND SERIALIZED {}", String::from_utf8(b).unwrap() );
 
             if let Some(ref tx_channel) = *(self.tx_channel.lock().unwrap()) {
                 tx_channel.send((self.address.clone(), packet)).unwrap();
@@ -306,8 +299,22 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
         }
     }
 }
-impl Drop for TransmitterUDP{
-    fn drop(&mut self) {
-        //println!("# TransmitterUDP.drop");
+//impl Drop for TransmitterUDP{
+//    #[tracing::instrument]
+//    fn drop(&mut self) {
+//        //
+//    }
+//}
+
+impl std::fmt::Debug for TransmitterUDP {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("TransmitterUDP")
+            .finish()
+    }
+}
+impl std::fmt::Debug for TransportUDP {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> std::fmt::Result {
+        fmt.debug_struct("TransportUDP")
+            .finish()
     }
 }

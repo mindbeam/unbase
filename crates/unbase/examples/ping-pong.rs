@@ -8,7 +8,7 @@ fn main() {
 }
 
 async fn run (){
-    let simulator = unbase::network::transport::Simulator::new();
+    let simulator = unbase::util::simulator::Simulator::new();
     let net = unbase::Network::create_new_system();
     net.add_transport( Box::new(simulator.clone()) );
 
@@ -45,7 +45,6 @@ async fn run (){
                     if "Meow".to_string() == rec_a1.get_value("animal_sound").await.unwrap() {
                         // set a value when a change is detected
 
-                        println!("[[[ Woof ]]]");
                         rec_a1.set_value("animal_sound", "Woof");
                         break;
                     }
@@ -71,7 +70,7 @@ async fn run (){
             loop {
                 if "Woof".to_string() == block_on(rec_b1.get_value("animal_sound")).unwrap() {
                     // set a value when a change is detected
-                    println!("[[[ Meow ]]]");
+
                     rec_b1.set_value("animal_sound","Meow");
                     break;
                 }

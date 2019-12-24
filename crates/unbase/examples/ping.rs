@@ -14,7 +14,6 @@ fn main() {
 //    let context_a = slab_a.create_context();
 //    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Meow").await.unwrap();
 //
-//    println!("subject id {}", rec_a1.id);
 //    // ************************************************************************
 //    // NOTE: have to use polling for now to detect when the subject has changed
 //    // because push notification (though planned) isn't implemented yet :)
@@ -33,7 +32,7 @@ fn main() {
 //                if "Meow".to_string() == rec_a1.get_value("animal_sound").unwrap() {
 //                    // set a value when a change is detected
 //
-//                    println!("[[[ Woof ]]]");
+//                    info!("[[[ Woof ]]]");
 //                    rec_a1.set_value("animal_sound","Woof");
 //                    break;
 //                }

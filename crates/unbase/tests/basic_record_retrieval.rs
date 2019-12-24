@@ -13,7 +13,7 @@ async fn basic_record_retrieval() {
     {
         let record = Subject::new_kv(&context_a, "animal_type","Cat").await.unwrap();
 
-        println!("Record {:?}", record );
+        debug!("Record {:?}", record );
         record_id = record.id;
     }
 
@@ -27,7 +27,7 @@ async fn basic_record_retrieval() {
 async fn basic_record_retrieval_simulator() {
 
     let net = unbase::Network::create_new_system();
-    let simulator = unbase::network::transport::Simulator::new();
+    let simulator = unbase::util::simulator::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
@@ -37,7 +37,7 @@ async fn basic_record_retrieval_simulator() {
     {
         let record = Subject::new_kv(&context_a, "animal_type","Cat").await.unwrap();
 
-        println!("Record {:?}", record );
+        debug!("Record {:?}", record );
         record_id = record.id;
     }
 

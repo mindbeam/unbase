@@ -1,4 +1,6 @@
-use super::*;
+use tracing::debug;
+use crate::network::{Transport, TransmitterArgs, Transmitter, TransportAddress};
+use crate::Network;
 
 #[derive(Clone)]
 pub struct Blackhole;
@@ -28,6 +30,6 @@ impl Transport for Blackhole {
 
 impl Drop for Blackhole {
     fn drop (&mut self) {
-        println!("# Blackhole.drop");
+        debug!("# Blackhole.drop");
     }
 }

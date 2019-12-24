@@ -7,7 +7,7 @@ use crate::error::RetrieveError;
 
 use std::sync::{Arc,RwLock};
 use std::fmt;
-
+use tracing::{warn};
 
 #[derive(Clone)]
 pub struct MemoRef(pub Arc<MemoRefInner>);
@@ -51,7 +51,7 @@ impl MemoRef {
         let mut acted = false;
         for apply_peer in apply_peerlist.0.clone() {
             if apply_peer.slabref.slab_id == self.owning_slab_id {
-                println!("WARNING - not allowed to apply self-peer");
+                warn!("WARNING - not allowed to apply self-peer");
                 //panic!("memoref.apply_peers is not allowed to apply for self-peers");
                 continue;
             }
@@ -62,7 +62,6 @@ impl MemoRef {
         acted
     }
     pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, maybe_dest_slab_id: Option<SlabId>) -> MemoPeerList {
-        //println!("MemoRef({}).get_peerlist_for_peer({:?},{:?})", self.id, my_ref, maybe_dest_slab_id);
         let mut list : Vec<MemoPeer> = Vec::new();
 
         list.push(MemoPeer{
@@ -108,7 +107,6 @@ impl MemoRef {
 
     #[tracing::instrument(level = "debug")]
     pub async fn get_memo (&self, slab: &SlabHandle) -> Result<Memo,RetrieveError> {
-//        println!("Slab({}).MemoRef({}).get_memo()", self.owning_slab_id, self.id );
         if self.owning_slab_id != slab.my_ref.slab_id {
             assert!(self.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
         }
@@ -145,7 +143,7 @@ impl MemoRef {
         let ref mut list = self.peerlist.write().unwrap().0;
         for peer in list.iter_mut() {
             if peer.slabref.slab_id == self.owning_slab_id {
-                println!("WARNING - not allowed to apply self-peer");
+                warn!("WARNING - not allowed to apply self-peer");
                 //panic!("memoref.update_peers is not allowed to apply for self-peers");
                 continue;
             }
@@ -197,6 +195,6 @@ impl PartialEq for MemoRef {
 
 impl Drop for MemoRefInner{
     fn drop(&mut self) {
-        //println!("# MemoRefInner({}).drop", self.id);
+        //
     }
 }

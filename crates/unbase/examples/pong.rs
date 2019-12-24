@@ -24,10 +24,10 @@ fn main() {
 //        if net.get_root_index_seed(&slab_b).is_some() {
 //            break
 //        }else if i == 59 {
-//            println!("Unable to connect to ping node");
+//            error!("Unable to connect to ping node");
 //            std::process::exit(0x0100);
 //        }
-//        println!("Waiting for ping node...");
+//        info!("Waiting for ping node...");
 //        thread::sleep(half_sec);
 //    }
 //
@@ -45,14 +45,14 @@ fn main() {
 //            maybe_rec_b1 = Some(rec);
 //            break;
 //        }
-//        println!("Waiting for subject...");
+//        info!("Waiting for subject...");
 //        thread::sleep(half_sec);
 //    }
 //
 //    let rec_b1 = match maybe_rec_b1 {
 //        Some(r) => r,
 //        None =>{
-//            println!("unable to retrieve subject");
+//            error!("unable to retrieve subject");
 //            std::process::exit(0x0100);
 //        }
 //    };
@@ -70,7 +70,7 @@ fn main() {
 //            loop {
 //                if "Woof".to_string() == rec_b1.get_value("animal_sound").await.unwrap() {
 //                    // set a value when a change is detected
-//                    println!("[[[ Meow ]]]");
+//                    info!("[[[ Meow ]]]");
 //                    rec_b1.set_value("animal_sound","Meow");
 //                    break;
 //                }

@@ -4,7 +4,7 @@ use crate::network::transmitter::DynamicDispatchTransmitter;
 use crate::Network;
 use std::fmt;
 
-use unbase_test_util::simulator::{Simulator, SimEventPayload, Point3, Point4, SimEvent};
+use crate::util::simulator::{Simulator, SimEventPayload, Point3, Point4, SimEvent};
 // TODO: determine how to account for execution time in a deterministic way
 // suggest each operation be assigned a delay factor, such that some or all resultant events are deterministically delayed
 pub struct MemoPayload {
@@ -67,6 +67,7 @@ pub struct SimulatorTransmitter{
 }
 
 impl DynamicDispatchTransmitter for SimulatorTransmitter {
+    #[tracing::instrument]
     fn send (&self, from_slabref: &SlabRef, memoref: MemoRef){
         let ref q = self.source_point;
         let ref p = self.dest_point;
@@ -98,5 +99,13 @@ impl DynamicDispatchTransmitter for SimulatorTransmitter {
         };
 
         self.simulator.add_event( evt );
+    }
+}
+
+impl fmt::Debug for SimulatorTransmitter{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("SimulatorTransmitter")
+            .field("dest", &self.dest.my_ref.slab_id)
+            .finish()
     }
 }

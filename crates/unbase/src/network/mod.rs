@@ -82,7 +82,6 @@ impl Network {
             if let Some(removed) = transports.iter()
                 .position(|t| t.is_local())
                 .map(|e| transports.remove(e)) {
-                println!("Unbinding local transport");
                 removed.unbind_network(self);
             }
         }
@@ -146,8 +145,8 @@ impl Network {
         }
         None
     }
+    #[tracing::instrument]
     pub fn register_local_slab(&self, new_slab: SlabHandle) {
-        // println!("# Network.register_slab {:?}", new_slab );
 
         {
             self.slabs.write().unwrap().insert(0, new_slab.clone());
@@ -167,7 +166,7 @@ impl Network {
             if let Some(removed) = slabs.iter()
                 .position(|s| s.my_ref.slab_id == slab_id)
                 .map(|e| slabs.remove(e)) {
-                // println!("Unbinding Slab {}", removed.id);
+                // debug!("Unbinding Slab {}", removed.id);
                 let _ = removed.my_ref.slab_id;
                 // removed.unbind_network(self);
             }
@@ -280,23 +279,6 @@ impl fmt::Debug for Network {
             .finish()
     }
 }
-
-// probably wasn't ever necessary, except as a way to debug
-// impl Drop for NetworkInner {
-// fn drop(&mut self) {
-// println!("# > Dropping NetworkInternals");
-//
-// println!("# > Dropping NetworkInternals B");
-// self.transports.clear();
-//
-// println!("# > Dropping NetworkInternals C");
-// self.root_index_seed.take();
-//
-// println!("# > Dropping NetworkInternals D");
-//
-// }
-// }
-//
 
 impl WeakNetwork {
     pub fn upgrade(&self) -> Option<Network> {

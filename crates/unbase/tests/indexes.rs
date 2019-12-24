@@ -9,7 +9,7 @@ use futures_await_test::async_test;
 async fn index_construction() {
 
     let net = unbase::Network::create_new_system();
-    let simulator = unbase::network::transport::Simulator::new();
+    let simulator = unbase::util::simulator::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);

@@ -465,7 +465,7 @@ mod test {
         // 4[0] -> 3
         let mut iter = manager.subject_head_iter();
         // for subject_head in iter {
-        //     println!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
+        //     debug!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
         // }
         assert_eq!(3, iter.next().expect("iter result 3 should be present").subject_id);
         assert_eq!(1, iter.next().expect("iter result 1 should be present").subject_id);
@@ -507,7 +507,7 @@ mod test {
         
         let mut iter = manager.subject_head_iter();
         // for subject_head in iter {
-        //     println!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
+        //     debug!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
         // }
         assert_eq!(1, iter.next().expect("iter result 1 should be present").subject_id);
         assert_eq!(4, iter.next().expect("iter result 4 should be present").subject_id);
@@ -542,7 +542,7 @@ mod test {
         
         let mut iter = manager.subject_head_iter();
         // for subject_head in iter {
-        //     println!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
+        //     debug!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
         // }
         assert_eq!(3, iter.next().expect("iter result 3 should be present").subject_id);
         assert_eq!(1, iter.next().expect("iter result 1 should be present").subject_id);
@@ -604,7 +604,7 @@ mod test {
 
         let mut iter = manager.subject_head_iter();
         // for subject_head in iter {
-        //     println!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
+        //     debug!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
         // }
         assert!(iter.next().is_none(), "iter should have ended");
     }

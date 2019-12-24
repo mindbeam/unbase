@@ -10,13 +10,19 @@ use futures::future::{select, RemoteHandle};
 use tracing::{debug, span, Level};
 
 #[async_test]
+#[tracing::instrument]
 async fn remote_traversal_simulated() {
 
-    unbase_test_util::init_test_logger();
+    unbase_test_util::init_test_logger("remote_traversal_simulated");
+
+    let span = span!(Level::TRACE, "my_span");
+    let _enter = span.enter();
+
+    debug!("meow");
 
     let net = unbase::Network::create_new_system();
-    let simulator = unbase::network::transport::Simulator::new();
-    net.add_transport( Box::new(simulator.clone()) );
+    let simulator = unbase::util::simulator::Simulator::new();
+    net.add_transport(Box::new(simulator.clone()));
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
@@ -26,12 +32,15 @@ async fn remote_traversal_simulated() {
 
     let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
 
-    rec_a1.set_value("animal_sound","Woof");
-    rec_a1.set_value("animal_sound","Meow");
+    rec_a1.set_value("animal_sound", "Woof");
+    rec_a1.set_value("animal_sound", "Meow");
 
     simulator.advance_clock(1); // Now it should have propagated to slab B
 
     simulator.advance_clock(1); // now slab A should know that Slab B has it
+    simulator.advance_clock(1);
+    simulator.advance_clock(1);
+    simulator.advance_clock(1);
 
     slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() ).expect("failed to remotize memos");
 

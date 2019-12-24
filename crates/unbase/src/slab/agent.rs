@@ -1,5 +1,6 @@
 use std::sync::{Arc,RwLock,Mutex};
 use std::collections::hash_map::Entry;
+use tracing::debug;
 
 use crate::slab::{SlabId, MemoRef, MemoBody, Memo, MemoInner, SlabRefInner, MemoRefInner, MemoRefPtr, MemoPeerList, MemoPeeringStatus, MemoId, MemoPeer, SlabPresence, SlabAnticipatedLifetime, RelationSlotSubjectHead};
 use crate::slab::state::SlabState;
@@ -58,6 +59,7 @@ impl SlabAgent {
         state.peer_refs.len() as usize
     }
 
+    #[tracing::instrument]
     pub fn new_memo ( &self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
         let memo_id = {
             let mut state = self.state.write().unwrap();
@@ -65,7 +67,7 @@ impl SlabAgent {
             (self.id as u64).rotate_left(32) | state.counters.last_memo_id as u64
         };
 
-        //println!("# Slab({}).new_memo(id: {},subject_id: {:?}, parents: {:?}, body: {:?})", self.id, memo_id, subject_id, parents.memo_ids(), body );
+        debug!(%memo_id);
 
         let memo = Memo::new(MemoInner {
             id:    memo_id,
@@ -112,6 +114,7 @@ impl SlabAgent {
             return;
         }
     }
+    #[tracing::instrument]
     pub fn consider_emit_memo(&self, memoref: &MemoRef) {
         // Emit memos for durability and notification purposes
         // At present, some memos like peering and slab presence are emitted manually.
@@ -121,12 +124,10 @@ impl SlabAgent {
         if let Some(memo) = memoref.get_memo_if_resident() {
             let needs_peers = self.check_peering_target(&memo);
 
-
-            //println!("Slab({}).consider_emit_memo {} - A ({:?})", self.id, memoref.id, &*self.peer_refs.read().unwrap() );
+            debug!("memo is resident");
             let state = self.state.read().unwrap();
             for peer_ref in state.peer_refs.iter().filter(|x| !memoref.is_peered_with_slabref(x) ).take( needs_peers as usize ) {
 
-                //println!("# Slab({}).emit_memos - EMIT Memo {} to Slab {}", self.id, memo.id, peer_ref.slab_id );
                 peer_ref.send( &self.my_ref, memoref );
             }
         }
@@ -168,8 +169,8 @@ impl SlabAgent {
             Entry::Vacant(_) => {}
         };
     }
+    #[tracing::instrument]
     pub fn handle_memo_from_other_slab( &self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef ){
-        //println!("Slab({}).handle_memo_from_other_slab({})", self.id, memo.id );
 
         match memo.body {
             // This Memo is a peering status update for another memo
@@ -315,7 +316,6 @@ impl SlabAgent {
             //    A. use parents at all
             //    B. and if so, what should be should we be using them for?
             //    C. Should we be sing that to determine the peered memo instead of the payload?
-            //println!("MEOW {}, {:?}", my_ref );
 
             let peering_memoref = self.new_memo(
                 None,
@@ -330,8 +330,8 @@ impl SlabAgent {
         }
 
     }
+    #[tracing::instrument]
     pub async fn recv_memoref (&self, memoref : MemoRef){
-        //println!("# \t\\ Slab({}).dispatch_memoref({})", self.id, &memoref.id );
 
         if let Some(subject_id) = memoref.subject_id {
 
@@ -358,10 +358,9 @@ impl SlabAgent {
 
         }
     }
+    #[tracing::instrument]
     pub fn localize_slabref(&self, slabref: &SlabRef ) -> SlabRef {
         // For now, we don't seem to care what slabref we're being cloned from, just which one we point to
-
-        //println!("Slab({}).SlabRef({}).clone_for_slab({})", self.owning_slab_id, self.slab_id, to_slab.id );
 
         // IF this slabref points to the destination slab, then use to_sab.my_ref
         // because we know it exists already, and we're not allowed to assert a self-ref
@@ -390,6 +389,7 @@ impl SlabAgent {
         }
 
     }
+    #[tracing::instrument]
     pub fn localize_memoref (&self, memoref: &MemoRef, from_slabref: &SlabRef, include_memo: bool ) -> MemoRef {
 //        assert!(from_slabref.owning_slab_id == self.id,"MemoRef clone_for_slab owning slab should be identical");
 //        assert!(from_slabref.slab_id != self.id,       "MemoRef clone_for_slab dest slab should not be identical");
@@ -398,11 +398,9 @@ impl SlabAgent {
         if memoref.owning_slab_id == self.id {
             return (*memoref).clone()
         }
-        //println!("Slab({}).Memoref.clone_for_slab({})", self.owning_slab_id, self.id);
 
         // Because our from_slabref is already owned by the destination slab, there is no need to do peerlist.clone_for_slab
         let peerlist = memoref.get_peerlist_for_peer(from_slabref, Some(self.id));
-        //println!("Slab({}).Memoref.clone_for_slab({}) C -> {:?}", self.owning_slab_id, self.id, peerlist);
 
         // TODO - reduce the redundant work here. We're basically asserting the memoref twice
         let memoref = self.assert_memoref(
@@ -418,15 +416,12 @@ impl SlabAgent {
             }
         ).0;
 
-
-        //println!("MemoRef.clone_for_slab({},{}) peerlist: {:?} -> MemoRef({:?})", from_slabref.slab_id, to_slab.id, &peerlist, &memoref );
-
         memoref
     }
+    #[tracing::instrument]
     pub fn localize_memo (&self, memo: &Memo, from_slabref: &SlabRef, peerlist: &MemoPeerList) -> Memo {
         assert!(from_slabref.owning_slab_id == self.id, "Memo clone_for_slab owning slab should be identical");
 
-        //println!("Slab({}).Memo.clone_for_slab(memo: {}, from: {}, to: {}, peers: {:?})", self.owning_slab_id, self.id, from_slabref.slab_id, to_slab.id, peerlist );
         self.reconstitute_memo(
             memo.id,
             memo.subject_id,
@@ -436,8 +431,8 @@ impl SlabAgent {
             peerlist
         ).0
     }
+    #[tracing::instrument]
     pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){
-        //println!("Slab({}).reconstitute_memo({})", self.id, memo_id );
         // TODO: find a way to merge this with assert_memoref to avoid doing duplicative work with regard to peerlist application
 
         let memo = Memo::new(MemoInner {
@@ -457,8 +452,6 @@ impl SlabAgent {
                 state.counters.memos_redundantly_received += 1;
             }
         }
-        //println!("Slab({}).reconstitute_memo({}) B -> {:?}", self.id, memo_id, memoref );
-
 
         self.consider_emit_memo(&memoref);
 
@@ -533,8 +526,8 @@ impl SlabAgent {
         RelationSlotSubjectHead(new)
     }
     #[allow(unused)]
+    #[tracing::instrument]
     pub fn residentize_memoref(&self, memoref: &MemoRef, memo: Memo) -> bool {
-        //println!("# Slab({}).MemoRef({}).residentize()", self.id, memoref.id);
 
         assert!(memoref.owning_slab_id == self.id);
         assert!( memoref.id == memo.id );
@@ -573,10 +566,9 @@ impl SlabAgent {
         }
     }
     #[allow(unused)]
+    #[tracing::instrument]
     pub fn remotize_memoref( &self, memoref: &MemoRef ) -> Result<(),String> {
         assert!(memoref.owning_slab_id == self.id);
-
-        //println!("# Slab({}).MemoRef({}).remotize()", self.id, memoref.id );
 
         // TODO: check peering minimums here, and punt if we're below threshold
 
@@ -618,6 +610,7 @@ impl SlabAgent {
 
         Ok(())
     }
+    #[tracing::instrument]
     pub fn assert_memoref( &self, memo_id: MemoId, subject_id: Option<SubjectId>, peerlist: MemoPeerList, memo: Option<Memo>) -> (MemoRef, bool) {
 
         let had_memoref;
@@ -659,8 +652,8 @@ impl SlabAgent {
 
         (memoref, had_memoref)
     }
+    #[tracing::instrument]
     pub fn assert_slabref(&self, slab_id: SlabId, presence: &[SlabPresence] ) -> SlabRef {
-        //println!("# Slab({}).assert_slabref({}, {:?})", self.id, slab_id, presence );
 
         if slab_id == self.id {
             return self.my_ref.clone();
@@ -726,7 +719,6 @@ impl SlabAgent {
                 let new_trans = self.net.get_transmitter( &args ).expect("assert_slabref net.get_transmitter");
                 let return_address = self.net.get_return_address( &p.address ).expect("return address not found");
 
-                println!("{:?}", new_trans);
                 *slabref.0.tx.lock().expect("tx.lock()") = new_trans;
                 *slabref.0.return_address.write().expect("return_address write lock") = return_address;
             }
@@ -736,8 +728,8 @@ impl SlabAgent {
 
     }
     #[allow(unused)]
+    #[tracing::instrument]
     pub fn remotize_memo_ids( &self, memo_ids: &[MemoId] ) -> Result<(),String>{
-        //println!("# Slab({}).remotize_memo_ids({:?})", self.id, memo_ids);
 
         let mut memorefs : Vec<MemoRef> = Vec::with_capacity(memo_ids.len());
 

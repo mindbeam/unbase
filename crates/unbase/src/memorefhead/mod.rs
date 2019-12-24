@@ -11,6 +11,7 @@ use std::fmt;
 use std::slice;
 use std::collections::VecDeque;
 use async_std::task::block_on;
+use tracing::debug;
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -58,8 +59,8 @@ impl MemoRefHead {
             head: vec![memoref],
         }
     }
+    #[tracing::instrument]
     pub async fn apply_memoref(&mut self, new: &MemoRef, slab: &SlabHandle ) -> bool {
-        //println!("# MemoRefHead({:?}).apply_memoref({})", self.memo_ids(), &new.id);
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
         // If so, any memorefs that it descends must be removed
@@ -126,9 +127,9 @@ impl MemoRefHead {
         // This memoref was applied if it was concurrent, or descends one or more previous memos
 
         if applied {
-            //println!("# \t\\ Was applied - {:?}", self.memo_ids());
+            debug!("Was applied - {:?}", self.memo_ids());
         }else{
-            //println!("# \t\\ NOT applied - {:?}", self.memo_ids());
+            debug!("NOT applied - {:?}", self.memo_ids());
         }
 
         applied
@@ -227,8 +228,8 @@ head ^    \- F -> D -/
      Going with the iterator for now in the interest of simplicity
 */
 impl CausalMemoIter {
+    #[tracing::instrument]
     pub fn from_head ( head: &MemoRefHead, slab: &SlabHandle) -> Self {
-        //println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
         if head.owning_slab_id != slab.my_ref.slab_id {
             assert!(head.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
         }

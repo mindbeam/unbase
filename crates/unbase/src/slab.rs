@@ -61,6 +61,7 @@ impl Deref for Slab {
 }
 
 impl Slab {
+    #[tracing::instrument]
     pub fn new(net: &Network) -> Slab {
         let id = net.generate_slab_id();
 

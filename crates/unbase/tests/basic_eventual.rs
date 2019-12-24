@@ -7,11 +7,13 @@ use futures_await_test::async_test;
 use futures::executor::block_on;
 use futures::future::RemoteHandle;
 
+use tracing::debug;
+
 #[async_test]
 async fn basic_eventual() {
 
     let net = unbase::Network::create_new_system();
-    let simulator = unbase::network::transport::Simulator::new();
+    let simulator = unbase::util::simulator::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
@@ -47,7 +49,7 @@ async fn basic_eventual() {
     //assert_eq!(slab_a.count_of_memorefs_resident(), 2, "Slab A should have 2 memorefs resident");
     //assert_eq!(slab_b.count_of_memorefs_resident(), 0, "Slab B should have 1 memorefs resident");
     //assert_eq!(slab_c.count_of_memorefs_resident(), 0, "Slab C should have 1 memorefs resident");
-    println!("New subject ID {}", rec_a1.id );
+    debug!("New subject ID {}", rec_a1.id );
 
     let record_id = rec_a1.id;
     let root_index_subject_id = if let Some(ref s) = *context_a.root_index.read().unwrap() {
@@ -85,11 +87,11 @@ async fn basic_eventual() {
     // change to a timeout-based process once context::subject_graph is working
     simulator.advance_clock(1); // advance the simulator clock by one tick
 
-    println!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
+    debug!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
     // Temporary way to magically, instantly send context
-    println!("Manually exchanging context from Context A to Context B - Count of MemoRefs: {}", context_a.hack_send_context(&context_b) );
-    println!("Manually exchanging context from Context A to Context C - Count of MemoRefs: {}", context_a.hack_send_context(&context_c) );
-    println!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
+    debug!("Manually exchanging context from Context A to Context B - Count of MemoRefs: {}", context_a.hack_send_context(&context_b) );
+    debug!("Manually exchanging context from Context A to Context C - Count of MemoRefs: {}", context_a.hack_send_context(&context_c) );
+    debug!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
 
 
     let context_b_copy = context_b.clone();
@@ -152,11 +154,11 @@ async fn basic_eventual() {
     let idx_node = Subject::new_kv(&context_b, "dummy","value").unwrap();
     idx_node.set_relation( 0, rec_b1 );
 
-    println!("All rec_b1 MemoIds: {:?}", rec_b1_memoids);
+    debug!("All rec_b1 MemoIds: {:?}", rec_b1_memoids);
     slab_b.remotize_memo_ids( &rec_b1_memoids ).expect("failed to remotize memos");
 
     if let Some(record) = idx_node.get_relation(0) {
-        println!("Retrieved record: {} - {:?}", record.id, record.get_value("animal_sound") );
+        debug!("Retrieved record: {} - {:?}", record.id, record.get_value("animal_sound") );
     }
 
     let rec_b2 = Subject::new_kv(&context_a, "animal_sound","Meow");

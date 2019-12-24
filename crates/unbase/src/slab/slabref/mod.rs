@@ -42,8 +42,8 @@ pub struct SlabRefInner {
 impl SlabRef{
     //pub fn new (to_slab_id: SlabId, owning_slab_id: SlabId, presence: Vec<Slab) -> SlabRef {
     //}
+    #[tracing::instrument]
     pub fn send (&self, from: &SlabRef, memoref: &MemoRef ) {
-        println!("# Slab({}).SlabRef({}).send_memo({:?})", self.owning_slab_id, self.slab_id, memoref );
 
         let tx = self.tx.lock().unwrap();
         tx.send(from, memoref.clone());
@@ -104,6 +104,6 @@ impl fmt::Debug for SlabRef {
 
 impl Drop for SlabRefInner{
     fn drop(&mut self) {
-        //println!("# SlabRefInner({},{}).drop",self.owning_slab_id, self.slab_id);
+        //
     }
 }

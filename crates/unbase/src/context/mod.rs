@@ -14,6 +14,7 @@ use std::fmt;
 use std::collections::HashMap;
 use std::sync::{Mutex, RwLock, Arc, Weak};
 use async_std::task::block_on;
+use tracing::debug;
 
 #[derive(Clone)]
 pub struct Context(pub Arc<ContextInner>);
@@ -128,11 +129,11 @@ impl Context {
 
     /// Retrieve a subject for a known MemoRefHead – ususally used for relationship traversal.
     /// Any relevant context will also be applied when reconstituting the relevant subject to ensure that our consistency model invariants are met
+    #[tracing::instrument]
     pub async fn get_subject_with_head(&self,
                                  subject_id: SubjectId,
                                  mut head: MemoRefHead)
                                  -> Result<Subject, RetrieveError> {
-        // println!("# Context.get_subject_with_head({},{:?})", subject_id, head.memo_ids() );
 
         if head.len() == 0 {
             return Err(RetrieveError::InvalidMemoRefHead);
@@ -148,11 +149,11 @@ impl Context {
         };
 
         if let Some(relevant_context_head) = maybe_head {
-            // println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
+            debug!("Relevant context head is ({:?})", relevant_context_head.memo_ids() );
             head = head.apply(&relevant_context_head, &self.slab).await;
 
         } else {
-            // println!("# \\ No relevant head found in context");
+            debug!("No relevant head found in context");
         }
 
         match self.get_subject_if_resident(subject_id) {
@@ -171,8 +172,8 @@ impl Context {
     }
     /// Subscribes a resident subject struct to relevant updates from this context
     /// Used by the subject constructor
+    #[tracing::instrument]
     pub fn subscribe_subject(&self, subject: &Subject) {
-        // println!("Context.subscribe_subject({})", subject.id );
         {
             self.subjects.write().unwrap().insert(subject.id, subject.weak());
         }
@@ -180,8 +181,8 @@ impl Context {
     }
     /// Unsubscribes the subject from further updates. Used by Subject.drop
     /// ( Temporarily defeated due to deadlocks. TODO )
+    #[tracing::instrument]
     pub fn unsubscribe_subject(&self, subject_id: SubjectId) {
-        // println!("# Context.unsubscribe_subject({})", subject_id);
         // let _ = subject_id;
         self.subjects.write().unwrap().remove(&subject_id);
 
@@ -200,17 +201,16 @@ impl Context {
         // }
         //
         // self.inner.slab.unsubscribe_subject(subject_id, self);
-        // println!("# Context.unsubscribe_subject({}) - FINISHED", subject_id);
         //
 
     }
 
     /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is made
+    #[tracing::instrument]
     pub fn apply_subject_head(&self,
                               subject_id: SubjectId,
                               apply_head: &MemoRefHead,
                               notify_subject: bool) {
-        // println!("Context.apply_subject_head({}, {:?}) ", subject_id, head.memo_ids() );
 
         // NOTE: In all liklihood, there is significant room to optimize this.
         //       We're applying heads to heads redundantly
@@ -397,7 +397,7 @@ impl Context {
 
 impl Drop for ContextInner {
     fn drop(&mut self) {
-        // println!("# ContextShared.drop");
+        //
     }
 }
 impl fmt::Debug for Context {
