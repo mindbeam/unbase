@@ -8,7 +8,6 @@ mod udp;
 mod blackhole;
 
 pub use self::udp::*;
-pub use self::simulator::Simulator;
 pub use self::local_direct::LocalDirect;
 pub use self::blackhole::Blackhole;
 pub use super::transmitter::{Transmitter, DynamicDispatchTransmitter};

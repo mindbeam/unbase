@@ -1,29 +1,10 @@
+use crate::network::{SlabRef, TransportAddress, Transport, TransmitterArgs, Transmitter};
+use crate::slab::{SlabHandle, MemoRef};
+use crate::network::transmitter::DynamicDispatchTransmitter;
+use crate::Network;
 use std::fmt;
-use super::*;
-use std::sync::{Arc,Mutex};
-use crate::slab::*;
-use itertools::partition;
-use crate::network::*;
-use tracing::debug;
 
-// Minkowski stuff: Still ridiculous, but necessary for our purposes.
-pub struct XYZPoint{
-    pub x: i64,
-    pub y: i64,
-    pub z: i64
-}
-#[derive(PartialEq, Debug)]
-pub struct MinkowskiPoint {
-    pub x: i64,
-    pub y: i64,
-    pub z: i64,
-    pub t: u64
-}
-
-pub trait SimEventPayload {
-    fn fire(self);
-}
-
+use unbase_test_util::simulator::{Simulator, SimEventPayload, Point3, Point4, SimEvent};
 // TODO: determine how to account for execution time in a deterministic way
 // suggest each operation be assigned a delay factor, such that some or all resultant events are deterministically delayed
 pub struct MemoPayload {
@@ -33,196 +14,31 @@ pub struct MemoPayload {
 }
 
 impl SimEventPayload for MemoPayload {
+    #[tracing::instrument]
     fn fire (self) {
-
-        /* let memo = &self.memoref.get_memo_if_resident().unwrap();
-        println!("Simulator.deliver FROM {} TO {} -> {}({:?}): {:?} {:?} {:?}",
-            &self.from_slabref.slab_id,
-            &to_slab.id,
-            &self.memoref.id,
-            &self.memoref.subject_id,
-            &memo.body,
-            &memo.parents.memo_ids(),
-            &self.memoref.peerlist.read().unwrap().slab_ids()
-        );*/
         let slabref = self.dest.agent.localize_slabref(&self.from_slabref);
-        println!("# SimEvent.deliver MEMO {} from SLAB {} to SLAB {}", self.memoref.id, slabref.slab_id, self.dest.my_ref.slab_id );
-
         self.dest.agent.localize_memoref( &self.memoref, &slabref, true );
-
-        // we all have to learn to deal with loss sometime
-    }
-}
-
-struct SimEvent<SimEventPayload> {
-    _source_point: MinkowskiPoint,
-    dest_point:    MinkowskiPoint,
-    payload: SimEventPayload
-}
-
-impl <P: SimEventPayload> SimEvent<P> {
-    pub fn fire (self) {
-        self.payload.fire();
-    }
-}
-
-impl <P: std::fmt::Debug> fmt::Debug for SimEvent<P>{
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("SimEvent")
-            .field("t", &self.dest_point.t )
-            .field("payload", &self.payload)
-            .finish()
     }
 }
 
 impl fmt::Debug for MemoPayload {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("MemoDelivery")
+        fmt.debug_struct("MemoPayload")
             .field("dest", &self.dest.my_ref.slab_id)
             .field("memo", &self.memoref.id)
             .finish()
     }
 }
 
-pub struct Simulator<P: SimEventPayload> {
-    shared: Arc<Mutex<SimulatorInternal<P>>>,
-    speed_of_light: u64,
-}
-
-impl <P:SimEventPayload> Clone for Simulator<P>{
-    fn clone(&self) -> Self {
-        Self{
-            shared: self.shared.clone(),
-            speed_of_light: self.speed_of_light
-        }
-    }
-}
-struct SimulatorInternal<P: SimEventPayload> {
-    clock: u64,
-    queue: Vec<SimEvent<P>>
-}
-
-impl <P: SimEventPayload + fmt::Debug> Simulator<P> {
-    pub fn new() -> Self {
-        Simulator {
-            speed_of_light: 1, // 1 distance unit per time unit
-            shared: Arc::new(Mutex::new(
-                SimulatorInternal::<P> {
-                    clock: 0,
-                    queue: Vec::new()
-                }
-            ))
-        }
-    }
-
-    fn add_event(&self, event: SimEvent<P>) {
-        let mut shared = self.shared.lock().unwrap();
-
-        let seek = event.dest_point.t;
-        let idx = shared.queue.binary_search_by(|probe| probe.dest_point.t.cmp(&seek)).unwrap_or_else(|x| x);
-        shared.queue.insert(idx, event);
-    }
-    pub fn get_clock(&self) -> u64 {
-        self.shared.lock().unwrap().clock
-    }
-
-    #[tracing::instrument(level = "debug")]
-    pub fn advance_clock (&self, ticks: u64) {
-        debug!("advancing clock {} ticks", ticks);
-        //TODO: advance only one tick at a time (skipping forward when gaps exist)
-        //TODO: determine how to simulate processing time for the event.fire, and how/if to consider that slab busy until processing is completed
-        //TODO: add automatic clock advancement mode
-        let events : Vec<SimEvent<P>> = self.advance_and_fetch(ticks);
-        for event in events {
-            event.fire();
-        }
-    }
-    fn advance_and_fetch (&self, ticks: u64) -> Vec<SimEvent<P>> {
-        let mut shared = self.shared.lock().unwrap();
-        shared.clock += ticks;
-        let t = shared.clock;
-
-        let split_index = partition(&mut shared.queue, |evt| evt.dest_point.t <= t );
-
-        debug!(%split_index);
-        shared.queue.drain(0..split_index).collect()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[derive(Debug)]
-    struct DummyPayload {}
-    impl SimEventPayload for DummyPayload {
-        fn fire(self) {}
-    }
-
-    #[test]
-    fn delivery_order() {
-        let sim = Simulator::<DummyPayload>::new();
-        sim.add_event(SimEvent {
-            _source_point: MinkowskiPoint { x: 0, y: 0, z: 0, t: 0 },
-            dest_point:    MinkowskiPoint { x: 1, y: 0, z: 0, t: 1 },
-            payload:       DummyPayload{},
-        });
-        sim.add_event(SimEvent {
-            _source_point: MinkowskiPoint { x: 0, y: 0, z: 0, t: 0 },
-            dest_point:    MinkowskiPoint { x: -1, y: 0, z: 0, t: 1 },
-            payload:       DummyPayload{},
-        });
-        sim.add_event(SimEvent {
-            _source_point: MinkowskiPoint { x: 0, y: 0, z: 0, t: 0 },
-            dest_point:    MinkowskiPoint { x: 3, y: 0, z: 0, t: 3 },
-            payload:       DummyPayload{},
-        });
-        sim.add_event(SimEvent {
-            _source_point: MinkowskiPoint { x: 0, y: 0, z: 0, t: 0 },
-            dest_point:    MinkowskiPoint { x: 0, y: 1, z: 0, t: 1 },
-            payload:       DummyPayload{},
-        });
-        sim.add_event(SimEvent {
-            _source_point: MinkowskiPoint { x: 0, y: 0, z: 0, t: 1 },
-            dest_point:    MinkowskiPoint { x: 2, y: 0, z: 0, t: 2 },
-            payload:       DummyPayload{},
-        });
-
-        let seq : Vec<u64> = sim.shared.lock().unwrap().queue.iter().map(|e| e.dest_point.t ).collect();
-        assert_eq!(seq, vec![1u64,1,1,2,3]);
-
-        let dests : Vec<MinkowskiPoint>= sim.advance_and_fetch(1).into_iter().map(|e| e.dest_point ).collect();
-        // NOTE: at present, we are reversing the event order for identical timeslots.
-        // In theory this shouldn't matter, as no communications should arrive in less than one clock tick
-        assert_eq!( dests , vec![MinkowskiPoint { x: -1, y: 0, z: 0, t: 1 }, MinkowskiPoint { x: 0, y: 1, z: 0, t: 1 }, MinkowskiPoint { x: 1, y: 0, z: 0, t: 1 }]);
-
-        let dests : Vec<MinkowskiPoint>= sim.advance_and_fetch(1).into_iter().map(|e| e.dest_point ).collect();
-        assert_eq!( dests , vec![MinkowskiPoint { x: 2, y: 0, z: 0, t: 2 }] );
-
-        let dests : Vec<MinkowskiPoint>= sim.advance_and_fetch(1).into_iter().map(|e| e.dest_point ).collect();
-        assert_eq!( dests , vec![MinkowskiPoint { x: 3, y: 0, z: 0, t: 3 }] );
-    }
-}
-
-impl <P: SimEventPayload + fmt::Debug> fmt::Debug for Simulator<P> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let shared = self.shared.lock().unwrap();
-        fmt.debug_struct("Simulator")
-            .field("clock",&shared.clock)
-            .field("queue", &shared.queue)
-            .finish()
-    }
-}
-
-impl Transport for Simulator<MemoPayload> {
+impl Transport for Simulator <MemoPayload> {
     fn is_local (&self) -> bool {
         true
     }
     fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
         if let TransmitterArgs::Local(ref slab) = *args {
             let tx = SimulatorTransmitter{
-                source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
-                dest_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
+                source_point: Point3 { x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
+                dest_point: Point3 { x: 1000, y: 1000, z: 1000 },
                 simulator: (*self).clone(),
                 dest: (*slab).clone()
             };
@@ -243,10 +59,9 @@ impl Transport for Simulator<MemoPayload> {
     }
 }
 
-
 pub struct SimulatorTransmitter{
-    pub source_point: XYZPoint,
-    pub dest_point: XYZPoint,
+    pub source_point: Point3,
+    pub dest_point: Point3,
     pub simulator: Simulator<MemoPayload>,
     pub dest: SlabHandle
 }
@@ -256,7 +71,7 @@ impl DynamicDispatchTransmitter for SimulatorTransmitter {
         let ref q = self.source_point;
         let ref p = self.dest_point;
 
-        let source_point = MinkowskiPoint {
+        let source_point = Point4 {
             x: q.x,
             y: q.y,
             z: q.z,
@@ -265,7 +80,7 @@ impl DynamicDispatchTransmitter for SimulatorTransmitter {
 
         let distance = (( (q.x - p.x)^2 + (q.y - p.y)^2 + (q.z - p.z)^2 ) as f64).sqrt();
 
-        let dest_point = MinkowskiPoint {
+        let dest_point = Point4 {
             x: p.x,
             y: p.y,
             z: p.z,
@@ -273,7 +88,7 @@ impl DynamicDispatchTransmitter for SimulatorTransmitter {
         };
 
         let evt = SimEvent {
-            _source_point: source_point,
+            source_point: source_point,
             dest_point: dest_point,
             payload: MemoPayload {
                 from_slabref: from_slabref.clone(),
