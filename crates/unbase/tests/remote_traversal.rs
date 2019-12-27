@@ -45,14 +45,8 @@ async fn remote_traversal_simulated() {
 //
     // This should be reconsidered when the simulator is reworked per https://github.com/unbase/unbase/issues/6
 //
-    let testspan2 = testspan.clone();
-    let handle: RemoteHandle<()> = unbase::util::task::spawn_with_handle((async move || {
-        let span = span!(parent: testspan2, Level::DEBUG, "Value retrieval task");
-        let _guard = span.enter();
-        let value = rec_a1.get_value("animal_sound").await.expect("get_value");
 
-        assert_eq!(value, "Meow");
-    })());
+        let value = rec_a1.get_value("animal_sound").await.expect("get_value");
 //
 //    let s2 = simulator.clone();
 //    let t = std::thread::spawn(move || {
