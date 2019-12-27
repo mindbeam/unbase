@@ -77,6 +77,7 @@ impl StatefulSerialize for MemoPeer {
     }
 }
 
+#[derive(Debug)]
 pub struct MemoRefSeed<'a> { pub dest_slab: &'a SlabHandle, pub origin_slabref: &'a SlabRef }
 
 impl<'a> DeserializeSeed for MemoRefSeed<'a> {
@@ -95,6 +96,7 @@ impl<'a> Visitor for MemoRefSeed<'a> {
        formatter.write_str("struct MemoRef")
     }
 
+    #[tracing::instrument(skip(visitor))]
     fn visit_seq<V>(self, mut visitor: V) -> Result<MemoRef, V::Error>
        where V: SeqVisitor
     {

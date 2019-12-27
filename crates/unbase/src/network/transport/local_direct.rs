@@ -3,7 +3,7 @@ use std::thread;
 use std::sync::mpsc;
 use crate::slab::*;
 use super::*;
-use tracing::{info,debug};
+use tracing::{span,debug,Level};
 
 #[derive(Clone)]
 pub struct LocalDirect {
@@ -30,14 +30,21 @@ impl Transport for LocalDirect {
     fn is_local (&self) -> bool {
         true
     }
-    fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+    #[tracing::instrument]
+    fn make_transmitter (
+        &self,
+        args: &TransmitterArgs,
+    ) -> Option<Transmitter> {
         if let &TransmitterArgs::Local(rcv_slab) = args {
             let slab = rcv_slab.clone();
             let (tx_channel, rx_channel) = mpsc::channel::<(SlabRef,MemoRef)>();
 
+            let span = span!(Level::TRACE, "LocalDirect Transmitter");
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
+                let _guard = span.enter();
+
                 //let mut buf = [0; 65536];
-                info!("Started TX Thread");
+                debug!("Starting consumer");
                 while let Ok((from_slabref, memoref)) = rx_channel.recv() {
                     debug!("LocalDirect Slab({}) RECEIVED {:?} from {}", slab.my_ref.slab_id, memoref, from_slabref.slab_id);
                     // clone_for_slab adds the memo to the slab, because memos cannot exist outside of an owning slab
@@ -45,6 +52,7 @@ impl Transport for LocalDirect {
                     let owned_slabref = slab.agent.localize_slabref(&from_slabref);
                     slab.agent.localize_memoref(&memoref, &owned_slabref, true);
                 }
+                debug!("Finished consumer");
             });
 
             // TODO: Remove the mutex here. Consider moving transmitter out of slabref.
@@ -77,5 +85,12 @@ impl Drop for Internal {
             thread.join().expect("local_direct thread join");
             debug!("# LocalDirectInternal.drop Thread post join");
         }
+    }
+}
+
+impl std::fmt::Debug for LocalDirect {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fmt.debug_struct("LocalDirect")
+            .finish()
     }
 }

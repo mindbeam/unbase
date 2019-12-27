@@ -254,6 +254,7 @@ impl Context {
     // This is a temporary hack for testing purposes until such time as proper context exchange is enabled
     // QUESTION: should context exchanges be happening constantly, but often ignored? or requested? Probably the former,
     //           sent based on an interval and/or compaction ( which would also likely be based on an interval and/or present context size)
+    #[tracing::instrument]
     pub fn hack_send_context(&self, other: &Self) -> usize {
         self.compress();
 

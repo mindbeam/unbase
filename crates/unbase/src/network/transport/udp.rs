@@ -166,7 +166,10 @@ impl Transport for TransportUDP {
     fn is_local (&self) -> bool {
         false
     }
-    fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+    fn make_transmitter (
+        &self,
+        args: &TransmitterArgs,
+    ) -> Option<Transmitter> {
 
         if let &TransmitterArgs::Remote(slab_id,address) = args {
             if let &TransportAddress::UDP(ref udp_address) = address {

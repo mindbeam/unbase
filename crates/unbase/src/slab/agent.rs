@@ -103,6 +103,7 @@ impl SlabAgent {
         }
         return;
     }
+    #[tracing::instrument]
     pub fn unsubscribe_subject (&self,  subject_id: u64, context: &Context ){
         let mut state = self.state.write().unwrap();
 
@@ -155,6 +156,7 @@ impl SlabAgent {
 
         rx
     }
+    #[tracing::instrument]
     pub fn check_memo_waiters ( &self, memo: &Memo) {
         let mut state = self.state.write().unwrap();
         match state.memo_wait_channels.entry(memo.id) {
@@ -296,6 +298,7 @@ impl SlabAgent {
 
 
     }
+    #[tracing::instrument]
     pub fn do_peering(&self, memoref: &MemoRef, origin_slabref: &SlabRef) {
 
         let do_send = if let Some(memo) = memoref.get_memo_if_resident(){
@@ -376,6 +379,7 @@ impl SlabAgent {
         }
 
     }
+    #[tracing::instrument]
     pub fn localize_memorefhead (&self, mrh: &MemoRefHead, from_slabref: &SlabRef, include_memos: bool ) -> MemoRefHead {
 
         if from_slabref.slab_id == self.my_ref.slab_id {
@@ -468,6 +472,7 @@ impl SlabAgent {
         // TODO: reconcile localize_memoref, reconstitute_memo, and recv_memoref
         (memo, memoref, had_memoref)
     }
+    #[tracing::instrument]
     fn localize_memobody(&self, mb: &MemoBody, from_slabref: &SlabRef ) -> MemoBody {
         assert!(from_slabref.owning_slab_id == self.id, "MemoBody clone_for_slab owning slab should be identical");
 
@@ -514,6 +519,7 @@ impl SlabAgent {
             })
             .collect())
     }
+    #[tracing::instrument]
     pub fn localize_relationslothead(&self, rsh: &RelationSlotSubjectHead, from_slabref: &SlabRef) -> RelationSlotSubjectHead {
         // panic!("check here to make sure that peers are being properly constructed for the root_index_seed");
         let new = rsh.0

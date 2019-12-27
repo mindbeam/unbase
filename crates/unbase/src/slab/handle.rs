@@ -31,6 +31,7 @@ impl SlabHandle {
 //        unimplemented!()
 //    }
 
+    #[tracing::instrument]
     pub async fn request_memo(&self, memoref: &MemoRef) -> Result<Memo, RetrieveError> {
 
         // we're looking for this memo
@@ -84,21 +85,26 @@ impl SlabHandle {
 
         Err(RetrieveError::NotFoundByDeadline)
     }
+    #[tracing::instrument]
     pub fn new_memo_basic (&self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
         self.agent.new_memo(subject_id, parents, body)
     }
+    #[tracing::instrument]
     pub fn new_memo_basic_noparent (&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
         self.agent.new_memo(subject_id, MemoRefHead::new(self), body)
     }
     pub fn generate_subject_id(&self) -> SubjectId {
         self.agent.generate_subject_id()
     }
+    #[tracing::instrument]
     pub fn subscribe_subject(&self, subject_id: u64, context: &Context) {
         self.agent.subscribe_subject(subject_id, context);
     }
+    #[tracing::instrument]
     pub fn unsubscribe_subject(&self, subject_id: u64, context: &Context) {
         self.agent.unsubscribe_subject(subject_id, context);
     }
+    #[tracing::instrument]
     pub fn slabref_from_local_slab(&self, peer_slab: &SlabHandle) -> SlabRef {
 
         //let args = TransmitterArgs::Local(&peer_slab);

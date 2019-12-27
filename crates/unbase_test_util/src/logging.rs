@@ -9,11 +9,18 @@ pub fn init_test_logger(name: &'static str) {
 
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
-    pub (crate) fn init(name: &'static str) {
-        #[cfg(feature="trace_jaeger")]
-        jaeger::init(name);
+    pub (crate) fn init(_name: &'static str) {
         #[cfg(feature="trace_basic")]
-        basic::init(name);
+        basic::init(_name);
+
+        #[cfg(feature="trace_jaeger")]
+        jaeger::init(_name);
+    }
+    #[cfg(all(feature="trace_basic"))]
+    mod basic {
+        pub fn init(_name: &'static str) {
+            tracing_subscriber::fmt::init();
+        }
     }
     #[cfg(feature = "trace_jaeger")]
     mod jaeger {
@@ -43,14 +50,6 @@ mod native {
             let subscriber = opentelemetry.with_subscriber(Registry::default());
 
             tracing::subscriber::set_global_default(subscriber).unwrap();
-        }
-    }
-
-    #[cfg(all(feature="trace_basic"))]
-    mod basic {
-        pub fn init(name: &'static str) {
-            use tracing_subscriber;
-            tracing_subscriber::fmt::init();
         }
     }
 }

@@ -44,12 +44,16 @@ impl Network {
     /// This represents your joining an existing unbase system.
     /// (In production, this is the one you want)
     pub fn new() -> Network {
-        Self::new_inner(false)
+        Self::new_inner(
+            false,
+        )
     }
     /// In test cases, you want to create a wholly new unbase system.
     /// You should not be using this in production, except the *first* time ever for that system
     pub fn create_new_system() -> Network {
-        Self::new_inner(true)
+        Self::new_inner(
+            true,
+        )
     }
     fn new_inner(create_new_system: bool) -> Network {
 
@@ -159,6 +163,7 @@ impl Network {
 
         self.conditionally_generate_root_index_seed(&new_slab);
     }
+    #[tracing::instrument]
     pub fn deregister_local_slab(&self, slab_id: SlabId) {
 //        // Remove the deregistered slab so get_representative_slab doesn't return it
         {
@@ -196,6 +201,7 @@ impl Network {
         // No slabs left
         root_index_seed.take();
     }
+    #[tracing::instrument]
     pub fn get_root_index_seed(&self, slab: &SlabHandle) -> Option<MemoRefHead> {
         let root_index_seed = {
             self.root_index_seed.read().expect("root_index_seed read lock").clone()
@@ -209,6 +215,7 @@ impl Network {
             None => None,
         }
     }
+    #[tracing::instrument]
     pub fn get_root_index_seed_for_agent(&self, agent: &SlabAgent ) -> Option<MemoRefHead> {
         let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");
 

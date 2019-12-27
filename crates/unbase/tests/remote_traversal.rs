@@ -10,15 +10,12 @@ use futures::future::{select, RemoteHandle};
 use tracing::{debug, span, Level};
 
 #[async_test]
-#[tracing::instrument]
 async fn remote_traversal_simulated() {
 
-    unbase_test_util::init_test_logger("remote_traversal_simulated");
-
-    let span = span!(Level::TRACE, "my_span");
-    let _enter = span.enter();
-
-    debug!("meow");
+    // TODO init logging and add span in async_test macro
+    unbase_test_util::init_test_logger("remote_traversal");
+    let testspan = span!(Level::INFO, "remote_traversal_simulated");
+    let _enter = testspan.enter();
 
     let net = unbase::Network::create_new_system();
     let simulator = unbase::util::simulator::Simulator::new();
@@ -42,33 +39,32 @@ async fn remote_traversal_simulated() {
     simulator.advance_clock(1);
     simulator.advance_clock(1);
 
-    slab_a.remotize_memo_ids( &rec_a1.get_all_memo_ids() ).expect("failed to remotize memos");
-
-    simulator.advance_clock(1);
-
+    slab_a.remotize_memo_ids(&rec_a1.get_all_memo_ids()).expect("failed to remotize memos");
+//
+    simulator.start();
+//
     // This should be reconsidered when the simulator is reworked per https://github.com/unbase/unbase/issues/6
-
-    let handle: RemoteHandle<()> = unbase::util::task::spawn_with_handle(  (async move || {
-        let span = span!(Level::DEBUG, "value retrieval");
+//
+    let testspan2 = testspan.clone();
+    let handle: RemoteHandle<()> = unbase::util::task::spawn_with_handle((async move || {
+        let span = span!(parent: testspan2, Level::DEBUG, "Value retrieval task");
         let _guard = span.enter();
-        debug!("MEOW");
         let value = rec_a1.get_value("animal_sound").await.expect("get_value");
 
         assert_eq!(value, "Meow");
     })());
-
-    let s2 = simulator.clone();
-    let t = std::thread::spawn(move || {
-        for _ in 0..300 {
-            debug!("ADVANCE");
-            block_on(Delay::new(Duration::from_millis(10)));
-            s2.advance_clock(1);
-        }
-    });
-
-    handle.await;
-    t.join().unwrap();
-
+//
+//    let s2 = simulator.clone();
+//    let t = std::thread::spawn(move || {
+//        for _ in 0..300 {
+//            debug!("ADVANCE");
+//            block_on(Delay::new(Duration::from_millis(10)));
+//            s2.advance_clock(1);
+//        }
+//    });
+//
+//    handle.await;
+//    t.join().unwrap();
 }
 
 #[async_test]

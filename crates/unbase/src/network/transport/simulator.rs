@@ -34,7 +34,10 @@ impl Transport for Simulator <MemoPayload> {
     fn is_local (&self) -> bool {
         true
     }
-    fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+    fn make_transmitter (
+        &self,
+        args: &TransmitterArgs,
+    ) -> Option<Transmitter> {
         if let TransmitterArgs::Local(ref slab) = *args {
             let tx = SimulatorTransmitter{
                 source_point: Point3 { x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
