@@ -9,7 +9,7 @@ use crate::Network;
 use crate::slab::agent::SlabAgent;
 use crate::context::Context;
 use crate::memorefhead::MemoRefHead;
-use crate::error::RetrieveError;
+use crate::error::{RetrieveError, PeeringError};
 use timer::Delay;
 use tracing::{trace};
 
@@ -37,7 +37,7 @@ impl SlabHandle {
         // we're looking for this memo
         let mut channel = self.agent.memo_wait_channel(memoref.id);
 
-        // send the request
+        // formulate the request
         let request_memo = self.new_memo_basic(
             None,
             MemoRefHead::new( self ), // TODO: how should this be parented?
@@ -63,6 +63,9 @@ impl SlabHandle {
             if sent == 0 {
                 return Err(RetrieveError::NotFound)
             }
+
+            // TODO - MAJOR SOURCE OF POTENTIAL NONDETERMINISM
+            // Need to ensure that the delay mechanism is hooked into the simulator when applicable
 
             let timeout = Delay::new(duration);
             match select(channel, timeout).await {
@@ -116,8 +119,9 @@ impl SlabHandle {
 
         self.agent.assert_slabref(peer_slab.my_ref.slab_id, &vec![presence])
     }
-    pub fn remotize_memo_ids(&self, memo_ids: &[MemoId]) -> Result<(), String> {
-        self.agent.remotize_memo_ids(memo_ids)
+    pub fn remotize_memos(&self, memo_ids: &[MemoId]) -> Result<(), PeeringError> {
+        //TODO accept memoref instead of memoid
+        self.agent.remotize_memos(memo_ids)
     }
     pub fn peer_slab_count (&self) -> usize {
         self.agent.peer_slab_count()

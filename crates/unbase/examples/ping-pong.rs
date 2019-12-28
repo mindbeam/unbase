@@ -80,7 +80,7 @@ async fn run (){
     });
 
     for _ in 1..12 {
-        simulator.advance_clock(1);
+        simulator.advance_clock().await;
         thread::sleep(half_sec);
     }
 

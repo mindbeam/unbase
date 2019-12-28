@@ -32,16 +32,6 @@ use crate::slab::agent::SlabAgent;
 use futures::StreamExt;
 use futures::future::RemoteHandle;
 
-// Opaque type + defining use site
-//type Dispatcher = impl Future;
-//fn make_dispatcher ( dispatch_rx_channel: mpsc::Receiver<MemoRef>,  agent: Arc<SlabAgent> ) -> Dispatcher {
-//    let foo = dispatch_rx_channel.for_each(async move |memoref| {
-//        agent.recv_memoref(memoref).await
-//    });
-//
-//    unimplemented!()
-//}
-
 #[derive(Clone)]
 pub struct Slab{
     pub id: SlabId,
@@ -79,9 +69,6 @@ impl Slab {
         let (dispatch_tx_channel, dispatch_rx_channel) = mpsc::channel::<MemoRef>(10);
 
         let agent = Arc::new(SlabAgent::new(net, my_ref.clone()));
-
-//        let dispatcher_task = make_dispatcher( dispatch_rx_channel,agent.clone() );
-//        let dispatcher  = crate::util::task::spawn_with_handle(dispatcher_task );
 
         let agent2 = agent.clone();
         let dispatcher_task = (async move || {

@@ -3,8 +3,9 @@ use crate::slab::{SlabHandle, MemoRef};
 use crate::network::transmitter::DynamicDispatchTransmitter;
 use crate::Network;
 use std::fmt;
+use async_trait::async_trait;
 
-use crate::util::simulator::{Simulator, SimEventPayload, Point3, Point4, SimEvent};
+use crate::util::simulator::{Simulator, SimEvent, Point3};
 // TODO: determine how to account for execution time in a deterministic way
 // suggest each operation be assigned a delay factor, such that some or all resultant events are deterministically delayed
 pub struct MemoPayload {
@@ -13,9 +14,10 @@ pub struct MemoPayload {
     memoref:       MemoRef
 }
 
-impl SimEventPayload for MemoPayload {
+#[async_trait]
+impl SimEvent for MemoPayload {
     #[tracing::instrument]
-    fn fire (self) {
+    async fn fire (self) {
         let slabref = self.dest.agent.localize_slabref(&self.from_slabref);
         self.dest.agent.localize_memoref( &self.memoref, &slabref, true );
     }
@@ -72,36 +74,14 @@ pub struct SimulatorTransmitter{
 impl DynamicDispatchTransmitter for SimulatorTransmitter {
     #[tracing::instrument]
     fn send (&self, from_slabref: &SlabRef, memoref: MemoRef){
-        let ref q = self.source_point;
-        let ref p = self.dest_point;
 
-        let source_point = Point4 {
-            x: q.x,
-            y: q.y,
-            z: q.z,
-            t: self.simulator.get_clock()
+        let evt = MemoPayload {
+            from_slabref: from_slabref.clone(),
+            dest: self.dest.clone(),
+            memoref: memoref
         };
 
-        let distance = (( (q.x - p.x)^2 + (q.y - p.y)^2 + (q.z - p.z)^2 ) as f64).sqrt();
-
-        let dest_point = Point4 {
-            x: p.x,
-            y: p.y,
-            z: p.z,
-            t: source_point.t + ( distance as u64 * self.simulator.speed_of_light ) + 1 // add 1 to ensure nothing is instant
-        };
-
-        let evt = SimEvent {
-            source_point: source_point,
-            dest_point: dest_point,
-            payload: MemoPayload {
-                from_slabref: from_slabref.clone(),
-                dest: self.dest.clone(),
-                memoref: memoref
-            }
-        };
-
-        self.simulator.add_event( evt );
+        self.simulator.add_event( evt, &self.source_point, &self.dest_point);
     }
 }
 

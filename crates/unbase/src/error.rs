@@ -7,3 +7,8 @@ pub enum RetrieveError {
     IndexNotInitialized,
     SlabError
 }
+
+#[derive(PartialEq, Debug)]
+pub enum PeeringError {
+    InsufficientReplicas
+}

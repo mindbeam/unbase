@@ -10,6 +10,7 @@ use crate::subject::SubjectId;
 use crate::memorefhead::MemoRefHead;
 use crate::context::{WeakContext, Context};
 use async_std::task::block_on;
+use crate::error::PeeringError;
 
 pub struct SlabAgent {
     pub id: SlabId,
@@ -573,7 +574,7 @@ impl SlabAgent {
     }
     #[allow(unused)]
     #[tracing::instrument]
-    pub fn remotize_memoref( &self, memoref: &MemoRef ) -> Result<(),String> {
+    pub fn remotize_memoref( &self, memoref: &MemoRef ) -> Result<(),PeeringError> {
         assert!(memoref.owning_slab_id == self.id);
 
         // TODO: check peering minimums here, and punt if we're below threshold
@@ -585,7 +586,7 @@ impl SlabAgent {
                 let peerlist = memoref.peerlist.read().unwrap();
 
                 if peerlist.len() == 0 {
-                    return Err("Cannot remotize a zero-peer memo".to_string());
+                    return Err(PeeringError::InsufficientReplicas);
                 }
                 send_peers = peerlist.clone();
                 *ptr = MemoRefPtr::Remote;
@@ -735,8 +736,8 @@ impl SlabAgent {
     }
     #[allow(unused)]
     #[tracing::instrument]
-    pub fn remotize_memo_ids( &self, memo_ids: &[MemoId] ) -> Result<(),String>{
-
+    pub fn remotize_memos(&self, memo_ids: &[MemoId] ) -> Result<(),PeeringError>{
+        //TODO accept memoref instead of memoid
         let mut memorefs : Vec<MemoRef> = Vec::with_capacity(memo_ids.len());
 
         {

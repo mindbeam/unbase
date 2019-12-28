@@ -37,6 +37,7 @@ futures-util = "0.3.1"
 tracing = "0.1.10"
 tracing-futures = "0.2.0"
 itertools = "0.8.0"
+async-trait = "0.1.22"
 unbase_test_util = { path = "../unbase_test_util" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
