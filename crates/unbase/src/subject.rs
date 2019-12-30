@@ -1,8 +1,17 @@
 use core::ops::Deref;
-use std::fmt;
-use std::collections::HashMap;
-use std::sync::{Arc,RwLock,Weak};
+use std::{
+    collections::HashMap,
+    fmt,
+    sync::{
+        Arc,
+        RwLock,
+        Weak
+    }
+};
 use tracing::debug;
+use futures::{
+    stream::StreamExt
+};
 
 use crate::slab::*;
 use crate::memorefhead::*;
@@ -89,7 +98,7 @@ impl Subject {
     }
     #[tracing::instrument]
     pub async fn get_value ( &self, key: &str ) -> Option<String> {
-        self.head.read().unwrap().project_value(&self.contextref.get_context(), key)
+        self.head.read().unwrap().project_value(&self.contextref.get_context(), key).await
     }
     #[tracing::instrument]
     pub async fn get_relation ( &self, key: RelationSlotId ) -> Result<Subject, RetrieveError> {
@@ -106,21 +115,30 @@ impl Subject {
     }
     #[tracing::instrument]
     pub async fn set_value (&self, key: &str, value: &str) -> bool {
+        //TODO: guard against race conditions between different newheads with simultaneous sets
+        // Was managing this with a mutex, but can't do it in the same way given asyncification
+
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
         let context = self.contextref.get_context();
         let slab = &context.slab;
-        let mut head = self.head.write().unwrap();
+
+        let mut head = {
+            self.head.read().unwrap().clone()
+        };
 
         let memoref = slab.new_memo_basic(
             Some(self.id),
-            head.clone(),
+            head,
             MemoBody::Edit(vals)
         );
 
-        head.apply_memoref(&memoref, &slab).await;
-        context.apply_subject_head( self.id,  &head, false );
+        let newhead = memoref.to_head();
+
+        context.apply_subject_head( self.id,  &newhead, false );
+
+        *(self.head.write().unwrap()) = newhead;
 
         true
     }
@@ -131,17 +149,21 @@ impl Subject {
 
         let context = self.contextref.get_context();
         let slab = &context.slab;
-        let mut head = self.head.write().unwrap();
+        let mut head = {
+            self.head.read().unwrap().clone()
+        };
 
         let memoref = slab.agent.new_memo(
             Some(self.id),
-            head.clone(),
+            head,
             MemoBody::Relation(RelationSlotSubjectHead(memoref_map))
         );
 
-        head.apply_memoref(&memoref, &slab).await;
-        context.apply_subject_head( self.id, &head, false );
+        let newhead = memoref.to_head();
 
+        context.apply_subject_head( self.id,&newhead, false ).await;
+
+        *(self.head.write().unwrap()) = newhead;
     }
     // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
     #[tracing::instrument]

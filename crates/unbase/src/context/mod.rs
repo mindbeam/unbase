@@ -224,9 +224,11 @@ impl Context {
 
         {
 
-            let head: MemoRefHead = if let Some(head) = {
+            let maybe_head = {
                 self.manager.lock().unwrap().get_head(subject_id)
-            } {
+            };
+
+            let head: MemoRefHead = if let Some(head) = maybe_head {
                 head.clone().apply(apply_head, &self.slab).await
             } else {
                 apply_head.clone()
@@ -383,14 +385,15 @@ impl Context {
 
     pub async fn is_fully_materialized(&self) -> bool {
 
-        // TODO - locking + async = :(
-        for subject_head in self.manager.lock().unwrap().subject_head_iter() {
-            if !subject_head.head.is_fully_materialized(&self.slab).await {
-                return false;
-            }
-        }
-
-        return true;
+        unimplemented!()
+//        // TODO - locking + async = :(
+//        for subject_head in self.manager.lock().unwrap().subject_head_iter() {
+//            if !subject_head.head.is_fully_materialized(&self.slab).await {
+//                return false;
+//            }
+//        }
+//
+//        return true;
 
     }
 }

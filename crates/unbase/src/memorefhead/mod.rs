@@ -173,7 +173,7 @@ impl MemoRefHead {
         self.head.iter().map(|memoref| {
             CausalMemoStreamItem {
                 memoref: memoref.clone(),
-                fut: get_memo_shim(&memoref, &self.slab),
+                fut: memoref.get_memo( slab ).boxed(),
                 memo: None
             }
         }).collect()
@@ -217,14 +217,9 @@ impl fmt::Debug for MemoRefHead{
     }
 }
 
-type MemoRequestFut = impl Future<Output=Memo>;
-fn get_memo_shim (memoref: &MemoRef, slab: &SlabHandle) -> MemoRequestFut {
-    memoref.get_memo( slab )
-}
-
 struct CausalMemoStreamItem{
     memoref: MemoRef,
-    fut: MemoRequestFut,
+    fut: Pin<Box<dyn Future<Output=Memo>>>,
     memo: Option<Memo>
 }
 

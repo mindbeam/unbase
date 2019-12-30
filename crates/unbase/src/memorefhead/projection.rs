@@ -1,5 +1,9 @@
 use super::*;
 
+use futures::{
+    stream::StreamExt,
+};
+
 impl MemoRefHead {
     /*pub fn fully_materialize( &self, slab: &Slab ) {
         // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
@@ -22,7 +26,7 @@ impl MemoRefHead {
         let mut relation_links : [SubjectId; SUBJECT_MAX_RELATIONS] = [0; SUBJECT_MAX_RELATIONS];
 
         // TODO: how to handle relationship nullification?
-        let memostream = self.causal_memo_stream(slab);
+        let mut memostream = self.causal_memo_stream(slab);
         while let Some(memo) = memostream.next().await {
             match memo.body {
                 MemoBody::FullyMaterialized { v: _, ref r } => {
@@ -56,11 +60,11 @@ impl MemoRefHead {
     pub async fn project_value ( &self, context: &Context, key: &str ) -> Option<String> {
 
         //TODO: consider creating a consolidated projection routine for most/all uses
-        let memostream = self.causal_memo_stream(&context.slab);
+        let mut memostream = self.causal_memo_stream(&context.slab);
         while let Some(memo) = memostream.next().await {
 
             debug!("# \t\\ Considering Memo {}", memo.id );
-            if let Some((values, materialized)) = memo.get_values().await {
+            if let Some((values, materialized)) = memo.get_values() {
                 if let Some(v) = values.get(key) {
                     return Some(v.clone());
                 }else if materialized {
@@ -74,7 +78,7 @@ impl MemoRefHead {
     pub async fn project_relation ( &self, context: &Context, key: RelationSlotId ) -> Result<(SubjectId,Self), RetrieveError> {
         // TODO: Make error handling more robust
 
-        let memostream = self.causal_memo_stream( &context.slab );
+        let mut memostream = self.causal_memo_stream( &context.slab );
         while let Some(memo) = memostream.next().await {
 
             if let Some((relations,materialized)) = memo.get_relations(){

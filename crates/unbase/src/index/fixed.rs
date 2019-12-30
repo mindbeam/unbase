@@ -50,13 +50,15 @@ impl IndexFixed {
     pub async fn insert <'a> (&self, key: u64, subject: &Subject) {
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
-        let node = &self.root.lock().unwrap().clone();
+        let node = {
+            self.root.lock().unwrap().clone()
+        };
 
         // TODO: optimize index node creation so we're not changing relationship as an edit
         // after the fact if we don't strictly have to. That said, this gives us a great excuse
         // to work on the consistency model, so I'm doing that first.
 
-        self.recurse_set(0, key, node, subject).await;
+        self.recurse_set(0, key, &node, subject).await;
     }
     // Temporarily managing our own bubble-up
     // TODO: finish moving the management of this to context / context::subject_graph
@@ -114,7 +116,9 @@ impl IndexFixed {
 
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
-        let mut node = self.root.lock().unwrap().clone();
+        let mut node = {
+            self.root.lock().unwrap().clone()
+        };
         let max = SUBJECT_MAX_RELATIONS as u64;
 
         //let mut n;
