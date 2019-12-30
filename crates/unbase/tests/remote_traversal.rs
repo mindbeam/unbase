@@ -19,6 +19,8 @@ async fn remote_traversal_simulated() {
     let net = unbase::Network::create_new_system();
     let simulator = unbase::util::simulator::Simulator::new();
     net.add_transport(Box::new(simulator.clone()));
+    let started = simulator.start();
+    debug!(%started);
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
@@ -31,28 +33,18 @@ async fn remote_traversal_simulated() {
     rec_a1.set_value("animal_sound", "Woof");
     rec_a1.set_value("animal_sound", "Meow");
 
-    simulator.advance_clock().await.expect("Now it should have propagated to slab B");
-    simulator.advance_clock().await.expect("now slab A should know that Slab B has it");
+    simulator.quiescence().await;
 
-    // TODO: how do we make subsequent operations deterministic?
-    // the most obvious thing is to implement a wait_for_quiescence call, or wait for a specific clock tick
-    // but that seems like a PITA. How do we get that determinism to happen by default when using the simulator?
-    // Do we build such behavior into a pre-operational checkpoint?
-    slab_a.remotize_memos(&rec_a1.get_all_memo_ids()).expect("failed to remotize memos");
-
-    let started = simulator.start();
-    debug!(%started);
+    slab_a.remotize_memos(&rec_a1.get_all_memo_ids()).await.expect("failed to remotize memos");
 
     let value = rec_a1.get_value("animal_sound").await;
     assert_eq!(value, Some("Meow".to_string()));
 
-    // TODO: replace this with sim.quiesce()
-    use std::time::Duration;
-    Delay::new(Duration::from_millis(1000)).await;
-
-    simulator.stop();
+    simulator.quiesce_and_stop().await;
     // This should be deterministic!
-    assert_eq!( simulator.get_clock().unwrap(), 5 );
+    assert_eq!( simulator.get_clock().unwrap(), 8 );
+    assert_eq!( simulator.get_sent().unwrap(), 10 );
+    assert_eq!( simulator.get_delivered().unwrap(), 10 );
 }
 
 #[async_test]
@@ -75,7 +67,7 @@ async fn remote_traversal_nondeterministic() {
 
     Delay::new(Duration::from_millis(10)).await;
 
-    slab_a.remotize_memos( &rec_a1.get_all_memo_ids() ).expect("failed to remotize memos");
+    slab_a.remotize_memos( &rec_a1.get_all_memo_ids() ).await.expect("failed to remotize memos");
 
     Delay::new(Duration::from_millis(10)).await;
 
@@ -109,7 +101,7 @@ async fn remote_traversal_nondeterministic_udp() {
         Delay::new(Duration::from_millis(150)).await;
 
         // manually remove the memos
-        slab_a.remotize_memos(&rec_a1.get_all_memo_ids()).expect("failed to remotize memos");
+        slab_a.remotize_memos(&rec_a1.get_all_memo_ids()).await.expect("failed to remotize memos");
 
         // Not really any strong reason to wait here, except just to play nice and make sure slab_b's peering is updated
         // TODO: test memo expungement/de-peering, followed immediately by MemoRequest for same

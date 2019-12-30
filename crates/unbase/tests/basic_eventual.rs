@@ -4,7 +4,6 @@ use unbase::error::*;
 use timer::Delay;
 use std::time;
 use futures_await_test::async_test;
-use futures::executor::block_on;
 use futures::future::RemoteHandle;
 
 use tracing::debug;

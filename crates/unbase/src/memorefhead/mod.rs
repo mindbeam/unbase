@@ -6,12 +6,19 @@ use crate::subject::*;
 use crate::context::*;
 use crate::error::*;
 
-use std::mem;
-use std::fmt;
-use std::slice;
-use std::collections::VecDeque;
-use async_std::task::block_on;
-use tracing::debug;
+use std::{
+    mem,
+    fmt,
+    slice,
+    collections::VecDeque,
+    pin::Pin,
+};
+
+use tracing::{
+    debug
+};
+
+use futures::{Stream, task::Poll, Future};
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -134,9 +141,9 @@ impl MemoRefHead {
 
         applied
     }
-    pub fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) {
+    pub async fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) {
         for new in new_memorefs.iter(){
-            block_on( self.apply_memoref(new, slab) );
+            self.apply_memoref(new, slab).await;
         }
     }
     pub async fn apply (mut self, other: &MemoRefHead, slab: &SlabHandle) -> MemoRefHead {
@@ -162,8 +169,14 @@ impl MemoRefHead {
     pub fn to_vec (&self) -> Vec<MemoRef> {
         self.head.clone()
     }
-    pub fn to_vecdeque (&self) -> VecDeque<MemoRef> {
-        VecDeque::from(self.head.clone())
+    pub fn to_stream_vecdeque (&self, slab: &SlabHandle ) -> VecDeque<CausalMemoStreamItem> {
+        self.head.iter().map(|memoref| {
+            CausalMemoStreamItem {
+                memoref: memoref.clone(),
+                fut: get_memo_shim(&memoref, &self.slab),
+                memo: None
+            }
+        }).collect()
     }
     pub fn len (&self) -> usize {
         self.head.len()
@@ -171,8 +184,8 @@ impl MemoRefHead {
     pub fn iter (&self) -> slice::Iter<MemoRef> {
         self.head.iter()
     }
-    pub fn causal_memo_iter(&self, slab: &SlabHandle ) -> CausalMemoIter {
-        CausalMemoIter::from_head( &self, slab )
+    pub fn causal_memo_stream(&self, slab: &SlabHandle ) -> CausalMemoStream {
+        CausalMemoStream::from_head(&self, slab )
     }
     pub async fn is_fully_materialized(&self, slab: &SlabHandle ) -> bool {
         // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
@@ -204,12 +217,23 @@ impl fmt::Debug for MemoRefHead{
     }
 }
 
-pub struct CausalMemoIter {
-    queue: VecDeque<MemoRef>,
+type MemoRequestFut = impl Future<Output=Memo>;
+fn get_memo_shim (memoref: &MemoRef, slab: &SlabHandle) -> MemoRequestFut {
+    memoref.get_memo( slab )
+}
+
+struct CausalMemoStreamItem{
+    memoref: MemoRef,
+    fut: MemoRequestFut,
+    memo: Option<Memo>
+}
+
+pub struct CausalMemoStream {
+    queue: VecDeque<CausalMemoStreamItem>,
     slab:  SlabHandle
 }
 
-impl fmt::Debug for CausalMemoIter {
+impl fmt::Debug for CausalMemoStream {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("CausalMemoIter")
             .field("remaining",&self.queue.len())
@@ -227,48 +251,55 @@ head ^    \- F -> D -/
      Arguably this should not be an iterator at all, but rather a recursive function
      Going with the iterator for now in the interest of simplicity
 */
-impl CausalMemoIter {
+impl CausalMemoStream {
     #[tracing::instrument]
     pub fn from_head ( head: &MemoRefHead, slab: &SlabHandle) -> Self {
         if head.owning_slab_id != slab.my_ref.slab_id {
             assert!(head.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
         }
-        CausalMemoIter {
-            queue: head.to_vecdeque(),
+        CausalMemoStream {
+            queue: head.to_stream_vecdeque(slab),
             slab:  (*slab).clone()
         }
     }
 }
 
-use tracing::info;
-// NEXT TODO - update this to be a stream
-impl Iterator for CausalMemoIter {
+impl Stream for CausalMemoStream {
     type Item = Memo;
 
     #[tracing::instrument]
-    fn next (&mut self) -> Option<Memo> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         // iterate over head memos
         // Unnecessarly complex because we're not always dealing with MemoRefs
         // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>
 
-        // TODO: Stop traversal when we come across a Keyframe memo
-        if let Some(memoref) = self.queue.pop_front() {
-            // this is wrong - Will result in G, E, F, C, D, B, A
-
-            info!("blocking on get_memo");
-            // HACK
-            match block_on( memoref.get_memo( &self.slab ) ) {
-                Ok(memo) => {
-                    self.queue.append(&mut memo.get_parent_head().to_vecdeque());
-                    return Some(memo)
-                },
-                Err(e) => {
-                    panic!("Failed to retrieve memo {} ({:?})", memoref.id, e );
-                }
-            }
-            //TODO: memoref.get_memo needs to be able to fail
+        if self.queue.len() == 0 {
+            return Poll::Ready(None);
         }
 
-        return None;
+        let mut nextheads = VecDeque::new();
+
+        for item in self.queue.iter_mut() {
+            // QUESTION: Is it bad to pass our context? We have to poll all of these, but only want to be
+            // woken up when the *first* of these futures is ready. We only get one shot at setting the
+            // context/waker though, so I think we just have to deal with that.
+            if let None = item.memo {
+                match item.fut.poll(cx) {
+                    Poll::Ready(memo) => {
+                        nextheads.append(&mut memo.get_parent_head().to_stream_vecdeque(&self.slab) );
+                        item.memo = Some(memo);
+                    },
+                    Poll::Pending => {}
+                }
+            }
+        }
+
+        self.queue.append(&nextheads);
+
+        if let None = self.queue[0] {
+            return Poll::Pending;
+        }
+
+        return Poll::Ready( self.queue.pop_front().memo.unwrap() )
     }
 }

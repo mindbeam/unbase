@@ -390,8 +390,8 @@ mod test {
     use crate::slab::{MemoBody, RelationSlotSubjectHead};
     use super::ContextManager;
 
-    #[test]
-    fn context_manager_basic() {
+    #[async_test]
+    async fn context_manager_basic() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
         let handle = slab.handle();
@@ -403,7 +403,7 @@ mod test {
                                          r: RelationSlotSubjectHead::empty(),
                                      })
             .to_head();
-        manager.set_subject_head(1, head1.project_all_relation_links(&handle), head1.clone());
+        manager.set_subject_head(1, head1.project_all_relation_links(&handle).await, head1.clone());
 
         let head2 = handle.new_memo_basic_noparent(Some(2),
                                                    MemoBody::FullyMaterialized {
@@ -411,7 +411,7 @@ mod test {
                                          r: RelationSlotSubjectHead::single(0, 1, head1),
                                      })
             .to_head();
-        manager.set_subject_head(2, head2.project_all_relation_links(&handle), head2.clone());
+        manager.set_subject_head(2, head2.project_all_relation_links(&handle).await, head2.clone());
 
         let head3 = handle.new_memo_basic_noparent(Some(3),
                                                    MemoBody::FullyMaterialized {
@@ -419,7 +419,7 @@ mod test {
                                          r: RelationSlotSubjectHead::single(0, 2, head2),
                                      })
             .to_head();
-        manager.set_subject_head(3, head3.project_all_relation_links(&handle), head3.clone());
+        manager.set_subject_head(3, head3.project_all_relation_links(&handle).await, head3.clone());
 
         let head4 = handle.new_memo_basic_noparent(Some(4),
                                                    MemoBody::FullyMaterialized {
@@ -427,7 +427,7 @@ mod test {
                                          r: RelationSlotSubjectHead::single(0, 3, head3),
                                      })
             .to_head();
-        manager.set_subject_head(4, head4.project_all_relation_links(&handle), head4);
+        manager.set_subject_head(4, head4.project_all_relation_links(&handle).await, head4);
 
         let mut iter = manager.subject_head_iter();
         assert_eq!(1, iter.next().expect("iter result 1 should be present").subject_id);
@@ -446,19 +446,19 @@ mod test {
 
         // Subject 1 is pointing to nooobody
         let head1 = handle.new_memo_basic_noparent(Some(1), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::empty() }).to_head();
-        manager.set_subject_head(1, head1.project_all_relation_links(&handle), head1.clone());
+        manager.set_subject_head(1, head1.project_all_relation_links(&handle).await, head1.clone());
 
         // Subject 2 slot 0 is pointing to Subject 1
         let head2 = handle.new_memo_basic_noparent(Some(2), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 1, head1.clone()) }).to_head();
-        manager.set_subject_head(2, head2.project_all_relation_links(&handle), head2.clone());
+        manager.set_subject_head(2, head2.project_all_relation_links(&handle).await, head2.clone());
 
         //Subject 3 slot 0 is pointing to nobody
         let head3 = handle.new_memo_basic_noparent(Some(3), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::empty() }).to_head();
-        manager.set_subject_head(3, head3.project_all_relation_links(&handle), head3.clone());
+        manager.set_subject_head(3, head3.project_all_relation_links(&handle).await, head3.clone());
 
         // Subject 4 slot 0 is pointing to Subject 3
         let head4 = handle.new_memo_basic_noparent(Some(4), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 3, head3.clone()) }).to_head();
-        manager.set_subject_head(4, head4.project_all_relation_links(&handle), head4);
+        manager.set_subject_head(4, head4.project_all_relation_links(&handle).await, head4);
 
 
         // 2[0] -> 1
@@ -481,23 +481,23 @@ mod test {
 
         // Subject 1 is pointing to nooobody
         let head1 = slab.new_memo_basic_noparent(Some(1), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::empty() }).to_head();
-        manager.set_subject_head(1, head1.project_all_relation_links(&slab), head1.clone());
+        manager.set_subject_head(1, head1.project_all_relation_links(&slab).await, head1.clone());
 
         // Subject 2 slot 0 is pointing to Subject 1
         let head2 = slab.new_memo_basic_noparent(Some(2), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 1, head1.clone()) }).to_head();
-        manager.set_subject_head(2, head2.project_all_relation_links(&slab), head2.clone());
+        manager.set_subject_head(2, head2.project_all_relation_links(&slab).await, head2.clone());
 
         //Subject 3 slot 0 is pointing to nobody
         let head3 = slab.new_memo_basic_noparent(Some(3), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::empty() }).to_head();
-        manager.set_subject_head(3, head3.project_all_relation_links(&slab), head3.clone());
+        manager.set_subject_head(3, head3.project_all_relation_links(&slab).await, head3.clone());
 
         // Subject 4 slot 0 is pointing to Subject 3
         let head4 = slab.new_memo_basic_noparent(Some(4), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 3, head3.clone()) }).to_head();
-        manager.set_subject_head(4, head4.project_all_relation_links(&slab), head4.clone());
+        manager.set_subject_head(4, head4.project_all_relation_links(&slab).await, head4.clone());
 
         // Repoint Subject 2 slot 0 to subject 4
         let head2_b = slab.new_memo_basic(Some(2), head2, MemoBody::Relation(RelationSlotSubjectHead::single(0,4,head4) )).to_head();
-        manager.set_subject_head(4, head2_b.project_all_relation_links(&slab), head2_b);
+        manager.set_subject_head(4, head2_b.project_all_relation_links(&slab).await, head2_b);
 
 
         // 2[0] -> 1
@@ -523,15 +523,15 @@ mod test {
 
         // Subject 1 is pointing to nooobody
         let head1 = slab.new_memo_basic_noparent(Some(1), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::empty() }).to_head();
-        manager.set_subject_head(1, head1.project_all_relation_links(&slab), head1.clone());
+        manager.set_subject_head(1, head1.project_all_relation_links(&slab).await, head1.clone());
 
         // Subject 2 slot 0 is pointing to Subject 1
         let head2 = slab.new_memo_basic_noparent(Some(2), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 1, head1.clone()) }).to_head();
-        manager.set_subject_head(2, head2.project_all_relation_links(&slab), head2.clone());
+        manager.set_subject_head(2, head2.project_all_relation_links(&slab).await, head2.clone());
 
         //Subject 3 slot 0 is pointing to Subject 2
         let head3 = slab.new_memo_basic_noparent(Some(3), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 2, head2.clone()) }).to_head();
-        manager.set_subject_head(3, head3.project_all_relation_links(&slab), head3.clone());
+        manager.set_subject_head(3, head3.project_all_relation_links(&slab).await, head3.clone());
 
 
         // 2[0] -> 1
@@ -556,7 +556,7 @@ mod test {
 
         // Subject 1 is pointing to nooobody
         let head1 = slab.new_memo_basic_noparent(Some(1), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::empty() }).to_head();
-        manager.set_subject_head(1, head1.project_all_relation_links(&slab), head1.clone());
+        manager.set_subject_head(1, head1.project_all_relation_links(&slab).await, head1.clone());
 
         assert_eq!(manager.subject_count(), 1);
         assert_eq!(manager.subject_head_count(), 1);
@@ -568,7 +568,7 @@ mod test {
 
         // Subject 2 slot 0 is pointing to Subject 1
         let head2 = slab.new_memo_basic_noparent(Some(2), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 1, head1.clone()) }).to_head();
-        manager.set_subject_head(2, head2.project_all_relation_links(&slab), head2.clone());
+        manager.set_subject_head(2, head2.project_all_relation_links(&slab).await, head2.clone());
 
         assert_eq!(manager.subject_count(), 2);
         assert_eq!(manager.subject_head_count(), 1);
@@ -580,7 +580,7 @@ mod test {
 
         //Subject 3 slot 0 is pointing to nobody
         let head3 = slab.new_memo_basic_noparent(Some(3), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::empty() }).to_head();
-        manager.set_subject_head(3, head3.project_all_relation_links(&slab), head3.clone());
+        manager.set_subject_head(3, head3.project_all_relation_links(&slab).await, head3.clone());
 
         assert_eq!(manager.subject_count(), 1);
         assert_eq!(manager.subject_head_count(), 1);
@@ -592,7 +592,7 @@ mod test {
 
         // Subject 4 slot 0 is pointing to Subject 3
         let head4 = slab.new_memo_basic_noparent(Some(4), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSlotSubjectHead::single(0, 3, head3.clone()) }).to_head();
-        manager.set_subject_head(4, head4.project_all_relation_links(&slab), head4);
+        manager.set_subject_head(4, head4.project_all_relation_links(&slab).await, head4);
 
         assert_eq!(manager.subject_count(), 2);
         assert_eq!(manager.subject_head_count(), 1);

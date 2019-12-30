@@ -18,11 +18,12 @@ impl MemoRefHead {
     // Kind of a brute force way to do this
     // TODO: Consider calculating deltas during memoref application,
     //       and use that to perform a minimum cost subject_head_link edit
-    pub fn project_all_relation_links (&self, slab: &SlabHandle) -> Vec<RelationLink> {
+    pub async fn project_all_relation_links (&self, slab: &SlabHandle) -> Vec<RelationLink> {
         let mut relation_links : [SubjectId; SUBJECT_MAX_RELATIONS] = [0; SUBJECT_MAX_RELATIONS];
 
         // TODO: how to handle relationship nullification?
-        for memo in self.causal_memo_iter(slab){
+        let memostream = self.causal_memo_stream(slab);
+        while let Some(memo) = memostream.next().await {
             match memo.body {
                 MemoBody::FullyMaterialized { v: _, ref r } => {
 
@@ -52,13 +53,14 @@ impl MemoRefHead {
         }).collect()
     }
 
-    pub fn project_value ( &self, context: &Context, key: &str ) -> Option<String> {
+    pub async fn project_value ( &self, context: &Context, key: &str ) -> Option<String> {
 
         //TODO: consider creating a consolidated projection routine for most/all uses
-        for memo in self.causal_memo_iter(&context.slab) {
+        let memostream = self.causal_memo_stream(&context.slab);
+        while let Some(memo) = memostream.next().await {
 
             debug!("# \t\\ Considering Memo {}", memo.id );
-            if let Some((values, materialized)) = memo.get_values() {
+            if let Some((values, materialized)) = memo.get_values().await {
                 if let Some(v) = values.get(key) {
                     return Some(v.clone());
                 }else if materialized {
@@ -69,10 +71,11 @@ impl MemoRefHead {
         None
     }
     #[tracing::instrument]
-    pub fn project_relation ( &self, context: &Context, key: RelationSlotId ) -> Result<(SubjectId,Self), RetrieveError> {
+    pub async fn project_relation ( &self, context: &Context, key: RelationSlotId ) -> Result<(SubjectId,Self), RetrieveError> {
         // TODO: Make error handling more robust
 
-        for memo in self.causal_memo_iter( &context.slab ) {
+        let memostream = self.causal_memo_stream( &context.slab );
+        while let Some(memo) = memostream.next().await {
 
             if let Some((relations,materialized)) = memo.get_relations(){
                 debug!("Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );

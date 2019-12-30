@@ -2,7 +2,6 @@ use core::ops::Deref;
 use std::fmt;
 use std::collections::HashMap;
 use std::sync::{Arc,RwLock,Weak};
-use async_std::task::block_on;
 use tracing::debug;
 
 use crate::slab::*;
@@ -100,13 +99,13 @@ impl Subject {
             self.head.read().unwrap().clone()
         };
 
-        match head.project_relation(&context, key) {
+        match head.project_relation(&context, key).await {
             Ok((subject_id, relhead)) => context.get_subject_with_head(subject_id,relhead).await,
             Err(e)   => Err(e)
         }
     }
     #[tracing::instrument]
-    pub fn set_value (&self, key: &str, value: &str) -> bool {
+    pub async fn set_value (&self, key: &str, value: &str) -> bool {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
@@ -120,7 +119,7 @@ impl Subject {
             MemoBody::Edit(vals)
         );
 
-        block_on( head.apply_memoref(&memoref, &slab) );
+        head.apply_memoref(&memoref, &slab).await;
         context.apply_subject_head( self.id,  &head, false );
 
         true
@@ -140,13 +139,13 @@ impl Subject {
             MemoBody::Relation(RelationSlotSubjectHead(memoref_map))
         );
 
-        block_on( head.apply_memoref(&memoref, &slab) );
+        head.apply_memoref(&memoref, &slab).await;
         context.apply_subject_head( self.id, &head, false );
 
     }
     // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
     #[tracing::instrument]
-    pub fn apply_head (&self, new: MemoRefHead){
+    pub async fn apply_head (&self, new: MemoRefHead){
 
         let context = self.contextref.get_context();
         let slab = context.slab.clone(); // TODO: find a way to get rid of this clone
@@ -155,17 +154,18 @@ impl Subject {
             self.head.read().unwrap().clone()
         };
 
-        let newhead = block_on( head.apply(&new, &slab) );
+        let newhead = head.apply(&new, &slab).await;
 
         *(self.head.write().unwrap()) = newhead;
     }
     pub fn get_head (&self) -> MemoRefHead {
         self.head.read().unwrap().clone()
     }
-    pub fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
+    pub async fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
         let context = self.contextref.get_context();
         let slab = context.slab.clone(); // TODO: find a way to get rid of this clone
-        self.head.read().unwrap().causal_memo_iter( &slab ).map(|m| m.id).collect()
+        let memostream = self.head.read().unwrap().causal_memo_stream( &slab );
+        memostream.map(|m| m.id).collect().await
     }
     pub fn weak (&self) -> WeakSubject {
         WeakSubject(Arc::downgrade(&self.0))

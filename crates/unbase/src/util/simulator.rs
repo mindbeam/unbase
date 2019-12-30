@@ -253,6 +253,7 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
                 {
                     let mut shared = sharedmutex.lock().unwrap();
                     shared.delivered += eventcount as u64;
+                    println!("delivered {}", eventcount);
                     shared.check_quiescence();
                 }
 
@@ -269,7 +270,9 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
         let mut runner = self.runner.lock().unwrap();
         if let Some(_handle) = runner.take() {
             // important to lock the shared object inside the runner lock to ensure determinism with stop/start sequence
+            println!("PRE QUIESCE");
             self.quiescence().await;
+            println!("POST QUIESCE");
             return true;
         }
         return false;

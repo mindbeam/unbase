@@ -13,7 +13,6 @@ use std::ops::Deref;
 use std::fmt;
 use std::collections::HashMap;
 use std::sync::{Mutex, RwLock, Arc, Weak};
-use async_std::task::block_on;
 use tracing::debug;
 
 #[derive(Clone)]
@@ -207,7 +206,7 @@ impl Context {
 
     /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is made
     #[tracing::instrument]
-    pub fn apply_subject_head(&self,
+    pub async fn apply_subject_head(&self,
                               subject_id: SubjectId,
                               apply_head: &MemoRefHead,
                               notify_subject: bool) {
@@ -225,14 +224,14 @@ impl Context {
 
         {
 
-
-            let head: MemoRefHead = if let Some(head) = { self.manager.lock().unwrap().get_head(subject_id) } {
-                // HACK
-                block_on( head.clone().apply(apply_head, &self.slab) )
+            let head: MemoRefHead = if let Some(head) = {
+                self.manager.lock().unwrap().get_head(subject_id)
+            } {
+                head.clone().apply(apply_head, &self.slab).await
             } else {
                 apply_head.clone()
             };
-            let relation_links = head.project_all_relation_links(&self.slab);
+            let relation_links = head.project_all_relation_links(&self.slab).await;
 
             {
                 self.manager

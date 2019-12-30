@@ -9,7 +9,6 @@ use crate::Network;
 use crate::subject::SubjectId;
 use crate::memorefhead::MemoRefHead;
 use crate::context::{WeakContext, Context};
-use async_std::task::block_on;
 use crate::error::PeeringError;
 
 pub struct SlabAgent {
@@ -437,7 +436,7 @@ impl SlabAgent {
         ).0
     }
     #[tracing::instrument]
-    pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){
+    pub async fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){
         // TODO: find a way to merge this with assert_memoref to avoid doing duplicative work with regard to peerlist application
 
         let memo = Memo::new(MemoInner {
@@ -468,7 +467,7 @@ impl SlabAgent {
 
         }
 
-        block_on( self.recv_memoref(memoref.clone()) );
+        self.recv_memoref(memoref.clone()).await;
 
         // TODO: reconcile localize_memoref, reconstitute_memo, and recv_memoref
         (memo, memoref, had_memoref)

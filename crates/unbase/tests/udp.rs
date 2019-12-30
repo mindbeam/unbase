@@ -3,7 +3,6 @@ extern crate unbase;
 use timer::Delay;
 use std::time::Duration;
 use futures_await_test::async_test;
-use async_std::task::block_on;
 use futures::future::{select, RemoteHandle};
 
 #[async_test]
