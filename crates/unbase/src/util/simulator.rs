@@ -5,7 +5,8 @@ use {
             self,
             Stream,
             StreamExt
-        }
+        },
+        channel::oneshot
     },
     std::{
         fmt,
@@ -14,7 +15,6 @@ use {
         task::{Context, Poll, Waker},
     },
 };
-
 use async_trait::async_trait;
 use tracing::{span,Level};
 use itertools::partition;
@@ -47,12 +47,6 @@ pub struct SimEventItem<E: SimEvent> {
     pub event: E
 }
 
-//impl <P: SimEventPayload> SimEventItem<P> {
-//    pub fn fire (self) -> Box<dyn Future<Output=()>>{
-//        self.payload.fire()
-//    }
-//}
-
 impl <E: SimEvent + std::fmt::Debug> fmt::Debug for SimEventItem<E>{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SimEvent")
@@ -64,7 +58,7 @@ impl <E: SimEvent + std::fmt::Debug> fmt::Debug for SimEventItem<E>{
 
 #[async_trait]
 pub trait SimEvent {
-    async fn fire(self);
+    async fn deliver(self);
 }
 
 pub struct Simulator<E: SimEvent> {
@@ -83,21 +77,23 @@ impl <E: SimEvent> Clone for Simulator<E>{
 
 impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
     pub fn new() -> Self {
-        let sim = Simulator {
+
+        // TODO: add option to record event history, and a concise representational format which can be used in tests
+        Simulator {
             shared: Arc::new(Mutex::new(
                 SimulatorInternal::<E> {
                     clock: 0,
                     queue: Vec::new(),
                     woke: false,
                     waker: None,
+                    quiescence_monitors: Vec::new(),
+                    sent: 0,
+                    fetched: 0,
+                    delivered: 0,
                 }
             )),
             runner: Arc::new(Mutex::new(None))
-        };
-
-//        sim.start();
-
-        sim
+        }
     }
     /// If the simulator is currentlly applying events, no new events can be observed until the next tick
     // In the case that we want to model computational time as being more than 1 tick, we should queue the events with a different departure time
@@ -139,6 +135,7 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
             source,
             destination,
         });
+        shared.sent += 1;
 
         if let Some(ref waker) = shared.waker {
             // debounce
@@ -159,35 +156,70 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
     pub fn get_clock_nondeterministic(&self) -> u64 {
         self.shared.lock().unwrap().clock
     }
-
-    #[tracing::instrument(level = "debug")]
-    pub async fn advance_clock (&self) -> Result<Option<u64>, SimError>{
-
-        if let Some(_) = *self.runner.lock().unwrap() {
-            // Can't manually advance the clock while the background runner is running
-            return Err(SimError::Nondeterminism);
-        }
-
-        let tick = {
-            let mut shared = self.shared.lock().unwrap();
-            shared.woke = false;
-            shared.advance_and_fetch()
-        };
-
-        // Gotta fire the events outside of the shared lock, because they might call add_events
-
-        if let Some((clock,events)) = tick {
-            stream::iter(events).for_each_concurrent(
-                None,
-                |rx| async move {
-                    rx.event.fire().await
-                }
-            ).await;
-            return Ok(Some(clock))
-        }else{
-            Ok(None)
+    pub fn get_sent(&self) -> Result<u64,SimError> {
+        match *self.runner.lock().unwrap() {
+            Some(_) => Err(SimError::Nondeterminism),
+            None => {
+                Ok(self.shared.lock().unwrap().sent)
+            }
         }
     }
+    pub fn get_delivered(&self) -> Result<u64,SimError> {
+        match *self.runner.lock().unwrap() {
+            Some(_) => Err(SimError::Nondeterminism),
+            None => {
+                Ok(self.shared.lock().unwrap().delivered)
+            }
+        }
+    }
+    pub async fn quiescence (&self) {
+        {
+             let mut shared = self.shared.lock().unwrap();
+             if shared.is_fully_delivered() {
+                 return;
+             }
+
+            let (tx, rx) = futures::channel::oneshot::channel::<()>();
+            shared.quiescence_monitors.push( tx );
+            rx
+        }.await.unwrap();
+    }
+//    #[tracing::instrument(level = "debug")]
+//    pub async fn advance_clock (&self) -> Result<Option<u64>, SimError>{
+//
+//        if let Some(_) = *self.runner.lock().unwrap() {
+//            // Can't manually advance the clock while the background runner is running
+//            return Err(SimError::Nondeterminism);
+//        }
+//
+//        // QUESTION: should this use TickStream?
+//
+//        let tick = {
+//            let mut shared = self.shared.lock().unwrap();
+//            shared.woke = false;
+//            shared.advance_and_fetch()
+//        };
+//
+//        // Gotta deliver the events outside of the shared lock, because they might call add_events
+//        if let Some((clock,events)) = tick {
+//            let eventcount = events.len();
+//            stream::iter(events).for_each(
+//                |rx| async move {
+//                    rx.event.deliver().await;
+//                }
+//            ).await;
+//
+//            {
+//                let mut shared = self.shared.lock().unwrap();
+//                shared.delivered += eventcount as u64;
+//                shared.check_quiescence();
+//            }
+//
+//            return Ok(Some(clock))
+//        }else{
+//            Ok(None)
+//        }
+//    }
     fn tickstream (&self) -> TickStream<E> {
         // TODO: store the tickstream and/or prevent there from being two?
         TickStream {
@@ -204,18 +236,25 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
         let span = span!(Level::DEBUG, "Simulator Runner");
 
         let mut tickstream = self.tickstream();
+        let sharedmutex = self.shared.clone();
         let handle: RemoteHandle<()> = crate::util::task::spawn_with_handle((async move || {
             let _guard = span.enter();
 
             // get a chunk of events
             while let Some(events) = tickstream.next().await {
-                // run them all to completion without looking back in the queue
-                stream::iter(events).for_each_concurrent(
-                    None,
+                let eventcount = events.len();
+                // run them all events in this tick to completion without looking back in the queue
+                stream::iter(events).for_each(
                     |rx| async move {
-                        rx.event.fire().await
+                        rx.event.deliver().await;
                     }
                 ).await;
+
+                {
+                    let mut shared = sharedmutex.lock().unwrap();
+                    shared.delivered += eventcount as u64;
+                    shared.check_quiescence();
+                }
 
                 // TODO: consider adding a timeout here to check if the simulator might be logjammed
             }
@@ -226,9 +265,11 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
 
         true
     }
-    pub fn stop (&self) -> bool {
+    pub async fn quiesce_and_stop (&self) -> bool {
         let mut runner = self.runner.lock().unwrap();
         if let Some(_handle) = runner.take() {
+            // important to lock the shared object inside the runner lock to ensure determinism with stop/start sequence
+            self.quiescence().await;
             return true;
         }
         return false;
@@ -239,8 +280,8 @@ struct TickStream<P: SimEvent> {
     shared: Arc<Mutex<SimulatorInternal<P>>>,
 }
 
-impl <P: SimEvent> Stream for TickStream<P> {
-    type Item = Vec<SimEventItem<P>>;
+impl <E: SimEvent> Stream for TickStream<E> {
+    type Item = Vec<SimEventItem<E>>;
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         let mut shared = self.shared.lock().unwrap();
         shared.woke = false;
@@ -261,10 +302,14 @@ struct SimulatorInternal<P: SimEvent> {
     queue: Vec<SimEventItem<P>>,
     woke: bool,
     waker: Option<Waker>,
+    quiescence_monitors: Vec<oneshot::Sender<()>>,
+    sent: u64,
+    fetched: u64,
+    delivered: u64,
 }
 
-impl <P: SimEvent> SimulatorInternal<P> {
-    fn advance_and_fetch (&mut self) -> Option<(u64, Vec<SimEventItem<P>>)> {
+impl <E: SimEvent> SimulatorInternal<E> {
+    fn advance_and_fetch (&mut self) -> Option<(u64, Vec<SimEventItem<E>>)> {
 
         if self.queue.len() == 0 {
             return None
@@ -272,17 +317,26 @@ impl <P: SimEvent> SimulatorInternal<P> {
 
         // The queue should be ordered by arrival time from add_event
         let next_tick = self.queue[0].destination.t;
-
         self.clock = next_tick;
         let split_index = partition(&mut self.queue, |item| item.destination.t <= next_tick );
 
         debug!(%split_index);
 
         if split_index > 0 {
-            Some((self.clock, self.queue.drain(0..split_index).collect()))
+            let events : Vec<SimEventItem<E>> = self.queue.drain(0..split_index).collect();
+            self.fetched += events.len() as u64;
+            Some((self.clock, events))
         }else{
             None
         }
+    }
+    fn check_quiescence (&mut self) {
+        if self.is_fully_delivered() {
+            self.quiescence_monitors.drain(..).for_each(|tx| tx.send(()).unwrap());
+        }
+    }
+    fn is_fully_delivered (&self) -> bool {
+        self.sent == self.delivered
     }
 }
 
@@ -290,14 +344,13 @@ impl <P: SimEvent> SimulatorInternal<P> {
 mod test {
     use super::*;
     use futures_await_test::async_test;
-    use timer::Delay;
 
     #[derive(Debug)]
     struct DummyPayload {}
 
     #[async_trait]
     impl SimEvent for DummyPayload {
-        async fn fire(self) {
+        async fn deliver(self) {
             //
         }
     }
@@ -376,30 +429,29 @@ mod test {
     }
 
     #[derive(Debug)]
-    struct EventIssuerPayload {
+    struct EventIssuerEvent {
         sim: Simulator<Self>,
         generation: u32,
-        max: u32,
+        total_generations: u32,
         fanout: u32,
     }
 
     #[async_trait]
-    impl SimEvent for EventIssuerPayload {
-        async fn fire(self) {
-
-            if self.generation < self.max {
-                let generation = self.generation + 1;
+    impl SimEvent for EventIssuerEvent {
+        async fn deliver(self) {
+            let generation = self.generation + 1;
+            if generation < self.total_generations {
                 for _ in 0..self.fanout {
                     let sim = self.sim.clone();
                     self.sim.add_event(
-                        EventIssuerPayload {
+                        EventIssuerEvent {
                             sim,
                             generation,
-                            max: self.max,
+                            total_generations: self.total_generations,
                             fanout: self.fanout,
                         },
                         &Point3 { x: 0, y: 0, z: 0 },
-                        &Point3 { x: ((10 * generation) % 7) as i64, y: ((10 * generation) % 9) as i64, z: ((10 * generation) % 11) as i64 },
+                        &Point3 { x: 10, y: 0, z: 0 },
                     );
                 }
             }
@@ -408,48 +460,40 @@ mod test {
 
     #[async_test]
     async fn stream_nofanout (){
-        let sim = Simulator::<EventIssuerPayload>::new();
-
+        let sim = Simulator::<EventIssuerEvent>::new();
         assert_eq!( sim.get_clock().unwrap(), 0 );
-
         sim.start();
 
         sim.add_event(
-            EventIssuerPayload{ sim: sim.clone(), generation: 0, max: 6, fanout: 1 },
+            EventIssuerEvent { sim: sim.clone(), generation: 0, total_generations: 6, fanout: 1 },
             &Point3 { x: 0, y: 0, z: 0 },
             &Point3 { x: 10, y: 0, z: 0 },
         );
 
-        // TODO: replace this with sim.quiesce()
-        use std::time::Duration;
-
-        Delay::new(Duration::from_millis(1000)).await;
-
-        sim.stop();
-        assert_eq!( sim.get_clock().unwrap(), 68);
+        sim.quiesce_and_stop().await;
+        assert_eq!( sim.get_clock().unwrap(), 60);
+        assert_eq!( sim.get_sent().unwrap(), 6 );
+        assert_eq!( sim.get_delivered().unwrap(), 6 );
     }
 
     // TODO: BROKEN - goes into a busy loop
-    //#[async_test]
+    #[async_test]
     async fn stream_fanout (){
-        let sim = Simulator::<EventIssuerPayload>::new();
-
+        let sim = Simulator::<EventIssuerEvent>::new();
         assert_eq!( sim.get_clock().unwrap(), 0 );
-
         sim.start();
 
         sim.add_event(
-            EventIssuerPayload{ sim: sim.clone(), generation: 0, max: 1, fanout: 3 },
+            EventIssuerEvent { sim: sim.clone(), generation: 0, total_generations: 10, fanout: 3 },
             &Point3 { x: 0, y: 0, z: 0 },
             &Point3 { x: 10, y: 0, z: 0 },
         );
 
-        // TODO: replace this with sim.quiesce()
-        use std::time::Duration;
-        Delay::new(Duration::from_millis(1000)).await;
+        // The crucial part here is that quiescence does not complete until all events are delivered
 
-        sim.stop();
-        assert_eq!( sim.get_clock().unwrap(), 68);
+        sim.quiesce_and_stop().await;
+        assert_eq!( sim.get_clock().unwrap(), 100);
+        assert_eq!( sim.get_delivered().unwrap(), 29_524 ); // 3^0 + 3^1 + 3^2...
     }
 }
 

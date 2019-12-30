@@ -17,7 +17,7 @@ pub struct MemoPayload {
 #[async_trait]
 impl SimEvent for MemoPayload {
     #[tracing::instrument]
-    async fn fire (self) {
+    async fn deliver(self) {
         let slabref = self.dest.agent.localize_slabref(&self.from_slabref);
         self.dest.agent.localize_memoref( &self.memoref, &slabref, true );
     }
