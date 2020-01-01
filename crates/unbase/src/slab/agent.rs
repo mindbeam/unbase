@@ -1,5 +1,10 @@
-use std::sync::{Arc,RwLock,Mutex};
-use std::collections::hash_map::Entry;
+use std::{
+    collections::hash_map::Entry,
+    sync::{Arc,RwLock,Mutex},
+};
+use futures::{
+    StreamExt,
+};
 use tracing::debug;
 
 use crate::slab::{SlabId, MemoRef, MemoBody, Memo, MemoInner, SlabRefInner, MemoRefInner, MemoRefPtr, MemoPeerList, MemoPeeringStatus, MemoId, MemoPeer, SlabPresence, SlabAnticipatedLifetime, RelationSlotSubjectHead};
@@ -10,6 +15,7 @@ use crate::subject::SubjectId;
 use crate::memorefhead::MemoRefHead;
 use crate::context::{WeakContext, Context};
 use crate::error::PeeringError;
+use futures::future::LocalBoxFuture;
 
 pub struct SlabAgent {
     pub id: SlabId,
@@ -380,21 +386,31 @@ impl SlabAgent {
 
     }
     #[tracing::instrument]
-    pub fn localize_memorefhead (&self, mrh: &MemoRefHead, from_slabref: &SlabRef, include_memos: bool ) -> MemoRefHead {
+    pub fn localize_memorefhead (&self, mrh: &MemoRefHead, from_slabref: &SlabRef, include_memos: bool ) -> LocalBoxFuture<MemoRefHead> {
 
-        if from_slabref.slab_id == self.my_ref.slab_id {
-            return mrh.clone();
-        }
+        async move {
+            if from_slabref.slab_id == self.my_ref.slab_id {
+                return futures::ready!( mrh.clone() );
+            }
 
-        let from_slabref = self.localize_slabref(from_slabref);
-        MemoRefHead{
-            head: mrh.iter().map(|mr| self.localize_memoref(mr, &from_slabref, include_memos )).collect(),
-            owning_slab_id: self.my_ref.slab_id
-        }
+            let head = mrh.head.clone();
+
+            let from_slabref = self.localize_slabref(from_slabref);
+
+            let mut newhead = Vec::with_capacity(head.len());
+            for mr in head.into_iter() {
+                newhead.push(self.localize_memoref(&mr, &from_slabref, include_memos).await);
+            }
+
+            MemoRefHead {
+                head: newhead,
+                owning_slab_id: self.my_ref.slab_id
+            }
+        }.boxed_local()
 
     }
     #[tracing::instrument]
-    pub fn localize_memoref (&self, memoref: &MemoRef, from_slabref: &SlabRef, include_memo: bool ) -> MemoRef {
+    pub async fn localize_memoref (&self, memoref: &MemoRef, from_slabref: &SlabRef, include_memo: bool ) -> MemoRef {
 //        assert!(from_slabref.owning_slab_id == self.id,"MemoRef clone_for_slab owning slab should be identical");
 //        assert!(from_slabref.slab_id != self.id,       "MemoRef clone_for_slab dest slab should not be identical");
 
@@ -413,7 +429,7 @@ impl SlabAgent {
             peerlist.clone(),
             match include_memo {
                 true => match *memoref.ptr.read().unwrap() {
-                    MemoRefPtr::Resident(ref m) => Some(self.localize_memo(m, from_slabref, &peerlist)),
+                    MemoRefPtr::Resident(ref m) => Some(self.localize_memo(m, from_slabref, &peerlist).await),
                     MemoRefPtr::Remote          => None
                 },
                 false => None
@@ -423,17 +439,17 @@ impl SlabAgent {
         memoref
     }
     #[tracing::instrument]
-    pub fn localize_memo (&self, memo: &Memo, from_slabref: &SlabRef, peerlist: &MemoPeerList) -> Memo {
+    pub async fn localize_memo (&self, memo: &Memo, from_slabref: &SlabRef, peerlist: &MemoPeerList) -> Memo {
         assert!(from_slabref.owning_slab_id == self.id, "Memo clone_for_slab owning slab should be identical");
 
         self.reconstitute_memo(
             memo.id,
             memo.subject_id,
-            self.localize_memorefhead(&memo.parents, from_slabref, false),
+            self.localize_memorefhead(&memo.parents, from_slabref, false).await,
             self.localize_memobody(&memo.body, from_slabref),
             from_slabref,
             peerlist
-        ).0
+        ).await.0
     }
     #[tracing::instrument]
     pub async fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){

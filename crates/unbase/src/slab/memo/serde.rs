@@ -9,6 +9,7 @@ use std::fmt;
 use ::serde::*;
 use ::serde::ser::*;
 use ::serde::de::*;
+use futures::executor::block_on;
 
 
 struct RelationMRHSeed<'a> { dest_slab: &'a SlabHandle, origin_slabref: &'a SlabRef  }
@@ -153,7 +154,7 @@ impl<'a> Visitor for MemoSeed<'a>{
        };
 
         // TODO - channelize this
-        let _memo = self.dest_slab.agent.reconstitute_memo(id, subject_id, parents, body, self.origin_slabref, &self.peerlist ).0;
+        let _memo = block_on(self.dest_slab.agent.reconstitute_memo(id, subject_id, parents, body, self.origin_slabref, &self.peerlist )).0;
 
         Ok(())
     }

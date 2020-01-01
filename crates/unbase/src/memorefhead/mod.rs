@@ -262,8 +262,8 @@ impl CausalMemoStream {
 impl Stream for CausalMemoStream {
     type Item = Memo;
 
-    #[tracing::instrument]
-    fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
+//    #[tracing::instrument]
+    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context) -> Poll<Option<Self::Item>> {
         // iterate over head memos
         // Unnecessarly complex because we're not always dealing with MemoRefs
         // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>

@@ -3,7 +3,7 @@ use crate::subject::*;
 use crate::memorefhead::{MemoRefHead,RelationSlotId};
 use crate::error::RetrieveError;
 use std::collections::HashMap;
-use futures::future::{BoxFuture, FutureExt};
+use futures::future::{FutureExt, LocalBoxFuture};
 use std::sync::{Arc,Mutex};
 use std::ops::Deref;
 use std::fmt;
@@ -62,7 +62,7 @@ impl IndexFixed {
     }
     // Temporarily managing our own bubble-up
     // TODO: finish moving the management of this to context / context::subject_graph
-    fn recurse_set(&self, tier: usize, key: u64, node: &Subject, subject: &Subject) -> BoxFuture<()> {
+    fn recurse_set(&self, tier: usize, key: u64, node: &Subject, subject: &Subject) -> LocalBoxFuture<()> {
 
         let me = (*self).clone();
         let node = (*node).clone();
@@ -109,7 +109,7 @@ impl IndexFixed {
                     }
                 }
             }
-        }.boxed()
+        }.boxed_local()
     }
     #[tracing::instrument]
     pub async fn get (&self, key: u64 ) -> Result<Subject, RetrieveError> {
