@@ -106,7 +106,7 @@ impl MemoRef {
     }
 
     #[tracing::instrument(level = "debug")]
-    pub async fn get_memo (&self, slab: &SlabHandle) -> Result<Memo,RetrieveError> {
+    pub async fn get_memo (self, slab: SlabHandle) -> Result<Memo,RetrieveError> {
         if self.owning_slab_id != slab.my_ref.slab_id {
             assert!(self.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
         }
@@ -118,11 +118,12 @@ impl MemoRef {
             }
         }
 
-        slab.request_memo(self).await
+        slab.request_memo(self.clone()).await
     }
     pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> bool {
         assert!(self.owning_slab_id == slab.my_ref.slab_id);
-        match self.get_memo( slab ).await {
+        // TODO get rid of clones here
+        match self.clone().get_memo( slab.clone() ).await {
             Ok(my_memo) => {
                 if my_memo.descends(&memoref, slab).await {
                     return true

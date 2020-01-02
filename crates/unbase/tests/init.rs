@@ -1,13 +1,19 @@
-extern crate unbase;
+#![feature(async_closure)]
 
-use wasm_bindgen_test::*;
 use timer::Delay;
 use std::time::Duration;
-use futures::future::RemoteHandle;
+use futures::{
+    FutureExt,
+    pin_mut,
+    select,
+};
+use tracing::{
+    debug
+};
 
 #[unbase_test_util::async_test]
 async fn init_blackhole() {
-    unbase_test_util::init_test_logger();
+    unbase_test_util::init_test_logger("init");
 
     let net = unbase::Network::create_new_system();
     let blackhole = unbase::network::transport::Blackhole::new();
@@ -17,6 +23,7 @@ async fn init_blackhole() {
 
 #[unbase_test_util::async_test]
 async fn init_blackhole_slab() {
+    unbase_test_util::init_test_logger("init");
 
     let net = unbase::Network::create_new_system();
     let blackhole = unbase::network::transport::Blackhole::new();
@@ -31,8 +38,10 @@ async fn init_blackhole_slab() {
     assert!( net.get_all_local_slabs().len() == 0 );
 }
 
-#[test]
-fn init_local_single() {
+#[unbase_test_util::async_test]
+async fn init_local_single() {
+    unbase_test_util::init_test_logger("init");
+
     let net = unbase::Network::create_new_system();
     {
         let slab_a = unbase::Slab::new(&net);
@@ -43,8 +52,9 @@ fn init_local_single() {
     assert!( net.get_all_local_slabs().len() == 0 );
 }
 
-#[test]
-fn init_local_multi() {
+#[unbase_test_util::async_test]
+async fn init_local_multi() {
+    unbase_test_util::init_test_logger("init");
 
     let net = unbase::Network::create_new_system();
     {
@@ -75,13 +85,15 @@ fn init_local_multi() {
     //Delay::new(Duration::from_millis(5000)).await;
 
     // We should have zero slabs resident at this point
-    //assert!( net.get_all_local_slabs().len() == 0, "not all slabs have cleaned up" );
+//    assert!( net.get_all_local_slabs().len() == 0, "not all slabs have cleaned up" );
 }
 
-#[test]
-fn init_udp() {
+#[unbase_test_util::async_test]
+async fn init_udp() {
+    unbase_test_util::init_test_logger("init");
 
-    let h1: RemoteHandle<()> = unbase::util::task::spawn_with_handle((async move || {
+    let f1 = async move || {
+
         let net1 = unbase::Network::create_new_system();
         {
             let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
@@ -96,18 +108,15 @@ fn init_udp() {
         // my local slab should have dropped
         assert_eq!( net1.get_all_local_slabs().len(), 0 );
 
-    })());
+    };
 
-    Delay::new(Duration::from_millis(50)).await;
-
-    let h2: RemoteHandle<()> = unbase::util::task::spawn_with_handle((async move || {
+    let f2 = async move || {
         let net2 = unbase::Network::new();
         net2.hack_set_next_slab_id(200);
-
+        Delay::new(Duration::from_millis(50)).await;
         {
             let udp2 = unbase::network::transport::TransportUDP::new("127.0.0.1:1337".to_string());
             net2.add_transport(Box::new(udp2.clone()));
-
             let slab_b = unbase::Slab::new(&net2);
 
             udp2.seed_address_from_string("127.0.0.1:12345".to_string());
@@ -117,13 +126,25 @@ fn init_udp() {
         }
 
         assert_eq!(net2.get_all_local_slabs().len(), 0);
-    })());
+    };
 
-    select(h1, h2).await;
+    let t1 = f1().fuse();
+    let t2 = f2().fuse();
+
+    pin_mut!(t1, t2);
+
+    loop {
+        select! {
+            () = t1 => println!("task one completed"),
+            () = t2 => println!("task two completed"),
+            complete => break
+        }
+    }
 }
 
-#[test]
-fn avoid_unnecessary_chatter() {
+#[unbase_test_util::async_test]
+async fn avoid_unnecessary_chatter() {
+    unbase_test_util::init_test_logger("init");
 
     let net = unbase::Network::create_new_system();
     {

@@ -14,6 +14,7 @@ use std::fmt;
 use std::collections::HashMap;
 use std::sync::{Mutex, RwLock, Arc, Weak};
 use tracing::debug;
+use async_std::task::block_on;
 
 #[derive(Clone)]
 pub struct Context(pub Arc<ContextInner>);
@@ -157,7 +158,7 @@ impl Context {
 
         match self.get_subject_if_resident(subject_id) {
             Some(ref mut subject) => {
-                subject.apply_head(head);
+                subject.apply_head(head).await;
                 return Ok(subject.clone());
             }
             None => {}
@@ -244,7 +245,7 @@ impl Context {
 
             if notify_subject {
                 if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
-                    subject.apply_head(head);
+                    subject.apply_head(head).await;
                 }
             }
 
@@ -268,9 +269,12 @@ impl Context {
         for subject_head in manager.subject_head_iter() {
             memoref_count += subject_head.head.len();
 
-            other.apply_subject_head(subject_head.subject_id,
+            println!("context::hack_send_context pre block_on");
+            block_on( other.apply_subject_head(subject_head.subject_id,
                                      &other.slab.agent.localize_memorefhead(&subject_head.head, &from_slabref, false),
-                                     true);
+                                     true) );
+            println!("context::hack_send_context post block_on");
+
             // HACK inside a hack - manually updating the remote subject is cheating, but necessary for now because subjects
             //      have a separate MRH versus the context
         }

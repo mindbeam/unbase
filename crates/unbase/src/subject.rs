@@ -124,7 +124,7 @@ impl Subject {
         let context = self.contextref.get_context();
         let slab = &context.slab;
 
-        let mut head = {
+        let head = {
             self.head.read().unwrap().clone()
         };
 
@@ -136,7 +136,7 @@ impl Subject {
 
         let newhead = memoref.to_head();
 
-        context.apply_subject_head( self.id,  &newhead, false );
+        context.apply_subject_head( self.id,  &newhead, false ).await;
 
         *(self.head.write().unwrap()) = newhead;
 
@@ -149,7 +149,7 @@ impl Subject {
 
         let context = self.contextref.get_context();
         let slab = &context.slab;
-        let mut head = {
+        let head = {
             self.head.read().unwrap().clone()
         };
 

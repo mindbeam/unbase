@@ -15,6 +15,8 @@ async fn basic_eventual() {
     let simulator = unbase::util::simulator::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 
+    simulator.start();
+
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
     let slab_c = unbase::Slab::new(&net);
@@ -64,15 +66,7 @@ async fn basic_eventual() {
             assert!(context_c_copy.get_subject_by_id(record_id).await.unwrap_err() == RetrieveError::NotFound, "new subject should not yet have conveyed to slab C");
     })());
 
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
+    simulator.quiescence().await;
 
     handle.await;
 
@@ -84,7 +78,7 @@ async fn basic_eventual() {
     // seconds for this to convey – not just a single clock tick
     // We've made the index artificially chatty for now, but this will
     // change to a timeout-based process once context::subject_graph is working
-    simulator.advance_clock().await; // advance the simulator clock by one tick
+    simulator.quiescence().await;
 
     debug!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
     // Temporary way to magically, instantly send context
@@ -111,7 +105,7 @@ async fn basic_eventual() {
         assert!(rec_b1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
         assert!(rec_c1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
 
-        simulator.advance_clock().await; // advance the simulator clock by one tick
+        simulator.quiescence().await;
 
         assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(), "Moo");
         assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(), "Moo");
@@ -122,6 +116,8 @@ async fn basic_eventual() {
         assert_eq!(rec_b1.get_value("animal_type").await.unwrap(), "Bovine");
         assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(),   "Moo");
 
+        simulator.quiesce_and_stop().await;
+
         rec_b1.set_value("animal_sound","Woof");
         rec_b1.set_value("animal_type","Kanine");
         assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(), "Woof");
@@ -131,21 +127,12 @@ async fn basic_eventual() {
         assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Moo");
         assert!(rec_a1.get_value("animal_type").await.is_none(), "Should not yet have a value on Slab A for animal_type");
 
-        simulator.advance_clock().await; // advance the simulator clock by one tick
+        simulator.start(); // advance the simulator clock by one tick
 
         // Nowwww it should have propagated
         assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Woof");
         assert_eq!(rec_a1.get_value("animal_type").await.unwrap(),    "Kanine");
     })());
-
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
-    simulator.advance_clock().await; // advance the simulator clock by one tick
 
     handle.await;
 /*

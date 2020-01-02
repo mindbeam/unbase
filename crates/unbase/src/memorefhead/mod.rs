@@ -19,12 +19,13 @@ use tracing::{
 };
 
 use futures::{
-    Future,
     FutureExt,
     Stream,
     task::Poll,
+    future::{
+        LocalBoxFuture
+    }
 };
-use futures::future::{BoxFuture, LocalBoxFuture};
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -175,7 +176,7 @@ impl MemoRefHead {
     pub fn to_vec (&self) -> Vec<MemoRef> {
         self.head.clone()
     }
-    pub fn to_stream_vecdeque (&self, slab: &SlabHandle ) -> VecDeque<CausalMemoStreamItem> {
+    fn to_stream_vecdeque (&self, slab: &SlabHandle ) -> VecDeque<CausalMemoStreamItem> {
 
 //        let mut out = VecDeque::with_capacity(self.head.len());
 //        for memoref in self.head.iter() {
@@ -189,12 +190,10 @@ impl MemoRefHead {
 //        out
 
         self.head.iter().map(|memoref| {
-            //TODO - can we remove or otherwise mitigate the clones here?
-            let mr_owned = memoref.clone();
-            let slab_owned = slab.clone();
+            //TODO - switching to an immutable internal datastructure should mitigate the need for clones here
             CausalMemoStreamItem {
-                memoref: mr_owned,
-                fut: mr_owned.get_memo( &slab_owned ).boxed(),
+//                memoref: memoref.clone(),
+                fut: memoref.clone().get_memo( slab.clone() ).boxed(),
                 memo: None
             }
         }).collect()
@@ -213,7 +212,7 @@ impl MemoRefHead {
         //       as part of the list management. That way we won't have to incur the below computational effort.
 
         for memoref in self.iter(){
-            if let Ok(memo) = memoref.get_memo(slab).await {
+            if let Ok(memo) = memoref.clone().get_memo(slab.clone()).await {
                 match memo.body {
                     MemoBody::FullyMaterialized { v: _, r: _ } => {},
                     _                           => { return false }
@@ -239,7 +238,7 @@ impl fmt::Debug for MemoRefHead{
 }
 
 struct CausalMemoStreamItem{
-    memoref: MemoRef,
+//    memoref: MemoRef,
     fut: LocalBoxFuture<'static, Result<Memo,RetrieveError>>,
     memo: Option<Memo>
 }
@@ -284,7 +283,7 @@ impl Stream for CausalMemoStream {
     type Item = Memo;
 
 //    #[tracing::instrument]
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context) -> Poll<Option<Self::Item>> {
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context) -> Poll<Option<Self::Item>> {
         // iterate over head memos
         // Unnecessarly complex because we're not always dealing with MemoRefs
         // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>
@@ -293,7 +292,7 @@ impl Stream for CausalMemoStream {
             return Poll::Ready(None);
         }
 
-        let mut nextheads = VecDeque::new();
+        let mut nextheads = Vec::new();
 
         for item in self.queue.iter_mut() {
             // QUESTION: Is it bad to pass our context? We have to poll all of these, but only want to be
@@ -302,19 +301,24 @@ impl Stream for CausalMemoStream {
             if let None = item.memo {
                 match item.fut.as_mut().poll(cx) {
                     Poll::Ready(Ok(memo)) => {
-                        nextheads.append(&mut memo.get_parent_head().to_stream_vecdeque(&self.slab) );
+                        nextheads.push(memo.get_parent_head() );
                         item.memo = Some(memo);
                     },
-                    Poll::Ready(Err(e)) => {
-                        panic!("TODO: how should we handle memo retrieval errors in the causal iterator?")
+                    Poll::Ready(Err(_e)) => {
+                        panic!("TODO: how should we handle memo retrieval errors in the causal iterator? {:?}", _e)
                     },
                     Poll::Pending => {}
                 }
             }
         }
 
+        for nexthead in nextheads {
+            let mut foo = &mut nexthead.to_stream_vecdeque(&self.slab);
+            self.queue.append( &mut foo );
+        }
+
     // TODO NEXT - where are we getting nextheads from?
-        self.queue.append(&mut nextheads);
+//        self.queue.append(&mut nextheads);
 
     // TODO -make this nicer
         if let None = self.queue[0].memo {

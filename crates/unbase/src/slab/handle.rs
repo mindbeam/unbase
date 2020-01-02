@@ -32,7 +32,7 @@ impl SlabHandle {
 //    }
 
     #[tracing::instrument]
-    pub async fn request_memo(&self, memoref: &MemoRef) -> Result<Memo, RetrieveError> {
+    pub async fn request_memo(&self, memoref: MemoRef) -> Result<Memo, RetrieveError> {
 
         // we're looking for this memo
         let mut channel = self.agent.memo_wait_channel(memoref.id);

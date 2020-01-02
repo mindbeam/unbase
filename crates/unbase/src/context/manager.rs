@@ -390,7 +390,7 @@ mod test {
     use crate::slab::{MemoBody, RelationSlotSubjectHead};
     use super::ContextManager;
 
-    #[async_test]
+    #[unbase_test_util::async_test]
     async fn context_manager_basic() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
@@ -437,8 +437,8 @@ mod test {
         assert!(iter.next().is_none(), "iter should have ended");
     }
 
-    #[test]
-    fn context_manager_dual_indegree_zero() {
+    #[unbase_test_util::async_test]
+    async fn context_manager_dual_indegree_zero() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
         let handle = slab.handle();
@@ -473,8 +473,9 @@ mod test {
         assert_eq!(2, iter.next().expect("iter result 2 should be present").subject_id);
         assert!(iter.next().is_none(), "iter should have ended");
     }
-    #[test]
-    fn context_manager_repoint_relation() {
+
+    #[unbase_test_util::async_test]
+    async fn context_manager_repoint_relation() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
         let mut manager = ContextManager::new();
@@ -515,8 +516,8 @@ mod test {
         assert_eq!(2, iter.next().expect("iter result 2 should be present").subject_id);
         assert!(iter.next().is_none(), "iter should have ended");
     }
-    #[test]
-    fn context_manager_remove() {
+    #[unbase_test_util::async_test]
+    async fn context_manager_remove() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
         let mut manager = ContextManager::new();
@@ -548,8 +549,8 @@ mod test {
         assert_eq!(1, iter.next().expect("iter result 1 should be present").subject_id);
         assert!(iter.next().is_none(), "iter should have ended");
     }
-    #[test]
-    fn context_manager_add_remove_cycle() {
+    #[unbase_test_util::async_test]
+    async fn context_manager_add_remove_cycle() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
         let mut manager = ContextManager::new();

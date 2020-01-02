@@ -2,10 +2,7 @@ use std::{
     collections::hash_map::Entry,
     sync::{Arc,RwLock,Mutex},
 };
-use futures::{
-    StreamExt,
-    FutureExt,
-};
+
 use tracing::debug;
 
 use crate::slab::{SlabId, MemoRef, MemoBody, Memo, MemoInner, SlabRefInner, MemoRefInner, MemoRefPtr, MemoPeerList, MemoPeeringStatus, MemoId, MemoPeer, SlabPresence, SlabAnticipatedLifetime, RelationSlotSubjectHead};
@@ -360,7 +357,9 @@ impl SlabAgent {
 
                     if let Some(context) = weakcontext.upgrade() {
                         // TODO NEXT - make background apply_subject_head, and (optionally) block new requests on that Context until it had converged
+                        println!("agent_recv_memoref pre block_on");
                         async_std::task::block_on(context.apply_subject_head( subject_id, &memoref.to_head(), true ));
+                        println!("agent_recv_memoref post block_on");
                     }
                 }
             }
