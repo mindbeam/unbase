@@ -18,7 +18,13 @@ use tracing::{
     debug
 };
 
-use futures::{Stream, task::Poll, Future};
+use futures::{
+    Future,
+    FutureExt,
+    Stream,
+    task::Poll,
+};
+use futures::future::{BoxFuture, LocalBoxFuture};
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -170,10 +176,25 @@ impl MemoRefHead {
         self.head.clone()
     }
     pub fn to_stream_vecdeque (&self, slab: &SlabHandle ) -> VecDeque<CausalMemoStreamItem> {
+
+//        let mut out = VecDeque::with_capacity(self.head.len());
+//        for memoref in self.head.iter() {
+//            let
+//            out.push_back(CausalMemoStreamItem {
+//                memoref: (*memoref).clone(),
+//                fut: memoref.clone().get_memo( slab ).boxed(),
+//                memo: None
+//            });
+//        };
+//        out
+
         self.head.iter().map(|memoref| {
+            //TODO - can we remove or otherwise mitigate the clones here?
+            let mr_owned = memoref.clone();
+            let slab_owned = slab.clone();
             CausalMemoStreamItem {
-                memoref: memoref.clone(),
-                fut: memoref.get_memo( slab ).boxed(),
+                memoref: mr_owned,
+                fut: mr_owned.get_memo( &slab_owned ).boxed(),
                 memo: None
             }
         }).collect()
@@ -219,7 +240,7 @@ impl fmt::Debug for MemoRefHead{
 
 struct CausalMemoStreamItem{
     memoref: MemoRef,
-    fut: Pin<Box<dyn Future<Output=Memo>>>,
+    fut: LocalBoxFuture<'static, Result<Memo,RetrieveError>>,
     memo: Option<Memo>
 }
 
@@ -279,22 +300,27 @@ impl Stream for CausalMemoStream {
             // woken up when the *first* of these futures is ready. We only get one shot at setting the
             // context/waker though, so I think we just have to deal with that.
             if let None = item.memo {
-                match item.fut.poll(cx) {
-                    Poll::Ready(memo) => {
+                match item.fut.as_mut().poll(cx) {
+                    Poll::Ready(Ok(memo)) => {
                         nextheads.append(&mut memo.get_parent_head().to_stream_vecdeque(&self.slab) );
                         item.memo = Some(memo);
+                    },
+                    Poll::Ready(Err(e)) => {
+                        panic!("TODO: how should we handle memo retrieval errors in the causal iterator?")
                     },
                     Poll::Pending => {}
                 }
             }
         }
 
-        self.queue.append(&nextheads);
+    // TODO NEXT - where are we getting nextheads from?
+        self.queue.append(&mut nextheads);
 
-        if let None = self.queue[0] {
+    // TODO -make this nicer
+        if let None = self.queue[0].memo {
             return Poll::Pending;
         }
 
-        return Poll::Ready( self.queue.pop_front().memo.unwrap() )
+        return Poll::Ready(Some( self.queue.pop_front().unwrap().memo.unwrap() ))
     }
 }

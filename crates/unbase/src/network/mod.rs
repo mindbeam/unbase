@@ -181,20 +181,18 @@ impl Network {
         // then we need to move it to a different slab
 
         let mut root_index_seed = self.root_index_seed.write().expect("root_index_seed write lock");
-        {
-            if let Some(ref mut r) = *root_index_seed {
-                if r.1.slab_id == slab_id {
-                    if let Some(new_slab) = self.get_representative_slab() {
 
-                        let owned_slabref = new_slab.agent.localize_slabref(&r.1 );
-                        r.0 = new_slab.agent.localize_memorefhead(&r.0, &owned_slabref, false);
-                        r.1 = new_slab.my_ref.clone();
-                        return;
-                    }
-                    // don't return
-                } else {
+        if let Some(ref mut r) = *root_index_seed {
+            if r.1.slab_id == slab_id {
+                if let Some(new_slab) = self.get_representative_slab() {
+                    let owned_slabref = new_slab.agent.localize_slabref(&r.1);
+                    r.0 = new_slab.agent.localize_memorefhead(&r.0, &owned_slabref, false);
+                    r.1 = new_slab.my_ref.clone();
                     return;
                 }
+                // don't return
+            } else {
+                return;
             }
         }
 

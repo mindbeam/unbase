@@ -74,7 +74,7 @@ impl Slab {
         let dispatcher_task = (async move || {
             let mut dispatch_rx_channel = dispatch_rx_channel;
             while let Some(memoref) = dispatch_rx_channel.next().await {
-                agent2.recv_memoref(memoref).await;
+                agent2.recv_memoref(memoref);
             }
         })();
 
