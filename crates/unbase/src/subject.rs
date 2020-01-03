@@ -34,6 +34,7 @@ pub struct WeakSubject(Weak<SubjectInner>);
 
 pub struct SubjectInner {
     pub id:     SubjectId,
+    // Should a subject have a Head at all? or should that be fetched on-demand by Context?
     head:       RwLock<MemoRefHead>,
     contextref: ContextRef,
 }
@@ -46,7 +47,7 @@ impl Subject {
         // don't store this
         let context = contextref.get_context();
 
-        let slab = &context.slab;
+        let slab = &context.inner.slab;
         let subject_id = slab.generate_subject_id();
         debug!(%subject_id);
 
@@ -122,7 +123,7 @@ impl Subject {
         vals.insert(key.to_string(), value.to_string());
 
         let context = self.contextref.get_context();
-        let slab = &context.slab;
+        let slab = &context.inner.slab;
 
         let head = {
             self.head.read().unwrap().clone()
@@ -136,7 +137,7 @@ impl Subject {
 
         let newhead = memoref.to_head();
 
-        context.apply_subject_head( self.id,  &newhead, false ).await;
+        context.inner.apply_head( self.id,  newhead.clone(), false ).await;
 
         *(self.head.write().unwrap()) = newhead;
 
@@ -148,7 +149,7 @@ impl Subject {
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
         let context = self.contextref.get_context();
-        let slab = &context.slab;
+        let slab = &context.inner.slab;
         let head = {
             self.head.read().unwrap().clone()
         };
@@ -161,7 +162,7 @@ impl Subject {
 
         let newhead = memoref.to_head();
 
-        context.apply_subject_head( self.id,&newhead, false ).await;
+        context.inner.apply_head( self.id,newhead.clone(), false ).await;
 
         *(self.head.write().unwrap()) = newhead;
     }
@@ -170,7 +171,7 @@ impl Subject {
     pub async fn apply_head (&self, new: MemoRefHead){
 
         let context = self.contextref.get_context();
-        let slab = context.slab.clone(); // TODO: find a way to get rid of this clone
+        let slab = context.inner.slab.clone(); // TODO: find a way to get rid of this clone
 
         let head = {
             self.head.read().unwrap().clone()
@@ -185,7 +186,7 @@ impl Subject {
     }
     pub async fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
         let context = self.contextref.get_context();
-        let slab = context.slab.clone(); // TODO: find a way to get rid of this clone
+        let slab = context.inner.slab.clone(); // TODO: find a way to get rid of this clone
         let memostream = self.head.read().unwrap().causal_memo_stream( &slab );
         memostream.map(|m| m.id).collect().await
     }
@@ -194,7 +195,7 @@ impl Subject {
     }
     pub async fn is_fully_materialized (&self) -> bool {
         let context = self.contextref.get_context();
-        self.head.read().unwrap().is_fully_materialized(&context.slab).await
+        self.head.read().unwrap().is_fully_materialized(&context.inner.slab).await
     }
     pub fn fully_materialize (&self, _slab: &Slab) -> bool {
         unimplemented!();

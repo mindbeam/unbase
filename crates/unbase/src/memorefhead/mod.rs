@@ -23,7 +23,7 @@ use futures::{
     Stream,
     task::Poll,
     future::{
-        LocalBoxFuture
+        BoxFuture
     }
 };
 
@@ -239,7 +239,7 @@ impl fmt::Debug for MemoRefHead{
 
 struct CausalMemoStreamItem{
 //    memoref: MemoRef,
-    fut: LocalBoxFuture<'static, Result<Memo,RetrieveError>>,
+    fut: BoxFuture<'static, Result<Memo,RetrieveError>>,
     memo: Option<Memo>
 }
 
@@ -316,9 +316,6 @@ impl Stream for CausalMemoStream {
             let mut foo = &mut nexthead.to_stream_vecdeque(&self.slab);
             self.queue.append( &mut foo );
         }
-
-    // TODO NEXT - where are we getting nextheads from?
-//        self.queue.append(&mut nextheads);
 
     // TODO -make this nicer
         if let None = self.queue[0].memo {

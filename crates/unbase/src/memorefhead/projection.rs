@@ -60,7 +60,7 @@ impl MemoRefHead {
     pub async fn project_value ( &self, context: &Context, key: &str ) -> Option<String> {
 
         //TODO: consider creating a consolidated projection routine for most/all uses
-        let mut memostream = self.causal_memo_stream(&context.slab);
+        let mut memostream = self.causal_memo_stream(&context.inner.slab).boxed();
         while let Some(memo) = memostream.next().await {
 
             debug!("# \t\\ Considering Memo {}", memo.id );
@@ -78,7 +78,7 @@ impl MemoRefHead {
     pub async fn project_relation ( &self, context: &Context, key: RelationSlotId ) -> Result<(SubjectId,Self), RetrieveError> {
         // TODO: Make error handling more robust
 
-        let mut memostream = self.causal_memo_stream( &context.slab );
+        let mut memostream = self.causal_memo_stream( &context.inner.slab );
         while let Some(memo) = memostream.next().await {
 
             if let Some((relations,materialized)) = memo.get_relations(){

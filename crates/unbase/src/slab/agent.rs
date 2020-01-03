@@ -355,11 +355,9 @@ impl SlabAgent {
 
                 for weakcontext in subscribers {
 
-                    if let Some(context) = weakcontext.upgrade() {
-                        // TODO NEXT - make background apply_subject_head, and (optionally) block new requests on that Context until it had converged
-                        println!("agent_recv_memoref pre block_on");
-                        async_std::task::block_on(context.apply_subject_head( subject_id, &memoref.to_head(), true ));
-                        println!("agent_recv_memoref post block_on");
+                    if let Some(mut context) = weakcontext.upgrade() {
+                        // TODO - update this to use a (blocking) channel so we don't have to do all this silliness with weakcontext
+                        context.apply_head_deferred(memoref.to_head());
                     }
                 }
             }
