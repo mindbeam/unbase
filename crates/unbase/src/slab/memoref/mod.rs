@@ -27,6 +27,7 @@ pub struct MemoRefInner {
     pub ptr:      RwLock<MemoRefPtr>
 }
 
+#[derive(Debug)]
 pub enum MemoRefPtr {
     Resident(Memo),
     Remote
@@ -178,11 +179,7 @@ impl fmt::Debug for MemoRef{
            .field("owning_slab_id", &self.owning_slab_id)
            .field("subject_id", &self.subject_id)
            .field("peerlist", &*self.peerlist.read().unwrap())
-
-           .field("resident", &match *self.ptr.read().unwrap() {
-               MemoRefPtr::Remote      => false,
-               MemoRefPtr::Resident(_) => true
-           })
+           .field("memo", &*self.ptr.read().unwrap() )
            .finish()
     }
 }

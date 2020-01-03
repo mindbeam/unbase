@@ -96,7 +96,7 @@ impl fmt::Debug for SlabRef {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("SlabRef")
             .field("owning_slab_id", &self.owning_slab_id)
-            .field("to_slab_id",     &self.slab_id)
+            .field("slab_id",     &self.slab_id)
             .field("presence",       &*self.presence.read().unwrap())
             .finish()
     }

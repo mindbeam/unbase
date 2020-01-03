@@ -226,6 +226,7 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
             shared: self.shared.clone()
         }
     }
+    #[tracing::instrument]
     pub fn start (&self) -> bool {
         let mut runner = self.runner.lock().unwrap();
 
@@ -238,10 +239,11 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
         let mut tickstream = self.tickstream();
         let sharedmutex = self.shared.clone();
         let handle: RemoteHandle<()> = crate::util::task::spawn_with_handle((async move || {
-            let _guard = span.enter();
 
             // get a chunk of events
             while let Some(events) = tickstream.next().await {
+                let _guard = span.enter();
+
                 let eventcount = events.len();
                 // run them all events in this tick to completion without looking back in the queue
                 stream::iter(events).for_each(

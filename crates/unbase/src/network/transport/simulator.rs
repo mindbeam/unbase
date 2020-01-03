@@ -4,6 +4,11 @@ use crate::network::transmitter::DynamicDispatchTransmitter;
 use crate::Network;
 use std::fmt;
 use async_trait::async_trait;
+use tracing::{
+    debug,
+    Level,
+    span
+};
 
 use crate::util::simulator::{Simulator, SimEvent, Point3};
 // TODO: determine how to account for execution time in a deterministic way
@@ -16,10 +21,15 @@ pub struct MemoPayload {
 
 #[async_trait]
 impl SimEvent for MemoPayload {
-    #[tracing::instrument]
     async fn deliver(self) {
+        let span = span!(Level::DEBUG, "MemoPayload Deliver");
+        let _guard = span.enter();
+
+        debug!("localizing slabref {:?}", &self.from_slabref);
         let slabref = self.dest.agent.localize_slabref(&self.from_slabref);
+        debug!("localizing memoref {:?}", &self.memoref);
         self.dest.agent.localize_memoref( &self.memoref, &slabref, true );
+        debug!("done");
     }
 }
 
