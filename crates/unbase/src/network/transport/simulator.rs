@@ -25,6 +25,20 @@ impl SimEvent for MemoPayload {
         let span = span!(Level::DEBUG, "MemoPayload Deliver");
         let _guard = span.enter();
 
+        // Critically important that we not wait for follow-on activities to occur here.
+        // We need to persist this payload to the slab, *maybe* a little light housekeeping, and then GTFO.
+        // We can't wait for any communication to occur between this slab and other slabs, if for no other
+        // reason that it takes _time_ passing to deliver any such messages, and time is frozen until this delivery completes
+
+        // QUESTION: how do we deterministically model execution time here such that memos which might be emitted as an
+        // immediate consequence of this delivery could be a different, yet deterministic, instant than this?
+
+        // NOTE: this separation of delivery handling from follow-on events also applies to network delivery, because
+        // We don't want to queue unprocessed messages in the network code.
+
+        // TODO: think about how backpressure interacts with selective hearing behaviors, and how intelligently relay that
+        // backpressure to other nodes who are sending stuff
+
         debug!("localizing slabref {:?}", &self.from_slabref);
         let slabref = self.dest.agent.localize_slabref(&self.from_slabref);
         debug!("localizing memoref {:?}", &self.memoref);

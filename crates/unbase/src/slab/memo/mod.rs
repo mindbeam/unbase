@@ -114,6 +114,7 @@ impl Memo {
             }
         }
     }
+    #[tracing::instrument]
     pub fn descends<'a>  (&'a self, memoref: &'a MemoRef, slab: &'a SlabHandle) -> BoxFuture<'a, bool> {
         // Not really sure if this is right
 

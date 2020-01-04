@@ -1,6 +1,9 @@
+#![feature(async_closure)]
+
 extern crate unbase;
 use unbase::subject::*;
 use futures_await_test::async_test;
+use tracing::debug;
 
 #[async_test]
 async fn basic_record_retrieval() {

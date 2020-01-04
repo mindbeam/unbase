@@ -148,11 +148,13 @@ impl MemoRefHead {
 
         applied
     }
+    #[tracing::instrument]
     pub async fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) {
         for new in new_memorefs.iter(){
             self.apply_memoref(new, slab).await;
         }
     }
+    #[tracing::instrument]
     pub async fn apply (mut self, other: &MemoRefHead, slab: &SlabHandle) -> MemoRefHead {
         // TODO make this concurrent?
         for new in other.iter(){
@@ -176,6 +178,7 @@ impl MemoRefHead {
     pub fn to_vec (&self) -> Vec<MemoRef> {
         self.head.clone()
     }
+    #[tracing::instrument]
     fn to_stream_vecdeque (&self, slab: &SlabHandle ) -> VecDeque<CausalMemoStreamItem> {
 
 //        let mut out = VecDeque::with_capacity(self.head.len());
@@ -204,6 +207,7 @@ impl MemoRefHead {
     pub fn iter (&self) -> slice::Iter<MemoRef> {
         self.head.iter()
     }
+    #[tracing::instrument]
     pub fn causal_memo_stream(&self, slab: &SlabHandle ) -> CausalMemoStream {
         CausalMemoStream::from_head(&self, slab )
     }
@@ -282,7 +286,7 @@ impl CausalMemoStream {
 impl Stream for CausalMemoStream {
     type Item = Memo;
 
-//    #[tracing::instrument]
+    #[tracing::instrument]
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context) -> Poll<Option<Self::Item>> {
         // iterate over head memos
         // Unnecessarly complex because we're not always dealing with MemoRefs

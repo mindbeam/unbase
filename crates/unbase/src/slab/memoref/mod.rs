@@ -121,6 +121,7 @@ impl MemoRef {
 
         slab.request_memo(self.clone()).await
     }
+    #[tracing::instrument]
     pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> bool {
         assert!(self.owning_slab_id == slab.my_ref.slab_id);
         // TODO get rid of clones here
