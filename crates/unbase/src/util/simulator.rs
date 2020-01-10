@@ -13,12 +13,14 @@ use {
         pin::Pin,
         sync::{Arc, Mutex},
         task::{Context, Poll, Waker},
+        time::Duration
     },
 };
 use async_trait::async_trait;
 use tracing::{span,Level};
 use itertools::partition;
 use tracing::debug;
+use timer::Delay;
 
 #[derive(Debug)]
 pub enum SimError{
@@ -240,6 +242,10 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
         let sharedmutex = self.shared.clone();
         let handle: RemoteHandle<()> = crate::util::task::spawn_with_handle((async move || {
 
+            // HACK - use a timeout to increase the liklihood that all tasks have advanced as far as they can
+            // TODO - replace this with executor.all_pending().await ?
+            Delay::new(Duration::from_millis(50)).await;
+
             // get a chunk of events
             while let Some(events) = tickstream.next().await {
                 let _guard = span.enter();
@@ -252,6 +258,8 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
                     }
                 ).await;
 
+                //Delay::new(Duration::from_millis(50)).await;
+
                 {
                     let mut shared = sharedmutex.lock().unwrap();
                     shared.delivered += eventcount as u64;
@@ -259,6 +267,8 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
                     shared.check_quiescence();
                 }
 
+                //HACK
+                Delay::new(Duration::from_millis(50)).await;
                 // TODO: consider adding a timeout here to check if the simulator might be logjammed
             }
 
