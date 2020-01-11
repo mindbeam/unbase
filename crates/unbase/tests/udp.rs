@@ -9,34 +9,32 @@ use futures::{
     future::{
         FutureExt
     },
-    select,
-    pin_mut,
+    join,
 };
+use tracing::info;
 
 #[async_test]
 async fn test_udp() {
-    let t1 = station_a().fuse();
-    let t2 = station_b().fuse();
-    pin_mut!(t1, t2);
-    loop {
-        select! {
-            () = t1 => println!("station a exited"),
-            () = t2 => println!("station b exited"),
-            complete => break
-        }
-    }
+    unbase_test_util::init_test_logger();
+
+    let t1 = node_a().fuse();
+    let t2 = node_b().fuse();
+
+    join!{ t1, t2 };
 }
 
 
-async fn station_a () {
+async fn node_a() {
     let net1 = unbase::Network::create_new_system();
     let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
     net1.add_transport(Box::new(udp1.clone()));
     let _slab_a = unbase::Slab::new(&net1);
     Delay::new(Duration::from_millis(500)).await;
+
+    info!("Node A is done!");
 }
 
-async fn station_b () {
+async fn node_b() {
     Delay::new(Duration::from_millis(50)).await;
 
     let net2 = unbase::Network::new();
@@ -50,5 +48,6 @@ async fn station_b () {
     udp2.seed_address_from_string("127.0.0.1:12345".to_string());
     Delay::new(Duration::from_millis(500)).await;
 
+    info!("Node B is done!");
     // TODO improve this test to actually exchange something, or at least verify that we've retrieved the root index
 }

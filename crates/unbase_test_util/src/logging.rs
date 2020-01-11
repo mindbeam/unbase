@@ -1,30 +1,35 @@
+use std::sync::Once;
+static START: Once = Once::new();
 
-pub fn init_test_logger(name: &'static str) {
-    #[cfg(not(target_arch = "wasm32"))]
-    native::init(name);
+pub fn init_test_logger() {
 
-    #[cfg(target_arch = "wasm32")]
-    wasm::init(name);
+    START.call_once(|| {
+        #[cfg(not(target_arch = "wasm32"))]
+            native::init();
+
+        #[cfg(target_arch = "wasm32")]
+            wasm::init();
+    });
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
-    pub (crate) fn init(_name: &'static str) {
+    pub (crate) fn init() {
         #[cfg(feature="trace_basic")]
-        basic::init(_name);
+        basic::init();
 
         #[cfg(feature="trace_jaeger")]
-        jaeger::init(_name);
+        jaeger::init();
     }
     #[cfg(all(feature="trace_basic"))]
     mod basic {
-        pub fn init(_name: &'static str) {
+        pub fn init() {
             tracing_subscriber::fmt::init();
         }
     }
     #[cfg(feature = "trace_jaeger")]
     mod jaeger {
-        pub fn init(name: &'static str) {
+        pub fn init() {
             use opentelemetry::{api::{Provider, Sampler}, exporter::trace::jaeger, global, sdk};
             use tracing_opentelemetry::OpentelemetryLayer;
             use tracing_subscriber::{Layer, Registry};
@@ -32,7 +37,7 @@ mod native {
             let exporter = jaeger::Exporter::builder()
                 .with_collector_endpoint("127.0.0.1:6831".parse().unwrap())
                 .with_process(jaeger::Process {
-                    service_name: name,
+                    service_name: "unbase_test",
                     tags: Vec::new(),
                 })
                 .init();

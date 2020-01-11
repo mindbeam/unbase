@@ -436,6 +436,7 @@ impl SlabAgent {
     pub fn localize_memo (&self, memo: &Memo, from_slabref: &SlabRef, peerlist: &MemoPeerList) -> Memo {
         assert!(from_slabref.owning_slab_id == self.id, "Memo clone_for_slab owning slab should be identical");
 
+        // TODO - simplify this
         self.reconstitute_memo(
             memo.id,
             memo.subject_id,

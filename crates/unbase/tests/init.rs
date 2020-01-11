@@ -2,18 +2,14 @@
 
 use timer::Delay;
 use std::time::Duration;
-use futures::{
-    FutureExt,
-    pin_mut,
-    select,
-};
+use futures::join;
 use tracing::{
     debug
 };
 
 #[unbase_test_util::async_test]
 async fn init_blackhole() {
-    unbase_test_util::init_test_logger("init");
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     let blackhole = unbase::network::transport::Blackhole::new();
@@ -23,7 +19,7 @@ async fn init_blackhole() {
 
 #[unbase_test_util::async_test]
 async fn init_blackhole_slab() {
-    unbase_test_util::init_test_logger("init");
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     let blackhole = unbase::network::transport::Blackhole::new();
@@ -40,7 +36,7 @@ async fn init_blackhole_slab() {
 
 #[unbase_test_util::async_test]
 async fn init_local_single() {
-    unbase_test_util::init_test_logger("init");
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     {
@@ -54,7 +50,7 @@ async fn init_local_single() {
 
 #[unbase_test_util::async_test]
 async fn init_local_multi() {
-    unbase_test_util::init_test_logger("init");
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     {
@@ -90,61 +86,53 @@ async fn init_local_multi() {
 
 #[unbase_test_util::async_test]
 async fn init_udp() {
-    unbase_test_util::init_test_logger("init");
+    unbase_test_util::init_test_logger();
 
-    let f1 = async move || {
+    let f1 = udp_station_one();
+    let f2 = udp_station_two();
 
-        let net1 = unbase::Network::create_new_system();
-        {
-            let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
-            net1.add_transport( Box::new(udp1.clone()) );
-            let slab_a = unbase::Slab::new(&net1);
-
-            // TODO - replace these sleeps with timed-out checkpoints of some kind
-            Delay::new(Duration::from_millis(150)).await;
-            assert_eq!( slab_a.peer_slab_count(), 1 );
-        }
-
-        // my local slab should have dropped
-        assert_eq!( net1.get_all_local_slabs().len(), 0 );
-
-    };
-
-    let f2 = async move || {
-        let net2 = unbase::Network::new();
-        net2.hack_set_next_slab_id(200);
-        Delay::new(Duration::from_millis(50)).await;
-        {
-            let udp2 = unbase::network::transport::TransportUDP::new("127.0.0.1:1337".to_string());
-            net2.add_transport(Box::new(udp2.clone()));
-            let slab_b = unbase::Slab::new(&net2);
-
-            udp2.seed_address_from_string("127.0.0.1:12345".to_string());
-            Delay::new(Duration::from_millis(50)).await;
-
-            assert_eq!(slab_b.peer_slab_count(), 1);
-        }
-
-        assert_eq!(net2.get_all_local_slabs().len(), 0);
-    };
-
-    let t1 = f1().fuse();
-    let t2 = f2().fuse();
-
-    pin_mut!(t1, t2);
-
-    loop {
-        select! {
-            () = t1 => println!("task one completed"),
-            () = t2 => println!("task two completed"),
-            complete => break
-        }
-    }
+    join!{f1, f2};
 }
+
+async fn udp_station_one(){
+    let net1 = unbase::Network::create_new_system();
+    {
+        let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
+        net1.add_transport( Box::new(udp1.clone()) );
+        let slab_a = unbase::Slab::new(&net1);
+
+        // TODO - replace these sleeps with timed-out checkpoints of some kind
+        Delay::new(Duration::from_millis(150)).await;
+        assert_eq!( slab_a.peer_slab_count(), 1 );
+    }
+
+    // my local slab should have dropped
+    assert_eq!( net1.get_all_local_slabs().len(), 0 );
+}
+
+async fn udp_station_two(){
+    let net2 = unbase::Network::new();
+    net2.hack_set_next_slab_id(200);
+    Delay::new(Duration::from_millis(50)).await;
+    {
+        let udp2 = unbase::network::transport::TransportUDP::new("127.0.0.1:1337".to_string());
+        net2.add_transport(Box::new(udp2.clone()));
+        let slab_b = unbase::Slab::new(&net2);
+
+        udp2.seed_address_from_string("127.0.0.1:12345".to_string());
+        Delay::new(Duration::from_millis(50)).await;
+
+        assert_eq!(slab_b.peer_slab_count(), 1);
+    }
+
+    assert_eq!(net2.get_all_local_slabs().len(), 0);
+}
+
+
 
 #[unbase_test_util::async_test]
 async fn avoid_unnecessary_chatter() {
-    unbase_test_util::init_test_logger("init");
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     {
@@ -169,26 +157,3 @@ async fn avoid_unnecessary_chatter() {
 
     assert!( net.get_all_local_slabs().len() == 0 );
 }
-
-/*
-#[test]
-fn many_threads() {
-    let net = unbase::Network::new();
-
-    let mut threads = Vec::new();
-    for _ in 0..20 {
-        let net = net.clone();
-
-        threads.push(thread::spawn(move || {
-            let slab = unbase::Slab::new(&net);
-            assert!(slab.id > 0, "Nonzero Slab ID");
-            debug!("# info test thread. Slab: {}", slab.id);
-        }));
-    }
-
-    for t in threads {
-        t.join().unwrap();
-    }
-
-}
-*/

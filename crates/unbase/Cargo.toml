@@ -41,7 +41,7 @@ async-trait = "0.1.22"
 unbase_test_util = { path = "../unbase_test_util" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-async-std = "1.3.0"
+async-std = { version = "1.4.0", features = ["attributes"] }
 env_logger = "0.6.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

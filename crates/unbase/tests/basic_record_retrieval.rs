@@ -7,6 +7,7 @@ use tracing::debug;
 
 #[async_test]
 async fn basic_record_retrieval() {
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     let slab_a = unbase::Slab::new(&net);
@@ -28,6 +29,7 @@ async fn basic_record_retrieval() {
 
 #[async_test]
 async fn basic_record_retrieval_simulator() {
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     let simulator = unbase::util::simulator::Simulator::new();

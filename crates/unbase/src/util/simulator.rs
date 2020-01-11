@@ -174,7 +174,10 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
             }
         }
     }
-    pub async fn quiescence (&self) {
+    pub async fn quiesce(&self) {
+        //HACK - replace with executor.yield().await
+
+        Delay::new(Duration::from_millis(50)).await;
         {
              let mut shared = self.shared.lock().unwrap();
              if shared.is_fully_delivered() {
@@ -236,7 +239,7 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
             return false;
         }
 
-        let span = span!(Level::DEBUG, "Simulator Runner");
+        let span = span!(Level::TRACE, "Simulator Runner");
 
         let mut tickstream = self.tickstream();
         let sharedmutex = self.shared.clone();
@@ -244,7 +247,7 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
 
             // HACK - use a timeout to increase the liklihood that all tasks have advanced as far as they can
             // TODO - replace this with executor.all_pending().await ?
-            Delay::new(Duration::from_millis(50)).await;
+            Delay::new(Duration::from_millis(100)).await;
 
             // get a chunk of events
             while let Some(events) = tickstream.next().await {
@@ -268,7 +271,7 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
                 }
 
                 //HACK
-                Delay::new(Duration::from_millis(50)).await;
+                Delay::new(Duration::from_millis(100)).await;
                 // TODO: consider adding a timeout here to check if the simulator might be logjammed
             }
 
@@ -282,9 +285,7 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
         let mut runner = self.runner.lock().unwrap();
         if let Some(_handle) = runner.take() {
             // important to lock the shared object inside the runner lock to ensure determinism with stop/start sequence
-            println!("PRE QUIESCE");
-            self.quiescence().await;
-            println!("POST QUIESCE");
+            self.quiesce().await;
             return true;
         }
         return false;

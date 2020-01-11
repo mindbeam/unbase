@@ -53,6 +53,8 @@ impl SlabRef{
         self.return_address.read().unwrap().clone()
     }
     pub fn apply_presence ( &self, presence: &SlabPresence ) -> bool {
+        // TODO - what about old presence information? Presumably SlabPresence should also be causal, no?
+
         if self.slab_id == self.owning_slab_id{
             return false; // the slab manages presence for its self-ref separately
         }

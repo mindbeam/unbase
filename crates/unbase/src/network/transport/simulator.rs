@@ -10,7 +10,11 @@ use tracing::{
     span
 };
 
-use crate::util::simulator::{Simulator, SimEvent, Point3};
+use crate::{
+    util::simulator::{
+        Simulator, SimEvent, Point3
+    }
+};
 // TODO: determine how to account for execution time in a deterministic way
 // suggest each operation be assigned a delay factor, such that some or all resultant events are deterministically delayed
 pub struct MemoPayload {
@@ -22,7 +26,7 @@ pub struct MemoPayload {
 #[async_trait]
 impl SimEvent for MemoPayload {
     async fn deliver(self) {
-        let span = span!(Level::DEBUG, "MemoPayload Deliver");
+        let span = span!(Level::TRACE, "MemoPayload Deliver");
         let _guard = span.enter();
 
         // Critically important that we not wait for follow-on activities to occur here.

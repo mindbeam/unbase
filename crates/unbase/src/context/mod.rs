@@ -85,7 +85,7 @@ impl Context {
 
         let (tx, rx) = mpsc::channel::<(ContextInner, SubjectId, MemoRefHead)>(1000);
         use tracing::{span, Level};
-        let span = span!(Level::DEBUG, "Context Applier");
+        let span = span!(Level::TRACE, "Context Applier");
 
         let applier: RemoteHandle<()> = crate::util::task::spawn_with_handle(
             rx.for_each_concurrent(Some(1000),move |(inner,subject_id,mrh)| {
@@ -146,8 +146,12 @@ impl Context {
     /// Retrive a Subject from the root index by ID
     pub async fn get_subject_by_id(&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
 
+        // HACK - come up with a way to use the index without having to clone it
+        let index : Option<IndexFixed> = {
+            self.inner.0.root_index.read().unwrap().clone()
+        };
 
-        match *self.inner.0.root_index.read().unwrap() {
+        match index {
             Some(ref index) => index.get(subject_id).await,
             None => Err(RetrieveError::IndexNotInitialized),
         }
@@ -378,15 +382,18 @@ impl Context {
 
     pub async fn is_fully_materialized(&self) -> bool {
 
-        unimplemented!()
-//        // TODO - locking + async = :(
-//        for subject_head in self.manager.lock().unwrap().subject_head_iter() {
-//            if !subject_head.head.is_fully_materialized(&self.slab).await {
-//                return false;
-//            }
-//        }
-//
-//        return true;
+        // HACK - for now we're forced to clone all heads in the manager because we can't hold the lock while calling is_fully_materialized :/
+        let heads = {
+            self.inner.0.manager.lock().unwrap().subject_head_iter().map(|sh| sh.head.clone() ).collect::<Vec<_>>()
+        };
+
+        for head in heads {
+            if !head.is_fully_materialized(&self.inner.0.slab).await {
+                return false;
+            }
+        }
+
+        return true;
 
     }
 }

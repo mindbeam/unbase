@@ -9,16 +9,19 @@ use tracing::debug;
 
 #[async_test]
 async fn basic_eventual() {
+    unbase_test_util::init_test_logger();
 
+    // initialize the system, and use the simulator transport
     let net = unbase::Network::create_new_system();
     let simulator = unbase::util::simulator::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 
-
+    // Set up three Slabs, corresponding to three hosts, or three OS processes, or MAYBE even three different workers within the same OS process
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
     let slab_c = unbase::Slab::new(&net);
 
+    // Basic sanity tests
     assert!(slab_a.id == 0, "Slab A ID shoud be 0");
     assert!(slab_b.id == 1, "Slab B ID shoud be 1");
     assert!(slab_c.id == 2, "Slab C ID shoud be 2");
@@ -27,6 +30,7 @@ async fn basic_eventual() {
     assert!(slab_b.peer_slab_count() == 2, "Slab B Should know two peers" );
     assert!(slab_c.peer_slab_count() == 2, "Slab C Should know two peers" );
 
+    // Spawns a task to tick away automatically in the background
     simulator.start();
 
     let context_a = slab_a.create_context();
@@ -42,7 +46,6 @@ async fn basic_eventual() {
     // TODO: consolidation is necessary for eventual consistency to work
     //context_a.fully_consolidate();
 
-
     debug!("New subject ID {}", rec_a1.id );
 
     let record_id = rec_a1.id;
@@ -57,12 +60,11 @@ async fn basic_eventual() {
     assert_eq!(context_b.get_subject_by_id(record_id).await.unwrap_err(), RetrieveError::NotFound, "new subject should not yet have conveyed to slab B");
     assert_eq!(context_c.get_subject_by_id(record_id).await.unwrap_err(), RetrieveError::NotFound, "new subject should not yet have conveyed to slab C");
 
-    simulator.quiescence().await;
+    simulator.quiesce().await;
 
     debug!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
-    // Temporary way to magically, instantly send context
 
-    //TODO: replace this
+    // TODO: replace this – Temporary way to magically, instantly send context
     debug!("Manually exchanging context from Context A to Context B - Count of MemoRefs: {}", context_a.hack_send_context(&mut context_b) );
     debug!("Manually exchanging context from Context A to Context C - Count of MemoRefs: {}", context_a.hack_send_context(&mut context_c) );
     debug!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
@@ -99,71 +101,11 @@ async fn basic_eventual() {
     assert_eq!(rec_a1.get_value("animal_type").await, None, "Should not yet have a value on Slab A for animal_type");
 
     simulator.start(); // advance the simulator clock by one tick
+    simulator.quiesce().await;
 
     // Nowwww it should have propagated
     assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(),   "Woof");
     assert_eq!(rec_a1.get_value("animal_type").await.unwrap(),    "Kanine");
 
     simulator.quiesce_and_stop().await;
-/*
-
-    let idx_node = Subject::new_kv(&context_b, "dummy","value").unwrap();
-    idx_node.set_relation( 0, rec_b1 );
-
-    debug!("All rec_b1 MemoIds: {:?}", rec_b1_memoids);
-    slab_b.remotize_memo_ids( &rec_b1_memoids ).expect("failed to remotize memos");
-
-    if let Some(record) = idx_node.get_relation(0) {
-        debug!("Retrieved record: {} - {:?}", record.id, record.get_value("animal_sound") );
-    }
-
-    let rec_b2 = Subject::new_kv(&context_a, "animal_sound","Meow");
-    let rec_b3 = Subject::new_kv(&context_a, "animal_sound","Ribbit");
-
-    rec_b2.set_relation( 1, rec_b1 );
-    */
-
-    // TODO: drop the referenced memos, ensuring we only have the remote memorefs Present
-    // TODO: test relation changing/projection
-    // TODO: fix/test subject reconstitution for relationship traversal (it's duping now)
-    // TODO: build the index class using this primative
-    // TODO: figure out how to bootstrap subject index, given that the subject index
-    //       needs a (probably lesser) subject index to locate its index nodes
-
-    //rec_b1.drop();
-
-/*
-    // Time moves forward
-    net.deliver_all_memos();
-
-    let rec_b1 = context_b.get_subject_by_id( rec_a1.id );
-    assert!(rec_b1.is_ok(), "new subject should now be available on slab B");
-    let rec_b1 = rec_b1.unwrap();
-
-    assert!(rec_b1.get_value("animal_sound").unwrap() == "moo", "Transferred subject should be consistent");
-
-
-    // Time moves forward
-    net.deliver_all_memos();
-
-    let rec_c1 = context_c.get_subject_by_id( rec_a1.id );
-    assert!(rec_c1.is_ok(), "new subject should now be available on slab C");
-    let mut rec_c1 = rec_c1.unwrap();
-
-    assert!(rec_c1.get_value("animal_sound").unwrap() == "moo", "Transferred subject should be consistent");
-
-    // Time moves forward
-    net.deliver_all_memos();
-
-    assert!( rec_c1.set_value("animal_sound", "woof"), "Change the value on slab C" );
-    assert!( rec_c1.get_value("animal_sound").unwrap() == "woof", "Updated subject should be consistent");
-
-    assert!( rec_a1.get_value("animal_sound").unwrap() == "moo", "Value should be unchanged on slab A" );
-
-    // Time moves forward
-    net.deliver_all_memos();
-
-    assert!( rec_a1.get_value("animal_sound").unwrap() == "woof", "Now the value should be changed on slab A" );
-*/
-
 }
