@@ -1,5 +1,5 @@
-
 extern crate unbase;
+
 extern crate serde;
 extern crate serde_json;
 
@@ -20,7 +20,7 @@ use unbase::network::packet::serde::PacketSeed;
 fn serialize() {
 
     let net = unbase::Network::create_new_system();
-    //let simulator = unbase::network::transport::Simulator::new();
+    //let simulator = unbase::util::simulator::Simulator::new();
     //net.add_transport( Box::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
@@ -31,7 +31,7 @@ fn serialize() {
 
 
     let net2 = unbase::Network::new();
-    //let simulator = unbase::network::transport::Simulator::new();
+    //let simulator = unbase::util::simulator::Simulator::new();
     //net.add_transport( Box::new(simulator.clone()) );
     let slab_b = unbase::Slab::new(&net);
 
@@ -51,7 +51,7 @@ fn check_roundtrip(record: &Subject, net: &Network, slab: &Slab){
     };
 
     let encoded = serde_json::to_string(&packet).expect("serde_json::to_string");
-    println!("{}", encoded );
+    debug!("{}", encoded );
 
     let decoded_packet : Packet;
     {

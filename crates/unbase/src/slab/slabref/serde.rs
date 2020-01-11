@@ -52,7 +52,7 @@ impl StatefulSerialize for SlabRef {
 }
 
 
-pub struct SlabRefSeed<'a> { pub dest_slab: &'a Slab }
+pub struct SlabRefSeed<'a> { pub dest_slab: &'a SlabHandle }
 impl<'a> DeserializeSeed for SlabRefSeed<'a> {
     type Value = SlabRef;
 
@@ -87,7 +87,7 @@ impl<'a> Visitor for SlabRefSeed<'a> {
            }
        };
 
-       let slabref = self.dest_slab.assert_slabref(slab_id, &presence); //.expect("slabref from slabrefseed presence");
+       let slabref = self.dest_slab.agent.assert_slabref(slab_id, &presence); //.expect("slabref from slabrefseed presence");
        Ok( slabref )
     }
 }

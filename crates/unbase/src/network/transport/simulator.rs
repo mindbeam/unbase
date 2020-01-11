@@ -1,133 +1,79 @@
-
+use crate::network::{SlabRef, TransportAddress, Transport, TransmitterArgs, Transmitter};
+use crate::slab::{SlabHandle, MemoRef};
+use crate::network::transmitter::DynamicDispatchTransmitter;
+use crate::Network;
 use std::fmt;
-use super::*;
-use std::sync::{Arc,Mutex};
-use crate::slab::*;
-use itertools::partition;
-use crate::network::*;
+use async_trait::async_trait;
+use tracing::{
+    debug,
+    Level,
+    span
+};
 
-// Minkowski stuff: Still ridiculous, but necessary for our purposes.
-pub struct XYZPoint{
-    pub x: i64,
-    pub y: i64,
-    pub z: i64
-}
-pub struct MinkowskiPoint {
-    pub x: i64,
-    pub y: i64,
-    pub z: i64,
-    pub t: u64
-}
-struct SimEvent {
-    _source_point: MinkowskiPoint,
-    dest_point:    MinkowskiPoint,
+use crate::{
+    util::simulator::{
+        Simulator, SimEvent, Point3
+    }
+};
+// TODO: determine how to account for execution time in a deterministic way
+// suggest each operation be assigned a delay factor, such that some or all resultant events are deterministically delayed
+pub struct MemoPayload {
     from_slabref:  SlabRef,
-    dest:          WeakSlab,
+    dest:          SlabHandle,
     memoref:       MemoRef
 }
 
-impl SimEvent {
-    pub fn deliver (self) {
-        //println!("# SimEvent.deliver" );
-        if let Some(to_slab) = self.dest.upgrade() {
+#[async_trait]
+impl SimEvent for MemoPayload {
+    async fn deliver(self) {
+        let span = span!(Level::TRACE, "MemoPayload Deliver");
+        let _guard = span.enter();
 
-            /* let memo = &self.memoref.get_memo_if_resident().unwrap();
-            println!("Simulator.deliver FROM {} TO {} -> {}({:?}): {:?} {:?} {:?}",
-                &self.from_slabref.slab_id,
-                &to_slab.id,
-                &self.memoref.id,
-                &self.memoref.subject_id,
-                &memo.body,
-                &memo.parents.memo_ids(),
-                &self.memoref.peerlist.read().unwrap().slab_ids()
-            );*/
-            let owned_slabref = &self.from_slabref.clone_for_slab(&to_slab);
-            self.memoref.clone_for_slab( &owned_slabref, &to_slab, true );
-        }
-        // we all have to learn to deal with loss sometime
+        // Critically important that we not wait for follow-on activities to occur here.
+        // We need to persist this payload to the slab, *maybe* a little light housekeeping, and then GTFO.
+        // We can't wait for any communication to occur between this slab and other slabs, if for no other
+        // reason that it takes _time_ passing to deliver any such messages, and time is frozen until this delivery completes
+
+        // QUESTION: how do we deterministically model execution time here such that memos which might be emitted as an
+        // immediate consequence of this delivery could be a different, yet deterministic, instant than this?
+
+        // NOTE: this separation of delivery handling from follow-on events also applies to network delivery, because
+        // We don't want to queue unprocessed messages in the network code.
+
+        // TODO: think about how backpressure interacts with selective hearing behaviors, and how intelligently relay that
+        // backpressure to other nodes who are sending stuff
+
+        debug!("localizing slabref {:?}", &self.from_slabref);
+        let slabref = self.dest.agent.localize_slabref(&self.from_slabref);
+        debug!("localizing memoref {:?}", &self.memoref);
+        self.dest.agent.localize_memoref( &self.memoref, &slabref, true );
+        debug!("done");
     }
 }
-impl fmt::Debug for SimEvent{
+
+impl fmt::Debug for MemoPayload {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("SimEvent")
-            .field("dest", &self.dest.id )
-            .field("memo", &self.memoref.id )
-            .field("t", &self.dest_point.t )
+        fmt.debug_struct("MemoPayload")
+            .field("dest", &self.dest.my_ref.slab_id)
+            .field("memo", &self.memoref.id)
             .finish()
     }
 }
 
-#[derive(Clone)]
-pub struct Simulator {
-    shared: Arc<Mutex<SimulatorInternal>>,
-    speed_of_light: u64,
-}
-struct SimulatorInternal {
-    clock: u64,
-    queue: Vec<SimEvent>
-}
-
-impl Simulator {
-    pub fn new() -> Self{
-        Simulator {
-            speed_of_light: 1, // 1 distance unit per time unit
-            shared: Arc::new(Mutex::new(
-                SimulatorInternal {
-                    clock: 0,
-                    queue: Vec::new()
-                }
-            ))
-        }
-    }
-
-    fn add_event(&self, event: SimEvent) {
-        let mut shared = self.shared.lock().unwrap();
-        shared.queue.push(event);
-    }
-    pub fn get_clock(&self) -> u64 {
-        self.shared.lock().unwrap().clock
-    }
-    pub fn advance_clock (&self, ticks: u64) {
-
-        println!("# Simulator.advance_clock({})", ticks);
-
-        let t;
-        let events : Vec<SimEvent>;
-        {
-            let mut shared = self.shared.lock().unwrap();
-            shared.clock += ticks;
-            t = shared.clock;
-
-            let split_index = partition(&mut shared.queue, |evt| evt.dest_point.t >= t );
-
-            events = shared.queue.drain(0..split_index).collect();
-        }
-        for event in events {
-            event.deliver();
-        }
-    }
-}
-
-impl fmt::Debug for Simulator {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let shared = self.shared.lock().unwrap();
-        fmt.debug_struct("Simulator")
-            .field("queue", &shared.queue)
-            .finish()
-    }
-}
-
-impl Transport for Simulator {
+impl Transport for Simulator <MemoPayload> {
     fn is_local (&self) -> bool {
         true
     }
-    fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+    fn make_transmitter (
+        &self,
+        args: &TransmitterArgs,
+    ) -> Option<Transmitter> {
         if let TransmitterArgs::Local(ref slab) = *args {
             let tx = SimulatorTransmitter{
-                source_point: XYZPoint{ x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
-                dest_point: XYZPoint{ x: 1000, y: 1000, z: 1000 },
-                simulator: self.clone(),
-                dest: slab.weak()
+                source_point: Point3 { x: 1000, y: 1000, z: 1000 }, // TODO: move this - not appropriate here
+                dest_point: Point3 { x: 1000, y: 1000, z: 1000 },
+                simulator: (*self).clone(),
+                dest: (*slab).clone()
             };
             Some(Transmitter::new(args.get_slab_id(), Box::new(tx)))
         }else{
@@ -146,47 +92,31 @@ impl Transport for Simulator {
     }
 }
 
-
-
-
-
 pub struct SimulatorTransmitter{
-    pub source_point: XYZPoint,
-    pub dest_point: XYZPoint,
-    pub simulator: Simulator,
-    pub dest: WeakSlab
+    pub source_point: Point3,
+    pub dest_point: Point3,
+    pub simulator: Simulator<MemoPayload>,
+    pub dest: SlabHandle
 }
 
 impl DynamicDispatchTransmitter for SimulatorTransmitter {
+    #[tracing::instrument]
     fn send (&self, from_slabref: &SlabRef, memoref: MemoRef){
-        let ref q = self.source_point;
-        let ref p = self.dest_point;
 
-        let source_point = MinkowskiPoint {
-            x: q.x,
-            y: q.y,
-            z: q.z,
-            t: self.simulator.get_clock()
-        };
-
-        let distance = (( (q.x - p.x)^2 + (q.y - p.y)^2 + (q.z - p.z)^2 ) as f64).sqrt();
-
-        let dest_point = MinkowskiPoint {
-            x: p.x,
-            y: p.y,
-            z: p.z,
-            t: source_point.t + ( distance as u64 * self.simulator.speed_of_light ) + 1 // add 1 to ensure nothing is instant
-        };
-
-        let evt = SimEvent {
-            _source_point: source_point,
-            dest_point: dest_point,
+        let evt = MemoPayload {
             from_slabref: from_slabref.clone(),
-
             dest: self.dest.clone(),
             memoref: memoref
         };
 
-        self.simulator.add_event( evt );
+        self.simulator.add_event( evt, &self.source_point, &self.dest_point);
+    }
+}
+
+impl fmt::Debug for SimulatorTransmitter{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("SimulatorTransmitter")
+            .field("dest", &self.dest.my_ref.slab_id)
+            .finish()
     }
 }

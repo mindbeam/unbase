@@ -26,7 +26,6 @@ futures = "0.3.1"
 
 log = "0.4.6"
 sha2 = "0.8.0"
-itertools = "0.8.0"
 serde = "0.9.11"
 serde_derive = "0.9.11"
 serde_json = "0.9.9"
@@ -34,9 +33,15 @@ serde_json = "0.9.9"
 #serde = "1.0.90"
 #serde_json = "1.0.39"
 #serde_derive = "1.0.91"
+futures-util = "0.3.1"
+tracing = "0.1.10"
+tracing-futures = "0.2.0"
+itertools = "0.8.0"
+async-trait = "0.1.22"
+unbase_test_util = { path = "../unbase_test_util" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = "0.2.0-alpha.6"
+async-std = { version = "1.4.0", features = ["attributes"] }
 env_logger = "0.6.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
@@ -49,12 +54,15 @@ console_error_panic_hook = '0.1'
 [dev-dependencies]
 futures-await-test = "0.3.0"
 wasm-bindgen-test = "0.3.5"
-unbase_test_util = { path = "../unbase_test_util" }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
+default = []
+trace = []
+trace_basic = ["unbase_test_util/trace_basic","trace"]
+trace_jaeger = ["unbase_test_util/trace_jaeger","trace"]
 
 #[build-dependencies]
 #capnpc = "0.8"

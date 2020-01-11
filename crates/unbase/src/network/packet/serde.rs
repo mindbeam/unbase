@@ -68,7 +68,7 @@ impl<'a> Visitor for PacketSeed<'a> {
                return Err(DeError::custom("Unable to pick_arbitrary_slab"));
            }
        }else{
-           if let Some(slab) = self.net.get_slab( to_slab_id ) {
+           if let Some(slab) = self.net.get_slabhandle( to_slab_id ) {
                dest_slab = slab;
            }else{
                return Err(DeError::custom("Destination slab not found"));
@@ -82,7 +82,7 @@ impl<'a> Visitor for PacketSeed<'a> {
            lifetime: SlabAnticipatedLifetime::Unknown
        };
 
-       let origin_slabref = dest_slab.slabref_from_presence(&from_presence).expect("slabref from presence");
+       let origin_slabref = dest_slab.agent.slabref_from_presence(&from_presence).expect("slabref from presence");
 
        // no need to return the memo here, as it's added to the slab
        let peers = match visitor.visit_seed(VecSeed(MemoPeerSeed{ dest_slab: &dest_slab }))? {

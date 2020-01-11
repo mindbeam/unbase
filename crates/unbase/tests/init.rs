@@ -1,7 +1,11 @@
-extern crate unbase;
+#![feature(async_closure)]
 
-use wasm_bindgen_test::*;
-use std::{thread, time};
+use timer::Delay;
+use std::time::Duration;
+use futures::join;
+use tracing::{
+    debug
+};
 
 #[unbase_test_util::async_test]
 async fn init_blackhole() {
@@ -13,8 +17,9 @@ async fn init_blackhole() {
 
 }
 
-#[test]
-fn init_blackhole_slab() {
+#[unbase_test_util::async_test]
+async fn init_blackhole_slab() {
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     let blackhole = unbase::network::transport::Blackhole::new();
@@ -29,8 +34,10 @@ fn init_blackhole_slab() {
     assert!( net.get_all_local_slabs().len() == 0 );
 }
 
-#[test]
-fn init_local_single() {
+#[unbase_test_util::async_test]
+async fn init_local_single() {
+    unbase_test_util::init_test_logger();
+
     let net = unbase::Network::create_new_system();
     {
         let slab_a = unbase::Slab::new(&net);
@@ -41,8 +48,9 @@ fn init_local_single() {
     assert!( net.get_all_local_slabs().len() == 0 );
 }
 
-#[test]
-fn init_local_multi() {
+#[unbase_test_util::async_test]
+async fn init_local_multi() {
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     {
@@ -60,7 +68,7 @@ fn init_local_multi() {
         assert!(slab_c.peer_slab_count() == 2, "Slab C Should know two peers" );
 
         let _context_a = slab_a.create_context();
-        thread::sleep( time::Duration::from_millis(50) );
+        Delay::new(Duration::from_millis(50)).await;
 
         let _context_b = slab_b.create_context();
         let _context_c = slab_c.create_context();
@@ -69,64 +77,62 @@ fn init_local_multi() {
     // TODO: Sometimes not all slabs clean up immediately. This is almost certainly indicative of some
     // kind of bug. There appears to be some occasional laggard thread which is causing a race condition
     // of some kind, and occasionally preventing one of the Slabs from destroying in time. All I know at
-    // this point is that adding the sleep here seems to help, which implies that it's not a deadlock.
-    //thread::sleep( time::Duration::from_millis(5000) );
+    // this point is that adding the delay here seems to help, which implies that it's not a deadlock.
+    //Delay::new(Duration::from_millis(5000)).await;
 
     // We should have zero slabs resident at this point
-    //assert!( net.get_all_local_slabs().len() == 0, "not all slabs have cleaned up" );
+//    assert!( net.get_all_local_slabs().len() == 0, "not all slabs have cleaned up" );
 }
 
-#[test]
-fn init_udp() {
+#[unbase_test_util::async_test]
+async fn init_udp() {
+    unbase_test_util::init_test_logger();
 
-    let t1 = thread::spawn(|| {
-     {
-        let net1 = unbase::Network::create_new_system();
-        {
-            let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
-            net1.add_transport( Box::new(udp1.clone()) );
-            let slab_a = unbase::Slab::new(&net1);
-            thread::sleep( time::Duration::from_millis(150) );
-            assert_eq!( slab_a.peer_slab_count(), 1 );
-        }
+    let f1 = udp_station_one();
+    let f2 = udp_station_two();
 
-        // my local slab should have dropped
-        assert_eq!( net1.get_all_local_slabs().len(), 0 );
+    join!{f1, f2};
+}
 
+async fn udp_station_one(){
+    let net1 = unbase::Network::create_new_system();
+    {
+        let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
+        net1.add_transport( Box::new(udp1.clone()) );
+        let slab_a = unbase::Slab::new(&net1);
+
+        // TODO - replace these sleeps with timed-out checkpoints of some kind
+        Delay::new(Duration::from_millis(150)).await;
+        assert_eq!( slab_a.peer_slab_count(), 1 );
     }
 
-    });
-
-    thread::sleep( time::Duration::from_millis(50) );
-
-    let t2 = thread::spawn(|| {
-        {
-            let net2 = unbase::Network::new();
-            net2.hack_set_next_slab_id(200);
-
-            {
-                let udp2 = unbase::network::transport::TransportUDP::new("127.0.0.1:1337".to_string());
-                net2.add_transport( Box::new(udp2.clone()) );
-
-                let slab_b = unbase::Slab::new(&net2);
-
-                udp2.seed_address_from_string( "127.0.0.1:12345".to_string() );
-                thread::sleep( time::Duration::from_millis(50) );
-
-                assert_eq!( slab_b.peer_slab_count(), 1 );
-            }
-
-            assert_eq!( net2.get_all_local_slabs().len(), 0 );
-        }
-
-    });
-
-    t1.join().expect("thread1.join");
-    t2.join().expect("thread2.join");
+    // my local slab should have dropped
+    assert_eq!( net1.get_all_local_slabs().len(), 0 );
 }
 
-#[test]
-fn avoid_unnecessary_chatter() {
+async fn udp_station_two(){
+    let net2 = unbase::Network::new();
+    net2.hack_set_next_slab_id(200);
+    Delay::new(Duration::from_millis(50)).await;
+    {
+        let udp2 = unbase::network::transport::TransportUDP::new("127.0.0.1:1337".to_string());
+        net2.add_transport(Box::new(udp2.clone()));
+        let slab_b = unbase::Slab::new(&net2);
+
+        udp2.seed_address_from_string("127.0.0.1:12345".to_string());
+        Delay::new(Duration::from_millis(50)).await;
+
+        assert_eq!(slab_b.peer_slab_count(), 1);
+    }
+
+    assert_eq!(net2.get_all_local_slabs().len(), 0);
+}
+
+
+
+#[unbase_test_util::async_test]
+async fn avoid_unnecessary_chatter() {
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
     {
@@ -136,16 +142,14 @@ fn avoid_unnecessary_chatter() {
         let _context_a = slab_a.create_context();
         let _context_b = slab_b.create_context();
 
-        thread::sleep(time::Duration::from_millis(100));
+        Delay::new(Duration::from_millis(100)).await;
 
-        println!("Slab A count of MemoRefs present {}", slab_a.count_of_memorefs_resident() );
-        println!("Slab A count of MemoRefs present {}", slab_b.count_of_memorefs_resident() );
-
-        println!("Slab A count of Memos received {}", slab_a.count_of_memos_received() );
-        println!("Slab B count of Memos received {}", slab_a.count_of_memos_received() );
-
-        println!("Slab A count of Memos redundantly received {}", slab_a.count_of_memos_reduntantly_received() );
-        println!("Slab B count of Memos redundantly received {}", slab_a.count_of_memos_reduntantly_received() );
+        debug!("Slab A count of MemoRefs present {}", slab_a.count_of_memorefs_resident() );
+        debug!("Slab A count of MemoRefs present {}", slab_b.count_of_memorefs_resident() );
+        debug!("Slab A count of Memos received {}", slab_a.count_of_memos_received() );
+        debug!("Slab B count of Memos received {}", slab_a.count_of_memos_received() );
+        debug!("Slab A count of Memos redundantly received {}", slab_a.count_of_memos_reduntantly_received() );
+        debug!("Slab B count of Memos redundantly received {}", slab_a.count_of_memos_reduntantly_received() );
 
         assert!( slab_a.count_of_memos_reduntantly_received() == 0, "Redundant memos received" );
         assert!( slab_b.count_of_memos_reduntantly_received() == 0, "Redundant memos received" );
@@ -153,27 +157,3 @@ fn avoid_unnecessary_chatter() {
 
     assert!( net.get_all_local_slabs().len() == 0 );
 }
-
-/*
-#[test]
-fn many_threads() {
-    let net = unbase::Network::new();
-
-    let mut threads = Vec::new();
-    for _ in 0..20 {
-        let net = net.clone();
-
-        threads.push(thread::spawn(move || {
-            let slab = unbase::Slab::new(&net);
-            assert!(slab.id > 0, "Nonzero Slab ID");
-            println!("# info test thread. Slab: {}", slab.id);
-        }));
-    }
-
-    for t in threads {
-        t.join().unwrap();
-    }
-
-    // println!("# {:?}", net);
-}
-*/

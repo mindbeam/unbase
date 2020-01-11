@@ -3,9 +3,12 @@ use crate::subject::*;
 use crate::memorefhead::{MemoRefHead,RelationSlotId};
 use crate::error::RetrieveError;
 use std::collections::HashMap;
-use futures::future::{BoxFuture, FutureExt};
+use futures::future::{FutureExt, LocalBoxFuture};
 use std::sync::{Arc,Mutex};
 use std::ops::Deref;
+use std::fmt;
+
+use tracing::debug;
 
 #[derive(Clone)]
 pub struct IndexFixed (Arc<Inner>);
@@ -43,21 +46,23 @@ impl IndexFixed {
     pub fn get_root_id (&self) -> SubjectId {
         self.root.lock().unwrap().id
     }
+    #[tracing::instrument]
     pub async fn insert <'a> (&self, key: u64, subject: &Subject) {
-        //println!("IndexFixed.insert({}, {:?})", key, subject );
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
-        let node = &self.root.lock().unwrap().clone();
+        let node = {
+            self.root.lock().unwrap().clone()
+        };
 
         // TODO: optimize index node creation so we're not changing relationship as an edit
         // after the fact if we don't strictly have to. That said, this gives us a great excuse
         // to work on the consistency model, so I'm doing that first.
 
-        self.recurse_set(0, key, node, subject).await;
+        self.recurse_set(0, key, &node, subject).await;
     }
     // Temporarily managing our own bubble-up
     // TODO: finish moving the management of this to context / context::subject_graph
-    fn recurse_set(&self, tier: usize, key: u64, node: &Subject, subject: &Subject) -> BoxFuture<()> {
+    fn recurse_set(&self, tier: usize, key: u64, node: &Subject, subject: &Subject) -> LocalBoxFuture<()> {
 
         let me = (*self).clone();
         let node = (*node).clone();
@@ -70,11 +75,11 @@ impl IndexFixed {
             let x = SUBJECT_MAX_RELATIONS.pow(exponent as u32);
             let y = ((key / (x as u64)) % SUBJECT_MAX_RELATIONS as u64) as RelationSlotId;
 
-            //println!("Tier {}, {}, {}", tier, x, y );
+            debug!("Tier {}, {}, {}", tier, x, y );
 
             if exponent == 0 {
                 // BUG: move this clause up
-                //println!("]]] end of the line");
+                debug!("]]] end of the line");
                 node.set_relation(y as RelationSlotId, &subject).await;
             } else {
                 match node.get_relation(y).await {
@@ -104,14 +109,16 @@ impl IndexFixed {
                     }
                 }
             }
-        }.boxed()
+        }.boxed_local()
     }
+    #[tracing::instrument]
     pub async fn get (&self, key: u64 ) -> Result<Subject, RetrieveError> {
 
-        //println!("IndexFixed.get({})", key );
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
-        let mut node = self.root.lock().unwrap().clone();
+        let mut node = {
+            self.root.lock().unwrap().clone()
+        };
         let max = SUBJECT_MAX_RELATIONS as u64;
 
         //let mut n;
@@ -119,10 +126,10 @@ impl IndexFixed {
             let exponent = (self.depth - 1) - tier;
             let x = max.pow(exponent as u32);
             let y = ((key / (x as u64)) % max) as RelationSlotId;
-            //println!("Tier {}, {}, {}", tier, x, y );
+            debug!("Tier {}, {}, {}", tier, x, y );
 
             if exponent == 0 {
-                //println!("]]] end of the line");
+                debug!("]]] end of the line");
                 return node.get_relation(y as RelationSlotId).await;
 
             }else{
@@ -145,3 +152,9 @@ impl IndexFixed {
     idx_node.set_relation( 0, rec_b1 );
     rec_b2.set_relation( 1, rec_b1 );
 */
+impl fmt::Debug for IndexFixed {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("IndexFixed")
+            .finish()
+    }
+}

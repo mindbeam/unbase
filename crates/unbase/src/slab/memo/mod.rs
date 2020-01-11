@@ -3,6 +3,7 @@
 */
 pub mod serde;
 
+use core::ops::Deref;
 use std::collections::HashMap;
 use std::{fmt};
 use std::sync::Arc;
@@ -11,6 +12,7 @@ use crate::subject::{SubjectId};
 use crate::slab::MemoRef;
 use crate::network::{SlabRef,SlabPresence};
 use super::*;
+use futures::future::{BoxFuture, FutureExt};
 
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
@@ -112,77 +114,31 @@ impl Memo {
             }
         }
     }
-    pub fn descends (&self, memoref: &MemoRef, slab: &Slab) -> bool {
+    #[tracing::instrument]
+    pub fn descends<'a>  (&'a self, memoref: &'a MemoRef, slab: &'a SlabHandle) -> BoxFuture<'a, bool> {
+        // Not really sure if this is right
+
         //TODO: parallelize this
         //TODO: Use sparse-vector/beacon to avoid having to trace out the whole lineage
         //      Should be able to stop traversal once happens-before=true. Cannot descend a thing that happens after
 
-
-        // breadth-first
-        for parent in self.parents.iter() {
-            if parent == memoref {
-                return true
-            };
-        }
-
-        // Ok now depth
-        for parent in self.parents.iter() {
-            if parent.descends(&memoref,slab) {
-                return true
+        async move {
+            // breadth-first
+            for parent in self.parents.iter() {
+                if parent == memoref {
+                    return true.into()
+                };
             }
-        }
-        return false;
-    }
-    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, peerlist: &MemoPeerList) -> Memo {
-        assert!(from_slabref.owning_slab_id == to_slab.id, "Memo clone_for_slab owning slab should be identical");
-
-        //println!("Slab({}).Memo.clone_for_slab(memo: {}, from: {}, to: {}, peers: {:?})", self.owning_slab_id, self.id, from_slabref.slab_id, to_slab.id, peerlist );
-        to_slab.reconstitute_memo(
-            self.id,
-            self.subject_id,
-            self.parents.clone_for_slab(from_slabref, to_slab, false),
-            self.body.clone_for_slab(from_slabref, to_slab),
-            from_slabref,
-            peerlist
-        ).0
+            // Ok now depth
+            for parent in self.parents.iter() {
+                if parent.descends(&memoref, slab).await {
+                    return true.into()
+                }
+            }
+            return false.into();
+        }.boxed()
     }
 }
 
 impl MemoBody {
-    fn clone_for_slab(&self, from_slabref: &SlabRef, to_slab: &Slab ) -> MemoBody {
-        assert!(from_slabref.owning_slab_id == to_slab.id, "MemoBody clone_for_slab owning slab should be identical");
-
-        match self {
-            &MemoBody::SlabPresence{ ref p, ref r } => {
-                MemoBody::SlabPresence{
-                    p: p.clone(),
-                    r: match r {
-                        &Some(ref root_mrh) => {
-                            Some(root_mrh.clone_for_slab(from_slabref, to_slab, true))
-                        }
-                        &None => None
-                    }
-                }
-            },
-            &MemoBody::Relation(ref rssh) => {
-                MemoBody::Relation(rssh.clone_for_slab(from_slabref, to_slab))
-            }
-            &MemoBody::Edit(ref hm) => {
-                MemoBody::Edit(hm.clone())
-            }
-            &MemoBody::FullyMaterialized{ ref v, ref r } => {
-                MemoBody::FullyMaterialized{ v: v.clone(), r: r.clone_for_slab(from_slabref, to_slab)}
-            }
-            &MemoBody::PartiallyMaterialized{ ref v, ref r } => {
-                MemoBody::PartiallyMaterialized{ v: v.clone(), r: r.clone_for_slab(from_slabref, to_slab)}
-            }
-            &MemoBody::Peering(memo_id, subject_id, ref peerlist) => {
-                MemoBody::Peering(memo_id,subject_id,peerlist.clone_for_slab(to_slab))
-            }
-            &MemoBody::MemoRequest(ref memo_ids, ref slabref) =>{
-                MemoBody::MemoRequest(memo_ids.clone(), slabref.clone_for_slab(to_slab))
-            }
-        }
-
-    }
 }

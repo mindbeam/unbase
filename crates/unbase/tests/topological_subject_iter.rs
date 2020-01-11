@@ -4,9 +4,10 @@ use futures_await_test::async_test;
 
 #[async_test]
 async fn acyclic() {
+    unbase_test_util::init_test_logger();
 
     let net = unbase::Network::create_new_system();
-    let simulator = unbase::network::transport::Simulator::new();
+    let simulator = unbase::util::simulator::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 
     let slab_a = unbase::Slab::new(&net);
@@ -24,9 +25,5 @@ async fn acyclic() {
     record4.set_relation(0,&record1).await;
     record5.set_relation(0,&record2).await;
     record6.set_relation(0,&record5).await;
-
-    //for (subject_id,mrh) in context_a.topo_subject_head_iter(){
-    //    println!("Subject {} MRH {:?}", subject_id, mrh );
-    //}
 
 }

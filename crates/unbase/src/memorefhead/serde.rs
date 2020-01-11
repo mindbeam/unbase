@@ -6,15 +6,15 @@ impl StatefulSerialize for MemoRefHead {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
-        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
-        for memoref in self.0.iter(){
+        let mut seq = serializer.serialize_seq(Some(self.head.len()))?;
+        for memoref in self.head.iter(){
             seq.serialize_element( &SerializeWrapper( memoref, helper ) )?;
         }
         seq.end()
     }
 }
 
-pub struct MemoRefHeadSeed<'a> { pub dest_slab: &'a Slab, pub origin_slabref: &'a SlabRef }
+pub struct MemoRefHeadSeed<'a> { pub dest_slab: &'a SlabHandle, pub origin_slabref: &'a SlabRef }
 
 impl<'a> DeserializeSeed for MemoRefHeadSeed<'a> {
     type Value = MemoRefHead;
@@ -42,6 +42,9 @@ impl<'a> Visitor for MemoRefHeadSeed<'a> {
             memorefs.push(memopeer);
         };
 
-        Ok(MemoRefHead(memorefs))
+        Ok(MemoRefHead{
+            head: memorefs,
+            owning_slab_id: self.dest_slab.my_ref.slab_id
+        })
     }
 }

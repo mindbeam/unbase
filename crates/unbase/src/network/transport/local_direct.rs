@@ -3,6 +3,7 @@ use std::thread;
 use std::sync::mpsc;
 use crate::slab::*;
 use super::*;
+use tracing::{span,debug,Level};
 
 #[derive(Clone)]
 pub struct LocalDirect {
@@ -29,23 +30,29 @@ impl Transport for LocalDirect {
     fn is_local (&self) -> bool {
         true
     }
-    fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+    #[tracing::instrument]
+    fn make_transmitter (
+        &self,
+        args: &TransmitterArgs,
+    ) -> Option<Transmitter> {
         if let &TransmitterArgs::Local(rcv_slab) = args {
-            let slab = rcv_slab.weak();
+            let slab = rcv_slab.clone();
             let (tx_channel, rx_channel) = mpsc::channel::<(SlabRef,MemoRef)>();
 
+            let span = span!(Level::TRACE, "LocalDirect Transmitter");
             let tx_thread : thread::JoinHandle<()> = thread::spawn(move || {
-                //let mut buf = [0; 65536];
-                //println!("Started TX Thread");
-                while let Ok((from_slabref, memoref)) = rx_channel.recv() {
-                    //println!("LocalDirect Slab({}) RECEIVED {:?} from {}", slab.id, memoref, from_slabref.slab_id);
-                    if let Some(slab) = slab.upgrade(){
-                        // clone_for_slab adds the memo to the slab, because memos cannot exist outside of an owning slab
+                let _guard = span.enter();
 
-                        let owned_slabref = from_slabref.clone_for_slab(&slab);
-                        memoref.clone_for_slab(&owned_slabref, &slab, true);
-                    }
+                //let mut buf = [0; 65536];
+                debug!("Starting consumer");
+                while let Ok((from_slabref, memoref)) = rx_channel.recv() {
+                    debug!("LocalDirect Slab({}) RECEIVED {:?} from {}", slab.my_ref.slab_id, memoref, from_slabref.slab_id);
+                    // clone_for_slab adds the memo to the slab, because memos cannot exist outside of an owning slab
+
+                    let owned_slabref = slab.agent.localize_slabref(&from_slabref);
+                    slab.agent.localize_memoref(&memoref, &owned_slabref, true);
                 }
+                debug!("Finished consumer");
             });
 
             // TODO: Remove the mutex here. Consider moving transmitter out of slabref.
@@ -72,12 +79,18 @@ impl Transport for LocalDirect {
 
 impl Drop for Internal {
     fn drop (&mut self) {
-        //println!("# LocalDirectInternal.drop");
         for thread in self.tx_threads.drain(..) {
 
-            //println!("# LocalDirectInternal.drop Thread pre join");
+            debug!("# LocalDirectInternal.drop Thread pre join");
             thread.join().expect("local_direct thread join");
-            //println!("# LocalDirectInternal.drop Thread post join");
+            debug!("# LocalDirectInternal.drop Thread post join");
         }
+    }
+}
+
+impl std::fmt::Debug for LocalDirect {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fmt.debug_struct("LocalDirect")
+            .finish()
     }
 }

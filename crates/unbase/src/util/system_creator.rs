@@ -6,7 +6,7 @@ pub struct SystemCreator;
 
 impl SystemCreator {
 
-    pub fn generate_root_index_seed( slab: &Slab ) -> MemoRefHead {
+    pub fn generate_root_index_seed( slab: &SlabHandle ) -> MemoRefHead {
 
         let mut values = HashMap::new();
         values.insert("tier".to_string(),0.to_string());

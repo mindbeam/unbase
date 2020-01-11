@@ -77,7 +77,8 @@ impl StatefulSerialize for MemoPeer {
     }
 }
 
-pub struct MemoRefSeed<'a> { pub dest_slab: &'a Slab, pub origin_slabref: &'a SlabRef }
+#[derive(Debug)]
+pub struct MemoRefSeed<'a> { pub dest_slab: &'a SlabHandle, pub origin_slabref: &'a SlabRef }
 
 impl<'a> DeserializeSeed for MemoRefSeed<'a> {
     type Value = MemoRef;
@@ -95,6 +96,7 @@ impl<'a> Visitor for MemoRefSeed<'a> {
        formatter.write_str("struct MemoRef")
     }
 
+    #[tracing::instrument(skip(visitor))]
     fn visit_seq<V>(self, mut visitor: V) -> Result<MemoRef, V::Error>
        where V: SeqVisitor
     {
@@ -133,12 +135,12 @@ impl<'a> Visitor for MemoRefSeed<'a> {
             }
         });
 
-        Ok(self.dest_slab.assert_memoref(memo_id, subject_id, MemoPeerList::new(peers), None).0 )
+        Ok(self.dest_slab.agent.assert_memoref(memo_id, subject_id, MemoPeerList::new(peers), None).0 )
     }
 }
 
 #[derive(Clone)]
-pub struct MemoPeerSeed<'a> { pub dest_slab: &'a Slab }
+pub struct MemoPeerSeed<'a> { pub dest_slab: &'a SlabHandle }
 
 impl<'a> DeserializeSeed for MemoPeerSeed<'a> {
     type Value = MemoPeer;

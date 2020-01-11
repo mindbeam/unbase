@@ -4,7 +4,7 @@ mod transmitter;
 pub mod transport;
 pub mod packet;
 
-pub use crate::slab::{SlabRef, SlabPresence, SlabAnticipatedLifetime};
+pub use crate::slab::{SlabRef, SlabPresence, agent::SlabAgent, SlabAnticipatedLifetime};
 pub use self::transport::{Transport, TransportAddress};
 pub use self::packet::Packet;
 use crate::util::system_creator::SystemCreator;
@@ -13,7 +13,7 @@ pub use self::transmitter::{Transmitter, TransmitterArgs};
 use std::ops::Deref;
 use std::sync::{Arc, Weak, Mutex, RwLock};
 use std::fmt;
-use crate::slab::{Slab, WeakSlab, SlabId};
+use crate::slab::{SlabId, SlabHandle};
 use crate::memorefhead::MemoRefHead;
 
 
@@ -29,7 +29,9 @@ impl Deref for Network {
 
 pub struct NetworkInner {
     next_slab_id: RwLock<u32>,
-    slabs: RwLock<Vec<WeakSlab>>,
+
+    // inducing a memory leak out of expedience TODO - Replace this with SlabHandle/SlabRef
+    slabs: RwLock<Vec<SlabHandle>>,
     transports: RwLock<Vec<Box<dyn Transport + Send + Sync>>>,
     root_index_seed: RwLock<Option<(MemoRefHead, SlabRef)>>,
     create_new_system: bool,
@@ -42,12 +44,16 @@ impl Network {
     /// This represents your joining an existing unbase system.
     /// (In production, this is the one you want)
     pub fn new() -> Network {
-        Self::new_inner(false)
+        Self::new_inner(
+            false,
+        )
     }
     /// In test cases, you want to create a wholly new unbase system.
     /// You should not be using this in production, except the *first* time ever for that system
     pub fn create_new_system() -> Network {
-        Self::new_inner(true)
+        Self::new_inner(
+            true,
+        )
     }
     fn new_inner(create_new_system: bool) -> Network {
 
@@ -80,7 +86,6 @@ impl Network {
             if let Some(removed) = transports.iter()
                 .position(|t| t.is_local())
                 .map(|e| transports.remove(e)) {
-                println!("Unbinding local transport");
                 removed.unbind_network(self);
             }
         }
@@ -96,39 +101,34 @@ impl Network {
 
         id
     }
-    pub fn get_slab(&self, slab_id: SlabId) -> Option<Slab> {
-        if let Some(weak) = self.slabs.read().unwrap().iter().find(|s| s.id == slab_id) {
-            if let Some(slab) = weak.upgrade() {
-                return Some(slab);
+    pub fn get_slabhandle(&self, slab_id: SlabId) -> Option<SlabHandle> {
+        if let Some(slabhandle) = self.slabs.read().unwrap().iter().find(|s| s.my_ref.slab_id == slab_id) {
+            if slabhandle.is_running() {
+                return Some((*slabhandle).clone());
             }
+            // TODO - scrub non-resident slabs
         }
         return None;
     }
-    fn get_representative_slab(&self) -> Option<Slab> {
-        for weak in self.slabs.read().unwrap().iter() {
-            if let Some(slab) = weak.upgrade() {
-                if !slab.dropping {
-                    return Some(slab);
-                }
+    fn get_representative_slab(&self) -> Option<SlabHandle> {
+        for slabhandle in self.slabs.read().unwrap().iter() {
+            if slabhandle.is_running() {
+                return Some((*slabhandle).clone());
             }
+            // TODO - scrub non-resident slabs
         }
         return None;
     }
-    pub fn get_all_local_slabs(&self) -> Vec<Slab> {
+    pub fn get_all_local_slabs(&self) -> Vec<SlabHandle> {
         // TODO: convert this into a iter generator that automatically expunges missing slabs.
-        let mut res: Vec<Slab> = Vec::new();
+        let mut res: Vec<SlabHandle> = Vec::new();
         // let mut missing : Vec<usize> = Vec::new();
 
-        for slab in self.slabs.read().unwrap().iter() {
-            match slab.upgrade() {
-                Some(s) => {
-                    res.push(s);
-                }
-                None => {
-                    // TODO: expunge freed slabs
-                }
+        for slabhandle in self.slabs.read().unwrap().iter() {
+            if slabhandle.is_running() {
+                res.push(slabhandle.clone());
             }
-
+            // TODO - scrub non-resident slabs
         }
 
         res
@@ -149,27 +149,30 @@ impl Network {
         }
         None
     }
-    pub fn register_local_slab(&self, new_slab: &Slab) {
-        // println!("# Network.register_slab {:?}", new_slab );
+    #[tracing::instrument]
+    pub fn register_local_slab(&self, new_slab: SlabHandle) {
 
         {
-            self.slabs.write().unwrap().insert(0, new_slab.weak());
+            self.slabs.write().unwrap().insert(0, new_slab.clone());
         }
 
         for prev_slab in self.get_all_local_slabs() {
-            prev_slab.slabref_from_local_slab(new_slab);
+            prev_slab.slabref_from_local_slab(&new_slab);
             new_slab.slabref_from_local_slab(&prev_slab);
         }
+
+        self.conditionally_generate_root_index_seed(&new_slab);
     }
+    #[tracing::instrument]
     pub fn deregister_local_slab(&self, slab_id: SlabId) {
-        // Remove the deregistered slab so get_representative_slab doesn't return it
+//        // Remove the deregistered slab so get_representative_slab doesn't return it
         {
             let mut slabs = self.slabs.write().expect("slabs write lock");
             if let Some(removed) = slabs.iter()
-                .position(|s| s.id == slab_id)
+                .position(|s| s.my_ref.slab_id == slab_id)
                 .map(|e| slabs.remove(e)) {
-                // println!("Unbinding Slab {}", removed.id);
-                let _ = removed.id;
+                // debug!("Unbinding Slab {}", removed.id);
+                let _ = removed.my_ref.slab_id;
                 // removed.unbind_network(self);
             }
         }
@@ -178,44 +181,51 @@ impl Network {
         // then we need to move it to a different slab
 
         let mut root_index_seed = self.root_index_seed.write().expect("root_index_seed write lock");
-        {
-            if let Some(ref mut r) = *root_index_seed {
-                if r.1.slab_id == slab_id {
-                    if let Some(new_slab) = self.get_representative_slab() {
 
-                        let owned_slabref = r.1.clone_for_slab(&new_slab);
-                        r.0 = r.0.clone_for_slab(&owned_slabref, &new_slab, false);
-                        r.1 = new_slab.my_ref.clone();
-                        return;
-                    }
-                    // don't return
-                } else {
+        if let Some(ref mut r) = *root_index_seed {
+            if r.1.slab_id == slab_id {
+                if let Some(new_slab) = self.get_representative_slab() {
+                    let owned_slabref = new_slab.agent.localize_slabref(&r.1);
+                    r.0 = new_slab.agent.localize_memorefhead(&r.0, &owned_slabref, false);
+                    r.1 = new_slab.my_ref.clone();
                     return;
                 }
+                // don't return
+            } else {
+                return;
             }
         }
 
         // No slabs left
         root_index_seed.take();
     }
-    pub fn get_root_index_seed(&self, slab: &Slab) -> Option<MemoRefHead> {
+    #[tracing::instrument]
+    pub fn get_root_index_seed(&self, slab: &SlabHandle) -> Option<MemoRefHead> {
+        let root_index_seed = {
+            self.root_index_seed.read().expect("root_index_seed read lock").clone()
+        };
+
+        match root_index_seed {
+            Some((ref seed, ref from_slabref)) => {
+                let local_seed = slab.agent.localize_memorefhead(seed, from_slabref, true);
+                Some(local_seed)
+            }
+            None => None,
+        }
+    }
+    #[tracing::instrument]
+    pub fn get_root_index_seed_for_agent(&self, agent: &SlabAgent ) -> Option<MemoRefHead> {
         let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");
 
         match *root_index_seed {
             Some((ref seed, ref from_slabref)) => {
-                if from_slabref.owning_slab_id == slab.id {
-                    // seed is resident on the requesting slab
-                    Some(seed.clone())
-                } else {
-                    let owned_slabref = from_slabref.clone_for_slab(&slab);
-                    Some(seed.clone_for_slab(&owned_slabref, slab, true))
-                }
+                let local_seed = agent.localize_memorefhead(seed, from_slabref, true);
+                Some(local_seed)
             }
             None => None,
         }
-
     }
-    pub fn conditionally_generate_root_index_seed(&self, slab: &Slab) -> bool {
+    pub fn conditionally_generate_root_index_seed(&self, slab: &SlabHandle) -> bool {
         {
             if let Some(_) = *self.root_index_seed.read().unwrap() {
                 return false;
@@ -274,23 +284,6 @@ impl fmt::Debug for Network {
             .finish()
     }
 }
-
-// probably wasn't ever necessary, except as a way to debug
-// impl Drop for NetworkInner {
-// fn drop(&mut self) {
-// println!("# > Dropping NetworkInternals");
-//
-// println!("# > Dropping NetworkInternals B");
-// self.transports.clear();
-//
-// println!("# > Dropping NetworkInternals C");
-// self.root_index_seed.take();
-//
-// println!("# > Dropping NetworkInternals D");
-//
-// }
-// }
-//
 
 impl WeakNetwork {
     pub fn upgrade(&self) -> Option<Network> {

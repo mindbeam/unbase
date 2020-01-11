@@ -1,93 +1,69 @@
 extern crate unbase;
-use unbase::subject::Subject;
-use std::{thread, time};
-use futures::executor::block_on;
 
-fn main() {
-    block_on(run())
+use unbase::{
+    Network,
+    Subject,
+    subject::SubjectId,
+};
+
+use std::time::Duration;
+use timer::Delay;
+use futures::join;
+use unbase::{
+    util::simulator::Simulator,
+    network::transport::simulator::MemoPayload,
+};
+use unbase::context::Context;
+
+#[async_std::main]
+async fn main () {
+    unbase_test_util::init_test_logger();
+
+    let simulator = unbase::util::simulator::Simulator::new();
+    let net = unbase::Network::create_new_system();
+    net.add_transport(Box::new(simulator.clone()));
+    simulator.start();
+
+    let referee_slab = unbase::Slab::new(&net);
+    let referee_context = referee_slab.create_context();
+
+    let record : Subject = Subject::new_kv(&referee_context, "the_ball_goes", "PING").await.unwrap();
+    let record_id : SubjectId = record.id;
+
+    simulator.quiesce().await;
+
+    let p1 = new_player( net.clone(), simulator.clone(), record_id, "PING", "PONG");
+    let p2 = new_player( net.clone(), simulator.clone(), record_id, "PONG", "PING");
+
+    join!{ p1, p2 };
+
+    simulator.quiesce_and_stop().await;
+
 }
 
-async fn run (){
-    let simulator = unbase::network::transport::Simulator::new();
-    let net = unbase::Network::create_new_system();
-    net.add_transport( Box::new(simulator.clone()) );
+async fn new_player(net: Network, sim: Simulator<MemoPayload>, record_id: SubjectId, listen_for: &'static str, then_say: &'static str ) {
+    let player_slab = unbase::Slab::new(&net);
+    let player_context = player_slab.create_context();
 
-    let slab_a = unbase::Slab::new(&net);
-    let slab_b = unbase::Slab::new(&net);
+//     TODO - replace this with slab.on_connected().await
+    sim.quiesce().await;
 
-    let context_a = slab_a.create_context();
-    let context_b = slab_b.create_context();
+    let rec = player_context.get_subject_by_id(record_id).await.expect("Couldn't find the record");
 
-    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Meow").await.unwrap();
-    let rec_id = rec_a1.id; // useful for cross-context retrieval
+    for _ in 0..5 { // send 5 volleys
+        for _ in 1..100 {
+            // TODO: update to use push notification (which isn't implemented yet)
+            // have to use polling for now to detect when the subject has changed
+            Delay::new(Duration::from_millis(50)).await;
 
-    // ************************************************************************
-    // Create one record, then spawn two threads,
-    // each of which makes an edit whenever it sees an edit
+            let value = rec.get_value("the_ball_goes").await.unwrap();
 
-    // NOTE: have to use polling for now to detect when the subject has changed
-    // because push notification (though planned) isn't implemented yet :)
-    // ************************************************************************
-
-    let half_sec = time::Duration::from_millis(500);
-    let ten_ms = time::Duration::from_millis(10);
-
-    // spawn thread 1
-    let t1 = thread::spawn(move || {
-
-        block_on(async {
-            // use the original copy of the subject, or look it up by sub
-            let rec_a1 = context_a.get_subject_by_id(rec_id).await.unwrap();
-
-            for _ in 1..5 {
-                // Hacky-polling approach for now, push notification coming sooooon!
-                loop {
-                    if "Meow".to_string() == rec_a1.get_value("animal_sound").await.unwrap() {
-                        // set a value when a change is detected
-
-                        println!("[[[ Woof ]]]");
-                        rec_a1.set_value("animal_sound", "Woof");
-                        break;
-                    }
-                    thread::sleep(ten_ms);
-                }
-            }
-        })
-    });
-
-
-    //
-
-    // spawn thread 2
-    let t2 = thread::spawn(move || {
-        // cheater cheater! ( not yet a blocking version of get_subject )
-        thread::sleep(ten_ms);
-
-        // Get a new copy of the same subject from context_b (requires communication)
-        let rec_b1 = block_on(context_b.get_subject_by_id( rec_id )).unwrap();
-
-        for _ in 1..5 {
-            // Hacky-polling approach for now, push notification coming sooooon!
-            loop {
-                if "Woof".to_string() == block_on(rec_b1.get_value("animal_sound")).unwrap() {
-                    // set a value when a change is detected
-                    println!("[[[ Meow ]]]");
-                    rec_b1.set_value("animal_sound","Meow");
-                    break;
-                }
-                thread::sleep(ten_ms);
+            if &value == listen_for  {
+                // set a value when a change is detected
+                println!("{}", then_say);
+                rec.set_value("the_ball_goes", then_say).await;
+                break;
             }
         }
-    });
-
-    for _ in 1..12 {
-        simulator.advance_clock(1);
-        thread::sleep(half_sec);
     }
-
-    // Remember, we're simulating the universe here, so we have to tell the universe to continuously move forward
-
-    t1.join().unwrap();
-    t2.join().unwrap();
-
 }

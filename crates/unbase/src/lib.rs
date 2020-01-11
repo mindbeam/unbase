@@ -36,9 +36,12 @@
 //!     assert_eq!(record.get_value("animal_type").await, record2.get_value("animal_type").await);
 //! }
 //!
-//! futures::executor::block_on(run())
+//! async_std::task::block_on(run())
 //! ```
 #![doc(html_root_url = "https://unba.se")]
+
+#![feature(type_alias_impl_trait)]
+#![feature(async_closure)]
 
 #[macro_use]
 extern crate serde_derive;

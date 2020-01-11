@@ -6,10 +6,26 @@ use crate::subject::*;
 use crate::context::*;
 use crate::error::*;
 
-use std::mem;
-use std::fmt;
-use std::slice;
-use std::collections::VecDeque;
+use std::{
+    mem,
+    fmt,
+    slice,
+    collections::VecDeque,
+    pin::Pin,
+};
+
+use tracing::{
+    debug
+};
+
+use futures::{
+    FutureExt,
+    Stream,
+    task::Poll,
+    future::{
+        BoxFuture
+    }
+};
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -20,8 +36,18 @@ use std::collections::VecDeque;
 
 pub type RelationSlotId = u8;
 
+//TODO: consider renaming to OwnedMemoRefHead
 #[derive(Clone, PartialEq)]
-pub struct MemoRefHead (Vec<MemoRef>);
+pub struct MemoRefHead {
+    pub (crate) owning_slab_id: SlabId,
+    pub (crate) head: Vec<MemoRef>
+}
+
+// TODO: consider renaming to ExternalMemoRefHead or something like that
+pub struct MemoRefHeadWithProvenance {
+    pub memorefhead: MemoRefHead,
+    pub slabref: SlabRef,
+}
 
 pub struct RelationLink{
     pub slot_id:    RelationSlotId,
@@ -29,17 +55,26 @@ pub struct RelationLink{
 }
 
 impl MemoRefHead {
-    pub fn new () -> Self {
-        MemoRefHead( Vec::with_capacity(5) )
+    pub fn new ( owning_slab: &SlabHandle ) -> Self {
+        MemoRefHead{
+            head: Vec::with_capacity(5),
+            owning_slab_id: owning_slab.my_ref.slab_id
+        }
     }
-    pub fn new_from_vec ( vec: Vec<MemoRef> ) -> Self {
-        MemoRefHead( vec )
+    pub fn new_from_vec ( vec: Vec<MemoRef>, owning_slab: &SlabHandle ) -> Self {
+        MemoRefHead{
+            head: vec,
+            owning_slab_id: owning_slab.my_ref.slab_id
+        }
     }
     pub fn from_memoref (memoref: MemoRef) -> Self {
-        MemoRefHead( vec![memoref] )
+        MemoRefHead {
+            owning_slab_id: memoref.owning_slab_id,
+            head: vec![memoref],
+        }
     }
-    pub fn apply_memoref(&mut self, new: &MemoRef, slab: &Slab ) -> bool {
-        //println!("# MemoRefHead({:?}).apply_memoref({})", self.memo_ids(), &new.id);
+    #[tracing::instrument]
+    pub async fn apply_memoref(&mut self, new: &MemoRef, slab: &SlabHandle ) -> bool {
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
         // If so, any memorefs that it descends must be removed
@@ -55,14 +90,15 @@ impl MemoRefHead {
         // new items are more likely to be at the end, and that's more likely to trigger
         // the cheapest case: (existing descends new)
 
-        'existing: for i in (0..self.0.len()).rev() {
+        // TODO - make this more async friendly.
+        'existing: for i in (0..self.head.len()).rev() {
             let mut remove = false;
             {
-                let ref mut existing = self.0[i];
+                let ref mut existing = self.head[i];
                 if existing == new {
                     return false; // we already had this
 
-                } else if existing.descends(&new,&slab) {
+                } else if existing.descends(&new,&slab).await {
                     new_is_descended = true;
 
                     // IMPORTANT: for the purposes of the boolean return,
@@ -72,7 +108,7 @@ impl MemoRefHead {
                     // then it doesn't get applied at all punt the whole thing
                     break 'existing;
 
-                } else if new.descends(&existing, &slab) {
+                } else if new.descends(&existing, &slab).await {
                     new_descends = true;
                     applied = true; // descends
 
@@ -90,7 +126,7 @@ impl MemoRefHead {
 
             if remove {
                 // because we're descending, we know the offset of the next items won't change
-                self.0.remove(i);
+                self.head.remove(i);
             }
         }
 
@@ -98,32 +134,38 @@ impl MemoRefHead {
             // if the new memoref neither descends nor is descended
             // then it must be concurrent
 
-            self.0.push(new.clone());
+            self.head.push(new.clone());
             applied = true; // The memoref was "applied" to the MemoRefHead
         }
 
         // This memoref was applied if it was concurrent, or descends one or more previous memos
 
         if applied {
-            //println!("# \t\\ Was applied - {:?}", self.memo_ids());
+            debug!("Was applied - {:?}", self.memo_ids());
         }else{
-            //println!("# \t\\ NOT applied - {:?}", self.memo_ids());
+            debug!("NOT applied - {:?}", self.memo_ids());
         }
 
         applied
     }
-    pub fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &Slab) {
+    #[tracing::instrument]
+    pub async fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) {
         for new in new_memorefs.iter(){
-            self.apply_memoref(new, slab);
+            self.apply_memoref(new, slab).await;
         }
     }
-    pub fn apply (&mut self, other: &MemoRefHead, slab: &Slab){
+    #[tracing::instrument]
+    pub async fn apply (mut self, other: &MemoRefHead, slab: &SlabHandle) -> MemoRefHead {
+        // TODO make this concurrent?
         for new in other.iter(){
-            self.apply_memoref( new, slab );
+            self.apply_memoref( new, slab ).await;
         }
+
+        //TODO reimplement this with immutability
+        self
     }
     pub fn memo_ids (&self) -> Vec<MemoId> {
-        self.0.iter().map(|m| m.id).collect()
+        self.head.iter().map(|m| m.id).collect()
     }
     pub fn first_subject_id (&self) -> Option<SubjectId> {
         if let Some(memoref) = self.iter().next() {
@@ -134,26 +176,47 @@ impl MemoRefHead {
         }
     }
     pub fn to_vec (&self) -> Vec<MemoRef> {
-        self.0.clone()
+        self.head.clone()
     }
-    pub fn to_vecdeque (&self) -> VecDeque<MemoRef> {
-        VecDeque::from(self.0.clone())
+    #[tracing::instrument]
+    fn to_stream_vecdeque (&self, slab: &SlabHandle ) -> VecDeque<CausalMemoStreamItem> {
+
+//        let mut out = VecDeque::with_capacity(self.head.len());
+//        for memoref in self.head.iter() {
+//            let
+//            out.push_back(CausalMemoStreamItem {
+//                memoref: (*memoref).clone(),
+//                fut: memoref.clone().get_memo( slab ).boxed(),
+//                memo: None
+//            });
+//        };
+//        out
+
+        self.head.iter().map(|memoref| {
+            //TODO - switching to an immutable internal datastructure should mitigate the need for clones here
+            CausalMemoStreamItem {
+//                memoref: memoref.clone(),
+                fut: memoref.clone().get_memo( slab.clone() ).boxed(),
+                memo: None
+            }
+        }).collect()
     }
     pub fn len (&self) -> usize {
-        self.0.len()
+        self.head.len()
     }
     pub fn iter (&self) -> slice::Iter<MemoRef> {
-        self.0.iter()
+        self.head.iter()
     }
-    pub fn causal_memo_iter(&self, slab: &Slab ) -> CausalMemoIter {
-        CausalMemoIter::from_head( &self, slab )
+    #[tracing::instrument]
+    pub fn causal_memo_stream(&self, slab: &SlabHandle ) -> CausalMemoStream {
+        CausalMemoStream::from_head(&self, slab )
     }
-    pub fn is_fully_materialized(&self, slab: &Slab ) -> bool {
+    pub async fn is_fully_materialized(&self, slab: &SlabHandle ) -> bool {
         // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
         //       as part of the list management. That way we won't have to incur the below computational effort.
 
         for memoref in self.iter(){
-            if let Ok(memo) = memoref.get_memo(slab) {
+            if let Ok(memo) = memoref.clone().get_memo(slab.clone()).await {
                 match memo.body {
                     MemoBody::FullyMaterialized { v: _, r: _ } => {},
                     _                           => { return false }
@@ -166,25 +229,35 @@ impl MemoRefHead {
 
         true
     }
-    pub fn clone_for_slab (&self, from_slabref: &SlabRef, to_slab: &Slab, include_memos: bool ) -> Self {
-        assert!(from_slabref.slab_id != to_slab.id, "slab id should differ");
-        MemoRefHead( self.iter().map(|mr| mr.clone_for_slab(from_slabref, to_slab, include_memos )).collect() )
-    }
 }
 
 impl fmt::Debug for MemoRefHead{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 
         fmt.debug_struct("MemoRefHead")
-            .field("memo_refs", &self.0 )
+            .field("memo_refs", &self.head )
             //.field("memo_ids", &self.memo_ids() )
             .finish()
     }
 }
 
-pub struct CausalMemoIter {
-    queue: VecDeque<MemoRef>,
-    slab:  Slab
+struct CausalMemoStreamItem{
+//    memoref: MemoRef,
+    fut: BoxFuture<'static, Result<Memo,RetrieveError>>,
+    memo: Option<Memo>
+}
+
+pub struct CausalMemoStream {
+    queue: VecDeque<CausalMemoStreamItem>,
+    slab:  SlabHandle
+}
+
+impl fmt::Debug for CausalMemoStream {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("CausalMemoIter")
+            .field("remaining",&self.queue.len())
+            .finish()
+    }
 }
 
 /*
@@ -197,40 +270,62 @@ head ^    \- F -> D -/
      Arguably this should not be an iterator at all, but rather a recursive function
      Going with the iterator for now in the interest of simplicity
 */
-impl CausalMemoIter {
-    pub fn from_head ( head: &MemoRefHead, slab: &Slab) -> Self {
-        //println!("# -- SubjectMemoIter.from_head({:?})", head.memo_ids() );
-
-        CausalMemoIter {
-            queue: head.to_vecdeque(),
-            slab:  slab.clone()
+impl CausalMemoStream {
+    #[tracing::instrument]
+    pub fn from_head ( head: &MemoRefHead, slab: &SlabHandle) -> Self {
+        if head.owning_slab_id != slab.my_ref.slab_id {
+            assert!(head.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
+        }
+        CausalMemoStream {
+            queue: head.to_stream_vecdeque(slab),
+            slab:  (*slab).clone()
         }
     }
 }
-impl Iterator for CausalMemoIter {
+
+impl Stream for CausalMemoStream {
     type Item = Memo;
 
-    fn next (&mut self) -> Option<Memo> {
+    #[tracing::instrument]
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context) -> Poll<Option<Self::Item>> {
         // iterate over head memos
         // Unnecessarly complex because we're not always dealing with MemoRefs
         // Arguably heads should be stored as Vec<MemoRef> instead of Vec<Memo>
 
-        // TODO: Stop traversal when we come across a Keyframe memo
-        if let Some(memoref) = self.queue.pop_front() {
-            // this is wrong - Will result in G, E, F, C, D, B, A
-
-            match memoref.get_memo( &self.slab ){
-                Ok(memo) => {
-                    self.queue.append(&mut memo.get_parent_head().to_vecdeque());
-                    return Some(memo)
-                },
-                Err(err) => {
-                    panic!("Failed to retrieve memo {} ({:?})", memoref.id, err );
-                }
-            }
-            //TODO: memoref.get_memo needs to be able to fail
+        if self.queue.len() == 0 {
+            return Poll::Ready(None);
         }
 
-        return None;
+        let mut nextheads = Vec::new();
+
+        for item in self.queue.iter_mut() {
+            // QUESTION: Is it bad to pass our context? We have to poll all of these, but only want to be
+            // woken up when the *first* of these futures is ready. We only get one shot at setting the
+            // context/waker though, so I think we just have to deal with that.
+            if let None = item.memo {
+                match item.fut.as_mut().poll(cx) {
+                    Poll::Ready(Ok(memo)) => {
+                        nextheads.push(memo.get_parent_head() );
+                        item.memo = Some(memo);
+                    },
+                    Poll::Ready(Err(_e)) => {
+                        panic!("TODO: how should we handle memo retrieval errors in the causal iterator? {:?}", _e)
+                    },
+                    Poll::Pending => {}
+                }
+            }
+        }
+
+        for nexthead in nextheads {
+            let mut foo = &mut nexthead.to_stream_vecdeque(&self.slab);
+            self.queue.append( &mut foo );
+        }
+
+    // TODO -make this nicer
+        if let None = self.queue[0].memo {
+            return Poll::Pending;
+        }
+
+        return Poll::Ready(Some( self.queue.pop_front().unwrap().memo.unwrap() ))
     }
 }

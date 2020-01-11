@@ -1,4 +1,6 @@
-use super::*;
+use tracing::debug;
+use crate::network::{Transport, TransmitterArgs, Transmitter, TransportAddress};
+use crate::Network;
 
 #[derive(Clone)]
 pub struct Blackhole;
@@ -14,7 +16,10 @@ impl Transport for Blackhole {
     fn is_local (&self) -> bool {
         true
     }
-    fn make_transmitter (&self, args: &TransmitterArgs ) -> Option<Transmitter> {
+    fn make_transmitter (
+        &self,
+        args: &TransmitterArgs,
+    ) -> Option<Transmitter> {
         Some(Transmitter::new_blackhole(args.get_slab_id()))
     }
 
@@ -28,6 +33,6 @@ impl Transport for Blackhole {
 
 impl Drop for Blackhole {
     fn drop (&mut self) {
-        println!("# Blackhole.drop");
+        debug!("# Blackhole.drop");
     }
 }

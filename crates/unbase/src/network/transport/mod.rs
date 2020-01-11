@@ -3,12 +3,11 @@
 //! `Transmitter`s which can be used to send `Memo`s.
 
 mod local_direct;
-mod simulator;
+pub mod simulator;
 mod udp;
 mod blackhole;
 
 pub use self::udp::*;
-pub use self::simulator::Simulator;
 pub use self::local_direct::LocalDirect;
 pub use self::blackhole::Blackhole;
 pub use super::transmitter::{Transmitter, DynamicDispatchTransmitter};
@@ -29,7 +28,10 @@ pub enum TransportAddress{
 }
 
 pub trait Transport {
-    fn make_transmitter(  &self, args: &TransmitterArgs  ) -> Option<Transmitter>;
+    fn make_transmitter(
+        &self,
+        args: &TransmitterArgs,
+    ) -> Option<Transmitter>;
     fn is_local        (  &self ) -> bool;
     fn bind_network    (  &self, network: &Network );
     fn unbind_network  (  &self, network: &Network );

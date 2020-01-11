@@ -1,7 +1,17 @@
 use core::ops::Deref;
-use std::fmt;
-use std::collections::HashMap;
-use std::sync::{Arc,RwLock,Weak};
+use std::{
+    collections::HashMap,
+    fmt,
+    sync::{
+        Arc,
+        RwLock,
+        Weak
+    }
+};
+use tracing::debug;
+use futures::{
+    stream::StreamExt
+};
 
 use crate::slab::*;
 use crate::memorefhead::*;
@@ -24,6 +34,7 @@ pub struct WeakSubject(Weak<SubjectInner>);
 
 pub struct SubjectInner {
     pub id:     SubjectId,
+    // Should a subject have a Head at all? or should that be fetched on-demand by Context?
     head:       RwLock<MemoRefHead>,
     contextref: ContextRef,
 }
@@ -36,9 +47,9 @@ impl Subject {
         // don't store this
         let context = contextref.get_context();
 
-        let slab = &context.slab;
+        let slab = &context.inner.0.slab;
         let subject_id = slab.generate_subject_id();
-        //println!("# Subject({}).new()",subject_id);
+        debug!(%subject_id);
 
         let memoref = slab.new_memo_basic_noparent(
                 Some(subject_id),
@@ -62,7 +73,6 @@ impl Subject {
         Ok(subject)
     }
     pub fn reconstitute (contextref: ContextRef, head: MemoRefHead) -> Subject {
-        //println!("Subject.reconstitute({:?})", head);
         let context = contextref.get_context();
 
         let subject_id = head.first_subject_id().unwrap();
@@ -80,90 +90,113 @@ impl Subject {
     pub async fn new_blank ( context: &Context ) -> Result<Subject,String> {
         Self::new( context, HashMap::new(), false ).await
     }
+    #[tracing::instrument]
     pub async fn new_kv ( context: &Context, key: &str, value: &str ) -> Result<Subject,String> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
         Self::new( context, vals, false ).await
     }
+    #[tracing::instrument]
     pub async fn get_value ( &self, key: &str ) -> Option<String> {
-        //println!("# Subject({}).get_value({})",self.id,key);
-
-        self.head.read().unwrap().project_value(&self.contextref.get_context(), key)
+        self.head.read().unwrap().project_value(&self.contextref.get_context(), key).await
     }
+    #[tracing::instrument]
     pub async fn get_relation ( &self, key: RelationSlotId ) -> Result<Subject, RetrieveError> {
-        //println!("# Subject({}).get_relation({})",self.id,key);
 
         let context = self.contextref.get_context();
-        match self.head.read().unwrap().project_relation(&context, key) {
-            Ok((subject_id, head)) => context.get_subject_with_head(subject_id,head),
-            Err(e)   => Err(e)
+        let head = {
+            self.head.read().unwrap().clone()
+        };
 
+        match head.project_relation(&context, key).await {
+            Ok((subject_id, relhead)) => context.get_subject_with_head(subject_id,relhead).await,
+            Err(e)   => Err(e)
         }
     }
-    pub fn set_value (&self, key: &str, value: &str) -> bool {
+    #[tracing::instrument]
+    pub async fn set_value (&self, key: &str, value: &str) -> bool {
+        //TODO: guard against race conditions between different newheads with simultaneous sets
+        // Was managing this with a mutex, but can't do it in the same way given asyncification
+
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
         let context = self.contextref.get_context();
-        let slab = &context.slab;
-        let mut head = self.head.write().unwrap();
+        let slab = &context.inner.0.slab;
+
+        let head = {
+            self.head.read().unwrap().clone()
+        };
 
         let memoref = slab.new_memo_basic(
             Some(self.id),
-            head.clone(),
+            head,
             MemoBody::Edit(vals)
         );
 
-        head.apply_memoref(&memoref, &slab);
-        context.apply_subject_head( self.id,  &head, false );
+        let newhead = memoref.to_head();
+
+        context.inner.clone().apply_head( self.id,  newhead.clone(), false ).await;
+
+        *(self.head.write().unwrap()) = newhead;
 
         true
     }
+    #[tracing::instrument]
     pub async fn set_relation (&self, key: RelationSlotId, relation: &Self) {
-        //println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
         let mut memoref_map : HashMap<RelationSlotId, (SubjectId,MemoRefHead)> = HashMap::new();
         memoref_map.insert(key, (relation.id, relation.get_head().clone()) );
 
         let context = self.contextref.get_context();
-        let slab = &context.slab;
-        let mut head = self.head.write().unwrap();
+        let slab = &context.inner.0.slab;
+        let head = {
+            self.head.read().unwrap().clone()
+        };
 
-        let memoref = slab.new_memo(
+        let memoref = slab.agent.new_memo(
             Some(self.id),
-            head.clone(),
+            head,
             MemoBody::Relation(RelationSlotSubjectHead(memoref_map))
         );
 
-        head.apply_memoref(&memoref, &slab);
-        context.apply_subject_head( self.id, &head, false );
+        let newhead = memoref.to_head();
 
+        context.inner.apply_head( self.id,newhead.clone(), false ).await;
+
+        *(self.head.write().unwrap()) = newhead;
     }
     // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
-    pub fn apply_head (&self, new: &MemoRefHead){
-        //println!("# Subject({}).apply_head({:?})", &self.id, new.memo_ids() );
+    #[tracing::instrument]
+    pub async fn apply_head (&self, new: MemoRefHead){
 
         let context = self.contextref.get_context();
-        let slab = context.slab.clone(); // TODO: find a way to get rid of this clone
+        let slab = context.inner.0.slab.clone(); // TODO: find a way to get rid of this clone
 
-        //println!("# Record({}) calling apply_memoref", self.id);
-        self.head.write().unwrap().apply(&new, &slab);
+        let head = {
+            self.head.read().unwrap().clone()
+        };
+
+        let newhead = head.apply(&new, &slab).await;
+
+        *(self.head.write().unwrap()) = newhead;
     }
     pub fn get_head (&self) -> MemoRefHead {
         self.head.read().unwrap().clone()
     }
-    pub fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
-        //println!("# Subject({}).get_all_memo_ids()",self.id);
+    #[tracing::instrument]
+    pub async fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
         let context = self.contextref.get_context();
-        let slab = context.slab.clone(); // TODO: find a way to get rid of this clone
-        self.head.read().unwrap().causal_memo_iter( &slab ).map(|m| m.id).collect()
+        let slab = context.inner.0.slab.clone(); // TODO: find a way to get rid of this clone
+        let memostream = self.head.read().unwrap().causal_memo_stream( &slab );
+        memostream.map(|m| m.id).collect().await
     }
     pub fn weak (&self) -> WeakSubject {
         WeakSubject(Arc::downgrade(&self.0))
     }
-    pub fn is_fully_materialized (&self) -> bool {
+    pub async fn is_fully_materialized (&self) -> bool {
         let context = self.contextref.get_context();
-        self.head.read().unwrap().is_fully_materialized(&context.slab)
+        self.head.read().unwrap().is_fully_materialized(&context.inner.0.slab).await
     }
     pub fn fully_materialize (&self, _slab: &Slab) -> bool {
         unimplemented!();
@@ -172,8 +205,8 @@ impl Subject {
 }
 
 impl Drop for SubjectInner {
+    #[tracing::instrument]
     fn drop (&mut self) {
-        //println!("# Subject({}).drop", &self.id);
         match self.contextref {
             ContextRef::Strong(ref c) => {
                 c.unsubscribe_subject(self.id);
@@ -202,8 +235,8 @@ impl fmt::Debug for SubjectInner {
 impl fmt::Debug for Subject {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("Subject")
-            .field("subject_id", &self.id)
-            .field("head", &self.head)
+            .field("id", &self.id)
+//            .field("head", &self.head)
             .finish()
     }
 }

@@ -2,6 +2,7 @@
 use std::sync::mpsc;
 use super::*;
 use crate::slab::*;
+use tracing::{warn};
 
 /// A trait for transmitters to implement
 pub trait DynamicDispatchTransmitter {
@@ -17,18 +18,17 @@ enum TransmitterInternal {
 
 #[derive(Debug)]
 pub enum TransmitterArgs<'a>{
-    Local(&'a Slab),
+    Local(&'a SlabHandle),
     Remote(&'a SlabId, &'a TransportAddress)
 }
 impl<'a> TransmitterArgs<'a>{
     pub fn get_slab_id (&self) -> SlabId {
         match self {
-            &TransmitterArgs::Local(ref s)     => s.id.clone(),
+            &TransmitterArgs::Local(ref s)     => s.my_ref.slab_id.clone(),
             &TransmitterArgs::Remote(ref id,_) => *id.clone()
         }
     }
 }
-
 
 impl TransmitterInternal {
     pub fn kind (&self) -> &str {
@@ -67,15 +67,14 @@ impl Transmitter {
         }
     }
     /// Send a Memo over to the target of this transmitter
+    #[tracing::instrument]
     pub fn send(&self, from: &SlabRef, memoref: MemoRef) {
-        //println!("Transmitter({} to: {}).send(from: {}, {:?})", self.internal.kind(), self.to_slab_id, from.slab_id, memoref );
         let _ = self.internal.kind();
         let _ = self.to_slab_id;
 
         use self::TransmitterInternal::*;
         match self.internal {
             Local(ref tx) => {
-                //println!("CHANNEL SEND from {}, {:?}", from.slab_id, memo);
                 // TODO - stop assuming that this is resident on the sending slab just because we're sending it
                 // TODO - lose the stupid lock on the transmitter
                 tx.lock().unwrap().send((from.clone(),memoref)).expect("local transmitter send")
@@ -84,14 +83,25 @@ impl Transmitter {
                 tx.send(from,memoref)
             }
             Blackhole => {
-                println!("WARNING! Transmitter Blackhole transmitter used. from {:?}, memoref {:?}", from, memoref );
+                warn!("WARNING! Transmitter Blackhole transmitter used. from {:?}, memoref {:?}", from, memoref );
             }
         }
     }
 }
 
+use std::fmt;
+impl fmt::Debug for Transmitter{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+
+        fmt.debug_struct("Transmitter")
+            .field("to_slab_id", &self.to_slab_id )
+            .field("kind", &self.internal.kind() )
+            .finish()
+    }
+}
+
 impl Drop for TransmitterInternal{
     fn drop(&mut self) {
-        //println!("# TransmitterInternal().drop");
+        //
     }
 }

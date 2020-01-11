@@ -9,34 +9,49 @@ use crate::error::RetrieveError;
 use crate::index::IndexFixed;
 use self::manager::ContextManager;
 
-use std::ops::Deref;
 use std::fmt;
 use std::collections::HashMap;
 use std::sync::{Mutex, RwLock, Arc, Weak};
+use tracing::debug;
+use futures::{
+    future::{
+        RemoteHandle
+    },
+    channel::{
+        mpsc::{self, Sender}
+    },
+    StreamExt,
+};
 
 #[derive(Clone)]
-pub struct Context(pub Arc<ContextInner>);
-
-impl Deref for Context {
-    type Target = ContextInner;
-    fn deref(&self) -> &ContextInner {
-        &*self.0
-    }
+pub struct Context {
+    applier: Arc<Mutex<Option<RemoteHandle<()>>>>,
+    pub inner: ContextInner,
+    pub (crate) apply_channel: Sender<(ContextInner,SubjectId,MemoRefHead)>,
 }
 
-pub struct ContextInner {
-    pub slab: Slab,
+#[derive(Clone)]
+pub struct ContextInner(pub Arc<ContextState>);
+
+pub struct ContextState{
     pub root_index: RwLock<Option<IndexFixed>>,
 
     /// For compaction of the subject_heads
     manager: Mutex<ContextManager>,
 
-    /// For active subjects / subject subscription management
+    /// TODO: replace this with notification channels (assuming that doesn't create a circular reference)
     subjects: RwLock<HashMap<SubjectId, WeakSubject>>,
-}
 
+    pub (crate) slab: SlabHandle,
+}
+// TODO - attempt to get rid of WeakContext in favor of subscription channels
+// The subject will still need to hold a reference to the context, but NOT the other way around
 #[derive(Clone)]
-pub struct WeakContext(Weak<ContextInner>);
+pub struct WeakContext{
+    applier: Weak<Mutex<Option<RemoteHandle<()>>>>,
+    state: Weak<ContextState>,
+    pub (crate) apply_channel: Sender<(ContextInner,SubjectId,MemoRefHead)>,
+}
 
 #[derive(Clone)]
 pub enum ContextRef {
@@ -56,14 +71,42 @@ impl ContextRef {
 }
 
 impl Context {
-    pub fn new(slab: &Slab) -> Context {
+    #[tracing::instrument]
+    pub fn new(slab: SlabHandle) -> Context {
 
-        let new_self = Context(Arc::new(ContextInner {
-            slab: slab.clone(),
+        let seed = slab.net.get_root_index_seed(&slab).expect("Uninitialized slab");
+
+        let inner = ContextInner(Arc::new(ContextState{
             root_index: RwLock::new(None),
             manager: Mutex::new(ContextManager::new()),
             subjects: RwLock::new(HashMap::new()),
+            slab
         }));
+
+        let (tx, rx) = mpsc::channel::<(ContextInner, SubjectId, MemoRefHead)>(1000);
+        use tracing::{span, Level};
+        let span = span!(Level::TRACE, "Context Applier");
+
+        let applier: RemoteHandle<()> = crate::util::task::spawn_with_handle(
+            rx.for_each_concurrent(Some(1000),move |(inner,subject_id,mrh)| {
+                let _guard = span.enter();
+                inner.apply_head(subject_id, mrh, true)
+            })
+        );
+
+//        async move {
+//            while let Some((subject_id, mrh)) = rx.next().await {
+//                println!("BEFORE");
+//                inner2.apply_head(subject_id, mrh, true).await;
+//                println!("AFTER");
+//            }
+//        }
+
+        let new_self = Context{
+            inner,
+            applier: Arc::new(Mutex::new(Some(applier))),
+            apply_channel: tx
+        };
 
         // Typically subjects, and the indexes that use them, have a hard link to their originating
         // contexts. This is useful because we want to make sure the context (and associated slab)
@@ -74,17 +117,15 @@ impl Context {
         // This shouldn't be a problem, because the index is private, and not subject to direct use, so the context
         // should outlive it.
 
-        let seed = slab.get_root_index_seed().expect("Uninitialized slab");
-
         let index = IndexFixed::new_from_memorefhead(ContextRef::Weak(new_self.weak()), 5, seed);
 
-        *new_self.root_index.write().unwrap() = Some(index);
+        *new_self.inner.0.root_index.write().unwrap() = Some(index);
 
         new_self
     }
     pub async fn insert_into_root_index(&self, subject_id: SubjectId, subject: &Subject) {
         let index = {
-            self.root_index.read().unwrap().as_ref().expect("no root index").clone()
+            self.inner.0.root_index.read().unwrap().as_ref().expect("no root index").clone()
         };
 
         index.insert(subject_id, subject).await;
@@ -102,24 +143,15 @@ impl Context {
     // }
     //
 
-
-    /// Retrieves a subject by ID from this context only if it is currently resedent
-    fn get_subject_if_resident(&self, subject_id: SubjectId) -> Option<Subject> {
-
-        if let Some(weaksub) = self.subjects.read().unwrap().get(&subject_id) {
-            if let Some(subject) = weaksub.upgrade() {
-                // NOTE: In theory we shouldn't need to apply the current context
-                //      to this subject, as it shouldddd have already happened
-                return Some(subject);
-            }
-        }
-
-        None
-    }
     /// Retrive a Subject from the root index by ID
     pub async fn get_subject_by_id(&self, subject_id: SubjectId) -> Result<Subject, RetrieveError> {
 
-        match *self.root_index.read().unwrap() {
+        // HACK - come up with a way to use the index without having to clone it
+        let index : Option<IndexFixed> = {
+            self.inner.0.root_index.read().unwrap().clone()
+        };
+
+        match index {
             Some(ref index) => index.get(subject_id).await,
             None => Err(RetrieveError::IndexNotInitialized),
         }
@@ -127,11 +159,11 @@ impl Context {
 
     /// Retrieve a subject for a known MemoRefHead – ususally used for relationship traversal.
     /// Any relevant context will also be applied when reconstituting the relevant subject to ensure that our consistency model invariants are met
-    pub fn get_subject_with_head(&self,
+    #[tracing::instrument]
+    pub async fn get_subject_with_head(&self,
                                  subject_id: SubjectId,
                                  mut head: MemoRefHead)
                                  -> Result<Subject, RetrieveError> {
-        // println!("# Context.get_subject_with_head({},{:?})", subject_id, head.memo_ids() );
 
         if head.len() == 0 {
             return Err(RetrieveError::InvalidMemoRefHead);
@@ -139,7 +171,7 @@ impl Context {
 
         let maybe_head = {
             // Don't want to hold the lock while calling head.apply, as it could request a memo from a remote slab, and we'd deadlock
-            if let Some(ref head) = self.manager.lock().unwrap().get_head(subject_id) {
+            if let Some(ref head) = self.inner.0.manager.lock().unwrap().get_head(subject_id) {
                 Some((*head).clone())
             } else {
                 None
@@ -147,16 +179,15 @@ impl Context {
         };
 
         if let Some(relevant_context_head) = maybe_head {
-            // println!("# \\ Relevant context head is ({:?})", relevant_context_head.memo_ids() );
-            head.apply(&relevant_context_head, &self.slab);
+            debug!("Relevant context head is ({:?})", relevant_context_head.memo_ids() );
+            head = head.apply(&relevant_context_head, &self.inner.0.slab).await;
 
         } else {
-            // println!("# \\ No relevant head found in context");
+            debug!("No relevant head found in context");
         }
-
-        match self.get_subject_if_resident(subject_id) {
+        match self.inner.get_subject_if_resident(subject_id) {
             Some(ref mut subject) => {
-                subject.apply_head(&head);
+                subject.apply_head(head).await;
                 return Ok(subject.clone());
             }
             None => {}
@@ -170,19 +201,19 @@ impl Context {
     }
     /// Subscribes a resident subject struct to relevant updates from this context
     /// Used by the subject constructor
+    #[tracing::instrument]
     pub fn subscribe_subject(&self, subject: &Subject) {
-        // println!("Context.subscribe_subject({})", subject.id );
         {
-            self.subjects.write().unwrap().insert(subject.id, subject.weak());
+            self.inner.0.subjects.write().unwrap().insert(subject.id, subject.weak());
         }
-        self.slab.subscribe_subject(subject.id, self);
+        self.inner.0.slab.subscribe_subject(subject.id, self);
     }
     /// Unsubscribes the subject from further updates. Used by Subject.drop
     /// ( Temporarily defeated due to deadlocks. TODO )
+    #[tracing::instrument]
     pub fn unsubscribe_subject(&self, subject_id: SubjectId) {
-        // println!("# Context.unsubscribe_subject({})", subject_id);
         // let _ = subject_id;
-        self.subjects.write().unwrap().remove(&subject_id);
+        self.inner.0.subjects.write().unwrap().remove(&subject_id);
 
         // BUG/TODO: Temporarily disabled unsubscription
         // 1. Because it was causing deadlocks on the context AND slab mutexes
@@ -199,78 +230,39 @@ impl Context {
         // }
         //
         // self.inner.slab.unsubscribe_subject(subject_id, self);
-        // println!("# Context.unsubscribe_subject({}) - FINISHED", subject_id);
         //
 
     }
 
-    /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is made
-    pub fn apply_subject_head(&self,
-                              subject_id: SubjectId,
-                              apply_head: &MemoRefHead,
-                              notify_subject: bool) {
-        // println!("Context.apply_subject_head({}, {:?}) ", subject_id, head.memo_ids() );
+    #[tracing::instrument]
+    pub fn apply_head_deferred(&mut self, apply_head: MemoRefHead) {
+        // TODO - make this async again, and use poll_ready / start_send to implement backpressure
+        if let Some(subject_id) = apply_head.first_subject_id() { // implicit subject_id containment is dumb. make it more specific, or take it out
 
-        // NOTE: In all liklihood, there is significant room to optimize this.
-        //       We're applying heads to heads redundantly
-
-        // QUESTION: Should we be updating our query context here?
-        //          not sure if this should happen implicitly or require explicit context exchange
-        //          I think there's a pretty strong argument for implicit, but I want to think
-        //          about this a bit more before I say yes for certain.
-        //
-        // ANSWER:   It occurs to me that we're only getting subject heads from the slab which we expressly
-        //          subscribed to, so this strengthens the case quite a bit
-
-        {
-
-
-            let head: MemoRefHead = if let Some(head) = {
-                self.manager.lock().unwrap().get_head(subject_id)
-            } {
-                head.apply(apply_head, &self.slab);
-                head.clone()
-            } else {
-                apply_head.clone()
-            };
-            let relation_links = head.project_all_relation_links(&self.slab);
-
-            {
-                self.manager
-                    .lock()
-                    .unwrap()
-                    .set_subject_head(subject_id, relation_links, head.clone());
-            }
-
-            if notify_subject {
-                if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
-                    subject.apply_head(&head);
-                }
-            }
-
+            //TODO NEXT - flag this subject as dirty, and wait for the dirty condition to be cleared before allowing reads to progress
+            self.apply_channel.try_send((self.inner.clone(), subject_id, apply_head)).unwrap();
         }
     }
-
-    // Magically transport subject heads into another context in the same process.
+        // Magically transport subject heads into another context in the same process.
     // This is a temporary hack for testing purposes until such time as proper context exchange is enabled
     // QUESTION: should context exchanges be happening constantly, but often ignored? or requested? Probably the former,
     //           sent based on an interval and/or compaction ( which would also likely be based on an interval and/or present context size)
-    pub fn hack_send_context(&self, other: &Self) -> usize {
+    #[tracing::instrument]
+    pub fn hack_send_context(&self, other: &mut Self) -> usize {
         self.compress();
 
-        let manager = self.manager.lock().unwrap();
+        let manager = self.inner.0.manager.lock().unwrap();
 
-        let from_slabref = self.slab.my_ref.clone_for_slab(&other.slab);
+        let from_slabref = other.inner.0.slab.agent.localize_slabref(&self.inner.0.slab.my_ref);
 
         let mut memoref_count = 0;
 
         for subject_head in manager.subject_head_iter() {
             memoref_count += subject_head.head.len();
 
-            other.apply_subject_head(subject_head.subject_id,
-                                     &subject_head.head
-                                         .clone_for_slab(&from_slabref, &other.slab, false),
-                                     true);
+            let apply_head = other.inner.0.slab.agent.localize_memorefhead(&subject_head.head, &from_slabref, false);
+            other.apply_head_deferred(apply_head);
+
             // HACK inside a hack - manually updating the remote subject is cheating, but necessary for now because subjects
             //      have a separate MRH versus the context
         }
@@ -278,7 +270,7 @@ impl Context {
         memoref_count
     }
     pub fn get_subject_head(&self, subject_id: SubjectId) -> Option<MemoRefHead> {
-        if let Some(ref head) = self.manager.lock().unwrap().get_head(subject_id) {
+        if let Some(ref head) = self.inner.0.manager.lock().unwrap().get_head(subject_id) {
             Some((*head).clone())
         } else {
             None
@@ -293,13 +285,18 @@ impl Context {
     }
     pub fn cmp(&self, other: &Self) -> bool {
         // stable way:
-        &*(self.0) as *const _ != &*(other.0) as *const _
+        &*(self.inner.0) as *const _ != &*(other.inner.0) as *const _
 
         // unstable way:
         // Arc::ptr_eq(&self.inner,&other.inner)
     }
     pub fn weak(&self) -> WeakContext {
-        WeakContext(Arc::downgrade(&self.0))
+        // This is lame. Lets get rid of Weakcontext
+        WeakContext{
+            state: Arc::downgrade(&self.inner.0),
+            apply_channel: self.apply_channel.clone(),
+            applier: Arc::downgrade(&self.applier)
+        }
     }
 
 
@@ -344,7 +341,7 @@ impl Context {
 
         // Iterate the contextualized subject heads in reverse topological order
         for subject_head in {
-            self.manager.lock().unwrap().subject_head_iter()
+            self.inner.0.manager.lock().unwrap().subject_head_iter()
         } {
 
             // TODO: implement MemoRefHead.conditionally_materialize such that the materialization threshold is selected dynamically.
@@ -383,10 +380,15 @@ impl Context {
 
     }
 
-    pub fn is_fully_materialized(&self) -> bool {
+    pub async fn is_fully_materialized(&self) -> bool {
 
-        for subject_head in self.manager.lock().unwrap().subject_head_iter() {
-            if !subject_head.head.is_fully_materialized(&self.slab) {
+        // HACK - for now we're forced to clone all heads in the manager because we can't hold the lock while calling is_fully_materialized :/
+        let heads = {
+            self.inner.0.manager.lock().unwrap().subject_head_iter().map(|sh| sh.head.clone() ).collect::<Vec<_>>()
+        };
+
+        for head in heads {
+            if !head.is_fully_materialized(&self.inner.0.slab).await {
                 return false;
             }
         }
@@ -396,16 +398,82 @@ impl Context {
     }
 }
 
+impl ContextInner {
+    /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is made
+    #[tracing::instrument]
+    pub async fn apply_head(self, subject_id: SubjectId,  apply_head: MemoRefHead, notify_subject: bool) {
+
+        // NOTE: In all liklihood, there is significant room to optimize this.
+        //       We're applying heads to heads redundantly
+
+        // QUESTION: Should we be updating our query context here?
+        //          not sure if this should happen implicitly or require explicit context exchange
+        //          I think there's a pretty strong argument for implicit, but I want to think
+        //          about this a bit more before I say yes for certain.
+        //
+        // ANSWER:   It occurs to me that we're only getting subject heads from the slab which we expressly
+        //          subscribed to, so this strengthens the case quite a bit
+
+        {
+            let maybe_head = {
+                self.0.manager.lock().unwrap().get_head(subject_id)
+            };
+
+            let head: MemoRefHead = if let Some(head) = maybe_head {
+                head.clone().apply(&apply_head, &self.0.slab).await
+            } else {
+                apply_head.clone()
+            };
+            let relation_links = head.project_all_relation_links(&self.0.slab).await;
+
+            {
+                self.0.manager
+                    .lock()
+                    .unwrap()
+                    .set_subject_head(subject_id, relation_links, head.clone());
+            }
+
+            if notify_subject {
+                if let Some(ref subject) = self.get_subject_if_resident(subject_id) {
+                    subject.apply_head(head).await;
+                }
+            }
+        }
+    }
+    /// Retrieves a subject by ID from this context only if it is currently resedent
+    fn get_subject_if_resident(&self, subject_id: SubjectId) -> Option<Subject> {
+        if let Some(weaksub) = self.0.subjects.read().unwrap().get(&subject_id) {
+            if let Some(subject) = weaksub.upgrade() {
+                // NOTE: In theory we shouldn't need to apply the current context
+                //      to this subject, as it shouldddd have already happened
+                return Some(subject);
+            }
+        }
+
+        None
+    }
+}
+
 impl Drop for ContextInner {
     fn drop(&mut self) {
-        // println!("# ContextShared.drop");
+        //
     }
 }
 impl fmt::Debug for Context {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 
-        fmt.debug_struct("ContextShared")
-            .field("subject_heads", &self.manager.lock().unwrap().subject_ids() )
+        fmt.debug_struct("Context")
+//            .field("subject_heads", &self.manager.lock().unwrap().subject_ids() )
+            // TODO: restore Debug for WeakSubject
+            //.field("subjects", &self.subjects)
+            .finish()
+    }
+}
+impl fmt::Debug for ContextInner {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+
+        fmt.debug_struct("ContextInner")
+            .field("subject_heads", &self.0.manager.lock().unwrap().subject_ids() )
             // TODO: restore Debug for WeakSubject
             //.field("subjects", &self.subjects)
             .finish()
@@ -413,17 +481,22 @@ impl fmt::Debug for Context {
 }
 
 impl WeakContext {
+    /// HACK - get rid of this
     pub fn upgrade(&self) -> Option<Context> {
-        match self.0.upgrade() {
-            Some(i) => Some(Context(i)),
-            None => None,
+        match (self.state.upgrade(), self.applier.upgrade()) {
+            (Some(state),Some(applier)) => Some(Context{
+                inner: ContextInner(state),
+                apply_channel: self.apply_channel.clone(),
+                applier
+            }),
+            _ => None,
         }
     }
     pub fn cmp(&self, other: &WeakContext) -> bool {
         if let Some(context) = self.upgrade() {
             if let Some(other) = other.upgrade() {
                 // stable way:
-                &*(context.0) as *const _ != &*(other.0) as *const _
+                &*(context.inner.0) as *const _ != &*(other.inner.0) as *const _
 
                 // unstable way:
                 // Arc::ptr_eq(&context.inner,&other.inner)

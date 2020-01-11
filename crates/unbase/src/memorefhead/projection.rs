@@ -1,5 +1,9 @@
 use super::*;
 
+use futures::{
+    stream::StreamExt,
+};
+
 impl MemoRefHead {
     /*pub fn fully_materialize( &self, slab: &Slab ) {
         // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
@@ -18,11 +22,12 @@ impl MemoRefHead {
     // Kind of a brute force way to do this
     // TODO: Consider calculating deltas during memoref application,
     //       and use that to perform a minimum cost subject_head_link edit
-    pub fn project_all_relation_links (&self, slab: &Slab) -> Vec<RelationLink> {
+    pub async fn project_all_relation_links (&self, slab: &SlabHandle) -> Vec<RelationLink> {
         let mut relation_links : [SubjectId; SUBJECT_MAX_RELATIONS] = [0; SUBJECT_MAX_RELATIONS];
 
         // TODO: how to handle relationship nullification?
-        for memo in self.causal_memo_iter(slab){
+        let mut memostream = self.causal_memo_stream(slab);
+        while let Some(memo) = memostream.next().await {
             match memo.body {
                 MemoBody::FullyMaterialized { v: _, ref r } => {
 
@@ -52,12 +57,13 @@ impl MemoRefHead {
         }).collect()
     }
 
-    pub fn project_value ( &self, context: &Context, key: &str ) -> Option<String> {
+    pub async fn project_value ( &self, context: &Context, key: &str ) -> Option<String> {
 
         //TODO: consider creating a consolidated projection routine for most/all uses
-        for memo in self.causal_memo_iter(&context.slab) {
+        let mut memostream = self.causal_memo_stream(&context.inner.0.slab).boxed();
+        while let Some(memo) = memostream.next().await {
 
-            //println!("# \t\\ Considering Memo {}", memo.id );
+            debug!("# \t\\ Considering Memo {}", memo.id );
             if let Some((values, materialized)) = memo.get_values() {
                 if let Some(v) = values.get(key) {
                     return Some(v.clone());
@@ -68,13 +74,15 @@ impl MemoRefHead {
         }
         None
     }
-    pub fn project_relation ( &self, context: &Context, key: RelationSlotId ) -> Result<(SubjectId,Self), RetrieveError> {
+    #[tracing::instrument]
+    pub async fn project_relation ( &self, context: &Context, key: RelationSlotId ) -> Result<(SubjectId,Self), RetrieveError> {
         // TODO: Make error handling more robust
 
-        for memo in self.causal_memo_iter( &context.slab ) {
+        let mut memostream = self.causal_memo_stream( &context.inner.0.slab );
+        while let Some(memo) = memostream.next().await {
 
             if let Some((relations,materialized)) = memo.get_relations(){
-                //println!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
+                debug!("Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
                 if let Some(&(subject_id, ref head)) = relations.get(&key) {
                     // BUG: the parent->child was formed prior to the revision of the child.
                     // TODO: Should be adding the new head memo to the query context
@@ -82,13 +90,13 @@ impl MemoRefHead {
 
                     return Ok((subject_id,head.clone()));
                 }else if materialized {
-                    //println!("\n# \t\\ Not Found (materialized)" );
+                    debug!("Not Found (materialized)" );
                     return Err(RetrieveError::NotFound);
                 }
             }
         }
 
-        //println!("\n# \t\\ Not Found" );
+        debug!("\n# \t\\ Not Found" );
         Err(RetrieveError::NotFound)
     }
 
