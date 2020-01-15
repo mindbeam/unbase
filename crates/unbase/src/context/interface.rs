@@ -1,8 +1,9 @@
 use super::*;
-use subjecthandle::SubjectHandle;
+use crate::{
+    slab::{MemoBody, MemoId},
+    subjecthandle::SubjectHandle
+};
 use std::fmt;
-use crate::subjecthandle::SubjectHandle;
-use crate::slab::{MemoBody, MemoId};
 
 /// User interface functions - Programmer API for `Context`
 impl Context {

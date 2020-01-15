@@ -66,5 +66,5 @@ pub mod util;
 pub mod subjecthandle;
 
 pub use crate::network::Network;
-pub use crate::subject::SubjectHandle;
+pub use crate::subjecthandle::SubjectHandle;
 pub use crate::slab::Slab;

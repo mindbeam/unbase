@@ -1,17 +1,31 @@
-use crate::context::{ContextRef, Context};
-use crate::subject::*;
-use crate::memorefhead::{MemoRefHead,RelationSlotId};
-use crate::error::{RetrieveError, WriteError};
+use crate::{
+    context::Context,
+    error::{
+        RetrieveError,
+        WriteError,
+    },
+    memorefhead::{MemoRefHead,RelationSlotId},
+    subject::{
+        Subject,
+        SubjectType
+    },
+    SubjectHandle,
+};
 use std::collections::HashMap;
-use futures::future::{FutureExt, LocalBoxFuture};
+use futures::{
+    future::{
+        FutureExt,
+        LocalBoxFuture
+    }
+};
+
 use std::sync::{Arc,Mutex};
 use std::ops::Deref;
 use std::fmt;
 
 use tracing::debug;
-use crate::subjecthandle::SubjectHandle;
 
-pub struct gIndexFixed {
+pub struct IndexFixed {
     root: Subject,
     depth: u8
 }
@@ -136,55 +150,56 @@ impl IndexFixed {
         panic!("Sanity error");
 
     }
-    pub fn scan_kv( &self, context: &Context, key: &str, value: &str ) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn scan_kv( &self, context: &Context, key: &str, value: &str ) -> Result<Option<SubjectHandle>, RetrieveError> {
         self.scan(&context, |r| {
             if let Some(v) = r.get_value(key) {
                 Ok(v == value)
             }else{
                 Ok(false)
             }
-        })
+        }).await
     }
-    pub (crate) fn scan<F> ( &self, context: &Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
+    pub async fn scan<F> ( &self, context: Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
         where F: Fn( &SubjectHandle ) -> Result<bool,RetrieveError> {
-        //println!("SCAN" );
 
         let node = self.root.clone();
 
-        self.scan_recurse( context, &node, 0, &f )
+        self.scan_recurse( context, node, 0, &f ).await
     }
 
-    fn scan_recurse <F> ( &self, context: &Context, node: &Subject, tier: usize, f: &F ) -> Result<Option<SubjectHandle>, RetrieveError>
+    fn scan_recurse <F> ( &self, context: Context, node: Subject, tier: usize, f: &F ) -> LocalBoxFuture<Result<Option<SubjectHandle>, RetrieveError>>
         where F: Fn( &SubjectHandle ) -> Result<bool,RetrieveError> {
+        async move {
+            //TODO NEXT
 
-        //TODO NEXT
+            // for _ in 0..tier+1 {
+            //     print!("\t");
+            // }
 
-        // for _ in 0..tier+1 {
-        //     print!("\t");
-        // }
-
-        if tier as u8 == self.depth - 1 {
-            //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
-            for slot_id in 0..SUBJECT_MAX_RELATIONS {
-                if let Some(mrh) = node.get_edge_head( context, slot_id as RelationSlotId )? {
-                    let sh = context.get_subject_handle_with_head(mrh)?;
-                    if f(&sh)? {
-                        return Ok(Some(sh))
+            if tier as u8 == self.depth - 1 {
+                //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
+                for slot_id in 0..SUBJECT_MAX_RELATIONS {
+                    if let Some(mrh) = node.get_edge_head(context, slot_id as RelationSlotId).await? {
+                        let sh = context.get_subject_handle_with_head(mrh).await?;
+                        if f(&sh)? {
+                            return Ok(Some(sh))
+                        }
+                    }
+                }
+            } else {
+                //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
+                for slot_id in 0..SUBJECT_MAX_RELATIONS {
+                    if let Some(child) = node.get_edge(context, slot_id as RelationSlotId)? {
+                        if let Some(mrh) = self.scan_recurse(context, &child, tier + 1, f)? {
+                            return Ok(Some(mrh))
+                        }
                     }
                 }
             }
-        }else{
-            //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
-            for slot_id in 0..SUBJECT_MAX_RELATIONS {
-                if let Some(child) = node.get_edge(context,slot_id as RelationSlotId)? {
-                    if let Some(mrh) = self.scan_recurse(context, &child, tier + 1, f)? {
-                        return Ok(Some(mrh))
-                    }
-                }
-            }
-        }
 
-        Ok(None)
+            Ok(None)
+
+        }.boxed_local()
     }
 }
 

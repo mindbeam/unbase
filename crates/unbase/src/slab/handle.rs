@@ -1,17 +1,44 @@
-use futures::channel::mpsc;
-use std::sync::Arc;
-use futures::future::{select,Either};
+use futures::{
+    channel::mpsc,
+    future::{
+        select,
+        Either
+    }
+};
 
-use crate::network::{SlabRef, TransportAddress};
-use crate::slab::{SlabPresence, Memo, MemoRef, MemoBody, SlabAnticipatedLifetime, MemoId};
-use crate::subject::SubjectId;
-use crate::Network;
-use crate::slab::agent::SlabAgent;
-use crate::context::Context;
-use crate::memorefhead::MemoRefHead;
-use crate::error::{RetrieveError, PeeringError};
-use timer::Delay;
 use tracing::{trace};
+use std::{
+    collections::hash_map::Entry,
+    sync::Arc,
+};
+
+use crate::{
+    context::Context,
+    error::{
+        RetrieveError,
+        PeeringError
+    },
+    memorefhead::MemoRefHead,
+    Network,
+    network::{
+        SlabRef, TransportAddress
+    },
+    slab::{
+        agent::SlabAgent,
+        SlabPresence,
+        Memo,
+        MemoRef,
+        MemoBody,
+        SlabAnticipatedLifetime,
+        MemoId,
+    },
+    subject::{
+        SubjectId,
+        SubjectType
+    },
+};
+
+use timer::Delay;
 
 
 // TODO change this to
@@ -34,6 +61,9 @@ impl SlabHandle {
 //        unimplemented!()
 //    }
 
+    pub (crate) fn observe_subject (&self, subject_id: SubjectId, tx: mpsc::Sender<MemoRefHead>) {
+        self.agent.observe_subject(subject_id, tx)
+    }
     #[tracing::instrument]
     pub async fn request_memo(&self, memoref: MemoRef) -> Result<Memo, RetrieveError> {
 
@@ -99,8 +129,8 @@ impl SlabHandle {
     pub fn new_memo_basic_noparent (&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
         self.agent.new_memo(subject_id, MemoRefHead::new(self), body)
     }
-    pub fn generate_subject_id(&self) -> SubjectId {
-        self.agent.generate_subject_id()
+    pub fn generate_subject_id(&self, stype: SubjectType) -> SubjectId {
+        self.agent.generate_subject_id(stype)
     }
     #[tracing::instrument]
     pub fn subscribe_subject(&self, subject_id: u64, context: &Context) {

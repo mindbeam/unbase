@@ -5,14 +5,27 @@ use std::{
 
 use tracing::debug;
 
-use crate::slab::{SlabId, MemoRef, MemoBody, Memo, MemoInner, SlabRefInner, MemoRefInner, MemoRefPtr, MemoPeerList, MemoPeeringStatus, MemoId, MemoPeer, SlabPresence, SlabAnticipatedLifetime, RelationSlotSubjectHead};
-use crate::slab::state::SlabState;
-use crate::network::{SlabRef, TransmitterArgs, Transmitter, TransportAddress};
-use crate::Network;
-use crate::subject::SubjectId;
-use crate::memorefhead::MemoRefHead;
-use crate::context::{WeakContext, Context};
-use crate::error::PeeringError;
+use crate::{
+    context::Context,
+    error::PeeringError,
+    memorefhead::MemoRefHead,
+    network::{SlabRef, TransmitterArgs, Transmitter, TransportAddress},
+    Network,
+    slab::{
+        SlabId, SlabRefInner, SlabPresence, SlabAnticipatedLifetime,
+        MemoRef, MemoBody, Memo, MemoInner, MemoRefInner, MemoRefPtr,
+        MemoPeerList, MemoPeeringStatus, MemoId, MemoPeer,
+        RelationSlotSubjectHead,
+        state::SlabState,
+    },
+    subject::{
+        SubjectId,
+        SubjectType,
+    }
+};
+use futures::{
+    channel::mpsc
+};
 
 pub struct SlabAgent {
     pub id: SlabId,
@@ -85,38 +98,13 @@ impl SlabAgent {
 
         memoref
     }
-    pub fn generate_subject_id (&self) -> SubjectId {
+    pub fn generate_subject_id(&self, stype: SubjectType) -> SubjectId {
 
         let mut state = self.state.write().unwrap();
         state.counters.last_subject_id += 1;
-        (self.id as u64).rotate_left(32) | state.counters.last_subject_id as u64
-    }
-    pub fn subscribe_subject (&self, subject_id: u64, context: &Context) {
-        let weakcontext : WeakContext = context.weak();
+        let id = (self.id as u64).rotate_left(32) | state.counters.last_subject_id as u64;
 
-        let mut state = self.state.write().unwrap();
-
-        match state.subject_subscriptions.entry(subject_id){
-            Entry::Occupied(mut e) => {
-                e.get_mut().push(weakcontext)
-            }
-            Entry::Vacant(e) => {
-                e.insert(vec![weakcontext]);
-            }
-        }
-        return;
-    }
-    #[tracing::instrument]
-    pub fn unsubscribe_subject (&self,  subject_id: u64, context: &Context ){
-        let mut state = self.state.write().unwrap();
-
-        if let Some(subs) = state.subject_subscriptions.get_mut(&subject_id) {
-            let weak_context = context.weak();
-            subs.retain(|c| {
-                c.cmp(&weak_context)
-            });
-            return;
-        }
+        SubjectId{ id, stype }
     }
     #[tracing::instrument]
     pub fn consider_emit_memo(&self, memoref: &MemoRef) {
@@ -336,33 +324,63 @@ impl SlabAgent {
         }
 
     }
+    pub (crate) fn observe_subject (&self, subject_id: SubjectId, tx: mpsc::Sender<MemoRefHead>) {
+        let mut state = self.state.write().unwrap();
+
+        match state.subject_subscriptions.entry(subject_id) {
+            Entry::Vacant(e) => {
+                e.insert(vec![tx]);
+            },
+            Entry::Occupied(mut e) => {
+                e.get_mut().push(tx);
+            }
+        };
+    }
     #[tracing::instrument]
     pub fn recv_memoref (&self, memoref : MemoRef){
 
         if let Some(subject_id) = memoref.subject_id {
+            let state = self.state.read().unwrap();
+            if let Some(ref s) = state.subject_subscriptions.get(&subject_id) {
+                Some((*s).clone())
+            } else {
+                None
+            }
+        }
 
-            let maybe_sub : Option<Vec<WeakContext>> = {
-                // we want to make sure the lock is released before continuing
-                let state = self.state.read().unwrap();
-                if let Some(ref s) = state.subject_subscriptions.get( &subject_id ) {
-                    Some((*s).clone())
-                }else{
-                    None
+
+        if let Some(subject_id) = memoref.subject_id {
+
+            if let SubjectType::IndexNode = subject_id.stype {
+                // TODO3 - update this to consider popularity of this node, and/or common points of reference with a given context
+                let mut senders = self.index_subscriptions.lock().unwrap();
+                let len = senders.len();
+                for i in (0..len).rev() {
+                    if let Err(_) = senders[i].clone().send(memoref.to_head()).wait(){
+                        // TODO3: proactively remove senders when the receiver goes out of scope. Necessary for memory bloat
+                        senders.swap_remove(i);
+                    }
                 }
-            };
 
-            if let Some(subscribers) = maybe_sub {
+            }
 
-                for weakcontext in subscribers {
+            if let Some(ref mut senders) = self.subject_subscriptions.lock().unwrap().get_mut( &subject_id ) {
+                let len = senders.len();
 
-                    if let Some(mut context) = weakcontext.upgrade() {
-                        // TODO - update this to use a (blocking) channel so we don't have to do all this silliness with weakcontext
-                        context.apply_head_deferred(memoref.to_head());
+                for i in (0..len).rev() {
+                    match senders[i].clone().send(memoref.to_head()).wait() {
+                        Ok(..) => { }
+                        Err(_) => {
+                            // TODO3: proactively remove senders when the receiver goes out of scope. Necessary for memory bloat
+                            senders.swap_remove(i);
+                        }
                     }
                 }
             }
 
         }
+
+
     }
     #[tracing::instrument]
     pub fn localize_slabref(&self, slabref: &SlabRef ) -> SlabRef {

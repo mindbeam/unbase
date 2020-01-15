@@ -1,18 +1,28 @@
+//TODO MERGE
 use std::collections::HashMap;
-use futures::channel::oneshot;
-//use std::collections::hash_map::Entry;
 
-use crate::slab::{MemoId, MemoRef, Memo};
-use crate::network::SlabRef;
-use crate::context::WeakContext;
-use crate::subject::SubjectId;
+use futures::{
+    channel::{
+        oneshot,
+        mpsc,
+    },
+};
+
+use crate::{
+    memorefhead::MemoRefHead,
+    network::SlabRef,
+    slab::{
+        MemoId, MemoRef, Memo
+    },
+    subject::SubjectId,
+};
 
 pub struct SlabState{
     pub (crate) memorefs_by_id: HashMap<MemoId,MemoRef>,
     pub (crate) counters: SlabCounters,
     pub (crate) peer_refs: Vec<SlabRef>,
     pub (crate) memo_wait_channels: HashMap<MemoId,Vec<oneshot::Sender<Memo>>>,
-    pub (crate) subject_subscriptions: HashMap<SubjectId, Vec<WeakContext>>,
+    pub (crate) subject_subscriptions: HashMap<SubjectId, Vec<mpsc::Sender<MemoRefHead>>>,
     pub (crate) running: bool,
 }
 

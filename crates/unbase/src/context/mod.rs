@@ -21,7 +21,6 @@ use crate::{
 
 use std::collections::HashMap;
 
-use slab::*;
 use self::stash::Stash;
 
 use std::sync::{Arc,Weak,Mutex,RwLock};
@@ -106,15 +105,6 @@ impl Context {
             }
 
             Delay::new(Duration::from_millis(50)).await;
-        }
-    }
-}
-
-impl WeakContext {
-    pub fn upgrade (&self) -> Option<Context> {
-        match self.inner.upgrade() {
-            Some(i) => Some( Context(i) ),
-            None    => None
         }
     }
 }

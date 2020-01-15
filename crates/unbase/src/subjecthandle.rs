@@ -1,11 +1,23 @@
-use subject::{Subject, SubjectId, SubjectType};
-use context::Context;
-use memorefhead::MemoRefHead;
-use slab::*;
-use error::*;
+use crate::{
+    context::Context,
+    error::{
+        WriteError,
+        RetrieveError
+    },
+    memorefhead::{
+        MemoRefHead,
+        RelationSlotId,
+    },
+    slab::MemoId,
+    subject::{Subject, SubjectId, SubjectType},
+};
+
 use std::fmt;
 use std::collections::HashMap;
-use futures::{Stream};
+use futures::{
+    channel::mpsc,
+    Stream
+};
 
 #[derive(Clone)]
 pub struct SubjectHandle {
@@ -59,9 +71,9 @@ impl SubjectHandle{
         self.subject.set_relation(&self.context, key, &relation.subject)
     }
     pub fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
-        self.subject.get_all_memo_ids(&self.context.slab)
+        self.subject.get_all_memo_ids( self.context.slab.clone() )
     }
-    pub fn observe (&self) -> Box<Stream<Item = MemoRefHead, Error = ()>> {
+    pub fn observe (&self) -> mpsc::Receiver<MemoRefHead> {
         self.subject.observe(&self.context.slab)
     }
 }

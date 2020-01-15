@@ -113,22 +113,6 @@ impl Slab {
     pub fn create_context(&self) -> Context {
         Context::new(self.handle())
     }
-    pub (crate) fn observe_subject (&self, subject_id: SubjectId, tx: futures::sync::mpsc::Sender<MemoRefHead> ) -> Receiver<MemoRefHead> {
-
-        let (tx, rx) = mpsc::channel::<MemoRefHead>(1000);
-        // let (tx,sub) = SubjectSubscription::new( subject_id, self.weak() );
-
-        match self.subject_subscriptions.lock().unwrap().entry(subject_id) {
-            Entry::Vacant(e)   => {
-                e.insert(vec![tx]);
-            },
-            Entry::Occupied(mut e) => {
-                e.get_mut().push(tx);
-            }
-        }
-
-        rx
-    }
     pub (crate) fn observe_index (&self, tx: futures::sync::mpsc::Sender<MemoRefHead> ) {
         self.index_subscriptions.lock().unwrap().push(tx);
     }
