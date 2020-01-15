@@ -26,38 +26,45 @@
 //!
 //! ```
 //! async fn run () {
-//!     let net     = unbase::Network::create_new_system(); // typically use new here instead
+//!     let net     = unbase::Network::create_new_system(); // use new, except for the very first time
 //!     let slab    = unbase::Slab::new(&net);
 //!     let context = slab.create_context();
 //!
-//!     let record  = unbase::Subject::new_kv(&context, "animal_type","Cat").await.unwrap();
-//!     let record2 = context.get_subject_by_id(record.id).await.unwrap();
+//!     let record  = unbase::SubjectHandle::new_kv(&context, "beast","Tiger").unwrap();
+//!     let record2 = context.fetch_kv("beast","Tiger").await.expect("it worked").expect("it was found");
+//!     record.set_value("sound","Rawwr").await;
 //!
-//!     assert_eq!(record.get_value("animal_type").await, record2.get_value("animal_type").await);
+//!     assert_eq!(record2.get_value("sound").await.unwrap(), "Rawwr");
 //! }
 //!
 //! async_std::task::block_on(run())
 //! ```
-#![doc(html_root_url = "https://unba.se")]
 
 #![feature(type_alias_impl_trait)]
 #![feature(async_closure)]
+#![doc(html_root_url = "https://unba.se")]
+
+//extern crate core;
+//extern crate linked_hash_map;
+//extern crate itertools;
 
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
+
 //#[doc(inline)]
+mod subject;
 pub mod network;
 pub mod slab;
-pub mod subject;
 pub mod context;
 pub mod error;
 pub mod index;
 pub mod memorefhead;
 pub mod util;
+pub mod subjecthandle;
 
 pub use crate::network::Network;
-pub use crate::subject::Subject;
+pub use crate::subject::SubjectHandle;
 pub use crate::slab::Slab;

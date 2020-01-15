@@ -31,7 +31,7 @@ async fn init_blackhole_slab() {
     }
 
     // Slabs should have been dropped by now
-    assert!( net.get_all_local_slabs().len() == 0 );
+    assert_eq!( net.get_all_local_slabs().len(), 0 );
 }
 
 #[unbase_test_util::async_test]
@@ -45,7 +45,7 @@ async fn init_local_single() {
     }
 
     // Slabs should have been dropped by now
-    assert!( net.get_all_local_slabs().len() == 0 );
+    assert_eq!( net.get_all_local_slabs().len(), 0 );
 }
 
 #[unbase_test_util::async_test]
