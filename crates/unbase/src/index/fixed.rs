@@ -1,7 +1,7 @@
-use crate::context::ContextRef;
+use crate::context::{ContextRef, Context};
 use crate::subject::*;
 use crate::memorefhead::{MemoRefHead,RelationSlotId};
-use crate::error::RetrieveError;
+use crate::error::{RetrieveError, WriteError};
 use std::collections::HashMap;
 use futures::future::{FutureExt, LocalBoxFuture};
 use std::sync::{Arc,Mutex};
@@ -9,116 +9,108 @@ use std::ops::Deref;
 use std::fmt;
 
 use tracing::debug;
+use crate::subjecthandle::SubjectHandle;
 
-#[derive(Clone)]
-pub struct IndexFixed (Arc<Inner>);
-impl Deref for IndexFixed {
-    type Target = Inner;
-    fn deref(&self) -> &Inner {
-        &*self.0
-    }
-}
-
-pub struct Inner {
-    pub contextref: Mutex<ContextRef>,
-    pub root: Mutex<Subject>,
-    pub depth: u8
+pub struct gIndexFixed {
+    root: Subject,
+    depth: u8
 }
 
 impl IndexFixed {
-    pub async fn new (contextref: &ContextRef, depth: u8) -> IndexFixed {
-
-        IndexFixed(Arc::new(Inner {
-                contextref: Mutex::new(contextref.clone()),
-                root: Mutex::new(Subject::new_with_contextref(contextref.clone(), HashMap::new(), true).await.unwrap()),
-                depth: depth
-            })
-        )
+    pub fn new (context: &Context, depth: u8) -> Result<IndexFixed,WriteError> {
+        Ok(Self {
+            root: Subject::new( context, SubjectType::IndexNode, HashMap::new() )?,
+            depth: depth
+        })
     }
-    pub fn new_from_memorefhead (contextref: ContextRef, depth: u8, memorefhead: MemoRefHead ) -> IndexFixed {
-        IndexFixed(Arc::new(Inner {
-                contextref: Mutex::new(contextref.clone()),
-                root: Mutex::new(Subject::reconstitute(contextref, memorefhead)),
-                depth: depth
-            })
-        )
+    pub fn new_from_memorefhead (context: &Context, depth: u8, memorefhead: MemoRefHead ) -> IndexFixed {
+        Self {
+            root: Subject::reconstitute( context, memorefhead ).unwrap(),
+            depth: depth
+        }
     }
-    pub fn get_root_id (&self) -> SubjectId {
-        self.root.lock().unwrap().id
+    pub fn insert_subject(&self, key: u64, subjecthandle: &SubjectHandle) -> Result<(),WriteError> {
+        self.insert(&subjecthandle.context, key, &subjecthandle.subject)
     }
-    #[tracing::instrument]
-    pub async fn insert <'a> (&self, key: u64, subject: &Subject) {
+    pub (crate) fn insert <'a> (&self, context: &Context, key: u64, subject: &Subject) -> Result<(),WriteError> {
+        //println!("IndexFixed.insert({}, {:?})", key, subject );
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
-        let node = {
-            self.root.lock().unwrap().clone()
-        };
+        let node = &self.root;
 
         // TODO: optimize index node creation so we're not changing relationship as an edit
         // after the fact if we don't strictly have to. That said, this gives us a great excuse
         // to work on the consistency model, so I'm doing that first.
 
-        self.recurse_set(0, key, &node, subject).await;
+        self.recurse_set(context, 0, key, node, subject).await
     }
     // Temporarily managing our own bubble-up
     // TODO: finish moving the management of this to context / context::subject_graph
-    fn recurse_set(&self, tier: usize, key: u64, node: &Subject, subject: &Subject) -> LocalBoxFuture<()> {
-
-        let me = (*self).clone();
-        let node = (*node).clone();
-        let subject = (*subject).clone();
+    fn recurse_set(&self, context: Context, tier: usize, key: u64, node: Subject, subject: Subject) -> LocalBoxFuture<Result<(),WriteError>>{
         async move {
             // TODO: refactor this in a way that is generalizable for strings and such
             // Could just assume we're dealing with whole bytes here, but I'd rather
             // allow for SUBJECT_MAX_RELATIONS <> 256. Values like 128, 512, 1024 may not be entirely ridiculous
-            let exponent: u32 = (me.depth as u32 - 1) - tier as u32;
+            let exponent: u32 = (self.depth as u32 - 1) - tier as u32;
             let x = SUBJECT_MAX_RELATIONS.pow(exponent as u32);
             let y = ((key / (x as u64)) % SUBJECT_MAX_RELATIONS as u64) as RelationSlotId;
 
-            debug!("Tier {}, {}, {}", tier, x, y );
+            //println!("Tier {}, {}, {}", tier, x, y );
 
             if exponent == 0 {
-                // BUG: move this clause up
-                debug!("]]] end of the line");
-                node.set_relation(y as RelationSlotId, &subject).await;
+                //println!("]]] end of the line");
+                node.set_edge(context, y as RelationSlotId, &subject).await
             } else {
-                match node.get_relation(y).await {
-                    Ok(n) => {
-                        me.recurse_set(tier + 1, key, &n, &subject).await;
-
-                        //TEMPORARY - to be replaced by automatic context compaction
-                        node.set_relation(y, &n).await;
+                match node.get_edge(context, y)?.await {
+                    Some(n) => {
+                        self.recurse_set(context, tier + 1, key, &n, subject)
                     }
-                    Err(RetrieveError::NotFound) => {
+                    None => {
                         let mut values = HashMap::new();
                         values.insert("tier".to_string(), tier.to_string());
 
-                        let context = {
-                            me.contextref.lock().unwrap().clone()
-                        };
-                        let new_node = Subject::new_with_contextref(context, values, true).await.unwrap();
-                        node.set_relation(y, &new_node).await;
+                        let new_node = Subject::new(context, SubjectType::IndexNode, values)?;
 
-                        me.recurse_set(tier + 1, key, &new_node, &subject).await;
+                        node.set_edge(context, y, &new_node)?.await;
 
-                        //TEMPORARY - to be replaced by automatic context compaction
-                        node.set_relation(y, &new_node).await;
-                    }
-                    _ => {
-                        panic!("unhandled error")
+                        self.recurse_set(context, tier + 1, key, &new_node, subject).await;
                     }
                 }
             }
         }.boxed_local()
     }
+    pub fn get_root_subject_handle(&self, context: &Context) -> Result<SubjectHandle,RetrieveError> {
+        Ok(SubjectHandle{
+            id: self.root.id,
+            subject: self.root.clone(),
+            context: context.clone()
+        })
+    }
+    pub fn get_subject_handle(&self, context: &Context, key: u64 ) -> Result<Option<SubjectHandle>,RetrieveError> {
+        match self.get(context,key)? {
+            Some(subject) => {
+                Ok(Some(SubjectHandle{
+                    id: subject.id,
+                    subject: subject,
+                    context: context.clone()
+                }))
+            },
+            None => Ok(None)
+        }
+    }
     #[tracing::instrument]
-    pub async fn get (&self, key: u64 ) -> Result<Subject, RetrieveError> {
+    pub async fn get ( &self, context: Context, key: u64 ) -> Result<Option<Subject>, RetrieveError> {
+        match self.get_head( context, key )? {
+            Some(mrh) => Ok(Some( context.get_subject_with_head( mrh )? )),
+            None      => Ok(None)
+        }
+    }
+    #[tracing::instrument]
+    pub async fn get_head ( &self, context: Context, key: u64 ) -> Result<Option<MemoRefHead>, RetrieveError> {
 
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
-        let mut node = {
-            self.root.lock().unwrap().clone()
-        };
+        let mut node = self.root.clone();
         let max = SUBJECT_MAX_RELATIONS as u64;
 
         //let mut n;
@@ -130,13 +122,12 @@ impl IndexFixed {
 
             if exponent == 0 {
                 debug!("]]] end of the line");
-                return node.get_relation(y as RelationSlotId).await;
+                return node.get_edge_head( context, y as RelationSlotId).await;
 
             }else{
-                if let Ok(n) = node.get_relation(y).await {
-                    node = n;
-                }else{
-                    return Err(RetrieveError::NotFound);
+                match node.get_edge( context, y)?.await {
+                    Some(n) => node = n,
+                    None    => return Ok(None),
                 }
             }
 
@@ -145,16 +136,93 @@ impl IndexFixed {
         panic!("Sanity error");
 
     }
+    pub fn scan_kv( &self, context: &Context, key: &str, value: &str ) -> Result<Option<SubjectHandle>, RetrieveError> {
+        self.scan(&context, |r| {
+            if let Some(v) = r.get_value(key) {
+                Ok(v == value)
+            }else{
+                Ok(false)
+            }
+        })
+    }
+    pub (crate) fn scan<F> ( &self, context: &Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
+        where F: Fn( &SubjectHandle ) -> Result<bool,RetrieveError> {
+        //println!("SCAN" );
+
+        let node = self.root.clone();
+
+        self.scan_recurse( context, &node, 0, &f )
+    }
+
+    fn scan_recurse <F> ( &self, context: &Context, node: &Subject, tier: usize, f: &F ) -> Result<Option<SubjectHandle>, RetrieveError>
+        where F: Fn( &SubjectHandle ) -> Result<bool,RetrieveError> {
+
+        //TODO NEXT
+
+        // for _ in 0..tier+1 {
+        //     print!("\t");
+        // }
+
+        if tier as u8 == self.depth - 1 {
+            //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
+            for slot_id in 0..SUBJECT_MAX_RELATIONS {
+                if let Some(mrh) = node.get_edge_head( context, slot_id as RelationSlotId )? {
+                    let sh = context.get_subject_handle_with_head(mrh)?;
+                    if f(&sh)? {
+                        return Ok(Some(sh))
+                    }
+                }
+            }
+        }else{
+            //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
+            for slot_id in 0..SUBJECT_MAX_RELATIONS {
+                if let Some(child) = node.get_edge(context,slot_id as RelationSlotId)? {
+                    if let Some(mrh) = self.scan_recurse(context, &child, tier + 1, f)? {
+                        return Ok(Some(mrh))
+                    }
+                }
+            }
+        }
+
+        Ok(None)
+    }
 }
 
-/*
-    let idx_node = Subject::new_kv(&context_b, "dummy","value").unwrap();
-    idx_node.set_relation( 0, rec_b1 );
-    rec_b2.set_relation( 1, rec_b1 );
-*/
-impl fmt::Debug for IndexFixed {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("IndexFixed")
-            .finish()
+#[cfg(test)]
+mod test {
+
+    #[test]
+    fn index_construction() {
+
+        let net = Network::create_new_system();
+
+        let context_a = Slab::new(&net).create_context();
+
+        let index = IndexFixed::new(&context_a, 5).unwrap();
+
+        // First lets do a single index test
+        let i = 12345;
+        let record = SubjectHandle::new_kv(&context_a, "record number", &format!("{}",i)).unwrap();
+        index.insert_subject(i, &record).unwrap();
+
+        assert_eq!( index.get_subject_handle(&context_a,12345).unwrap().unwrap().get_value("record number").unwrap(), "12345");
+
+        //Ok, now lets torture it a little
+        for i in 0..500 {
+            let record = SubjectHandle::new_kv(&context_a, "record number", &format!("{}",i)).unwrap();
+            index.insert_subject(i, &record).unwrap();
+        }
+
+        for i in 0..500 {
+            assert_eq!( index.get_subject_handle(&context_a,i).unwrap().unwrap().get_value("record number").unwrap(), i.to_string() );
+        }
+
+        let maybe_rec = index.scan_kv(&context_a, "record number","12345").unwrap();
+        assert!( maybe_rec.is_some(), "Index scan for record 12345" );
+        assert_eq!( maybe_rec.unwrap().get_value("record number").unwrap(), "12345", "Is correct record");
+
+        let maybe_rec = index.scan_kv(&context_a, "record number","275").unwrap();
+        assert!( maybe_rec.is_some(), "Index scan for record 275" );
+        assert_eq!( maybe_rec.unwrap().get_value("record number").unwrap(), "275", "Is correct record");
     }
 }

@@ -1,10 +1,18 @@
+//TODO MERGE topic/topo-compaction3
+
+use futures::{
+    StreamExt,
+    channel::mpsc::Receiver,
+    future::RemoteHandle,
+};
+use std::collections::hash_map::Entry;
+
 pub use self::common_structs::*;
 pub use self::slabref::{SlabRef,SlabRefInner};
 pub use self::memoref::{MemoRef,MemoRefInner,MemoRefPtr};
 pub use self::memo::{MemoId,Memo,MemoInner,MemoBody};
 pub use self::memoref::serde as memoref_serde;
 pub use self::memo::serde as memo_serde;
-
 
 use crate::subject::SubjectId;
 use crate::memorefhead::*;
@@ -29,8 +37,6 @@ pub use handle::SlabHandle;
 pub type SlabId = u32;
 
 use crate::slab::agent::SlabAgent;
-use futures::StreamExt;
-use futures::future::RemoteHandle;
 
 #[derive(Clone)]
 pub struct Slab{
@@ -106,6 +112,25 @@ impl Slab {
     }
     pub fn create_context(&self) -> Context {
         Context::new(self.handle())
+    }
+    pub (crate) fn observe_subject (&self, subject_id: SubjectId, tx: futures::sync::mpsc::Sender<MemoRefHead> ) -> Receiver<MemoRefHead> {
+
+        let (tx, rx) = mpsc::channel::<MemoRefHead>(1000);
+        // let (tx,sub) = SubjectSubscription::new( subject_id, self.weak() );
+
+        match self.subject_subscriptions.lock().unwrap().entry(subject_id) {
+            Entry::Vacant(e)   => {
+                e.insert(vec![tx]);
+            },
+            Entry::Occupied(mut e) => {
+                e.get_mut().push(tx);
+            }
+        }
+
+        rx
+    }
+    pub (crate) fn observe_index (&self, tx: futures::sync::mpsc::Sender<MemoRefHead> ) {
+        self.index_subscriptions.lock().unwrap().push(tx);
     }
     fn _memo_durability_score(&self, _memo: &Memo) -> u8 {
         // TODO: devise durability_score algo

@@ -14,6 +14,9 @@ use timer::Delay;
 use tracing::{trace};
 
 
+// TODO change this to
+// pub struct SlabHandle(Arc<SlabHandleInner>);
+
 #[derive(Clone)]
 pub struct SlabHandle {
     pub (crate) my_ref: SlabRef,
