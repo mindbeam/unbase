@@ -7,7 +7,6 @@ use crate::subject::*;
 use crate::memorefhead::MemoRefHead;
 use crate::error::RetrieveError;
 use crate::index::IndexFixed;
-use self::manager::ContextManager;
 
 use std::fmt;
 use std::collections::HashMap;
