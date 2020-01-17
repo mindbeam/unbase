@@ -12,10 +12,10 @@ use crate::{
     network::{SlabRef, TransmitterArgs, Transmitter, TransportAddress},
     Network,
     slab::{
+        EdgeSet, RelationSet,
         SlabId, SlabRefInner, SlabPresence, SlabAnticipatedLifetime,
         MemoRef, MemoBody, Memo, MemoInner, MemoRefInner, MemoRefPtr,
         MemoPeerList, MemoPeeringStatus, MemoId, MemoPeer,
-        RelationSlotSubjectHead,
         state::SlabState,
     },
     subject::{
@@ -509,26 +509,26 @@ impl SlabAgent {
             &MemoBody::SlabPresence{ ref p, ref r } => {
                 MemoBody::SlabPresence{
                     p: p.clone(),
-                    r: match r {
-                        &Some(ref root_mrh) => {
-                            Some(self.localize_memorefhead(root_mrh, from_slabref, true))
-                        }
-                        &None => None
-                    }
+                    r: self.localize_memorefhead(root_mrh, from_slabref, true)
                 }
             },
-            &MemoBody::Relation(ref rssh) => {
-                MemoBody::Relation(self.localize_relationslothead(rssh,from_slabref))
+            &MemoBody::Relation(ref relationset) => {
+                // No slab localization is needed for relationsets
+                MemoBody::Relation(relationset.clone())
+            }
+            &MemoBody::Edge(ref edgeset) => {
+                MemoBody::Edge(self.localize_edgeset(edgeset, from_slabref))
             }
             &MemoBody::Edit(ref hm) => {
                 MemoBody::Edit(hm.clone())
             }
-            &MemoBody::FullyMaterialized{ ref v, ref r } => {
-                MemoBody::FullyMaterialized{ v: v.clone(), r: self.localize_relationslothead(r,from_slabref)}
+            &MemoBody::FullyMaterialized{ ref v, ref r, ref t, ref e } => {
+                MemoBody::FullyMaterialized{ v: v.clone(), r: r.clone(), e: self.localize_edgeset(e, from_slabref), t: t.clone() }
             }
-            &MemoBody::PartiallyMaterialized{ ref v, ref r } => {
-                MemoBody::PartiallyMaterialized{ v: v.clone(), r: self.localize_relationslothead(r, from_slabref)}
+            &MemoBody::PartiallyMaterialized{ ref v, ref r,ref e, ref t } => {
+                MemoBody::PartiallyMaterialized{ v: v.clone(), r: r.clone_for_slab(from_slabref, to_slab), e: e.clone_for_slab(from_slabref, to_slab), t: t.clone() }
             }
+
             &MemoBody::Peering(memo_id, subject_id, ref peerlist) => {
                 MemoBody::Peering(memo_id,subject_id,  self.localize_peerlist(peerlist))
             }
@@ -548,17 +548,15 @@ impl SlabAgent {
             })
             .collect())
     }
-    #[tracing::instrument]
-    pub fn localize_relationslothead(&self, rsh: &RelationSlotSubjectHead, from_slabref: &SlabRef) -> RelationSlotSubjectHead {
-        // panic!("check here to make sure that peers are being properly constructed for the root_index_seed");
-        let new = rsh.0
+    pub fn localize_edgeset(&self, edgeset: &EdgeSet, from_slabref: &SlabRef) -> EdgeSet {
+        let new = edgeset.0
             .iter()
-            .map(|(slot_id, &(subject_id, ref mrh))| {
-                (*slot_id, (subject_id, self.localize_memorefhead(mrh, from_slabref,false)))
+            .map(|(slot_id, mrh)| {
+                (*slot_id, self.localize_memorefhead(mrh, from_slabref, false))
             })
             .collect();
 
-        RelationSlotSubjectHead(new)
+        EdgeSet(new)
     }
     #[allow(unused)]
     #[tracing::instrument]

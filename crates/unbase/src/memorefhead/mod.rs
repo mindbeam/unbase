@@ -21,6 +21,7 @@ use tracing::{
 use futures::{
     FutureExt,
     Stream,
+    StreamExt,
     task::Poll,
     future::{
         BoxFuture
@@ -32,9 +33,6 @@ use futures::{
 // This "head" is rather like a git HEAD, insofar as it is intended to contain only the youngest
 // descendents of a given causal chain. It provides mechanisms for applying memorefs, or applying
 // other MemoRefHeads such that the mutated list may be pruned as appropriate given the above.
-
-
-pub type RelationSlotId = u8;
 
 //TODO: consider renaming to OwnedMemoRefHead
 #[derive(Clone, PartialEq)]
@@ -218,7 +216,7 @@ impl MemoRefHead {
         for memoref in self.iter(){
             if let Ok(memo) = memoref.clone().get_memo(slab.clone()).await {
                 match memo.body {
-                    MemoBody::FullyMaterialized { v: _, r: _ } => {},
+                    MemoBody::FullyMaterialized { .._ } => {},
                     _                           => { return false }
                 }
             }else{
@@ -284,6 +282,7 @@ impl CausalMemoStream {
 }
 
 impl Stream for CausalMemoStream {
+    // TODO NEXT - change this to Result<Memo>
     type Item = Memo;
 
     #[tracing::instrument]

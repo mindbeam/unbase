@@ -4,15 +4,28 @@
 pub mod serde;
 
 use core::ops::Deref;
-use std::collections::HashMap;
-use std::{fmt};
-use std::sync::Arc;
-
-use crate::subject::{SubjectId};
-use crate::slab::MemoRef;
-use crate::network::{SlabRef,SlabPresence};
-use super::*;
+use std::{
+    collections::HashMap,
+    fmt,
+    sync::Arc
+};
 use futures::future::{BoxFuture, FutureExt};
+
+use crate::{
+    memorefhead::MemoRefHead,
+    network::{SlabRef,SlabPresence},
+    slab::{
+        EdgeSet,
+        MemoPeerList,
+        MemoRef,
+        RelationSet,
+        SlabId,
+        SlabHandle,
+    },
+    subject::{
+        SubjectId, SubjectType
+    }
+};
 
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
@@ -39,11 +52,12 @@ pub struct MemoInner {
 
 #[derive(Clone, Debug)]
 pub enum MemoBody{
-    SlabPresence{ p: SlabPresence, r: Option<MemoRefHead> }, // TODO: split out root_index_seed conveyance to another memobody type
-    Relation(RelationSlotSubjectHead),
+    SlabPresence{ p: SlabPresence, r: MemoRefHead }, // TODO: split out root_index_seed conveyance to another memobody type
+    Relation(RelationSet),
+    Edge(EdgeSet),
     Edit(HashMap<String, String>),
-    FullyMaterialized     { v: HashMap<String, String>, r: RelationSlotSubjectHead },
-    PartiallyMaterialized { v: HashMap<String, String>, r: RelationSlotSubjectHead },
+    FullyMaterialized     { v: HashMap<String, String>, r: RelationSet, e: EdgeSet, t: SubjectType },
+    PartiallyMaterialized { v: HashMap<String, String>, r: RelationSet, e: EdgeSet, t: SubjectType },
     Peering(MemoId,Option<SubjectId>,MemoPeerList),
     MemoRequest(Vec<MemoId>,SlabRef)
 }
@@ -82,19 +96,29 @@ impl Memo {
 
         match self.body {
             MemoBody::Edit(ref v)
-                => Some((v.clone(),false)),
-            MemoBody::FullyMaterialized { ref v, r: _ }
-                => Some((v.clone(),true)),
+            => Some((v.clone(),false)),
+            MemoBody::FullyMaterialized { ref v, .. }
+            => Some((v.clone(),true)),
             _   => None
         }
     }
-    pub fn get_relations (&self) -> Option<(RelationSlotSubjectHead,bool)> {
+    pub fn get_relations (&self) -> Option<(RelationSet,bool)> {
 
         match self.body {
             MemoBody::Relation(ref r)
-                => Some((r.clone(),false)),
-            MemoBody::FullyMaterialized { v: _, ref r }
-                => Some((r.clone(),true)),
+            => Some((r.clone(),false)),
+            MemoBody::FullyMaterialized { ref r, .. }
+            => Some((r.clone(),true)),
+            _   => None
+        }
+    }
+    pub fn get_edges (&self) -> Option<(EdgeSet,bool)> {
+
+        match self.body {
+            MemoBody::Edge(ref e)
+            => Some((e.clone(),false)),
+            MemoBody::FullyMaterialized { ref e, .. }
+            => Some((e.clone(),true)),
             _   => None
         }
     }

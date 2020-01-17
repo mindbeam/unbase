@@ -1,6 +1,13 @@
 use super::*;
 use crate::{
-    slab::{MemoBody, MemoId},
+    slab::{
+        EdgeLink,
+        EdgeSet,
+        MemoBody,
+        MemoId,
+        RelationSet,
+        RelationSlotId,
+    },
     subjecthandle::SubjectHandle
 };
 use std::fmt;

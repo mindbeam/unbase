@@ -111,11 +111,16 @@ impl Context {
 
 #[cfg(test)]
 mod test {
-    use {Network, Slab};
-    use subject::SubjectId;
-    use super::EdgeSet;
-    use super::Context;
-    use super::MemoBody;
+    use crate::{
+        context::Context,
+        Network,
+        Slab,
+        slab::{
+            EdgeSet,
+            MemoBody
+        },
+        subject::SubjectId,
+    };
 
     use std::collections::HashMap;
 
@@ -123,7 +128,7 @@ mod test {
     fn context_basic() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
-        let context = Context::new(&slab);
+        let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
         let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]    );
@@ -139,7 +144,7 @@ mod test {
     fn context_manual_compaction() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
-        let context = Context::new(&slab);
+        let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
         let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]   );
@@ -180,7 +185,7 @@ mod test {
     fn context_auto_compaction() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
-        let context = Context::new(&slab);
+        let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
         let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]  );
@@ -214,7 +219,7 @@ mod test {
     // fn context_manager_dual_indegree_zero() {
     //     let net = Network::create_new_system();
     //     let slab = Slab::new(&net);
-    //     let mut context = Context::new(&slab);
+    //     let mut context = slab.create_context();
 
     //     // 2 -> 1, 4 -> 3
     //     let head1 = context.add_test_subject(1, None, &slab        );
@@ -229,7 +234,7 @@ mod test {
     // fn repoint_relation() {
     //     let net = Network::create_new_system();
     //     let slab = Slab::new(&net);
-    //     let mut context = Context::new(&slab);
+    //     let mut context = slab.create_context();
 
     //     // 2 -> 1, 4 -> 3
     //     // Then:
@@ -252,7 +257,7 @@ mod test {
     // fn context_remove() {
     //     let net = Network::create_new_system();
     //     let slab = Slab::new(&net);
-    //     let mut context = Context::new(&slab);
+    //     let mut context = slab.create_context();
 
     //     // Subject 1 is pointing to nooobody
     //     let head1 = slab.new_memo_basic_noparent(Some(1), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSet::empty() }).to_head();
@@ -285,7 +290,7 @@ mod test {
     // fn context_manager_add_remove_cycle() {
     //     let net = Network::create_new_system();
     //     let slab = Slab::new(&net);
-    //     let mut context = Context::new(&slab);
+    //     let mut context = slab.create_context();
 
     //     // Subject 1 is pointing to nooobody
     //     let head1 = slab.new_memo_basic_noparent(Some(1), MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSet::empty() }).to_head();
