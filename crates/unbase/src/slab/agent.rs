@@ -402,22 +402,16 @@ impl SlabAgent {
     }
     #[tracing::instrument]
     pub fn localize_memorefhead (&self, mrh: &MemoRefHead, from_slabref: &SlabRef, include_memos: bool ) -> MemoRefHead {
+        let local_from_slabref = self.localize_slabref(&from_slabref);
 
-        if from_slabref.slab_id == self.my_ref.slab_id {
-            mrh.clone()
-        }else {
-            let head = mrh.head.clone();
-
-            let local_from_slabref = self.localize_slabref(&from_slabref);
-
-            let mut newhead = Vec::with_capacity(head.len());
-            for mr in head.into_iter() {
-                newhead.push(self.localize_memoref(&mr, &local_from_slabref, include_memos));
-            }
-
-            MemoRefHead {
-                head: newhead,
-                owning_slab_id: self.my_ref.slab_id
+        match mrh {
+            MemoRefHead::Null                    => MemoRefHead::Null,
+            MemoRefHead::Anonymous { ref head }  => MemoRefHead::Anonymous{
+                head: head.iter().map(|mr| to_slab.localize_memoref(mr, from_slabref, include_memos )).collect()
+            },
+            MemoRefHead::Subject{ subject_id, ref head } => MemoRefHead::Subject {
+                subject_id: subject_id.clone(),
+                head: head.iter().map(|mr| to_slab.localize_memoref(mr, from_slabref, include_memos )).collect()
             }
         }
     }

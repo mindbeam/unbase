@@ -36,20 +36,21 @@ use futures::{
 
 //TODO: consider renaming to OwnedMemoRefHead
 #[derive(Clone, PartialEq)]
-pub struct MemoRefHead {
-    pub (crate) owning_slab_id: SlabId,
-    pub (crate) head: Vec<MemoRef>
+pub enum MemoRefHead {
+    Null,
+    Subject{
+        subject_id: SubjectId,
+        head:       Vec<MemoRef>
+    },
+    Anonymous{
+        head:       Vec<MemoRef>
+    }
 }
 
 // TODO: consider renaming to ExternalMemoRefHead or something like that
 pub struct MemoRefHeadWithProvenance {
     pub memorefhead: MemoRefHead,
     pub slabref: SlabRef,
-}
-
-pub struct RelationLink{
-    pub slot_id:    RelationSlotId,
-    pub subject_id: Option<SubjectId>
 }
 
 impl MemoRefHead {
@@ -76,6 +77,29 @@ impl MemoRefHead {
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
         // If so, any memorefs that it descends must be removed
+        let head = match self {
+            MemoRefHead::Null => {
+                if let Some(subject_id) = new.subject_id {
+                    *self = MemoRefHead::Subject{
+                        head: vec![new.clone()],
+                        subject_id
+                    };
+                }else{
+                    *self = MemoRefHead::Anonymous{ head: vec![new.clone()] };
+                }
+
+                return Ok(true);
+            },
+            MemoRefHead::Anonymous{ ref mut head } => {
+                head
+            },
+            MemoRefHead::Subject{ ref mut head, ..} => {
+                head
+            }
+        };
+
+        // Conditionally add the new memoref only if it descends any memorefs in the head
+        // If so, any memorefs that it descends must be removed
 
         // Not suuuper in love with these flag names
         let mut new_is_descended = false;
@@ -89,10 +113,10 @@ impl MemoRefHead {
         // the cheapest case: (existing descends new)
 
         // TODO - make this more async friendly.
-        'existing: for i in (0..self.head.len()).rev() {
+        'existing: for i in (0..head.len()).rev() {
             let mut remove = false;
             {
-                let ref mut existing = self.head[i];
+                let ref mut existing = head[i];
                 if existing == new {
                     return false; // we already had this
 
@@ -124,7 +148,7 @@ impl MemoRefHead {
 
             if remove {
                 // because we're descending, we know the offset of the next items won't change
-                self.head.remove(i);
+                head.remove(i);
             }
         }
 
@@ -132,17 +156,17 @@ impl MemoRefHead {
             // if the new memoref neither descends nor is descended
             // then it must be concurrent
 
-            self.head.push(new.clone());
+            head.push(new.clone());
             applied = true; // The memoref was "applied" to the MemoRefHead
         }
 
         // This memoref was applied if it was concurrent, or descends one or more previous memos
 
-        if applied {
-            debug!("Was applied - {:?}", self.memo_ids());
-        }else{
-            debug!("NOT applied - {:?}", self.memo_ids());
-        }
+//        if applied {
+//            debug!("Was applied - {:?}", self.memo_ids());
+//        }else{
+//            debug!("NOT applied - {:?}", self.memo_ids());
+//        }
 
         applied
     }
@@ -231,11 +255,24 @@ impl MemoRefHead {
 
 impl fmt::Debug for MemoRefHead{
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-
-        fmt.debug_struct("MemoRefHead")
-            .field("memo_refs", &self.head )
-            //.field("memo_ids", &self.memo_ids() )
-            .finish()
+        match *self {
+            MemoRefHead::Null       => {
+                fmt.debug_struct("MemoRefHead::Null").finish()
+            },
+            MemoRefHead::Anonymous{ ref head, .. } => {
+                fmt.debug_struct("MemoRefHead::Anonymous")
+                    .field("memo_refs",  head )
+                    //.field("memo_ids", &self.memo_ids() )
+                    .finish()
+            }
+            MemoRefHead::Subject{ ref subject_id, ref head } => {
+                fmt.debug_struct("MemoRefHead::Subject")
+                    .field("subject_id", &subject_id )
+                    .field("memo_refs",  head )
+                    //.field("memo_ids", &self.memo_ids() )
+                    .finish()
+            }
+        }
     }
 }
 
