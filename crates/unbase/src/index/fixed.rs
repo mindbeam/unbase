@@ -205,6 +205,8 @@ impl IndexFixed {
 
 #[cfg(test)]
 mod test {
+    use crate::{Network, Slab, SubjectHandle};
+    use crate::index::IndexFixed;
 
     #[test]
     fn index_construction() {
