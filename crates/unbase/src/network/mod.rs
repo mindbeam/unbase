@@ -29,8 +29,6 @@ impl Deref for Network {
 
 pub struct NetworkInner {
     next_slab_id: RwLock<u32>,
-
-    // inducing a memory leak out of expedience TODO - Replace this with SlabHandle/SlabRef
     slabs: RwLock<Vec<SlabHandle>>,
     transports: RwLock<Vec<Box<dyn Transport + Send + Sync>>>,
     root_index_seed: RwLock<Option<(MemoRefHead, SlabRef)>>,
@@ -152,6 +150,7 @@ impl Network {
     #[tracing::instrument]
     pub fn register_local_slab(&self, new_slab: SlabHandle) {
 
+        // Question: does this have to be done first?
         {
             self.slabs.write().unwrap().insert(0, new_slab.clone());
         }
@@ -160,8 +159,6 @@ impl Network {
             prev_slab.slabref_from_local_slab(&new_slab);
             new_slab.slabref_from_local_slab(&prev_slab);
         }
-
-        self.conditionally_generate_root_index_seed(&new_slab);
     }
     #[tracing::instrument]
     pub fn deregister_local_slab(&self, slab_id: SlabId) {
@@ -199,30 +196,29 @@ impl Network {
         // No slabs left
         root_index_seed.take();
     }
-    #[tracing::instrument]
-    pub fn get_root_index_seed(&self, slab: &SlabHandle) -> Option<MemoRefHead> {
+    pub fn get_root_index_seed(&self, slab: &SlabHandle) -> MemoRefHead {
+
         let root_index_seed = {
             self.root_index_seed.read().expect("root_index_seed read lock").clone()
         };
 
         match root_index_seed {
             Some((ref seed, ref from_slabref)) => {
-                let local_seed = slab.agent.localize_memorefhead(seed, from_slabref, true);
-                Some(local_seed)
+                    slab.agent.localize_memorefhead(seed, from_slabref, true)
             }
-            None => None,
+            None => MemoRefHead::Null,
         }
+
     }
     #[tracing::instrument]
-    pub fn get_root_index_seed_for_agent(&self, agent: &SlabAgent ) -> Option<MemoRefHead> {
+    pub fn get_root_index_seed_for_agent(&self, agent: &SlabAgent ) -> MemoRefHead {
         let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");
 
         match *root_index_seed {
             Some((ref seed, ref from_slabref)) => {
-                let local_seed = agent.localize_memorefhead(seed, from_slabref, true);
-                Some(local_seed)
+                agent.localize_memorefhead(seed, from_slabref, true)
             }
-            None => None,
+            None => MemoRefHead::Null,
         }
     }
     pub fn conditionally_generate_root_index_seed(&self, slab: &SlabHandle) -> bool {
@@ -266,7 +262,7 @@ impl Network {
                 //                 it is imperative that all memorefs in the root_index_seed reside on the same local slabref
                 //                 so, it is important to undertake the necessary dilligence to clone them to that slab
 
-                return true; // be lenient for now. Not ok for Alpha
+                return false;
             }
         }
 

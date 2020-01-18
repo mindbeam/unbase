@@ -105,6 +105,8 @@ impl Slab {
 
         net.register_local_slab(me.handle());
 
+        net.conditionally_generate_root_index_seed(&me.handle);
+
         me
     }
     pub fn handle(&self) -> SlabHandle {
