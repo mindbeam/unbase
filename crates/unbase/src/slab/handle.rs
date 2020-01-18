@@ -127,7 +127,7 @@ impl SlabHandle {
     }
     #[tracing::instrument]
     pub fn new_memo_basic_noparent (&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
-        self.agent.new_memo(subject_id, MemoRefHead::new(self), body)
+        self.agent.new_memo(subject_id, MemoRefHead::Null, body)
     }
     pub fn generate_subject_id(&self, stype: SubjectType) -> SubjectId {
         self.agent.generate_subject_id(stype)

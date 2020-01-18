@@ -7,7 +7,7 @@ use tracing::debug;
 
 use crate::{
     context::Context,
-    error::PeeringError,
+    error::StorageOpDeclined,
     memorefhead::MemoRefHead,
     network::{SlabRef, TransmitterArgs, Transmitter, TransportAddress},
     Network,
@@ -26,6 +26,7 @@ use crate::{
 use futures::{
     channel::mpsc
 };
+use timer::Delay;
 
 pub struct SlabAgent {
     pub id: SlabId,
@@ -756,7 +757,7 @@ impl SlabAgent {
     }
     #[allow(unused)]
     #[tracing::instrument]
-    pub fn remotize_memos(&self, memo_ids: &[MemoId] ) -> Result<(),PeeringError>{
+    pub fn try_remotize_memos(&self, memo_ids: &[MemoId] ) -> Result<(),StorageOpDeclined>{
         //TODO accept memoref instead of memoid
         let mut memorefs : Vec<MemoRef> = Vec::with_capacity(memo_ids.len());
 
@@ -774,6 +775,29 @@ impl SlabAgent {
         }
 
         Ok(())
+    }
+    pub async fn remotize_memos( &self, memo_ids: &[MemoId], ms: u64 ) -> Result<(),StorageOpDeclined> {
+        use std::time::{Instant,Duration};
+        let start = Instant::now();
+        let wait = Duration::from_millis(ms);
+        use std::thread;
+
+        loop {
+            if start.elapsed() > wait{
+                return Err(StorageOpDeclined::InsufficientPeering)
+            }
+
+            #[allow(unreachable_patterns)]
+            match self.try_remotize_memos( memo_ids ) {
+                Ok(_) => {
+                    return Ok(())
+                },
+                Err(StorageOpDeclined::InsufficientPeering) => {}
+                Err(e)                                      => return Err(e)
+            }
+
+            Delay::new(Duration::from_millis(50)).await;
+        }
     }
 }
 
