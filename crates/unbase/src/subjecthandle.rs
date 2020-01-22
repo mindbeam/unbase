@@ -6,10 +6,16 @@ use crate::{
     },
     memorefhead::{
         MemoRefHead,
-        RelationSlotId,
     },
-    slab::MemoId,
-    subject::{Subject, SubjectId, SubjectType},
+    slab::{
+        RelationSlotId,
+        MemoId,
+    },
+    subject::{
+        Subject,
+        SubjectId,
+        SubjectType
+    },
 };
 
 use std::fmt;

@@ -15,9 +15,9 @@ use std::fmt;
 /// User interface functions - Programmer API for `Context`
 impl Context {
     /// Retrive a Subject from the root index by ID
-    pub fn get_subject_by_id(&self, subject_id: SubjectId) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn get_subject_by_id(&self, subject_id: SubjectId) -> Result<Option<SubjectHandle>, RetrieveError> {
 
-        match self.root_index()?.get(&self, subject_id.id)? {
+        match self.root_index(Duration::from_secs(1)).await?.get(&self, subject_id.id)? {
             Some(s) => {
                 let sh = SubjectHandle{
                     id: subject_id,
@@ -48,7 +48,7 @@ impl Context {
         for head in self.stash.iter() {
             memoref_count += head.len();
 
-            let apply_head = other.inner.0.slab.agent.localize_memorefhead(&subject_head.head, &from_slabref, false);
+            let apply_head = other.inner.0.slab.agent.localize_memorefhead(head, &from_slabref, false);
             other.apply_head_deferred(apply_head);
         }
 
@@ -80,7 +80,7 @@ impl Context {
            }
         };
         
-        let seed = slab.net.get_root_index_seed(&slab);
+        let seed = self.slab.net.get_root_index_seed(self);
         if seed.is_some() {
             let index = IndexFixed::new_from_memorefhead(&self, 5, seed);
             let arcindex = Arc::new(index);

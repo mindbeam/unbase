@@ -2,26 +2,36 @@
 
 use futures::{
     StreamExt,
-    channel::mpsc::Receiver,
+    channel::mpsc,
     future::RemoteHandle,
 };
 use std::collections::hash_map::Entry;
 
-pub use self::common_structs::*;
-pub use self::slabref::{SlabRef,SlabRefInner};
-pub use self::memoref::{MemoRef,MemoRefInner,MemoRefPtr};
-pub use self::memo::{MemoId,Memo,MemoInner,MemoBody};
-pub use self::memoref::serde as memoref_serde;
-pub use self::memo::serde as memo_serde;
+pub use self::{
+    common_structs::*,
+    slabref::{SlabRef, SlabRefInner},
+    memoref::{MemoRef, MemoRefInner, MemoRefPtr},
+    memo::{MemoId, Memo, MemoInner, MemoBody},
+    memoref::serde as memoref_serde,
+    memo::serde as memo_serde,
+    handle::SlabHandle,
+};
 
-use crate::subject::SubjectId;
-use crate::memorefhead::*;
-use crate::context::Context;
-use crate::network::{Network,Transmitter,TransportAddress};
+
+use crate::{
+    context::Context,
+    memorefhead::*,
+    network::{
+        Network,
+        Transmitter,
+        TransportAddress
+    },
+    slab::agent::SlabAgent,
+    subject::SubjectId,
+};
 
 use std::sync::{Arc,RwLock,Mutex};
 use std::ops::Deref;
-use futures::channel::mpsc;
 
 mod state;
 pub (crate) mod agent;
@@ -32,11 +42,7 @@ mod memo;
 mod slabref;
 mod memoref;
 
-pub use handle::SlabHandle;
-
 pub type SlabId = u32;
-
-use crate::slab::agent::SlabAgent;
 
 #[derive(Clone)]
 pub struct Slab{
@@ -115,7 +121,7 @@ impl Slab {
     pub fn create_context(&self) -> Context {
         Context::new(self.handle())
     }
-    pub (crate) fn observe_index (&self, tx: futures::sync::mpsc::Sender<MemoRefHead> ) {
+    pub (crate) fn observe_index (&self, tx: mpsc::Sender<MemoRefHead> ) {
         self.index_subscriptions.lock().unwrap().push(tx);
     }
     fn _memo_durability_score(&self, _memo: &Memo) -> u8 {

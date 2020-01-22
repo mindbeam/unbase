@@ -20,18 +20,22 @@ use futures::{
 };
 use crate::{
     context::Context,
-    error::WriteError,
+    error::{
+        RetrieveError,
+        WriteError,
+    },
     memorefhead::{
         MemoRefHead,
-        RelationSlotId,
     },
     slab::{
+        EdgeSet,
+        MemoBody,
+        MemoId,
+        RelationSet,
+        RelationSlotId,
         SlabHandle,
-        MemoBody
     }
 };
-use crate::error::RetrieveError;
-use crate::slab::MemoId;
 
 pub const SUBJECT_MAX_RELATIONS : usize = 256;
 #[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash,Debug,Serialize,Deserialize)]

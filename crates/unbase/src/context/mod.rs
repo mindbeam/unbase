@@ -54,16 +54,17 @@ impl Context {
     pub fn new(slab: SlabHandle) -> Context {
 
         let stash = Stash::new();
+
+        let (tx, rx) = mpsc::channel(1);
         let rx = slab.observe_index( tx );
 
         let applier_slab = slab.clone();
         let applier_stash = stash.clone();
 
-
         let span = span!(Level::TRACE, "Context Applier");
 
         let applier: RemoteHandle<()> = crate::util::task::spawn_with_handle(
-            rx.for_each(move |(inner,subject_id,mrh)| {
+            rx.for_each(move |(inner,subject_id,head)| {
                 let _guard = span.enter();
                 applier_stash.apply_head(applier_slab.clone(), head)
             })
@@ -91,7 +92,7 @@ impl Context {
         let start = Instant::now();
         use std::thread;
 
-        self.root_index_wait(ms)?;
+        self.root_index_wait(wait)?;
 
         // TODO ASYNC NOTIFY
         loop {

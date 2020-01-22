@@ -1,8 +1,23 @@
-use slab::memoref_serde::*;
-use util::serde::*;
+use crate::{
+    memorefhead::MemoRefHead,
+    subject::SubjectId,
+    slab::{
+        memoref_serde::*,
+        MemoRef,
+        SlabHandle,
+        SlabRef,
+    },
+    util::serde::{
+        DeError,
+        SerializeHelper,
+        SerializeWrapper,
+        StatefulSerialize,
+        VecSeed,
+    },
+};
+use std::fmt;
 use serde::ser::*;
 use serde::de::*;
-use super::*;
 
 impl StatefulSerialize for MemoRefHead {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
@@ -29,7 +44,7 @@ impl StatefulSerialize for MemoRefHead {
 }
 
 
-pub struct MemoRefHeadSeed<'a> { pub dest_slab: &'a Slab, pub origin_slabref: &'a SlabRef }
+pub struct MemoRefHeadSeed<'a> { pub dest_slab: &'a SlabHandle, pub origin_slabref: &'a SlabRef }
 
 #[derive(Deserialize)]
 enum MRHVariant{
@@ -64,7 +79,7 @@ impl<'a> Visitor for MemoRefHeadSeed<'a> {
         where V: EnumVisitor
     {
 
-        let foo = match try!(visitor.visit_variant()) {
+        let foo = match visitor.visit_variant()? {
             (MRHVariant::Null,       variant) => variant.visit_newtype_seed(MRHNullSeed{}),
             (MRHVariant::Anonymous,  variant) => variant.visit_newtype_seed(MRHAnonymousSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref }),
             (MRHVariant::Subject,    variant) => variant.visit_newtype_seed(MRHSubjectSeed{ dest_slab: self.dest_slab, origin_slabref: self.origin_slabref })
@@ -98,7 +113,7 @@ impl<'a> Visitor for MRHNullSeed {
     }
 }
 
-struct MRHAnonymousSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
+struct MRHAnonymousSeed<'a> { dest_slab: &'a SlabHandle, origin_slabref: &'a SlabRef  }
 
 impl<'a> DeserializeSeed for MRHAnonymousSeed<'a> {
     type Value = MemoRefHead;
@@ -136,7 +151,7 @@ impl<'a> Visitor for MRHAnonymousSeed<'a> {
 }
 
 
-struct MRHSubjectSeed<'a> { dest_slab: &'a Slab, origin_slabref: &'a SlabRef  }
+struct MRHSubjectSeed<'a> { dest_slab: &'a SlabHandle, origin_slabref: &'a SlabRef  }
 impl<'a> DeserializeSeed for MRHSubjectSeed<'a> {
     type Value = MemoRefHead;
 

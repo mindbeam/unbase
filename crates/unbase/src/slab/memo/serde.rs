@@ -1,9 +1,13 @@
 use super::*;
-use crate::memorefhead::serde::*;
-use super::memoref::serde::MemoPeerSeed;
-
-use crate::slab::slabref::serde::SlabRefSeed;
-use crate::util::serde::*;
+use crate::{
+    slab::{
+        memoref::serde::MemoPeerSeed,
+        RelationSlotId,
+        slabref::serde::SlabRefSeed,
+    },
+    memorefhead::serde::*,
+    util::serde::*,
+};
 
 use std::fmt;
 use ::serde::*;

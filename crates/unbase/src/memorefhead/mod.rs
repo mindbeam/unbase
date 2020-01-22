@@ -54,24 +54,6 @@ pub struct MemoRefHeadWithProvenance {
 }
 
 impl MemoRefHead {
-    pub fn new ( owning_slab: &SlabHandle ) -> Self {
-        MemoRefHead{
-            head: Vec::with_capacity(5),
-            owning_slab_id: owning_slab.my_ref.slab_id
-        }
-    }
-    pub fn new_from_vec ( vec: Vec<MemoRef>, owning_slab: &SlabHandle ) -> Self {
-        MemoRefHead{
-            head: vec,
-            owning_slab_id: owning_slab.my_ref.slab_id
-        }
-    }
-    pub fn from_memoref (memoref: MemoRef) -> Self {
-        MemoRefHead {
-            owning_slab_id: memoref.owning_slab_id,
-            head: vec![memoref],
-        }
-    }
     #[tracing::instrument]
     pub async fn apply_memoref(&mut self, new: &MemoRef, slab: &SlabHandle ) -> bool {
 
@@ -240,8 +222,8 @@ impl MemoRefHead {
         for memoref in self.iter(){
             if let Ok(memo) = memoref.clone().get_memo(slab.clone()).await {
                 match memo.body {
-                    MemoBody::FullyMaterialized { .._ } => {},
-                    _                           => { return false }
+                    MemoBody::FullyMaterialized { .. } => {},
+                    _ => { return false }
                 }
             }else{
                 // TODO: do something more intelligent here

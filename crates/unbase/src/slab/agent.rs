@@ -408,11 +408,11 @@ impl SlabAgent {
         match mrh {
             MemoRefHead::Null                    => MemoRefHead::Null,
             MemoRefHead::Anonymous { ref head }  => MemoRefHead::Anonymous{
-                head: head.iter().map(|mr| to_slab.localize_memoref(mr, from_slabref, include_memos )).collect()
+                head: head.iter().map(|mr| self.localize_memoref(mr, from_slabref, include_memos )).collect()
             },
             MemoRefHead::Subject{ subject_id, ref head } => MemoRefHead::Subject {
                 subject_id: subject_id.clone(),
-                head: head.iter().map(|mr| to_slab.localize_memoref(mr, from_slabref, include_memos )).collect()
+                head: head.iter().map(|mr| self.localize_memoref(mr, from_slabref, include_memos )).collect()
             }
         }
     }
@@ -508,7 +508,7 @@ impl SlabAgent {
             &MemoBody::SlabPresence{ ref p, ref r } => {
                 MemoBody::SlabPresence{
                     p: p.clone(),
-                    r: self.localize_memorefhead(root_mrh, from_slabref, true)
+                    r: self.localize_memorefhead(r, from_slabref, true)
                 }
             },
             &MemoBody::Relation(ref relationset) => {
@@ -525,7 +525,7 @@ impl SlabAgent {
                 MemoBody::FullyMaterialized{ v: v.clone(), r: r.clone(), e: self.localize_edgeset(e, from_slabref), t: t.clone() }
             }
             &MemoBody::PartiallyMaterialized{ ref v, ref r,ref e, ref t } => {
-                MemoBody::PartiallyMaterialized{ v: v.clone(), r: r.clone_for_slab(from_slabref, to_slab), e: e.clone_for_slab(from_slabref, to_slab), t: t.clone() }
+                MemoBody::PartiallyMaterialized{ v: v.clone(), r: r.clone(), e: self.localize_edgeset(e, from_slabref), t: t.clone() }
             }
 
             &MemoBody::Peering(memo_id, subject_id, ref peerlist) => {

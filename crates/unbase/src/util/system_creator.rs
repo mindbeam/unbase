@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use crate::{
     memorefhead::MemoRefHead,
     slab::{
+        EdgeSet,
         MemoBody,
-        SlabHandle
+        RelationSet,
+        SlabHandle,
     },
     subject::SubjectType,
 };
