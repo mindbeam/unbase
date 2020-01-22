@@ -28,6 +28,7 @@ use std::ops::Deref;
 use crate::slab::SlabHandle;
 use tracing::{span, Level};
 use timer::Delay;
+use std::time::Duration;
 
 #[derive(Clone)]
 pub struct Context(Arc<ContextInner>);
@@ -77,7 +78,7 @@ impl Context {
 
         Context(Arc::new(inner))
     }
-    pub async fn fetch_kv(&self, key: &str, val: &str) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn try_fetch_kv(&self, key: &str, val: &str) -> Result<Option<SubjectHandle>, RetrieveError> {
         // TODO implement field-specific indexes
         //if I have an index for that field {
         //    use it
@@ -85,10 +86,9 @@ impl Context {
         self.root_index()?.scan_kv(self, key, val).await
         //}
     }
-    pub async fn fetch_kv_wait(&self, key: &str, val: &str, ms: u64) -> Result<SubjectHandle, RetrieveError> {
+    pub async fn fetch_kv(&self, key: &str, val: &str, wait: Duration) -> Result<SubjectHandle, RetrieveError> {
         use std::time::{Instant, Duration};
         let start = Instant::now();
-        let wait = Duration::from_millis(ms);
         use std::thread;
 
         self.root_index_wait(ms)?;
@@ -100,7 +100,7 @@ impl Context {
                 return Err(RetrieveError::NotFoundByDeadline)
             }
 
-            if let Some(rec) = self.fetch_kv(key, val)? {
+            if let Some(rec) = self.try_fetch_kv(key, val)? {
                 return Ok(rec)
             }
 

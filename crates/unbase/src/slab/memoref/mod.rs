@@ -21,10 +21,10 @@ impl Deref for MemoRef {
 
 pub struct MemoRefInner {
     pub id:       MemoId,
-    pub owning_slab_id: SlabId,
+    pub owning_slab_id: SlabId, // TODO - rename and conditionalize with a macro
     pub subject_id: Option<SubjectId>,
     pub peerlist: RwLock<MemoPeerList>,
-    pub ptr:      RwLock<MemoRefPtr>
+    pub ptr:      RwLock<MemoRefPtr>,
 }
 
 #[derive(Debug)]
@@ -44,7 +44,16 @@ impl MemoRefPtr {
 
 impl MemoRef {
     pub fn to_head (&self) -> MemoRefHead {
-        MemoRefHead::from_memoref(self.clone())
+        match self.subject_id {
+            None => MemoRefHead::Anonymous{
+                head: vec![self.clone()]
+            },
+            Some(subject_id) =>
+                MemoRefHead::Subject {
+                    subject_id: subject_id,
+                    head: vec![self.clone()]
+                }
+        }
     }
     pub fn apply_peers ( &self, apply_peerlist: &MemoPeerList ) -> bool {
 
@@ -122,22 +131,15 @@ impl MemoRef {
         slab.request_memo(self.clone()).await
     }
     #[tracing::instrument]
-    pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> bool {
+        pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> Result<bool,RetrieveError> {
         assert!(self.owning_slab_id == slab.my_ref.slab_id);
         // TODO get rid of clones here
-        match self.clone().get_memo( slab.clone() ).await {
-            Ok(my_memo) => {
-                if my_memo.descends(&memoref, slab).await {
-                    return true
-                }
-            }
-            Err(_) => {
-                // TODO: convert this into a Result<>
-                panic!("Unable to retrieve memo")
-            }
-        };
 
-        false
+        if self.clone().get_memo( slab.clone() ).await?.descends(&memoref, slab).await? {
+            Ok(true)
+        }else{
+            Ok(false)
+        }
     }
     pub fn update_peer (&self, slabref: &SlabRef, status: MemoPeeringStatus) -> bool {
 

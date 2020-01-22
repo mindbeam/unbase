@@ -27,6 +27,7 @@ use futures::{
     channel::mpsc
 };
 use timer::Delay;
+use std::time::Duration;
 
 pub struct SlabAgent {
     pub id: SlabId,
@@ -163,16 +164,16 @@ impl SlabAgent {
             Entry::Vacant(_) => {}
         };
     }
+    /// Perform necessary tasks given a newly arrived memo on this slab
     #[tracing::instrument]
     pub fn handle_memo_from_other_slab( &self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef ){
 
         match memo.body {
             // This Memo is a peering status update for another memo
-            MemoBody::SlabPresence{ p: ref presence, r: ref opt_root_index_seed } => {
+            MemoBody::SlabPresence{ p: ref presence, r: ref root_index_seed } => {
 
-                match opt_root_index_seed {
-                    &Some(ref root_index_seed) => {
-
+                match root_index_seed {
+                    &MemoRefHead::Subject{..} | &MemoRefHead::Anonymous{..} => {
                         // HACK - this should be done inside the deserialize
                         for memoref in root_index_seed.iter() {
                             memoref.update_peer(origin_slabref, MemoPeeringStatus::Resident);
@@ -180,29 +181,29 @@ impl SlabAgent {
 
                         self.net.apply_root_index_seed( &presence, root_index_seed, &self.my_ref );
                     }
-                    &None => {}
+                    &MemoRefHead::Null => {}
                 }
 
                 let mut reply = false;
-                if let &None = opt_root_index_seed {
+                if let &MemoRefHead::Null = root_index_seed {
                     reply = true;
                 }
 
                 if reply {
-                    if let Ok(mentioned_slabref) = self.slabref_from_presence( presence ) {
+                    if let Ok(mentioned_slabref) = self.slabref_from_presence(presence) {
                         // TODO: should we be telling the origin slabref, or the presence slabref that we're here?
                         //       these will usually be the same, but not always
 
                         let my_presence_memoref = self.new_memo(
                             None,
                             memoref.to_head(),
-                            MemoBody::SlabPresence{
-                                p: self.presence_for_origin( origin_slabref ),
+                            MemoBody::SlabPresence {
+                                p: self.presence_for_origin(origin_slabref),
                                 r: self.net.get_root_index_seed_for_agent(&self)
                             }
                         );
 
-                        origin_slabref.send( &self.my_ref, &my_presence_memoref );
+                        origin_slabref.send(&self.my_ref, &my_presence_memoref);
 
                         let _ = mentioned_slabref;
                         // needs PartialEq
@@ -245,7 +246,7 @@ impl SlabAgent {
                         }else{
                             let peering_memoref = self.new_memo(
                                 None,
-                                MemoRefHead::from_memoref(memoref.clone()),
+                                memoref.to_head(),
                                 MemoBody::Peering(
                                     *desired_memo_id,
                                     None,
@@ -348,7 +349,6 @@ impl SlabAgent {
                 None
             }
         }
-
 
         if let Some(subject_id) = memoref.subject_id {
 
@@ -486,6 +486,10 @@ impl SlabAgent {
         if let Some(ref memo) = memoref.get_memo_if_resident() {
 
             self.check_memo_waiters(memo);
+            //TODO1 - figure out eventual consistency index update behavior. Think fairly hard about blockchain fan-in / block-tree
+            // NOTE: this might be a correct place to employ selective hearing. Highest liklihood if the subject is in any of our contexts,
+            // otherwise
+
             self.handle_memo_from_other_slab(memo, &memoref, &origin_slabref);
             self.do_peering(&memoref, &origin_slabref);
 
@@ -571,7 +575,7 @@ impl SlabAgent {
 
             let peering_memoref = self.new_memo(
                 None,
-                MemoRefHead::from_memoref(memoref.clone()),
+                memoref.to_head(),
                 MemoBody::Peering(
                     memoref.id,
                     memoref.subject_id,
@@ -595,7 +599,7 @@ impl SlabAgent {
     }
     #[allow(unused)]
     #[tracing::instrument]
-    pub fn remotize_memoref( &self, memoref: &MemoRef ) -> Result<(),PeeringError> {
+    pub fn remotize_memoref( &self, memoref: &MemoRef ) -> Result<(),StorageOpDeclined>  {
         assert!(memoref.owning_slab_id == self.id);
 
         // TODO: check peering minimums here, and punt if we're below threshold
@@ -607,7 +611,7 @@ impl SlabAgent {
                 let peerlist = memoref.peerlist.read().unwrap();
 
                 if peerlist.len() == 0 {
-                    return Err(PeeringError::InsufficientReplicas);
+                    return Err(StorageOpDeclined::InsufficientPeering);
                 }
                 send_peers = peerlist.clone();
                 *ptr = MemoRefPtr::Remote;
@@ -619,7 +623,7 @@ impl SlabAgent {
 
         let peering_memoref = self.new_memo(
             None,
-            MemoRefHead::from_memoref(memoref.clone()),
+            memoref.to_head(),
             MemoBody::Peering(
                 memoref.id,
                 memoref.subject_id,
@@ -755,7 +759,7 @@ impl SlabAgent {
         return slabref;
 
     }
-    #[allow(unused)]
+    /// Attempt to remotize the specified memos once. If There is insuffient peering, the storage operation will be declined immediately
     #[tracing::instrument]
     pub fn try_remotize_memos(&self, memo_ids: &[MemoId] ) -> Result<(),StorageOpDeclined>{
         //TODO accept memoref instead of memoid
@@ -776,11 +780,10 @@ impl SlabAgent {
 
         Ok(())
     }
-    pub async fn remotize_memos( &self, memo_ids: &[MemoId], ms: u64 ) -> Result<(),StorageOpDeclined> {
+    /// Attempt to remotize the specified memos, waiting for up to the provided delay for them to be successfully remotized.
+    pub async fn remotize_memos( &self, memo_ids: &[MemoId], wait: Duration ) -> Result<(),StorageOpDeclined> {
         use std::time::{Instant,Duration};
         let start = Instant::now();
-        let wait = Duration::from_millis(ms);
-        use std::thread;
 
         loop {
             if start.elapsed() > wait{

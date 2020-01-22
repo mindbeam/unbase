@@ -173,7 +173,7 @@ impl Subject {
         self.head.read().unwrap().project_edge(&context.slab, key)
     }
 
-    pub fn set_value (&self, context: &Context, key: &str, value: &str) -> Result<bool,WriteError> {
+    pub async fn set_value (&self, context: &Context, key: &str, value: &str) -> Result<bool,WriteError> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
@@ -187,7 +187,7 @@ impl Subject {
                 MemoBody::Edit(vals)
             );
 
-            head.apply_memoref(&memoref, &slab)?;
+            head.apply_memoref(&memoref, &slab).await?;
         }
         self.update_referents( context )?;
 

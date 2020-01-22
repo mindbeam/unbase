@@ -71,7 +71,7 @@ impl Context {
             }
         }
     }
-    pub fn root_index (&self) -> Result<Arc<IndexFixed>,RetrieveError> {
+    pub fn try_root_index (&self) -> Result<Arc<IndexFixed>,RetrieveError> {
         // TODO MERGE
         {
            let rg = self.root_index.read().unwrap();
@@ -92,7 +92,7 @@ impl Context {
         }
 
     }
-    pub fn root_index_wait (&self, wait: u64) -> Result<Arc<IndexFixed>, RetrieveError> {
+    pub async fn root_index (&self, wait: Duration) -> Result<Arc<IndexFixed>, RetrieveError> {
         use std::time::{Instant,Duration};
         let start = Instant::now();
         let wait = Duration::from_millis(wait);
@@ -103,11 +103,11 @@ impl Context {
                 return Err(RetrieveError::NotFoundByDeadline)
             }
 
-            if let Ok(ri) = self.root_index() {
+            if let Ok(ri) = self.try_root_index() {
                 return Ok(ri);
             };
 
-            thread::sleep(Duration::from_millis(50));
+            Delay::new(Duration::from_millis(50)).await;
         }
     }
     pub fn get_resident_subject_head(&self, subject_id: SubjectId) -> MemoRefHead {

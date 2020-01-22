@@ -2,11 +2,11 @@
 
 extern crate unbase;
 use timer::Delay;
-use unbase::subject::Subject;
 use std::time::Duration;
 use futures_await_test::async_test;
 use futures::join;
 use tracing::{info, debug, span, Level};
+use unbase::SubjectHandle;
 
 #[async_test]
 async fn remote_traversal_simulated() {
@@ -27,7 +27,7 @@ async fn remote_traversal_simulated() {
     let context_a = slab_a.create_context();
     let _context_b = slab_b.create_context();
 
-    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
+    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
 
     rec_a1.set_value("animal_sound", "Woof").await;
 
@@ -62,7 +62,7 @@ async fn remote_traversal_nondeterministic() {
     let context_a = slab_a.create_context();
     let _context_b = slab_b.create_context();
 
-    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
+    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
 
     rec_a1.set_value("animal_sound","Woof").await;
     rec_a1.set_value("animal_sound","Meow").await;
@@ -92,7 +92,7 @@ async fn remote_traversal_nondeterministic_udp() {
 async fn udp_station_one(){
     let net1 = unbase::Network::create_new_system();
 
-    let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12001".to_string());
+    let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12011".to_string());
     net1.add_transport(Box::new(udp1.clone()));
     let slab_a = unbase::Slab::new(&net1);
 
@@ -103,15 +103,16 @@ async fn udp_station_one(){
     Delay::new(Duration::from_millis(150)).await;
 
     // Do some stuff
-    let rec_a1 = Subject::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
-    rec_a1.set_value("animal_sound", "Woof").await;
-    rec_a1.set_value("animal_sound", "Meow").await;
+    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
+    rec_a1.set_value("animal_sound", "Woof").await.unwrap();
+    rec_a1.set_value("animal_sound", "Meow").await.unwrap();
 
     // TODO - come up with a way to enforce determinism with real network traffic
     Delay::new(Duration::from_millis(50)).await;
 
+
     // manually remove the memos
-    slab_a.remotize_memos(&rec_a1.get_all_memo_ids().await).expect("failed to remotize memos");
+    slab_a.remotize_memos(&rec_a1.get_all_memo_ids().await, Duration::from_secs(1)).await.expect("failed to remotize memos");
 
     // Not really any strong reason to wait here, except just to play nice and make sure slab_b's peering is updated
     // TODO: test memo expungement/de-peering, followed immediately by MemoRequest for same
@@ -132,14 +133,14 @@ async fn udp_station_two(){
     let net2 = unbase::Network::new();
     net2.hack_set_next_slab_id(200);
 
-    // Ensure slab_a is listening - TODO make this auto-retry
+    // HACK - Ensure slab_a is listening - TODO make this auto-retry
     Delay::new(Duration::from_millis(50)).await;
 
-    let udp2 = unbase::network::transport::TransportUDP::new("127.0.0.1:12002".to_string());
+    let udp2 = unbase::network::transport::TransportUDP::new("127.0.0.1:12012".to_string());
     net2.add_transport(Box::new(udp2.clone()));
 
     let slab_b = unbase::Slab::new(&net2);
-    udp2.seed_address_from_string("127.0.0.1:12001".to_string());
+    udp2.seed_address_from_string("127.0.0.1:12011".to_string());
 
     Delay::new(Duration::from_millis(50)).await;
     let _context_b = slab_b.create_context();

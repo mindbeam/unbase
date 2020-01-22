@@ -39,6 +39,7 @@ use crate::{
 };
 
 use timer::Delay;
+use std::time::Duration;
 
 
 // TODO change this to
@@ -73,7 +74,7 @@ impl SlabHandle {
         // formulate the request
         let request_memo = self.new_memo_basic(
             None,
-            MemoRefHead::new( self ), // TODO: how should this be parented?
+            MemoRefHead::Null,
             MemoBody::MemoRequest(
                 vec![memoref.id],
                 self.my_ref.clone()
@@ -152,9 +153,10 @@ impl SlabHandle {
 
         self.agent.assert_slabref(peer_slab.my_ref.slab_id, &vec![presence])
     }
-    pub fn remotize_memos(&self, memo_ids: &[MemoId]) -> Result<(), PeeringError> {
+    /// Attempt to remotize the specified memos, waiting for up to the provided delay for them to be successfully remotized.
+    pub async fn remotize_memos(&self, memo_ids: &[MemoId], wait: Duration) -> Result<(), PeeringError> {
         //TODO accept memoref instead of memoid
-        self.agent.remotize_memos(memo_ids)
+        self.agent.remotize_memos(memo_ids, wait).await
     }
     pub fn peer_slab_count (&self) -> usize {
         self.agent.peer_slab_count()

@@ -76,7 +76,7 @@ async fn test2_node_a() {
     let beast_a = SubjectHandle::new_kv(&context_a, "beast", "Lion").expect("write successful");
     beast_a.set_value("sound", "Grraaawrrr").expect("write successful");
 
-    // Hang out so we can help thread 2
+    // Hang out so we can help task 2
     Delay::new(Duration::from_millis(500)).await;
 }
 
