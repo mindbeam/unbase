@@ -38,7 +38,7 @@ use crate::{
 };
 
 use timer::Delay;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 
 // TODO change this to
@@ -155,7 +155,25 @@ impl SlabHandle {
     /// Attempt to remotize the specified memos, waiting for up to the provided delay for them to be successfully remotized.
     pub async fn remotize_memos(&self, memo_ids: &[MemoId], wait: Duration) -> Result<(), StorageOpDeclined> {
         //TODO NEXT accept memoref instead of memoid
-        self.agent.remotize_memos(memo_ids, wait).await
+
+        let start = Instant::now();
+
+        loop {
+            if start.elapsed() > wait{
+                return Err(StorageOpDeclined::InsufficientPeering)
+            }
+
+            #[allow(unreachable_patterns)]
+            match self.agent.try_remotize_memos( memo_ids ) {
+                Ok(_) => {
+                    return Ok(())
+                },
+                Err(StorageOpDeclined::InsufficientPeering) => {}
+                Err(e)                    => return Err(e)
+            }
+
+            Delay::new(Duration::from_millis(50)).await;
+        }
     }
     pub fn peer_slab_count (&self) -> usize {
         self.agent.peer_slab_count()
