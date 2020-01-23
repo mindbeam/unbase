@@ -19,7 +19,6 @@ pub use self::{
 
 use crate::{
     context::Context,
-    memorefhead::*,
     network::{
         Network,
         Transmitter,
@@ -119,9 +118,6 @@ impl Slab {
     }
     pub fn create_context(&self) -> Context {
         Context::new(self.handle())
-    }
-    pub (crate) fn observe_index (&self, tx: mpsc::Sender<MemoRefHead> ) {
-        self.index_subscriptions.lock().unwrap().push(tx);
     }
     fn _memo_durability_score(&self, _memo: &Memo) -> u8 {
         // TODO: devise durability_score algo

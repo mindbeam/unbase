@@ -1,7 +1,6 @@
 use std::{
     collections::hash_map::Entry,
     sync::{Arc,RwLock,Mutex},
-    time::{Instant,Duration},
 };
 
 use tracing::debug;
@@ -26,7 +25,6 @@ use crate::{
 use futures::{
     channel::mpsc
 };
-use timer::Delay;
 
 pub struct SlabAgent {
     pub id: SlabId,
@@ -35,6 +33,11 @@ pub struct SlabAgent {
     my_ref: SlabRef
 }
 
+
+/// SlabAgent is the agent which holds the lock on SlabState.
+/// No other modules is allowed to hold a lock on the SlabState, because it may become deadlocked
+/// SlabAgent is not allowed to implement async functions because we might inadvertently hold the lock across yield points.
+/// All async functions must be offered by some other module.
 impl SlabAgent {
     pub fn new ( net: &Network, my_ref: SlabRef ) -> Self {
         let state = RwLock::new(SlabState::new() );
@@ -147,6 +150,10 @@ impl SlabAgent {
         };
 
         rx
+    }
+    pub fn observe_index (&self, tx: mpsc::Sender<MemoRefHead> ) {
+        let mut state = self.state.write().unwrap();
+        state.index_subscriptions.push(tx);
     }
     #[tracing::instrument]
     pub fn check_memo_waiters ( &self, memo: &Memo) {
@@ -341,20 +348,20 @@ impl SlabAgent {
     pub fn recv_memoref (&self, memoref : MemoRef){
 
         if let Some(subject_id) = memoref.subject_id {
-            let state = self.state.read().unwrap();
-            if let Some(ref s) = state.subject_subscriptions.get(&subject_id) {
-                Some((*s).clone())
-            } else {
-                None
-            }
-        }
 
-        if let Some(subject_id) = memoref.subject_id {
+            // should we split this up into:
+            - (agent) get index subs
+            - (handle) async deliver
+            - (agent) remove failed subs
 
+            // OR should we break our rule against async functions here
             if let SubjectType::IndexNode = subject_id.stype {
                 // TODO3 - update this to consider popularity of this node, and/or common points of reference with a given context
                 let mut senders = self.index_subscriptions.lock().unwrap();
-                let len = senders.len();
+
+                let state = self.state.read().unwrap();
+
+                let len = state.index_subscriptions.len();
                 for i in (0..len).rev() {
                     if let Err(_) = senders[i].clone().send(memoref.to_head()).wait(){
                         // TODO3: proactively remove senders when the receiver goes out of scope. Necessary for memory bloat
@@ -778,27 +785,6 @@ impl SlabAgent {
         }
 
         Ok(())
-    }
-    /// Attempt to remotize the specified memos, waiting for up to the provided delay for them to be successfully remotized.
-    pub async fn remotize_memos( &self, memo_ids: &[MemoId], wait: Duration ) -> Result<(),StorageOpDeclined> {
-        let start = Instant::now();
-
-        loop {
-            if start.elapsed() > wait{
-                return Err(StorageOpDeclined::InsufficientPeering)
-            }
-
-            #[allow(unreachable_patterns)]
-            match self.try_remotize_memos( memo_ids ) {
-                Ok(_) => {
-                    return Ok(())
-                },
-                Err(StorageOpDeclined::InsufficientPeering) => {}
-                Err(e)                                      => return Err(e)
-            }
-
-            Delay::new(Duration::from_millis(50)).await;
-        }
     }
 }
 

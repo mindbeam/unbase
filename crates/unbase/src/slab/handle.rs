@@ -187,6 +187,9 @@ impl SlabHandle {
     pub fn count_of_memos_reduntantly_received( &self ) -> u64 {
         self.agent.count_of_memos_reduntantly_received()
     }
+    pub (crate) fn observe_index (&self, tx: mpsc::Sender<MemoRefHead> ) {
+        self.agent.observe_index(tx)
+    }
 }
 
 impl std::fmt::Debug for SlabHandle {

@@ -17,13 +17,17 @@ use crate::{
     subject::SubjectId,
 };
 
-pub struct SlabState{
-    pub (crate) memorefs_by_id: HashMap<MemoId,MemoRef>,
-    pub (crate) counters: SlabCounters,
-    pub (crate) peer_refs: Vec<SlabRef>,
-    pub (crate) memo_wait_channels: HashMap<MemoId,Vec<oneshot::Sender<Memo>>>,
-    pub (crate) subject_subscriptions: HashMap<SubjectId, Vec<mpsc::Sender<MemoRefHead>>>,
-    pub (crate) running: bool,
+/// SlabState stores all state for a slab
+/// It may ONLY be owned/touched by SlabAgent. No exceptions.
+/// Consider making SlabState a child of SlabAgent to further discourage this
+pub (in super) struct SlabState{
+    pub memorefs_by_id: HashMap<MemoId,MemoRef>,
+    pub counters: SlabCounters,
+    pub peer_refs: Vec<SlabRef>,
+    pub memo_wait_channels: HashMap<MemoId,Vec<oneshot::Sender<Memo>>>,
+    pub subject_subscriptions: HashMap<SubjectId, Vec<mpsc::Sender<MemoRefHead>>>,
+    pub index_subscriptions: Vec<mpsc::Sender<MemoRefHead>>,
+    pub running: bool,
 }
 
 #[derive(Debug)]
@@ -50,6 +54,7 @@ impl SlabState{
             peer_refs: Vec::new(),
             memo_wait_channels: HashMap::new(),
             subject_subscriptions: HashMap::new(),
+            index_subscriptions:: Vec::new(),
             running: true,
         }
     }

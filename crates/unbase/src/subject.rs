@@ -2,15 +2,12 @@
 
 use std::{
     collections::HashMap,
-    fmt,
-    sync::{
-        RwLock,
-    }
+    fmt
 };
 use tracing::debug;
 use futures::{
     StreamExt,
-    channel::mpsc
+    channel::mpsc,
 };
 use crate::{
     context::Context,
@@ -274,8 +271,8 @@ impl Subject {
 
     pub fn observe (&self, slab: &SlabHandle) -> mpsc::Receiver<MemoRefHead> {
         // get an initial value, rather than waiting for the value to change
-        let (tx, rx) = mpsc::channel(1000);
-        tx.clone().send( self.head.clone() ).wait().unwrap();
+        let (mut tx, rx) = mpsc::channel(1000);
+//        tx.send( self.head.clone() ).wait().unwrap();
 
         // BUG HERE - not applying MRH to our head here, but double check as to what we were expecting from indexes
         slab.observe_subject( self.id, tx );
@@ -288,7 +285,7 @@ impl Clone for Subject {
     fn clone (&self) -> Subject {
         Self{
             id: self.id,
-            head: RwLock::new(self.head.read().unwrap().clone())
+            head: self.head.clone()
         }
     }
 }

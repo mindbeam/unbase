@@ -1,22 +1,51 @@
-use std::net::UdpSocket;
-use std::thread;
-use std::str;
-use tracing::{debug,trace};
+use crate::{
+    memorefhead::MemoRefHead,
+    slab::{
+        MemoBody,
+        MemoRef,
+        SlabId,
+        SlabAnticipatedLifetime,
+        SlabPresence,
+        SlabRef,
+    },
+    network::{
+        Network,
+        Packet,
+        Transmitter,
+        TransmitterArgs,
+        Transport,
+        TransportAddress,
+        WeakNetwork,
+        transmitter::DynamicDispatchTransmitter,
+    },
+    util::serde::{
+        DeserializeSeed,
+        SerializeHelper,
+        SerializeWrapper
+    },
+};
 
-use super::*;
-use std::sync::mpsc;
-use std::sync::{Arc,Mutex};
-use crate::slab::*;
+use std::{
+    fmt,
+    net::UdpSocket,
+    sync::{Arc,Mutex},
+    thread,
+    sync::mpsc,
+};
+
+//use futures::{
+//    TODO
+//};
+
 // use std::collections::BTreeMap;
-use super::packet::*;
-use crate::util::serde::DeserializeSeed;
-
-use crate::util::serde::{SerializeHelper,SerializeWrapper};
 use super::packet::serde::PacketSeed;
-//use std::time;
-use tracing::error;
+use tracing::{
+    debug,
+    error,
+    trace,
+};
 
-use serde_json;// {serialize as bin_serialize, deserialize as bin_deserialize};
+use serde_json;
 
 #[derive(Clone)]
 pub struct TransportUDP {
@@ -152,8 +181,9 @@ impl TransportUDP {
                 lifetime: SlabAnticipatedLifetime::Unknown
             };
 
-            let hello = slab.new_memo_basic_noparent(
+            let hello = slab.new_memo(
                 None,
+                MemoRefHead::Null,
                 MemoBody::SlabPresence{ p: presence, r: net.get_root_index_seed(&slab) }
             );
 
@@ -184,6 +214,14 @@ impl TransportUDP {
                 }
             }
         }
+    }
+}
+
+impl fmt::Debug for TransportUDP {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("TransportUDP")
+            .field("address", &self.shared.lock().unwrap().address)
+            .finish()
     }
 }
 
@@ -327,6 +365,15 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
         }
     }
 }
+
+impl fmt::Debug for TransmitterUDP {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("TransmitterUDP")
+            .field("address", &self.address)
+            .finish()
+    }
+}
+
 impl Drop for TransmitterUDP{
     fn drop(&mut self) {
         //println!("# TransmitterUDP.drop");

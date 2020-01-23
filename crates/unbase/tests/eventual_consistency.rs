@@ -1,19 +1,23 @@
 #![feature(proc_macro, conservative_impl_trait, generators)]
 
-extern crate unbase;
-extern crate futures_await as futures;
-
-use std::thread;
-use unbase::SubjectHandle;
+use unbase::{
+    SubjectHandle,
+    util::task::spawn_with_handle
+};
 use futures::stream::Stream;
-use std::sync::{Arc,Mutex};
+use std::{
+    sync::{Arc,Mutex}
+};
+use futures::future::RemoteHandle;
 
-#[test]
-fn eventual_basic() {
+#[async_test]
+async fn eventual_basic() {
 
     let net = unbase::Network::create_new_system();
     let mut simulator = unbase::network::transport::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
+
+    simulator.start();
 
     let context_a = unbase::Slab::new(&net).create_context();
     let context_b = unbase::Slab::new(&net).create_context();
@@ -24,8 +28,7 @@ fn eventual_basic() {
     assert!( rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
     assert!( context_b.get_subject_by_id( record_id ).unwrap().is_none(), "new subject should not yet have conveyed to slab B");
 
-    simulator.metronome(10);
-    simulator.wait_ticks(2);
+    simulator.quiesce().await;
 
     let rec_b1 = context_b.get_subject_by_id( record_id ).unwrap();
     assert!(rec_b1.is_some(), "new subject should now have conveyed to slab B");
@@ -34,27 +37,27 @@ fn eventual_basic() {
 
     rec_b1.set_value("animal_sound","Woof").unwrap();
 
-    simulator.wait_ticks(5);
+    simulator.quiesce().await;
 
     assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Woof");
 }
 
 
-#[test]
-fn eventual_detail() {
+#[async_test]
+async fn eventual_detail() {
 
     let net = unbase::Network::create_new_system();
     let mut simulator = unbase::network::transport::Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
     
-    simulator.metronome(10);
+    simulator.start();
 
     let slab_a = unbase::Slab::new(&net);
     let slab_b = unbase::Slab::new(&net);
     let slab_c = unbase::Slab::new(&net);
 
 
-    simulator.wait_ticks(3);
+    simulator.quiesce().await;
 
     assert!(slab_a.id == 0, "Slab A ID shoud be 0");
     assert!(slab_b.id == 1, "Slab B ID shoud be 1");
@@ -68,7 +71,7 @@ fn eventual_detail() {
     let context_b = slab_b.create_context();
     let context_c = slab_c.create_context();
 
-    simulator.pause();
+    simulator.quiesce_and_stop().await;
 
     let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo");
 
@@ -95,8 +98,8 @@ fn eventual_detail() {
             context_b.get_resident_subject_head_memo_ids(root_index_subject.id).len()
         ), (1,0), "Context A should  be seeded with the root index, and B should not" );
 
-    simulator.resume();
-    simulator.wait_ticks(5);
+    simulator.start();
+    simulator.quiesce().await;
 
     assert_eq!(context_b.get_resident_subject_head_memo_ids(root_index_subject.id).len(), 1, "Context b should now be seeded with the root index" );
 
@@ -117,7 +120,8 @@ fn eventual_detail() {
     
     {
         let last_observed_sound_c = last_observed_sound_c.clone();
-        thread::spawn(move || {
+
+        let applier: RemoteHandle<()> = spawn_with_handle(move || {
             let stream = rec_c1_clone.observe();
             for _ in stream.wait() {
                 let sound = rec_c1_clone.get_value("animal_sound").unwrap();
@@ -127,7 +131,7 @@ fn eventual_detail() {
         });
     }
 
-    simulator.wait_ticks(5);
+    simulator.quiesce().await;
 
     assert!(rec_b1.get_value("animal_sound").unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
     assert!(rec_c1.get_value("animal_sound").unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
@@ -147,7 +151,9 @@ fn eventual_detail() {
     assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Woof");
     assert_eq!(rec_b1.get_value("animal_type").unwrap(),  "Kanine");
 
-    simulator.wait_ticks(5);
+    // TODO add wait_ticks back to simulator
+//    simulator.wait_ticks(5);
+    simulator.quiesce().await;
 
     // Nowwww it should have propagated
     let expected_contents = ["I9001>I9003", "I9003>I9004", "I9004>I9005", "I9005>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,I9006", "I9006>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,R9002"];
