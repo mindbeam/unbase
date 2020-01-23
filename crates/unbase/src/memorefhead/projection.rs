@@ -16,6 +16,9 @@ use tracing::{
     debug
 };
 
+use futures::{
+    stream::StreamExt
+};
 
 impl MemoRefHead {
     /*pub fn fully_materialize( &self, slab: &Slab ) {
@@ -42,7 +45,7 @@ impl MemoRefHead {
 
     /// Project all edge links based only on the causal history of this head.
     /// The name is pretty gnarly, and this is very ripe for refactoring, but at least it says what it does.
-    pub async fn project_all_edge_links_including_empties (&self, slab: &SlabHandle) -> Vec<EdgeLink> {
+    pub async fn project_all_edge_links_including_empties (&self, slab: &SlabHandle) -> Result<Vec<EdgeLink>,RetrieveError> {
 
         //let mut edge_links : [Option<EdgeLink>; SUBJECT_MAX_RELATIONS];// = [None; SUBJECT_MAX_RELATIONS];
         let mut edge_links : Vec<Option<EdgeLink>> = Vec::with_capacity(SUBJECT_MAX_RELATIONS);
@@ -52,11 +55,10 @@ impl MemoRefHead {
             edge_links.push(None);
         }
 
-        let mut memostream = self.causal_memo_stream(slab);
+        let mut memostream = self.causal_memo_stream(slab.clone());
         while let Some(memo) = memostream.next().await {
 
-            let memo = memo.expect("Memo retrieval error. TODO: Update to use Result<..,RetrieveError>");
-            match memo.body {
+            match memo?.body {
                 MemoBody::FullyMaterialized { e : ref edgeset, .. } => {
 
                     // Iterate over all the entries in this EdgeSet
@@ -92,23 +94,25 @@ impl MemoRefHead {
             }
         }
 
-        edge_links.iter().enumerate().map(|(slot_id,maybe_link)| {
+        let out : Vec<EdgeLink> = edge_links.iter().enumerate().map(|(slot_id,maybe_link)| {
             // Fill in the non-visited links with vacants
             match maybe_link {
                 None           => EdgeLink::Vacant{ slot_id: slot_id as RelationSlotId },
                 Some(ref link) => link.clone()
             }
-        }).collect()
+        }).collect();
+
+        Ok(out)
     }
     /// Contextualized projection of occupied edges
     pub async fn project_occupied_edges (&self, slab: &SlabHandle) -> Result<Vec<EdgeLink>,RetrieveError> {
         let mut visited = [false;SUBJECT_MAX_RELATIONS];
         let mut edge_links : Vec<EdgeLink> = Vec::new();
 
-        let mut memostream = self.causal_memo_stream(slab);
+        let mut memostream = self.causal_memo_stream(slab.clone());
         'memo: while let Some(memo) = memostream.next().await {
 
-            let (edgeset,last) = match memo.body {
+            let (edgeset,last) = match memo?.body {
                 MemoBody::FullyMaterialized { e : ref edgeset, .. } => {
                     (edgeset,true)
                 },
@@ -149,7 +153,7 @@ impl MemoRefHead {
     pub async fn project_value ( &self, slab: &SlabHandle, key: &str ) -> Result<Option<String>,RetrieveError> {
 
         //TODO: consider creating a consolidated projection routine for most/all uses
-        let mut memostream = self.causal_memo_stream(slab).boxed();
+        let mut memostream = self.causal_memo_stream(slab.clone()).boxed();
         while let Some(memo) = memostream.next().await {
             //println!("# \t\\ Considering Memo {}", memo.id );
             if let Some((values, materialized)) = memo?.get_values() {
@@ -167,10 +171,11 @@ impl MemoRefHead {
     #[tracing::instrument]
     pub async fn project_relation ( &self, slab: &SlabHandle, key: RelationSlotId ) -> Result<Option<SubjectId>, RetrieveError> {
 
-        let mut memostream = self.causal_memo_stream(slab);
+        let mut memostream = self.causal_memo_stream(slab.clone());
         while let Some(memo) = memostream.next().await {
 
-            if let Some((relations,materialized)) = memo?.get_relations(){
+            let memo = memo?;
+            if let Some((relations,materialized)) = memo.get_relations(){
                 debug!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
                 if let Some(maybe_subject_id) = relations.get(&key) {
                     return match *maybe_subject_id {
@@ -189,10 +194,11 @@ impl MemoRefHead {
     }
     pub async fn project_edge ( &self, slab: &SlabHandle, key: RelationSlotId ) -> Result<Option<Self>, RetrieveError> {
 
-        let mut memostream = self.causal_memo_stream(slab);
+        let mut memostream = self.causal_memo_stream(slab.clone());
         while let Some(memo) = memostream.next().await {
 
-            if let Some((edges,materialized)) = memo?.get_edges(){
+            let memo = memo?;
+            if let Some((edges,materialized)) = memo.get_edges(){
                 debug!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), edges );
                 if let Some(head) = edges.get(&key) {
                     return Ok(Some(head.clone()));

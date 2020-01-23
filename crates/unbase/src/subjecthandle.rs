@@ -22,7 +22,6 @@ use std::fmt;
 use std::collections::HashMap;
 use futures::{
     channel::mpsc,
-    Stream
 };
 
 #[derive(Clone)]

@@ -1,21 +1,15 @@
 //TODO MERGE topic/topo-compaction3
 
-use core::ops::Deref;
 use std::{
     collections::HashMap,
     fmt,
     sync::{
-        Arc,
         RwLock,
-        Weak
     }
 };
 use tracing::debug;
 use futures::{
-    Future,
     StreamExt,
-    Stream,
-    Sink,
     channel::mpsc
 };
 use crate::{
@@ -84,7 +78,7 @@ impl fmt::Display for SubjectId {
 
 pub(crate) struct Subject {
     pub id:     SubjectId,
-    pub (crate) head: RwLock<MemoRefHead>
+    pub (crate) head: MemoRefHead
 }
 
 impl Subject {
@@ -92,15 +86,14 @@ impl Subject {
 
         let slab: &SlabHandle = &context.slab;
         let id = slab.generate_subject_id(stype);
-        //println!("# Subject({}).new()",subject_id);
+        debug!("Subject({}).new()",id);
 
-        let memoref = slab.new_memo_basic_noparent(
+        let head = slab.new_memo_noparent(
             Some(id),
             MemoBody::FullyMaterialized {v: vals, r: RelationSet::empty(), e: EdgeSet::empty(), t: stype.clone() }
-        );
-        let head = memoref.to_head();
+        ).to_head();
 
-        let subject = Subject{ id, head: RwLock::new(head.clone()) };
+        let mut subject = Subject{ id, head };
 
         //slab.subscribe_subject( &subject );
 
@@ -109,15 +102,14 @@ impl Subject {
         Ok(subject)
     }
     /// Notify whomever needs to know that a new subject has been created
-    fn update_referents (&self, context: &Context) -> Result<(),WriteError> {
+    async fn update_referents (&mut self, context: &Context) -> Result<(),WriteError> {
         match self.id.stype {
             SubjectType::IndexNode => {
-                let head = self.head.read().unwrap();
-                context.apply_head( &*head )?;
+                context.apply_head( &self.head ).await?;
             },
             SubjectType::Record    => {
                 // TODO: Consider whether this should accept head instead of subject
-                context.insert_into_root_index( self.id, &self )?;
+                context.insert_into_root_index( self.id, &self ).await?;
             }
         }
 
@@ -127,11 +119,8 @@ impl Subject {
         //println!("Subject.reconstitute({:?})", head);
         // Arguably we shouldn't ever be reconstituting a subject
 
-        if let Some(subject_id) = head.subject_id(){
-            let subject = Subject{
-                id:   subject_id,
-                head: RwLock::new(head)
-            };
+        if let Some(id) = head.subject_id(){
+            let subject = Subject{ id, head };
 
             // TODO3 - Should a resident subject be proactively updated? Or only when it's being observed?
             //context.slab.subscribe_subject( &subject );
@@ -142,100 +131,110 @@ impl Subject {
             Err(RetrieveError::InvalidMemoRefHead)
         }
     }
-    pub async fn get_value ( &self, context: &Context, key: &str ) -> Result<Option<String>, RetrieveError> {
+    pub async fn get_value ( &mut self, context: &Context, key: &str ) -> Result<Option<String>, RetrieveError> {
         //println!("# Subject({}).get_value({})",self.id,key);
 
         // TODO3: Consider updating index node ingress to mark relevant subjects as potentially dirty
         //        Use the lack of potential dirtyness to skip index traversal inside get_relevant_subject_head
-        let chead = context.get_relevant_subject_head(self.id)?;
+        let chead = context.get_relevant_subject_head(self.id).await?;
         //println!("\t\tGOT: {:?}", chead.memo_ids() );
-        self.head.write().unwrap().apply( &chead, &context.slab )?;
-        self.head.read().unwrap().project_value(&context.slab, key)
-    }
-    pub async fn get_relation ( &self, context: &Context, key: RelationSlotId ) -> Result<Option<Subject>, RetrieveError> {
-        //println!("# Subject({}).get_relation({})",self.id,key);
-        self.head.write().unwrap().apply( &context.get_resident_subject_head(self.id), &context.slab )?;
 
-        match self.head.read().unwrap().project_relation(&context.slab, key)? {
-            Some(subject_id) => context.get_subject(subject_id),
+        self.head.apply_mut( &chead, &context.slab ).await?;
+        self.head.project_value(&context.slab, key).await
+    }
+    pub async fn get_relation ( &mut self, context: &Context, key: RelationSlotId ) -> Result<Option<Subject>, RetrieveError> {
+        //println!("# Subject({}).get_relation({})",self.id,key);
+        self.head.apply_mut( &context.get_resident_subject_head(self.id), &context.slab ).await?;
+
+        match self.head.project_relation(&context.slab, key).await? {
+            Some(subject_id) => context.get_subject(subject_id).await,
             None             => Ok(None),
         }
     }
-    pub async fn get_edge ( &self, context: &Context, key: RelationSlotId ) -> Result<Option<Subject>, RetrieveError> {
-        match self.get_edge_head(context,key)? {
+    pub async fn get_edge ( &mut self, context: &Context, key: RelationSlotId ) -> Result<Option<Subject>, RetrieveError> {
+        match self.get_edge_head(context,key).await? {
             Some(head) => {
-                Ok( Some( context.get_subject_with_head(head)? ) )
+                Ok( Some( context.get_subject_with_head(head).await? ) )
             },
             None => {
                 Ok(None)
             }
         }
     }
-    pub async fn get_edge_head ( &self, context: &Context, key: RelationSlotId ) -> Result<Option<MemoRefHead>, RetrieveError> {
+    pub async fn get_edge_head ( &mut self, context: &Context, key: RelationSlotId ) -> Result<Option<MemoRefHead>, RetrieveError> {
         //println!("# Subject({}).get_relation({})",self.id,key);
-        self.head.write().unwrap().apply( &context.get_resident_subject_head(self.id), &context.slab )?;
-        self.head.read().unwrap().project_edge(&context.slab, key)
+        self.head.apply_mut( &context.get_resident_subject_head(self.id), &context.slab ).await?;
+        self.head.project_edge(&context.slab, key).await
     }
 
-    pub async fn set_value (&self, context: &Context, key: &str, value: &str) -> Result<bool,WriteError> {
+    pub async fn set_value (&mut self, context: &Context, key: &str, value: &str) -> Result<bool,WriteError> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        let slab = &context.slab;
-        {
-            let mut head = self.head.write().unwrap();
+        // TODO - do this in a single swap? May require unsafe
+        let mut head = MemoRefHead::Null;
+        std::mem::swap(&mut head,&mut self.head);
 
-            let memoref = slab.new_memo_basic(
-                Some(self.id),
-                head.clone(),
-                MemoBody::Edit(vals)
-            );
+        let new_head = context.slab.new_memo(
+            Some(self.id),
+            head,
+            MemoBody::Edit(vals)
+        ).to_head();
 
-            head.apply_memoref(&memoref, &slab).await?;
-        }
-        self.update_referents( context )?;
+        std::mem::swap(&mut self.head, &mut new_head);
+
+        // We shouldn't need to apply the new memoref. It IS the new head
+        // self.head.apply_memoref(&memoref, &slab).await?;
+
+        self.update_referents( context ).await?;
 
         Ok(true)
     }
-    pub fn set_relation (&self, context: &Context, key: RelationSlotId, relation: &Self) -> Result<(),WriteError> {
+    pub async fn set_relation (&mut self, context: &Context, key: RelationSlotId, relation: &Self) -> Result<(),WriteError> {
         //println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
         let mut relationset = RelationSet::empty();
         relationset.insert( key, relation.id );
 
-        let slab = &context.slab;
-        {
-            let mut head = self.head.write().unwrap();
+        // TODO - do this in a single swap? May require unsafe
+        let mut head = MemoRefHead::Null;
+        std::mem::swap(&mut head,&mut self.head);
 
-            let memoref = slab.new_memo(
-                Some(self.id),
-                head.clone(),
-                MemoBody::Relation(relationset)
-            );
+        let new_head = context.slab.new_memo(
+            Some(self.id),
+            head,
+            MemoBody::Relation(relationset)
+        ).to_head();
 
-            head.apply_memoref(&memoref, &slab)?;
-        };
+        std::mem::swap(&mut self.head, &mut new_head);
 
-        self.update_referents( context )
+        // We shouldn't need to apply the new memoref. It IS the new head
+        // self.head.apply_memoref(&memoref, &slab).await?;
+
+        self.update_referents( context ).await?;
+
+        Ok(())
     }
-    pub fn set_edge (&self, context: &Context, key: RelationSlotId, edge: &Self) -> Result<(),WriteError>{
+    pub async fn set_edge (&mut self, context: &Context, key: RelationSlotId, edge: &Self) -> Result<(),WriteError>{
         //println!("# Subject({}).set_edge({}, {})", &self.id, key, relation.id);
         let mut edgeset = EdgeSet::empty();
         edgeset.insert( key, edge.get_head() );
 
-        let slab = &context.slab;
-        {
-            let mut head = self.head.write().unwrap();
+        // TODO - do this in a single swap? May require unsafe
+        let mut head = MemoRefHead::Null;
+        std::mem::swap(&mut head,&mut self.head);
 
-            let memoref = slab.new_memo(
+        let new_head = context.slab.new_memo(
                 Some(self.id),
-                head.clone(),
+                head,
                 MemoBody::Edge(edgeset)
-            );
+            ).to_head();
 
-            head.apply_memoref(&memoref, &slab)?;
-        }
+        std::mem::swap(&mut self.head, &mut new_head);
 
-        self.update_referents( context )
+        // We shouldn't need to apply the new memoref. It IS the new head
+        // self.head.apply_memoref(&memoref, &slab).await?;
+
+        self.update_referents( context ).await
 
     }
     // // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
@@ -248,7 +247,7 @@ impl Subject {
     //     self.head.write().unwrap().apply(&new, &slab);
     // }
     pub fn get_head (&self) -> MemoRefHead {
-        self.head.read().unwrap().clone()
+        self.head.clone()
     }
     // pub fn get_contextualized_head(&self, context: &Context) -> MemoRefHead {
     //     let mut head = self.head.read().unwrap().clone();
@@ -256,9 +255,14 @@ impl Subject {
     //     head
     // }
     #[tracing::instrument]
-    pub async fn get_all_memo_ids ( &self, slab: SlabHandle ) -> Vec<MemoId> {
-        let memostream = self.head.read().unwrap().causal_memo_stream( slab );
-        memostream.map(|m| m.id).collect().await
+    pub async fn get_all_memo_ids ( &self, slab: SlabHandle ) -> Result<Vec<MemoId>,RetrieveError> {
+        let mut memostream = self.head.causal_memo_stream( slab );
+
+        let mut memo_ids = Vec::new();
+        while let Some(memo) = memostream.next().await {
+            memo_ids.push(memo?.id);
+        }
+        Ok(memo_ids)
     }
     // pub fn is_fully_materialized (&self, context: &Context) -> bool {
     //     self.head.read().unwrap().is_fully_materialized(&context.slab)
@@ -271,7 +275,7 @@ impl Subject {
     pub fn observe (&self, slab: &SlabHandle) -> mpsc::Receiver<MemoRefHead> {
         // get an initial value, rather than waiting for the value to change
         let (tx, rx) = mpsc::channel(1000);
-        tx.clone().send( self.head.read().unwrap().clone() ).wait().unwrap();
+        tx.clone().send( self.head.clone() ).wait().unwrap();
 
         // BUG HERE - not applying MRH to our head here, but double check as to what we were expecting from indexes
         slab.observe_subject( self.id, tx );

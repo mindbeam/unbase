@@ -367,7 +367,7 @@ impl ItemEditGuard{
     }
     fn apply_head (&mut self, apply_head: &MemoRefHead, slab: &SlabHandle) -> Result<bool,WriteError> {
         // NO LOCKS IN HERE
-        if !self.head.apply( apply_head, slab )? {
+        if !self.head.apply_mut(apply_head, slab )? {
             return Ok(false);
         }
         // It is inappropriate here to do a contextualized projection (one which considers the current context stash)

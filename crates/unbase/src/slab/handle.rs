@@ -8,7 +8,6 @@ use futures::{
 
 use tracing::{trace};
 use std::{
-    collections::hash_map::Entry,
     sync::Arc,
 };
 
@@ -16,7 +15,7 @@ use crate::{
     context::Context,
     error::{
         RetrieveError,
-        PeeringError
+        StorageOpDeclined,
     },
     memorefhead::MemoRefHead,
     Network,
@@ -72,7 +71,7 @@ impl SlabHandle {
         let mut channel = self.agent.memo_wait_channel(memoref.id);
 
         // formulate the request
-        let request_memo = self.new_memo_basic(
+        let request_memo = self.new_memo(
             None,
             MemoRefHead::Null,
             MemoBody::MemoRequest(
@@ -123,11 +122,11 @@ impl SlabHandle {
         Err(RetrieveError::NotFoundByDeadline)
     }
     #[tracing::instrument]
-    pub fn new_memo_basic (&self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
+    pub fn new_memo(&self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
         self.agent.new_memo(subject_id, parents, body)
     }
     #[tracing::instrument]
-    pub fn new_memo_basic_noparent (&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
+    pub fn new_memo_noparent(&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
         self.agent.new_memo(subject_id, MemoRefHead::Null, body)
     }
     pub fn generate_subject_id(&self, stype: SubjectType) -> SubjectId {
@@ -154,8 +153,8 @@ impl SlabHandle {
         self.agent.assert_slabref(peer_slab.my_ref.slab_id, &vec![presence])
     }
     /// Attempt to remotize the specified memos, waiting for up to the provided delay for them to be successfully remotized.
-    pub async fn remotize_memos(&self, memo_ids: &[MemoId], wait: Duration) -> Result<(), PeeringError> {
-        //TODO accept memoref instead of memoid
+    pub async fn remotize_memos(&self, memo_ids: &[MemoId], wait: Duration) -> Result<(), StorageOpDeclined> {
+        //TODO NEXT accept memoref instead of memoid
         self.agent.remotize_memos(memo_ids, wait).await
     }
     pub fn peer_slab_count (&self) -> usize {

@@ -1,5 +1,10 @@
-use super::*;
 use crate::{
+    error::{
+        RetrieveError,
+        WriteError,
+    },
+    index::IndexFixed,
+    memorefhead::MemoRefHead,
     slab::{
         EdgeLink,
         EdgeSet,
@@ -8,16 +13,30 @@ use crate::{
         RelationSet,
         RelationSlotId,
     },
-    subjecthandle::SubjectHandle
+    subject::{
+        SubjectType,
+        SubjectId,
+    },
+    subjecthandle::SubjectHandle,
 };
-use std::fmt;
+use super::Context;
+use timer::Delay;
+
+use std::{
+    collections::HashMap,
+    fmt,
+    sync::Arc,
+    time::{Instant,Duration}
+};
 
 /// User interface functions - Programmer API for `Context`
 impl Context {
     /// Retrive a Subject from the root index by ID
     pub async fn get_subject_by_id(&self, subject_id: SubjectId) -> Result<Option<SubjectHandle>, RetrieveError> {
 
-        match self.root_index(Duration::from_secs(1)).await?.get(&self, subject_id.id)? {
+        let root_index = self.root_index(Duration::from_secs(5)).await?;
+
+        match root_index.get(&self, subject_id.id).await? {
             Some(s) => {
                 let sh = SubjectHandle{
                     id: subject_id,
@@ -54,7 +73,7 @@ impl Context {
 
         memoref_count
     }
-    pub fn get_relevant_subject_head(&self, subject_id: SubjectId) -> Result<MemoRefHead, RetrieveError> {
+    pub async fn get_relevant_subject_head(&self, subject_id: SubjectId) -> Result<MemoRefHead, RetrieveError> {
         match subject_id {
             SubjectId{ stype: SubjectType::IndexNode,.. } => {
                 Ok(self.stash.get_head(subject_id).clone())
@@ -64,7 +83,9 @@ impl Context {
                 //       was pulled against a sufficiently identical context stash state.
                 //       Perhaps stash edit increment? how can we get this to be really granular?
 
-                match self.root_index()?.get_head(&self, subject_id.id)? {
+                let root_index = self.root_index(Duration::from_secs(5)).await?;
+
+                match root_index.get_head(&self, subject_id.id).await? {
                     Some(mrh) => Ok(mrh),
                     None      => Ok(MemoRefHead::Null)
                 }
@@ -75,7 +96,7 @@ impl Context {
         // TODO MERGE
         {
            let rg = self.root_index.read().unwrap();
-           if let Some( ref arcindex ) = *rg {
+           if let Some( ref arcindex ) = rg {
                return Ok( arcindex.clone() )
            }
         };
@@ -93,10 +114,7 @@ impl Context {
 
     }
     pub async fn root_index (&self, wait: Duration) -> Result<Arc<IndexFixed>, RetrieveError> {
-        use std::time::{Instant,Duration};
         let start = Instant::now();
-        let wait = Duration::from_millis(wait);
-        use std::thread;
 
         loop {
             if start.elapsed() > wait{

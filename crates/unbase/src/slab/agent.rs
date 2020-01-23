@@ -1,18 +1,18 @@
 use std::{
     collections::hash_map::Entry,
     sync::{Arc,RwLock,Mutex},
+    time::{Instant,Duration},
 };
 
 use tracing::debug;
 
 use crate::{
-    context::Context,
     error::StorageOpDeclined,
     memorefhead::MemoRefHead,
     network::{SlabRef, TransmitterArgs, Transmitter, TransportAddress},
     Network,
     slab::{
-        EdgeSet, RelationSet,
+        EdgeSet,
         SlabId, SlabRefInner, SlabPresence, SlabAnticipatedLifetime,
         MemoRef, MemoBody, Memo, MemoInner, MemoRefInner, MemoRefPtr,
         MemoPeerList, MemoPeeringStatus, MemoId, MemoPeer,
@@ -27,7 +27,6 @@ use futures::{
     channel::mpsc
 };
 use timer::Delay;
-use std::time::Duration;
 
 pub struct SlabAgent {
     pub id: SlabId,
@@ -782,7 +781,6 @@ impl SlabAgent {
     }
     /// Attempt to remotize the specified memos, waiting for up to the provided delay for them to be successfully remotized.
     pub async fn remotize_memos( &self, memo_ids: &[MemoId], wait: Duration ) -> Result<(),StorageOpDeclined> {
-        use std::time::{Instant,Duration};
         let start = Instant::now();
 
         loop {

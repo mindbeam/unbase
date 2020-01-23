@@ -5,7 +5,6 @@ use futures::{
     channel::mpsc,
     future::RemoteHandle,
 };
-use std::collections::hash_map::Entry;
 
 pub use self::{
     common_structs::*,

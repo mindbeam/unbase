@@ -13,6 +13,7 @@ pub enum RetrieveError {
 #[derive(PartialEq, Debug)]
 pub enum WriteError{
     RetrieveError(Box<RetrieveError>)
+    // This is silly. TODO - break this cycle and remove the Box
 }
 
 #[derive(PartialEq, Debug)]

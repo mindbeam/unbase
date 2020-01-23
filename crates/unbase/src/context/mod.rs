@@ -2,33 +2,35 @@ mod internal;
 pub mod stash;
 mod interface;
 
+use crate::{
+    error::{
+        RetrieveError,
+    },
+    index::IndexFixed,
+    slab::SlabHandle,
+    subjecthandle::SubjectHandle,
+};
+
+use self::stash::Stash;
+use timer::Delay;
+
+use std::{
+    sync::{Arc, RwLock},
+    ops::Deref,
+    time::{Instant, Duration},
+};
+
 use futures::{
     future::{
         RemoteHandle
     },
     channel::{
-        mpsc::{self, Sender}
+        mpsc,
     },
     StreamExt,
 };
-use crate::{
-    error::*,
-    index::IndexFixed,
-    memorefhead::*,
-    subject::{Subject,SubjectId,SubjectType},
-    subjecthandle::SubjectHandle,
-};
 
-use std::collections::HashMap;
-
-use self::stash::Stash;
-
-use std::sync::{Arc,Weak,Mutex,RwLock};
-use std::ops::Deref;
-use crate::slab::SlabHandle;
 use tracing::{span, Level};
-use timer::Delay;
-use std::time::Duration;
 
 #[derive(Clone)]
 pub struct Context(Arc<ContextInner>);
@@ -84,15 +86,13 @@ impl Context {
         //if I have an index for that field {
         //    use it
         //} else if I am allowed to scan this index...
-        self.root_index()?.scan_kv(self, key, val).await
+        self.root_index(Duration::from_secs(5)).await?.scan_kv(self, key, val).await
         //}
     }
     pub async fn fetch_kv(&self, key: &str, val: &str, wait: Duration) -> Result<SubjectHandle, RetrieveError> {
-        use std::time::{Instant, Duration};
         let start = Instant::now();
-        use std::thread;
 
-        self.root_index_wait(wait)?;
+        self.root_index(wait).await?;
 
         // TODO ASYNC NOTIFY
         loop {
@@ -101,7 +101,7 @@ impl Context {
                 return Err(RetrieveError::NotFoundByDeadline)
             }
 
-            if let Some(rec) = self.try_fetch_kv(key, val)? {
+            if let Some(rec) = self.try_fetch_kv(key, val).await? {
                 return Ok(rec)
             }
 

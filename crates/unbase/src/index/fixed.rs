@@ -4,14 +4,18 @@ use crate::{
         RetrieveError,
         WriteError,
     },
-    memorefhead::{MemoRefHead,RelationSlotId},
+    memorefhead::MemoRefHead,
+    slab::{
+        RelationSlotId
+    },
     subject::{
         Subject,
-        SubjectType
+        SubjectType,
+        SUBJECT_MAX_RELATIONS,
     },
     SubjectHandle,
 };
-use std::collections::HashMap;
+
 use futures::{
     future::{
         FutureExt,
@@ -19,9 +23,10 @@ use futures::{
     }
 };
 
-use std::sync::{Arc,Mutex};
-use std::ops::Deref;
-use std::fmt;
+use std::{
+    collections::HashMap,
+    fmt,
+};
 
 use tracing::debug;
 
@@ -46,21 +51,18 @@ impl IndexFixed {
     pub fn insert_subject(&self, key: u64, subjecthandle: &SubjectHandle) -> Result<(),WriteError> {
         self.insert(&subjecthandle.context, key, &subjecthandle.subject)
     }
-    pub (crate) fn insert <'a> (&self, context: &Context, key: u64, subject: &Subject) -> Result<(),WriteError> {
-        //println!("IndexFixed.insert({}, {:?})", key, subject );
-        //TODO: this is dumb, figure out how to borrow here
-        //      and replace with borrows for nested subjects
-        let node = &self.root;
+    pub (crate) async fn insert <'a> (&mut self, context: &Context, key: u64, subject: &Subject) -> Result<(),WriteError> {
+        debug!("IndexFixed.insert({}, {:?})", key, subject );
 
         // TODO: optimize index node creation so we're not changing relationship as an edit
         // after the fact if we don't strictly have to. That said, this gives us a great excuse
         // to work on the consistency model, so I'm doing that first.
 
-        self.recurse_set(context, 0, key, node, subject).await
+        self.recurse_set(context, 0, key, &mut self.root, subject.clone()).await
     }
     // Temporarily managing our own bubble-up
     // TODO: finish moving the management of this to context / context::subject_graph
-    fn recurse_set(&self, context: Context, tier: usize, key: u64, node: Subject, subject: Subject) -> LocalBoxFuture<Result<(),WriteError>>{
+    fn recurse_set <'a> (&'a self, context: &'a Context, tier: usize, key: u64, node: &'a mut Subject, subject: Subject) -> LocalBoxFuture<'a, Result<(),WriteError>>{
         async move {
             // TODO: refactor this in a way that is generalizable for strings and such
             // Could just assume we're dealing with whole bytes here, but I'd rather
@@ -75,19 +77,19 @@ impl IndexFixed {
                 //println!("]]] end of the line");
                 node.set_edge(context, y as RelationSlotId, &subject).await
             } else {
-                match node.get_edge(context, y)?.await {
-                    Some(n) => {
-                        self.recurse_set(context, tier + 1, key, &n, subject)
+                match node.get_edge(context, y).await? {
+                    Some(ref mut n) => {
+                        self.recurse_set(context, tier + 1, key, n, subject).await
                     }
                     None => {
                         let mut values = HashMap::new();
                         values.insert("tier".to_string(), tier.to_string());
 
-                        let new_node = Subject::new(context, SubjectType::IndexNode, values)?;
+                        let mut new_node = Subject::new(context, SubjectType::IndexNode, values).await?;
 
-                        node.set_edge(context, y, &new_node)?.await;
+                        node.set_edge(context, y, &new_node).await?;
 
-                        self.recurse_set(context, tier + 1, key, &new_node, subject).await;
+                        self.recurse_set(context, tier + 1, key, &mut new_node, subject).await
                     }
                 }
             }
@@ -113,14 +115,14 @@ impl IndexFixed {
         }
     }
     #[tracing::instrument]
-    pub async fn get ( &self, context: Context, key: u64 ) -> Result<Option<Subject>, RetrieveError> {
-        match self.get_head( context, key )? {
-            Some(mrh) => Ok(Some( context.get_subject_with_head( mrh )? )),
+    pub async fn get ( &self, context: &Context, key: u64 ) -> Result<Option<Subject>, RetrieveError> {
+        match self.get_head( context, key ).await? {
+            Some(mrh) => Ok(Some( context.get_subject_with_head( mrh ).await? )),
             None      => Ok(None)
         }
     }
     #[tracing::instrument]
-    pub async fn get_head ( &self, context: Context, key: u64 ) -> Result<Option<MemoRefHead>, RetrieveError> {
+    pub async fn get_head ( &self, context: &Context, key: u64 ) -> Result<Option<MemoRefHead>, RetrieveError> {
 
         //TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
@@ -139,7 +141,7 @@ impl IndexFixed {
                 return node.get_edge_head( context, y as RelationSlotId).await;
 
             }else{
-                match node.get_edge( context, y)?.await {
+                match node.get_edge( context, y).await? {
                     Some(n) => node = n,
                     None    => return Ok(None),
                 }
@@ -150,7 +152,7 @@ impl IndexFixed {
         panic!("Sanity error");
 
     }
-    pub async fn scan_kv( &self, context: &Context, key: &str, value: &str ) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn scan_kv( &mut self, context: &Context, key: &str, value: &str ) -> Result<Option<SubjectHandle>, RetrieveError> {
         self.scan(&context, |r| {
             if let Some(v) = r.get_value(key) {
                 Ok(v == value)
@@ -159,18 +161,15 @@ impl IndexFixed {
             }
         }).await
     }
-    pub async fn scan<F> ( &self, context: Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
+    pub async fn scan<F> ( &mut self, context: &Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
         where F: Fn( &SubjectHandle ) -> Result<bool,RetrieveError> {
 
-        let node = self.root.clone();
-
-        self.scan_recurse( context, node, 0, &f ).await
+        self.scan_recurse( context, &mut self.root, 0, &f ).await
     }
 
-    fn scan_recurse <F> ( &self, context: Context, node: Subject, tier: usize, f: &F ) -> LocalBoxFuture<Result<Option<SubjectHandle>, RetrieveError>>
+    fn scan_recurse <'a, F> ( &'a self, context: &'a Context, node: &'a mut Subject, tier: usize, f: &'a F ) -> LocalBoxFuture<'a, Result<Option<SubjectHandle>, RetrieveError>>
         where F: Fn( &SubjectHandle ) -> Result<bool,RetrieveError> {
         async move {
-            //TODO NEXT
 
             // for _ in 0..tier+1 {
             //     print!("\t");
@@ -189,8 +188,8 @@ impl IndexFixed {
             } else {
                 //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
                 for slot_id in 0..SUBJECT_MAX_RELATIONS {
-                    if let Some(child) = node.get_edge(context, slot_id as RelationSlotId)? {
-                        if let Some(mrh) = self.scan_recurse(context, &child, tier + 1, f)? {
+                    if let Some(child) = node.get_edge(context, slot_id as RelationSlotId).await? {
+                        if let Some(mrh) = self.scan_recurse(context, &mut child, tier + 1, f).await? {
                             return Ok(Some(mrh))
                         }
                     }
@@ -200,6 +199,13 @@ impl IndexFixed {
             Ok(None)
 
         }.boxed_local()
+    }
+}
+
+impl fmt::Debug for IndexFixed {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("IndexFixed")
+            .finish()
     }
 }
 

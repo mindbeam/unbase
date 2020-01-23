@@ -26,6 +26,7 @@ use crate::{
         SubjectId, SubjectType
     }
 };
+use crate::error::RetrieveError;
 
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
@@ -139,7 +140,7 @@ impl Memo {
         }
     }
     #[tracing::instrument]
-    pub fn descends<'a>  (&'a self, memoref: &'a MemoRef, slab: &'a SlabHandle) -> BoxFuture<'a, bool> {
+    pub fn descends<'a>  (&'a self, memoref: &'a MemoRef, slab: &'a SlabHandle) -> BoxFuture<'a, Result<bool,RetrieveError>> {
         // Not really sure if this is right
 
         //TODO: parallelize this
@@ -150,16 +151,16 @@ impl Memo {
             // breadth-first
             for parent in self.parents.iter() {
                 if parent == memoref {
-                    return true.into()
+                    return Ok(true)
                 };
             }
             // Ok now depth
             for parent in self.parents.iter() {
-                if parent.descends(&memoref, slab).await {
-                    return true.into()
+                if parent.descends(&memoref, slab).await? {
+                    return Ok(true)
                 }
             }
-            return false.into();
+            return Ok(false)
         }.boxed()
     }
 }
