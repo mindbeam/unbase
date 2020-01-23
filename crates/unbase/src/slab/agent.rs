@@ -344,15 +344,20 @@ impl SlabAgent {
             }
         };
     }
+
     #[tracing::instrument]
     pub fn recv_memoref (&self, memoref : MemoRef){
 
         if let Some(subject_id) = memoref.subject_id {
 
-            // should we split this up into:
-            - (agent) get index subs
-            - (handle) async deliver
-            - (agent) remove failed subs
+            // Strategy 1 - try_send first, then clone and return the senders which were not disconnected
+            // Strategy 2 - filter by sender.is_closed, then clone and return all senders
+            // Both strategies need to either return senders which were not able to be sent -OR- to have
+            // this be an async function, which breaks our morritorium on async functions in agent
+
+            // As a temporary measure I think I'm going to just use try_send for now, and drop any messages
+            // to the floor for channels which were at capacity. Obviously this is broken, but I can
+            // probably get away with it until after the topic/topo-compression3 branch is fully merged
 
             // OR should we break our rule against async functions here
             if let SubjectType::IndexNode = subject_id.stype {
