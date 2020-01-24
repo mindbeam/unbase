@@ -23,7 +23,11 @@ use crate::{
     }
 };
 use futures::{
-    channel::mpsc
+    channel::mpsc,
+    SinkExt,
+    future::{
+        join_all
+    },
 };
 
 pub struct SlabAgent {
@@ -346,53 +350,53 @@ impl SlabAgent {
     }
 
     #[tracing::instrument]
-    pub fn recv_memoref (&self, memoref : MemoRef){
+    pub async fn recv_memoref (&self, memoref: MemoRef) {
 
-        if let Some(subject_id) = memoref.subject_id {
+        let subject_id = match memoref.subject_id {
+            Some(subject_id) => subject_id,
+            None => return,
+        };
 
-            // Strategy 1 - try_send first, then clone and return the senders which were not disconnected
-            // Strategy 2 - filter by sender.is_closed, then clone and return all senders
-            // Both strategies need to either return senders which were not able to be sent -OR- to have
-            // this be an async function, which breaks our morritorium on async functions in agent
+        let mut futs = Vec::new();
 
-            // As a temporary measure I think I'm going to just use try_send for now, and drop any messages
-            // to the floor for channels which were at capacity. Obviously this is broken, but I can
-            // probably get away with it until after the topic/topo-compression3 branch is fully merged
+        {
+            let state = self.state.read().unwrap();
 
-            // OR should we break our rule against async functions here
             if let SubjectType::IndexNode = subject_id.stype {
                 // TODO3 - update this to consider popularity of this node, and/or common points of reference with a given context
-                let mut senders = self.index_subscriptions.lock().unwrap();
+                // selective hearing?
 
-                let state = self.state.read().unwrap();
-
-                let len = state.index_subscriptions.len();
-                for i in (0..len).rev() {
-                    if let Err(_) = senders[i].clone().send(memoref.to_head()).wait(){
-                        // TODO3: proactively remove senders when the receiver goes out of scope. Necessary for memory bloat
-                        senders.swap_remove(i);
-                    }
-                }
-
-            }
-
-            if let Some(ref mut senders) = self.subject_subscriptions.lock().unwrap().get_mut( &subject_id ) {
+                let senders = &mut state.index_subscriptions;
                 let len = senders.len();
 
                 for i in (0..len).rev() {
-                    match senders[i].clone().send(memoref.to_head()).wait() {
-                        Ok(..) => { }
-                        Err(_) => {
-                            // TODO3: proactively remove senders when the receiver goes out of scope. Necessary for memory bloat
-                            senders.swap_remove(i);
-                        }
+                    let sender = &senders[i];
+                    if sender.is_closed() {
+                        // TODO3: proactively remove senders when the receiver goes out of scope. Necessary for memory bloat
+                        senders.swap_remove(i);
+                    } else {
+                        futs.push(sender.send(memoref.to_head()) );
                     }
                 }
             }
 
+            if let Some(ref mut senders) = state.subject_subscriptions.get_mut( &subject_id ) {
+
+                let len = senders.len();
+                for i in (0..len).rev() {
+                    let sender = &senders[i];
+                    if sender.is_closed() {
+                        // TODO3: proactively remove senders when the receiver goes out of scope. Necessary for memory bloat
+                        senders.swap_remove(i);
+                    } else {
+                        futs.push(sender.send(memoref.to_head()) );
+                    }
+                }
+            }
         }
 
-
+        // No lock held when we poll the futures
+        join_all(futs).await;
     }
     #[tracing::instrument]
     pub fn localize_slabref(&self, slabref: &SlabRef ) -> SlabRef {

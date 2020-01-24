@@ -57,8 +57,8 @@ impl Context {
 
         let stash = Stash::new();
 
-        let (tx, rx) = mpsc::channel(1);
-        let rx = slab.observe_index( tx );
+        let (tx, mut rx) = mpsc::channel(1);
+        slab.observe_index( tx );
 
         let applier_slab = slab.clone();
         let applier_stash = stash.clone();
@@ -66,9 +66,9 @@ impl Context {
         let span = span!(Level::TRACE, "Context Applier");
 
         let applier: RemoteHandle<()> = crate::util::task::spawn_with_handle(
-            rx.for_each(move |(inner,subject_id,head)| {
+            rx.for_each(move |head| {
                 let _guard = span.enter();
-                applier_stash.apply_head(applier_slab.clone(), head)
+                applier_stash.apply_head(&applier_slab, &head);
             })
         );
 

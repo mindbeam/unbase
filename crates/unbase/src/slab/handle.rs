@@ -12,7 +12,6 @@ use std::{
 };
 
 use crate::{
-    context::Context,
     error::{
         RetrieveError,
         StorageOpDeclined,
@@ -131,14 +130,6 @@ impl SlabHandle {
     }
     pub fn generate_subject_id(&self, stype: SubjectType) -> SubjectId {
         self.agent.generate_subject_id(stype)
-    }
-    #[tracing::instrument]
-    pub fn subscribe_subject(&self, subject_id: u64, context: &Context) {
-        self.agent.subscribe_subject(subject_id, context);
-    }
-    #[tracing::instrument]
-    pub fn unsubscribe_subject(&self, subject_id: u64, context: &Context) {
-        self.agent.unsubscribe_subject(subject_id, context);
     }
     #[tracing::instrument]
     pub fn slabref_from_local_slab(&self, peer_slab: &SlabHandle) -> SlabRef {

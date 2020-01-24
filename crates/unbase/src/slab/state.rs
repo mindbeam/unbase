@@ -54,7 +54,7 @@ impl SlabState{
             peer_refs: Vec::new(),
             memo_wait_channels: HashMap::new(),
             subject_subscriptions: HashMap::new(),
-            index_subscriptions:: Vec::new(),
+            index_subscriptions: Vec::new(),
             running: true,
         }
     }

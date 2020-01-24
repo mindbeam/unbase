@@ -24,7 +24,7 @@ use crate::{
 
 };
 /// Stash of Subject MemoRefHeads which must be considered for state projection
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub (in super) struct Stash{
     inner: Arc<Mutex<StashInner>>
 }
