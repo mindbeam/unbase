@@ -112,7 +112,9 @@ impl MemoRefHead {
         let mut memostream = self.causal_memo_stream(slab.clone());
         'memo: while let Some(memo) = memostream.next().await {
 
-            let (edgeset,last) = match memo?.body {
+            let memo = memo?;
+
+            let (edgeset,last) = match memo.body {
                 MemoBody::FullyMaterialized { e : ref edgeset, .. } => {
                     (edgeset,true)
                 },

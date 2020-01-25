@@ -357,10 +357,10 @@ impl SlabAgent {
             None => return,
         };
 
-        let mut futs = Vec::new();
+//        let mut futs = Vec::new();
 
         {
-            let state = self.state.read().unwrap();
+            let mut state = self.state.write().unwrap();
 
             if let SubjectType::IndexNode = subject_id.stype {
                 // TODO3 - update this to consider popularity of this node, and/or common points of reference with a given context
@@ -369,13 +369,29 @@ impl SlabAgent {
                 let senders = &mut state.index_subscriptions;
                 let len = senders.len();
 
+                //TODO POSTMERGE - alright, this approach isn't going to work.
+                //    fn send(&mut self, item: Item) -> Send<'_, Self, Item>
+                // it returns a Send future which contains &mut self
+                // so collecting these futures won't work unless we clone...
+                // and maybe not even then, because the clones won't live long enough for &mut self
+
                 for i in (0..len).rev() {
-                    let sender = &senders[i];
-                    if sender.is_closed() {
-                        // TODO3: proactively remove senders when the receiver goes out of scope. Necessary for memory bloat
-                        senders.swap_remove(i);
-                    } else {
-                        futs.push(sender.send(memoref.to_head()) );
+                    let r = {
+                        senders[i].try_send(memoref.to_head())
+                    };
+
+                    match r {
+                        Ok(_) => {},
+                        Err(e) => {
+
+                            // the fact that SendError.kind is private is :facepalm:
+                            if e.is_disconnected() {
+                                senders.swap_remove(i);
+                            }else{
+                                panic!("queue is full, and I haven't implemented async sending yet")
+                            }
+
+                        }
                     }
                 }
             }
@@ -384,19 +400,28 @@ impl SlabAgent {
 
                 let len = senders.len();
                 for i in (0..len).rev() {
-                    let sender = &senders[i];
-                    if sender.is_closed() {
-                        // TODO3: proactively remove senders when the receiver goes out of scope. Necessary for memory bloat
-                        senders.swap_remove(i);
-                    } else {
-                        futs.push(sender.send(memoref.to_head()) );
+                    let r = {
+                        senders[i].try_send(memoref.to_head())
+                    };
+
+                    match r {
+                        Ok(_) => {},
+                        Err(e) => {
+
+                            // the fact that SendError.kind is private is :facepalm:
+                            if e.is_disconnected() {
+                                senders.swap_remove(i);
+                            }else{
+                                panic!("queue is full, and I haven't implemented async sending yet")
+                            }
+
+                        }
                     }
                 }
             }
         }
 
-        // No lock held when we poll the futures
-        join_all(futs).await;
+//        join_all(futs).await;
     }
     #[tracing::instrument]
     pub fn localize_slabref(&self, slabref: &SlabRef ) -> SlabRef {
@@ -424,12 +449,12 @@ impl SlabAgent {
             MemoRefHead::Null                    => MemoRefHead::Null,
             MemoRefHead::Anonymous { ref head, .. }  => MemoRefHead::Anonymous{
                 owning_slab_id: self.id,
-                head: head.iter().map(|mr| self.localize_memoref(mr, from_slabref, include_memos )).collect()
+                head: head.iter().map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos )).collect()
             },
             MemoRefHead::Subject{ subject_id, ref head, .. } => MemoRefHead::Subject {
                 owning_slab_id: self.id,
                 subject_id: subject_id.clone(),
-                head: head.iter().map(|mr| self.localize_memoref(mr, from_slabref, include_memos )).collect()
+                head: head.iter().map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos )).collect()
             }
         }
     }

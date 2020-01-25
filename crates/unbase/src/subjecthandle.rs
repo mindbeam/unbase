@@ -44,21 +44,21 @@ impl SubjectHandle{
 
         Ok(handle)
     }
-    pub fn new_blank ( context: &Context ) -> Result<SubjectHandle,WriteError> {
-        Self::new( context, HashMap::new() )
+    pub async fn new_blank ( context: &Context ) -> Result<SubjectHandle,WriteError> {
+        Self::new( context, HashMap::new() ).await
     }
-    pub fn new_kv ( context: &Context, key: &str, value: &str ) -> Result<SubjectHandle,WriteError> {
+    pub async fn new_kv ( context: &Context, key: &str, value: &str ) -> Result<SubjectHandle,WriteError> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        Self::new( context, vals )
+        Self::new( context, vals ).await
     }
-    pub fn get_value ( &self, key: &str ) -> Option<String> {
-        self.subject.get_value(&self.context, key).expect("Retrieval error. TODO: Convert to Result<..,RetrieveError>")
+    pub async fn get_value ( &mut self, key: &str ) -> Result<Option<String>,RetrieveError> {
+        self.subject.get_value(&self.context, key).await
     }
-    pub fn get_relation ( &self, key: RelationSlotId ) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn get_relation ( &mut self, key: RelationSlotId ) -> Result<Option<SubjectHandle>, RetrieveError> {
 
-        match self.subject.get_relation(&self.context, key)?{
+        match self.subject.get_relation(&self.context, key).await?{
         Some(rel_sub_subject) => {
             Ok(Some(SubjectHandle{
                 id: rel_sub_subject.id,
@@ -69,14 +69,14 @@ impl SubjectHandle{
             None => Ok(None)
         }
     }
-    pub fn set_value (&self, key: &str, value: &str) -> Result<bool,WriteError> {
-        self.subject.set_value(&self.context, key, value)
+    pub async fn set_value (&mut self, key: &str, value: &str) -> Result<bool,WriteError> {
+        self.subject.set_value(&self.context, key, value).await
     }
-    pub fn set_relation (&self, key: RelationSlotId, relation: &Self) -> Result<(),WriteError> {
-        self.subject.set_relation(&self.context, key, &relation.subject)
+    pub async fn set_relation (&mut self, key: RelationSlotId, relation: &Self) -> Result<(),WriteError> {
+        self.subject.set_relation(&self.context, key, &relation.subject).await
     }
-    pub fn get_all_memo_ids ( &self ) -> Vec<MemoId> {
-        self.subject.get_all_memo_ids( self.context.slab.clone() )
+    pub async fn get_all_memo_ids ( &self ) -> Result<Vec<MemoId>,RetrieveError> {
+        self.subject.get_all_memo_ids( self.context.slab.clone() ).await
     }
     pub fn observe (&self) -> mpsc::Receiver<MemoRefHead> {
         self.subject.observe(&self.context.slab)

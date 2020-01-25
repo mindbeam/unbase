@@ -176,7 +176,7 @@ impl MemoRefHead {
         }
     }
     #[tracing::instrument]
-    pub async fn apply_mut(mut self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool,WriteError> {
+    pub async fn apply_mut(&mut self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool,WriteError> {
         let mut applied = false;
         // TODO make this concurrent?
         // TODO NEXT - Make this immutable
@@ -187,6 +187,20 @@ impl MemoRefHead {
         }
 
         Ok(applied)
+    }
+    #[tracing::instrument]
+    pub async fn apply(mut self, other: &MemoRefHead, slab: &SlabHandle) -> Result<(MemoRefHead, bool),WriteError> {
+        let mut applied = false;
+        // TODO make this concurrent?
+
+        for new in other.iter(){
+            if self.apply_memoref( new, slab ).await? {
+                applied = true;
+            };
+        }
+
+        //TODO reimplement this with immutability
+        Ok((self, applied))
     }
     pub async fn descends_or_contains (&self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool,RetrieveError> {
 
@@ -371,7 +385,7 @@ impl CausalMemoStream {
             Some(id) if id != slab.my_ref.slab_id => {
                 panic!("requesting slab does not match owning slab");
             },
-            None => {}
+            _ => {}
         }
 
         CausalMemoStream {

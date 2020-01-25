@@ -20,7 +20,8 @@ use futures::{
     future::{
         FutureExt,
         LocalBoxFuture
-    }
+    },
+    Future,
 };
 
 use std::{
@@ -153,53 +154,64 @@ impl IndexFixed {
 
     }
     pub async fn scan_kv( &mut self, context: &Context, key: &str, value: &str ) -> Result<Option<SubjectHandle>, RetrieveError> {
-        self.scan(&context, |r| {
-            if let Some(v) = r.get_value(key) {
+        // TODO - make scan_concurrent or something like that.
+        // The problem with concurrent scanning is: how do we want to manage output ordering?
+        // Presumably scan should be generic over output Vec<T>
+        // That way, closure execution won't be (deterministically/lexicographically) ordered, but scan() -> Vec<T> will be
+
+        self.scan(&context, async move |r| {
+            if let Some(v) = r.get_value(key).await? {
                 Ok(v == value)
             }else{
                 Ok(false)
             }
         }).await
     }
-    pub async fn scan<F> ( &mut self, context: &Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
-        where F: Fn( &SubjectHandle ) -> Result<bool,RetrieveError> {
+    pub async fn scan<'a, 'b, F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
+        where
+            F: Fn( &'b mut SubjectHandle ) -> Fut,
+            Fut: Future<Output=Result<bool,RetrieveError>> + 'b
+    {
 
-        self.scan_recurse( context, &mut self.root, 0, &f ).await
+        unimplemented!()
+//        self.scan_recurse( context, &mut self.root, 0, &f ).await
     }
 
-    fn scan_recurse <'a, F> ( &'a self, context: &'a Context, node: &'a mut Subject, tier: usize, f: &'a F ) -> LocalBoxFuture<'a, Result<Option<SubjectHandle>, RetrieveError>>
-        where F: Fn( &SubjectHandle ) -> Result<bool,RetrieveError> {
-        async move {
-
-            // for _ in 0..tier+1 {
-            //     print!("\t");
-            // }
-
-            if tier as u8 == self.depth - 1 {
-                //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
-                for slot_id in 0..SUBJECT_MAX_RELATIONS {
-                    if let Some(mrh) = node.get_edge_head(context, slot_id as RelationSlotId).await? {
-                        let sh = context.get_subject_handle_with_head(mrh).await?;
-                        if f(&sh)? {
-                            return Ok(Some(sh))
-                        }
-                    }
-                }
-            } else {
-                //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
-                for slot_id in 0..SUBJECT_MAX_RELATIONS {
-                    if let Some(child) = node.get_edge(context, slot_id as RelationSlotId).await? {
-                        if let Some(mrh) = self.scan_recurse(context, &mut child, tier + 1, f).await? {
-                            return Ok(Some(mrh))
-                        }
-                    }
-                }
-            }
-
-            Ok(None)
-
-        }.boxed_local()
-    }
+//    fn scan_recurse <'a, 'b, F, Fut> ( &'a self, context: &'a Context, node: &'b mut Subject, tier: usize, f: &'a F ) -> LocalBoxFuture<'b, Result<Option<SubjectHandle>, RetrieveError>>
+//        where
+//            F: Fn( &'b mut SubjectHandle ) -> Fut,
+//            Fut: Future<Output=Result<bool,RetrieveError>> + 'b {
+//        async move {
+//
+//            // for _ in 0..tier+1 {
+//            //     print!("\t");
+//            // }
+//
+//            if tier as u8 == self.depth - 1 {
+//                //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
+//                for slot_id in 0..SUBJECT_MAX_RELATIONS {
+//                    if let Some(mrh) = node.get_edge_head(context, slot_id as RelationSlotId).await? {
+//                        let mut sh = context.get_subject_handle_with_head(mrh).await?;
+//                        if f(&mut sh).await? {
+//                            return Ok(Some(sh))
+//                        }
+//                    }
+//                }
+//            } else {
+//                //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
+//                for slot_id in 0..SUBJECT_MAX_RELATIONS {
+//                    if let Some(child) = node.get_edge(context, slot_id as RelationSlotId).await? {
+//                        if let Some(mrh) = self.scan_recurse(context, &mut child, tier + 1, f).await? {
+//                            return Ok(Some(mrh))
+//                        }
+//                    }
+//                }
+//            }
+//
+//            Ok(None)
+//
+//        }.boxed_local()
+//    }
 }
 
 impl fmt::Debug for IndexFixed {

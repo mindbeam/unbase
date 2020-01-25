@@ -63,11 +63,13 @@ impl Context {
         let applier_slab = slab.clone();
         let applier_stash = stash.clone();
 
-        let span = span!(Level::TRACE, "Context Applier");
+//        let span = span!(Level::TRACE, "Context Applier");
 
         let applier: RemoteHandle<()> = crate::util::task::spawn_with_handle(
             rx.for_each(async move |head| {
-                let _guard = span.enter();
+
+//                let _guard = span.enter();
+
                 // TODO NEXT - how do we handle a head-application error on the background applier?
                 // Probably shouldn't retry indefinitely.
                 // Some ideas:

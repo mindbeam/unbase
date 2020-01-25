@@ -176,7 +176,7 @@ impl Subject {
         let mut head = MemoRefHead::Null;
         std::mem::swap(&mut head,&mut self.head);
 
-        let new_head = context.slab.new_memo(
+        let mut new_head = context.slab.new_memo(
             Some(self.id),
             head,
             MemoBody::Edit(vals)
@@ -200,7 +200,7 @@ impl Subject {
         let mut head = MemoRefHead::Null;
         std::mem::swap(&mut head,&mut self.head);
 
-        let new_head = context.slab.new_memo(
+        let mut new_head = context.slab.new_memo(
             Some(self.id),
             head,
             MemoBody::Relation(relationset)
@@ -224,7 +224,7 @@ impl Subject {
         let mut head = MemoRefHead::Null;
         std::mem::swap(&mut head,&mut self.head);
 
-        let new_head = context.slab.new_memo(
+        let mut new_head = context.slab.new_memo(
                 Some(self.id),
                 head,
                 MemoBody::Edge(edgeset)
@@ -275,7 +275,7 @@ impl Subject {
 
     pub fn observe (&self, slab: &SlabHandle) -> mpsc::Receiver<MemoRefHead> {
         // get an initial value, rather than waiting for the value to change
-        let (mut tx, rx) = mpsc::channel(1000);
+        let (tx, rx) = mpsc::channel(1000);
 //        tx.send( self.head.clone() ).wait().unwrap();
 
         // BUG HERE - not applying MRH to our head here, but double check as to what we were expecting from indexes
