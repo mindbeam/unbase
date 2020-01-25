@@ -422,10 +422,12 @@ impl SlabAgent {
 
         match mrh {
             MemoRefHead::Null                    => MemoRefHead::Null,
-            MemoRefHead::Anonymous { ref head }  => MemoRefHead::Anonymous{
+            MemoRefHead::Anonymous { ref head, .. }  => MemoRefHead::Anonymous{
+                owning_slab_id: self.id,
                 head: head.iter().map(|mr| self.localize_memoref(mr, from_slabref, include_memos )).collect()
             },
-            MemoRefHead::Subject{ subject_id, ref head } => MemoRefHead::Subject {
+            MemoRefHead::Subject{ subject_id, ref head, .. } => MemoRefHead::Subject {
+                owning_slab_id: self.id,
                 subject_id: subject_id.clone(),
                 head: head.iter().map(|mr| self.localize_memoref(mr, from_slabref, include_memos )).collect()
             }

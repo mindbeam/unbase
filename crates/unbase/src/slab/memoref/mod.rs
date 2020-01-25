@@ -46,10 +46,12 @@ impl MemoRef {
     pub fn to_head (&self) -> MemoRefHead {
         match self.subject_id {
             None => MemoRefHead::Anonymous{
+                owning_slab_id: self.owning_slab_id,
                 head: vec![self.clone()]
             },
             Some(subject_id) =>
                 MemoRefHead::Subject {
+                    owning_slab_id: self.owning_slab_id,
                     subject_id: subject_id,
                     head: vec![self.clone()]
                 }
@@ -131,7 +133,7 @@ impl MemoRef {
         slab.request_memo(self.clone()).await
     }
     #[tracing::instrument]
-        pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> Result<bool,RetrieveError> {
+    pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> Result<bool,RetrieveError> {
         assert!(self.owning_slab_id == slab.my_ref.slab_id);
         // TODO get rid of clones here
 

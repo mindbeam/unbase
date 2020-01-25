@@ -11,6 +11,7 @@ use crate::{
         MemoBody,
         Memo,
         MemoId,
+        SlabId,
         SlabHandle,
         SlabRef,
     },
@@ -49,10 +50,12 @@ use futures::{
 pub enum MemoRefHead {
     Null,
     Subject{
+        owning_slab_id: SlabId,
         subject_id: SubjectId,
         head:       Vec<MemoRef>
     },
     Anonymous{
+        owning_slab_id: SlabId,
         head:       Vec<MemoRef>
     }
 }
@@ -73,16 +76,20 @@ impl MemoRefHead {
             MemoRefHead::Null => {
                 if let Some(subject_id) = new.subject_id {
                     *self = MemoRefHead::Subject{
+                        owning_slab_id: new.owning_slab_id,
                         head: vec![new.clone()],
                         subject_id
                     };
                 }else{
-                    *self = MemoRefHead::Anonymous{ head: vec![new.clone()] };
+                    *self = MemoRefHead::Anonymous{
+                        owning_slab_id: new.owning_slab_id,
+                        head: vec![new.clone()]
+                    };
                 }
 
                 return Ok(true);
             },
-            MemoRefHead::Anonymous{ ref mut head } => {
+            MemoRefHead::Anonymous{ ref mut head, .. } => {
                 head
             },
             MemoRefHead::Subject{ ref mut head, ..} => {
@@ -181,6 +188,36 @@ impl MemoRefHead {
 
         Ok(applied)
     }
+    pub async fn descends_or_contains (&self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool,RetrieveError> {
+
+        // there's probably a more efficient way to do this than iterating over the cartesian product
+        // we can get away with it for now though I think
+        // TODO: revisit when beacons are implemented
+        match *self {
+            MemoRefHead::Null             => Ok(false),
+            MemoRefHead::Subject{ ref head, .. } | MemoRefHead::Anonymous{ ref head, .. } => {
+                match *other {
+                    MemoRefHead::Null             => Ok(false),
+                    MemoRefHead::Subject{ head: ref other_head, .. } | MemoRefHead::Anonymous{ head: ref other_head, .. } => {
+                        if head.len() == 0 || other_head.len() == 0 {
+                            return Ok(false) // searching for positive descendency, not merely non-ascendency
+                        }
+                        for memoref in head.iter(){
+                            for other_memoref in other_head.iter(){
+                                if memoref == other_memoref {
+                                    //
+                                } else if !memoref.descends(other_memoref, slab).await? {
+                                    return Ok(false);
+                                }
+                            }
+                        }
+
+                        Ok(true)
+                    }
+                }
+            }
+        }
+    }
     pub fn memo_ids (&self) -> Vec<MemoId> {
         match *self {
             MemoRefHead::Null => Vec::new(),
@@ -191,6 +228,13 @@ impl MemoRefHead {
         match *self {
             MemoRefHead::Null | MemoRefHead::Anonymous{..} => None,
             MemoRefHead::Subject{ subject_id, .. }     => Some(subject_id)
+        }
+    }
+    pub fn owning_slab_id (&self) -> Option<SlabId> {
+        match *self {
+            MemoRefHead::Null => None,
+            MemoRefHead::Anonymous { owning_slab_id, .. } => Some(owning_slab_id),
+            MemoRefHead::Subject{ owning_slab_id, .. }   => Some(owning_slab_id),
         }
     }
     pub fn is_some (&self) -> bool {
@@ -227,28 +271,22 @@ impl MemoRefHead {
 
         match *self {
             MemoRefHead::Null                    => EMPTY.iter(), // HACK
-            MemoRefHead::Anonymous{ ref head }   => head.iter(),
+            MemoRefHead::Anonymous{ ref head, .. }   => head.iter(),
             MemoRefHead::Subject{ ref head, .. } => head.iter()
         }
     }
     #[tracing::instrument]
     fn to_stream_vecdeque (&self, slab: &SlabHandle ) -> VecDeque<CausalMemoStreamItem> {
 
-//        let mut out = VecDeque::with_capacity(self.head.len());
-//        for memoref in self.head.iter() {
-//            let
-//            out.push_back(CausalMemoStreamItem {
-//                memoref: (*memoref).clone(),
-//                fut: memoref.clone().get_memo( slab ).boxed(),
-//                memo: None
-//            });
-//        };
-//        out
+        let head = match self {
+            MemoRefHead::Null                                       =>  return VecDeque::new(),
+            MemoRefHead::Anonymous { ref head, .. } => head,
+            MemoRefHead::Subject{  ref head, .. }   => head
+        };
 
-        self.head.iter().map(|memoref| {
+        head.iter().map(|memoref| {
             //TODO - switching to an immutable internal datastructure should mitigate the need for clones here
             CausalMemoStreamItem {
-//                memoref: memoref.clone(),
                 fut: memoref.clone().get_memo( slab.clone() ).boxed(),
                 memo: None
             }
@@ -286,7 +324,7 @@ impl fmt::Debug for MemoRefHead{
                     //.field("memo_ids", &self.memo_ids() )
                     .finish()
             }
-            MemoRefHead::Subject{ ref subject_id, ref head } => {
+            MemoRefHead::Subject{ ref subject_id, ref head, .. } => {
                 fmt.debug_struct("MemoRefHead::Subject")
                     .field("subject_id", &subject_id )
                     .field("memo_refs",  head )
@@ -329,9 +367,13 @@ head ^    \- F -> D -/
 impl CausalMemoStream {
     #[tracing::instrument]
     pub fn from_head ( head: &MemoRefHead, slab: SlabHandle) -> Self {
-        if head.owning_slab_id != slab.my_ref.slab_id {
-            assert!(head.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
+        match head.owning_slab_id() {
+            Some(id) if id != slab.my_ref.slab_id => {
+                panic!("requesting slab does not match owning slab");
+            },
+            None => {}
         }
+
         CausalMemoStream {
             queue: head.to_stream_vecdeque(&slab),
             slab:  slab
@@ -382,6 +424,6 @@ impl Stream for CausalMemoStream {
             return Poll::Pending;
         }
 
-        return Poll::Ready(Some( self.queue.pop_front().unwrap().memo.unwrap() ))
+        return Poll::Ready(Some(Ok( self.queue.pop_front().unwrap().memo.unwrap() )))
     }
 }

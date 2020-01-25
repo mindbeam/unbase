@@ -53,25 +53,27 @@ impl Context {
     pub fn concise_contents (&self) -> Vec<String> {
         self.stash.concise_contents()
     }
+
     // Magically transport subject heads into another context in the same process.
     // This is a temporary hack for testing purposes until such time as proper context exchange is enabled
     // QUESTION: should context exchanges be happening constantly, but often ignored? or requested? Probably the former,
     //           sent based on an interval and/or compaction ( which would also likely be based on an interval and/or present context size)
-    pub fn hack_send_context(&self, other: &Self) -> usize {
-        self.compact().expect("compact");
+    #[tracing::instrument]
+    pub async fn hack_send_context(&self, other: &Context) -> Result<usize,WriteError> {
+        self.compact().await?;
 
-        let from_slabref = other.inner.0.slab.agent.localize_slabref(&self.inner.0.slab.my_ref);
+        let from_slabref = other.slab.agent.localize_slabref(&self.slab.my_ref);
 
         let mut memoref_count = 0;
 
         for head in self.stash.iter() {
             memoref_count += head.len();
 
-            let apply_head = other.inner.0.slab.agent.localize_memorefhead(head, &from_slabref, false);
-            other.apply_head_deferred(apply_head);
+            let apply_head = other.slab.agent.localize_memorefhead(&head, &from_slabref, false);
+            other.apply_head(&apply_head).await?;
         }
 
-        memoref_count
+        Ok(memoref_count)
     }
     pub async fn get_relevant_subject_head(&self, subject_id: SubjectId) -> Result<MemoRefHead, RetrieveError> {
         match subject_id {
@@ -93,15 +95,14 @@ impl Context {
         }
     }
     pub fn try_root_index (&self) -> Result<Arc<IndexFixed>,RetrieveError> {
-        // TODO MERGE
         {
            let rg = self.root_index.read().unwrap();
-           if let Some( ref arcindex ) = rg {
+           if let Some( ref arcindex ) = *rg {
                return Ok( arcindex.clone() )
            }
         };
         
-        let seed = self.slab.net.get_root_index_seed(self);
+        let seed = self.slab.net.get_root_index_seed(&self.slab);
         if seed.is_some() {
             let index = IndexFixed::new_from_memorefhead(&self, 5, seed);
             let arcindex = Arc::new(index);
@@ -142,7 +143,7 @@ impl Context {
         // Arc::ptr_eq(&self.inner,&other.inner)
     }
 
-    pub fn add_test_subject(&self, subject_id: SubjectId, relations: Vec<MemoRefHead>) -> MemoRefHead {
+    pub async fn add_test_subject(&self, subject_id: SubjectId, relations: Vec<MemoRefHead>) -> MemoRefHead {
 
         let mut edgeset = EdgeSet::empty();
 
@@ -152,17 +153,20 @@ impl Context {
             }
         }
 
-        let memobody = MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSet::empty(), e: edgeset, t: subject_id.stype };
-        let head = self.slab.new_memo_basic_noparent(Some(subject_id), memobody).to_head();
+        let head = self.slab.new_memo(
+            Some(subject_id),
+            MemoRefHead::Null,
+            MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSet::empty(), e: edgeset, t: subject_id.stype }
+        ).to_head();
 
-        self.apply_head(&head).expect("apply head")
+        self.apply_head(&head).await.expect("apply head")
     }
 
     /// Attempt to compress the present query context.
     /// We do this by issuing Relation memos for any subject heads which reference other subject heads presently in the query context.
     /// Then we can remove the now-referenced subject heads, and repeat the process in a topological fashion, confident that these
     /// referenced subject heads will necessarily be included in subsequent projection as a result.
-    pub fn compact(&self) -> Result<(), WriteError>  {
+    pub async fn compact(&self) -> Result<(), WriteError>  {
         let before = self.stash.concise_contents();
 
         //TODO: implement topological MRH iterator for stash
@@ -172,13 +176,13 @@ impl Context {
         for parent_mrh in self.stash.iter() {
             let mut updated_edges = EdgeSet::empty();
 
-            for edgelink in parent_mrh.project_occupied_edges(&self.slab)? {
+            for edgelink in parent_mrh.project_occupied_edges(&self.slab).await? {
                 if let EdgeLink::Occupied{slot_id,head:edge_mrh} = edgelink {
 
                     if let Some(subject_id) = edge_mrh.subject_id(){
                         if let stash_mrh @ MemoRefHead::Subject{..} = self.stash.get_head(subject_id) {
                             // looking for cases where the stash is fresher than the edge
-                            if stash_mrh.descends_or_contains(&edge_mrh, &self.slab)?{
+                            if stash_mrh.descends_or_contains(&edge_mrh, &self.slab).await?{
                                 updated_edges.insert( slot_id, stash_mrh );
                             }
                         }
@@ -190,9 +194,14 @@ impl Context {
                 // TODO: When should this be materialized?
                 let memobody = MemoBody::Edge(updated_edges);
                 let subject_id = parent_mrh.subject_id().unwrap();
-                let head = self.slab.new_memo_basic(Some(subject_id), parent_mrh, memobody.clone()).to_head();
+
+                let head = self.slab.new_memo(
+                    Some(subject_id),
+                    MemoRefHead::Null,
+                    memobody.clone()
+                ).to_head();
                 
-                self.apply_head(&head)?;
+                self.apply_head(&head).await?;
             }
         }
 

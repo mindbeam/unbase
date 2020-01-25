@@ -36,9 +36,9 @@ pub struct IndexFixed {
 }
 
 impl IndexFixed {
-    pub fn new (context: &Context, depth: u8) -> Result<IndexFixed,WriteError> {
+    pub async fn new (context: &Context, depth: u8) -> Result<IndexFixed,WriteError> {
         Ok(Self {
-            root: Subject::new( context, SubjectType::IndexNode, HashMap::new() )?,
+            root: Subject::new( context, SubjectType::IndexNode, HashMap::new() ).await?,
             depth: depth
         })
     }
@@ -48,8 +48,8 @@ impl IndexFixed {
             depth: depth
         }
     }
-    pub fn insert_subject(&self, key: u64, subjecthandle: &SubjectHandle) -> Result<(),WriteError> {
-        self.insert(&subjecthandle.context, key, &subjecthandle.subject)
+    pub async fn insert_subject(&mut self, key: u64, subjecthandle: &SubjectHandle) -> Result<(),WriteError> {
+        self.insert(&subjecthandle.context, key, &subjecthandle.subject).await
     }
     pub (crate) async fn insert <'a> (&mut self, context: &Context, key: u64, subject: &Subject) -> Result<(),WriteError> {
         debug!("IndexFixed.insert({}, {:?})", key, subject );
@@ -102,8 +102,8 @@ impl IndexFixed {
             context: context.clone()
         })
     }
-    pub fn get_subject_handle(&self, context: &Context, key: u64 ) -> Result<Option<SubjectHandle>,RetrieveError> {
-        match self.get(context,key)? {
+    pub async fn get_subject_handle(&self, context: &Context, key: u64 ) -> Result<Option<SubjectHandle>,RetrieveError> {
+        match self.get(context,key).await? {
             Some(subject) => {
                 Ok(Some(SubjectHandle{
                     id: subject.id,

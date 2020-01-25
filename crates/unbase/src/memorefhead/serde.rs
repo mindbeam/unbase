@@ -28,12 +28,12 @@ impl StatefulSerialize for MemoRefHead {
                 let mut sv = serializer.serialize_struct_variant("MemoRefHead", 0, "Null", 0)?;
                 sv.end()
             },
-            MemoRefHead::Anonymous{ref head} => {
+            MemoRefHead::Anonymous{ref head, ..} => {
                 let mut sv = serializer.serialize_struct_variant("MemoRefHead", 1, "Anonymous", 1)?;
                 sv.serialize_field("h", &SerializeWrapper(head, helper))?;
                 sv.end()
             }
-            MemoRefHead::Subject{ref subject_id, ref head} => {
+            MemoRefHead::Subject{ref subject_id, ref head, ..} => {
                 let mut sv = serializer.serialize_struct_variant("MemoRefHead", 2, "Subject", 3)?;
                 sv.serialize_field("s", &subject_id)?;
                 sv.serialize_field("h", &SerializeWrapper(&head,helper))?;
@@ -142,7 +142,10 @@ impl<'a> Visitor for MRHAnonymousSeed<'a> {
         }
 
         if head.is_some() {
-            Ok(MemoRefHead::Anonymous{ head: head.unwrap() })
+            Ok(MemoRefHead::Anonymous{
+                owning_slab_id: self.dest_slab.my_ref.slab_id,
+                head: head.unwrap()
+            })
         }else{
             Err(DeError::invalid_length(0, &self))
         }
@@ -182,6 +185,7 @@ impl<'a> Visitor for MRHSubjectSeed<'a> {
 
         if head.is_some() && subject_id.is_some(){
             Ok(MemoRefHead::Subject{
+                owning_slab_id: self.dest_slab.my_ref.slab_id,
                 head: head.unwrap(),
                 subject_id: subject_id.unwrap(),
             })

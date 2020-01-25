@@ -85,8 +85,9 @@ impl Subject {
         let id = slab.generate_subject_id(stype);
         debug!("Subject({}).new()",id);
 
-        let head = slab.new_memo_noparent(
+        let head = slab.new_memo(
             Some(id),
+            MemoRefHead::Null,
             MemoBody::FullyMaterialized {v: vals, r: RelationSet::empty(), e: EdgeSet::empty(), t: stype.clone() }
         ).to_head();
 
@@ -113,6 +114,9 @@ impl Subject {
         Ok(())
     }
     pub fn reconstitute (_context: &Context, head: MemoRefHead) -> Result<Subject,RetrieveError> {
+
+        // TODO: consolidate this with new_from_memorefhead
+        // TODO: do we need to be calling update_referents from here?
         //println!("Subject.reconstitute({:?})", head);
         // Arguably we shouldn't ever be reconstituting a subject
 

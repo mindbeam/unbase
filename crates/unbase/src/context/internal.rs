@@ -24,9 +24,10 @@ impl Context {
     /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is made
     pub (crate) async fn apply_head(&self, head: &MemoRefHead) -> Result<MemoRefHead,WriteError> {
         // println!("Context.apply_subject_head({}, {:?}) ", subject_id, head.memo_ids() );
-        self.stash.apply_head(&self.slab, head)
+        self.stash.apply_head(&self.slab, head).await
     }
     pub (crate) async fn get_subject(&self, subject_id: SubjectId) -> Result<Option<Subject>, RetrieveError> {
+        // TODO centralized timeout duration config
         let root_index = self.root_index(Duration::from_secs(5)).await?;
         root_index.get(self, subject_id.id).await
     }

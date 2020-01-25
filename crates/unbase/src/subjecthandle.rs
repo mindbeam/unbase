@@ -32,9 +32,9 @@ pub struct SubjectHandle {
 }
 
 impl SubjectHandle{
-    pub fn new ( context: &Context, vals: HashMap<String, String> ) -> Result<SubjectHandle,WriteError> {
+    pub async fn new ( context: &Context, vals: HashMap<String, String> ) -> Result<SubjectHandle,WriteError> {
 
-        let subject = Subject::new(&context, SubjectType::Record, vals )?;
+        let subject = Subject::new(&context, SubjectType::Record, vals ).await?;
 
         let handle = SubjectHandle{
             id: subject.id,

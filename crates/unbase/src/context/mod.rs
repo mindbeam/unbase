@@ -66,9 +66,17 @@ impl Context {
         let span = span!(Level::TRACE, "Context Applier");
 
         let applier: RemoteHandle<()> = crate::util::task::spawn_with_handle(
-            rx.for_each(move |head| {
+            rx.for_each(async move |head| {
                 let _guard = span.enter();
-                applier_stash.apply_head(&applier_slab, &head);
+                // TODO NEXT - how do we handle a head-application error on the background applier?
+                // Probably shouldn't retry indefinitely.
+                // Some ideas:
+                // a. raise an error event to the holder of the context somehow
+                // b. consider this error to apply to the next query
+                // c. throw away out stash and reload it from another node
+                // d. employ a healing protocol of some kind - if the data is lost, it's probably going to affect more than just this context
+
+                let _merged_head = applier_stash.apply_head(&applier_slab, &head).await.unwrap();
             })
         );
 
