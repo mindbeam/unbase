@@ -32,7 +32,7 @@ pub const SUBJECT_MAX_RELATIONS : usize = 256;
 #[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash,Debug,Serialize,Deserialize)]
 pub enum SubjectType {
     IndexNode,
-    Record
+    Record,
 }
 #[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash,Debug,Serialize,Deserialize)]
 pub struct SubjectId {
@@ -79,7 +79,12 @@ pub(crate) struct Subject {
 }
 
 impl Subject {
+    // TODO POSTMERGE - consider merging Subject and MemoRefHead ( SubjectHandle could potentially be then renamed to Subject? )
     pub async fn new (context: &Context, stype: SubjectType, vals: HashMap<String,String> ) -> Result<Self,WriteError> {
+        if let SubjectType::IndexNode = stype {
+            panic!("now allowed to use Subject::new for IndexNode");
+            // Perhaps this means that IndexNode should be its own thing?
+        }
 
         let slab: &SlabHandle = &context.slab;
         let id = slab.generate_subject_id(stype);
@@ -103,7 +108,8 @@ impl Subject {
     async fn update_referents (&mut self, context: &Context) -> Result<(),WriteError> {
         match self.id.stype {
             SubjectType::IndexNode => {
-                context.apply_head( &self.head ).await?;
+//                context.apply_head( &self.head ).await?;
+                panic!("not allowed to use this for index nodes")
             },
             SubjectType::Record    => {
                 // TODO: Consider whether this should accept head instead of subject
@@ -215,7 +221,7 @@ impl Subject {
 
         Ok(())
     }
-    pub async fn set_edge (&mut self, context: &Context, key: RelationSlotId, edge: &Self) -> Result<(),WriteError>{
+    pub fn set_edge (&mut self, context: &Context, key: RelationSlotId, edge: &Self) {
         //println!("# Subject({}).set_edge({}, {})", &self.id, key, relation.id);
         let mut edgeset = EdgeSet::empty();
         edgeset.insert( key, edge.get_head() );
@@ -234,9 +240,6 @@ impl Subject {
 
         // We shouldn't need to apply the new memoref. It IS the new head
         // self.head.apply_memoref(&memoref, &slab).await?;
-
-        self.update_referents( context ).await
-
     }
     // // TODO: get rid of apply_head and get_head in favor of Arc sharing heads with the context
     // pub fn apply_head (&self, context: &Context, new: &MemoRefHead){

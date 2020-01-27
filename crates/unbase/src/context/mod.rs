@@ -54,7 +54,7 @@ pub struct Context(Arc<ContextInner>);
 
 pub struct ContextInner {
     pub slab: SlabHandle,
-    pub root_index_node: Arc<Mutex<Option<Subject>>>,
+    pub root_index_node: Arc<Mutex<Option<MemoRefHead>>>,
     applier: RemoteHandle<()>,
     stash: Stash,
     //pathology:  Option<Box<Fn(String)>> // Something is wrong here, causing compile to fail with a recursion error
@@ -100,7 +100,7 @@ impl Context {
 
         let inner = ContextInner {
             slab: slab,
-            root_index: Arc::new(Mutex::new(None)),
+            root_index_node: Arc::new(Mutex::new(None)),
             stash,
             applier,
         };
@@ -197,27 +197,24 @@ impl Context {
             }
         }
     }
-    pub fn try_root_index_node(&self) -> Result<(),RetrieveError> {
+    pub fn try_root_index_node (&self) -> Result<MemoRefHead,RetrieveError> {
         {
-            let rg = self.root_index.lock().unwrap();
-            if let Some( ref arcindex ) = *rg {
-
+            if let Some( ref node ) = *self.root_index_node.lock().unwrap() {
+                return Ok(node.clone())
             }
         };
 
         let seed = self.slab.net.get_root_index_seed(&self.slab);
         if seed.is_some() {
-            let index = IndexFixed::new_from_memorefhead(&self, 5, seed);
-            let arcindex = Mutex::new(Some(index));
-            *self.root_index.lock().unwrap() = Some(arcindex.clone());
+            *self.root_index_node.lock().unwrap() = Some(seed.clone());
 
-            Ok(())
+            Ok(seed)
         }else{
             Err(RetrieveError::IndexNotInitialized)
         }
 
     }
-    pub async fn root_index_node (&self, wait: Duration) -> Result<Subject, RetrieveError> {
+    pub async fn root_index (&self, wait: Duration) -> Result<IndexFixed, RetrieveError> {
         let start = Instant::now();
 
         loop {
@@ -225,9 +222,10 @@ impl Context {
                 return Err(RetrieveError::NotFoundByDeadline)
             }
 
-            if let Ok(ri) = self.try_root_index_node() {
-                return Ok(ri);
-            };
+            if let Ok(node) = self.try_root_index_node() {
+                let index = IndexFixed::new_from_memorefhead(&self, 5, node);
+                return Ok(index);
+            }
 
             Delay::new(Duration::from_millis(50)).await;
         }
@@ -338,7 +336,11 @@ impl Context {
     }
     /// Retrieve a subject for a known MemoRefHead – ususally used for relationship traversal.
     /// Any relevant context will also be applied when reconstituting the relevant subject to ensure that our consistency model invariants are met
-    pub async fn get_subject_with_head(&self,  mut head: MemoRefHead)  -> Result<Subject, RetrieveError> {
+    pub async fn get_subject_with_head(&self,  mut head: MemoRefHead)  -> Result<SubjectHandle, RetrieveError> {
+
+        // TODO POSTMERGE - look here when contemplating the unification of Subject and MemoRefHead
+        // I think the contract of SubjectHandle would be that it's been brought up to date against the context
+        // Whereas the contract for MemoRefHead wouldn't offer that
 
         if head.len() == 0 {
             return Err(RetrieveError::InvalidMemoRefHead);

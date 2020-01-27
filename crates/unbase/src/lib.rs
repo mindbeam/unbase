@@ -43,6 +43,7 @@
 #![feature(type_alias_impl_trait)]
 //#![feature(async_closure)]
 #![doc(html_root_url = "https://unba.se")]
+//#![recursion_limit = "42"]
 
 //extern crate core;
 //extern crate linked_hash_map;

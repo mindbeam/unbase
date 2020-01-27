@@ -19,6 +19,7 @@ use crate::{
 use futures::{
     future::{
         FutureExt,
+        TryFutureExt,
         LocalBoxFuture
     },
     Future,
@@ -26,10 +27,12 @@ use futures::{
 
 use std::{
     collections::HashMap,
+    cell::RefCell,
     fmt,
 };
 
 use tracing::debug;
+use crate::slab::{MemoBody, RelationSet, EdgeSet};
 
 pub struct IndexFixed {
     root: Subject,
@@ -59,12 +62,11 @@ impl IndexFixed {
         // after the fact if we don't strictly have to. That said, this gives us a great excuse
         // to work on the consistency model, so I'm doing that first.
 
-        self.recurse_set(context, 0, key, &mut self.root, subject.clone()).await
-    }
-    // Temporarily managing our own bubble-up
-    // TODO: finish moving the management of this to context / context::subject_graph
-    fn recurse_set <'a> (&'a self, context: &'a Context, tier: usize, key: u64, node: &'a mut Subject, subject: Subject) -> LocalBoxFuture<'a, Result<(),WriteError>>{
-        async move {
+        let mut tier = 0;
+//        let mut new_node : RefCell<Option<Subject>> = RefCell::new(None);
+        let mut node = self.root.clone();
+
+        loop{
             // TODO: refactor this in a way that is generalizable for strings and such
             // Could just assume we're dealing with whole bytes here, but I'd rather
             // allow for SUBJECT_MAX_RELATIONS <> 256. Values like 128, 512, 1024 may not be entirely ridiculous
@@ -76,25 +78,45 @@ impl IndexFixed {
 
             if exponent == 0 {
                 //println!("]]] end of the line");
-                node.set_edge(context, y as RelationSlotId, &subject).await
+                node.set_edge(context, y as RelationSlotId, &subject);
+                // Apply the updated head to the context
+                context.apply_head( &node.head ).await?;
+
+                return Ok(());
             } else {
                 match node.get_edge(context, y).await? {
-                    Some(ref mut n) => {
-                        self.recurse_set(context, tier + 1, key, n, subject).await
+                    Some(n) => {
+                        node = n;
+                        tier += 1;
                     }
                     None => {
                         let mut values = HashMap::new();
                         values.insert("tier".to_string(), tier.to_string());
 
-                        let mut new_node = Subject::new(context, SubjectType::IndexNode, values).await?;
+                        // Manually implementing the relevant parts of Subject::new to avoid recursive async functions / boxed futures
+                        // we can get away with this because Subject::new only inserts other SubjectTypes into the root index, not ::IndexNode
+                        let id = context.slab.generate_subject_id(SubjectType::IndexNode);
+                        let head = context.slab.new_memo(
+                            Some(id),
+                            MemoRefHead::Null,
+                            MemoBody::FullyMaterialized {v: values, r: RelationSet::empty(), e: EdgeSet::empty(), t: SubjectType::IndexNode }
+                        ).to_head();
 
-                        node.set_edge(context, y, &new_node).await?;
+                        // apply the new_node head to the context
+                        // TODO POSTMERGE - determine if we can skip this apply_head because we're about to do it for the updated parent node
+                        context.apply_head( &head ).await?;
+                        let next_node = Subject{ id, head };
 
-                        self.recurse_set(context, tier + 1, key, &mut new_node, subject).await
+                        node.set_edge(context, y, &next_node);
+                        // Apply the updated head to the context
+                        context.apply_head( &node.head ).await?;
+
+                        node = next_node;
+                        tier += 1;
                     }
                 }
             }
-        }.boxed_local()
+        }
     }
     pub fn get_root_subject_handle(&self, context: &Context) -> Result<SubjectHandle,RetrieveError> {
         Ok(SubjectHandle{
@@ -160,46 +182,49 @@ impl IndexFixed {
         // That way, closure execution won't be (deterministically/lexicographically) ordered, but scan() -> Vec<T> will be
 
         // TODO MERGE - uncomment ( crap, I think we probably do need async closures )
-//        self.scan(&context, async move |r| {
-//            if let Some(v) = r.get_value(key).await? {
-//                Ok(v == value)
-//            }else{
-//                Ok(false)
+        self.scan(&context, move |r| {
+//            async {
+//                if let Some(v) = r.get_value(key).await? {
+//                    Ok(v == value)
+//                } else {
+//                    Ok(false)
+//                }
 //            }
-//        }).await
-        unimplemented!()
+            futures::future::ready(Ok(false) )
+//            unimplemented!()
+        }).await;
+
+        Ok(None)
     }
-    pub async fn scan<'b, F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
+    pub async fn scan<F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
         where
-            F: Fn( &'b mut SubjectHandle ) -> Fut,
-            Fut: Future<Output=Result<bool,RetrieveError>> + 'b
+            F: Fn( &mut SubjectHandle ) -> Fut,
+            Fut: Future<Output=Result<bool,RetrieveError>>
     {
 
-        let mut stack : Vec<(&mut Subject,usize)> = vec![(&mut self.root,0)];
+        let mut stack : Vec<(Subject,usize)> = vec![(self.root.clone(),0)];
 
-        while let Some((node,tier)) = stack.pop() {
+        while let Some((mut node,tier)) = stack.pop() {
             if tier as u8 == self.depth - 1 {
 
                 // TODO NEXT / WIP: finish converting this to stack based recursion.
                 // Seems the compiler doesn't like something here. Most likely has to do with
 
-
-
                 //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
                 for slot_id in 0..SUBJECT_MAX_RELATIONS {
-//                    if let Some(mrh) = node.get_edge_head(context, slot_id as RelationSlotId).await? {
-//                        let mut sh = context.get_subject_handle_with_head(mrh).await?;
-//                        if f(&mut sh).await? {
-//                            return Ok(Some(sh))
-//                        }
-//                    }
+                    if let Some(mrh) = node.get_edge_head(context, slot_id as RelationSlotId).await? {
+                        let mut sh = context.get_subject_handle_with_head(mrh).await?;
+                        if f(&mut sh).await? {
+                            return Ok(Some(sh))
+                        }
+                    }
                 }
             } else {
                 //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
                 for slot_id in 0..SUBJECT_MAX_RELATIONS {
-//                    if let Some(child) = node.get_edge(context, slot_id as RelationSlotId).await? {
-//                        stack.push( (&mut child, tier + 1 ))
-//                    }
+                    if let Some(child) = node.get_edge(context, slot_id as RelationSlotId).await? {
+                        stack.push( (child, tier + 1 ))
+                    }
                 }
             }
         }

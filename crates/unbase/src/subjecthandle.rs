@@ -79,10 +79,19 @@ impl SubjectHandle{
         self.subject.get_all_memo_ids( self.context.slab.clone() ).await
     }
     pub fn observe (&self) -> mpsc::Receiver<MemoRefHead> {
-        self.subject.observe(&self.context.slab)
+        let rx = self.subject.observe(&self.context.slab);
+
+
+//        SubjectState{ rx,  }
+        rx
     }
+
 }
 
+// TODO POSTMERGE dig into https://docs.rs/futures-signals/0.3.11/futures_signals/tutorial/index.html and think about API
+//struct SubjectState {
+//    subject: SubjectHandle,
+//}
 
 impl fmt::Debug for SubjectHandle {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {

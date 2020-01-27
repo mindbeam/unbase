@@ -43,7 +43,8 @@ async fn player_one() {
     let rec_a1 = SubjectHandle::new_kv(&context_a, "action", "Ping").unwrap();
 
     let mut pings = 0;
-    for _ in rec_a1.observe().wait() {
+
+    for _ in rec_a1.observe() {
         // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied immediately after this event is sent
         Delay::new(Duration::from_millis(10)).await;
 
