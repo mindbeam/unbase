@@ -107,7 +107,7 @@ impl Slab {
 
         me
     }
-    async fn run_dispatcher(agent: SlabAgent, mut dispatch_rx_channel: mpsc::Receiver<MemoRef>) {
+    async fn run_dispatcher(agent: Arc<SlabAgent>, mut dispatch_rx_channel: mpsc::Receiver<MemoRef>) {
         while let Some(memoref) = dispatch_rx_channel.next().await {
             agent.recv_memoref(memoref);
         }
