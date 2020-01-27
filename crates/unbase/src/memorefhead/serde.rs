@@ -25,7 +25,7 @@ impl StatefulSerialize for MemoRefHead {
     {
         match *self {
             MemoRefHead::Null => {
-                let mut sv = serializer.serialize_struct_variant("MemoRefHead", 0, "Null", 0)?;
+                let sv = serializer.serialize_struct_variant("MemoRefHead", 0, "Null", 0)?;
                 sv.end()
             },
             MemoRefHead::Anonymous{ref head, ..} => {

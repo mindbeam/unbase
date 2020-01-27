@@ -80,15 +80,9 @@ impl Slab {
 
         let agent = Arc::new(SlabAgent::new(net, my_ref.clone()));
 
-        let agent2 = agent.clone();
-        let dispatcher_task = (async move || {
-            let mut dispatch_rx_channel = dispatch_rx_channel;
-            while let Some(memoref) = dispatch_rx_channel.next().await {
-                agent2.recv_memoref(memoref);
-            }
-        })();
-
-        let dispatcher: RemoteHandle<()> = crate::util::task::spawn_with_handle(dispatcher_task);
+        let dispatcher: RemoteHandle<()> = crate::util::task::spawn_with_handle(
+            Self::run_dispatcher( agent.clone(), dispatch_rx_channel )
+        );
 
         let handle = SlabHandle {
             my_ref: my_ref.clone(),
@@ -112,6 +106,11 @@ impl Slab {
         net.conditionally_generate_root_index_seed(&me.handle);
 
         me
+    }
+    async fn run_dispatcher(agent: SlabAgent, mut dispatch_rx_channel: mpsc::Receiver<MemoRef>) {
+        while let Some(memoref) = dispatch_rx_channel.next().await {
+            agent.recv_memoref(memoref);
+        }
     }
     pub fn handle(&self) -> SlabHandle {
         self.handle.clone()

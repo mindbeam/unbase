@@ -159,59 +159,54 @@ impl IndexFixed {
         // Presumably scan should be generic over output Vec<T>
         // That way, closure execution won't be (deterministically/lexicographically) ordered, but scan() -> Vec<T> will be
 
-        self.scan(&context, async move |r| {
-            if let Some(v) = r.get_value(key).await? {
-                Ok(v == value)
-            }else{
-                Ok(false)
-            }
-        }).await
+        // TODO MERGE - uncomment ( crap, I think we probably do need async closures )
+//        self.scan(&context, async move |r| {
+//            if let Some(v) = r.get_value(key).await? {
+//                Ok(v == value)
+//            }else{
+//                Ok(false)
+//            }
+//        }).await
+        unimplemented!()
     }
-    pub async fn scan<'a, 'b, F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
+    pub async fn scan<'b, F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<SubjectHandle>, RetrieveError>
         where
             F: Fn( &'b mut SubjectHandle ) -> Fut,
             Fut: Future<Output=Result<bool,RetrieveError>> + 'b
     {
 
-        unimplemented!()
-//        self.scan_recurse( context, &mut self.root, 0, &f ).await
-    }
+        let mut stack : Vec<(&mut Subject,usize)> = vec![(&mut self.root,0)];
 
-//    fn scan_recurse <'a, 'b, F, Fut> ( &'a self, context: &'a Context, node: &'b mut Subject, tier: usize, f: &'a F ) -> LocalBoxFuture<'b, Result<Option<SubjectHandle>, RetrieveError>>
-//        where
-//            F: Fn( &'b mut SubjectHandle ) -> Fut,
-//            Fut: Future<Output=Result<bool,RetrieveError>> + 'b {
-//        async move {
-//
-//            // for _ in 0..tier+1 {
-//            //     print!("\t");
-//            // }
-//
-//            if tier as u8 == self.depth - 1 {
-//                //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
-//                for slot_id in 0..SUBJECT_MAX_RELATIONS {
+        while let Some((node,tier)) = stack.pop() {
+            if tier as u8 == self.depth - 1 {
+
+                // TODO NEXT / WIP: finish converting this to stack based recursion.
+                // Seems the compiler doesn't like something here. Most likely has to do with
+
+
+
+                //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
+                for slot_id in 0..SUBJECT_MAX_RELATIONS {
 //                    if let Some(mrh) = node.get_edge_head(context, slot_id as RelationSlotId).await? {
 //                        let mut sh = context.get_subject_handle_with_head(mrh).await?;
 //                        if f(&mut sh).await? {
 //                            return Ok(Some(sh))
 //                        }
 //                    }
-//                }
-//            } else {
-//                //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
-//                for slot_id in 0..SUBJECT_MAX_RELATIONS {
+                }
+            } else {
+                //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
+                for slot_id in 0..SUBJECT_MAX_RELATIONS {
 //                    if let Some(child) = node.get_edge(context, slot_id as RelationSlotId).await? {
-//                        if let Some(mrh) = self.scan_recurse(context, &mut child, tier + 1, f).await? {
-//                            return Ok(Some(mrh))
-//                        }
+//                        stack.push( (&mut child, tier + 1 ))
 //                    }
-//                }
-//            }
-//
-//            Ok(None)
-//
-//        }.boxed_local()
-//    }
+                }
+            }
+        }
+
+
+        Ok(None)
+    }
 }
 
 impl fmt::Debug for IndexFixed {

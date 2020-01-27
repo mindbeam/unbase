@@ -41,7 +41,7 @@
 //! ```
 
 #![feature(type_alias_impl_trait)]
-#![feature(async_closure)]
+//#![feature(async_closure)]
 #![doc(html_root_url = "https://unba.se")]
 
 //extern crate core;

@@ -239,47 +239,46 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
             return false;
         }
 
-        let span = span!(Level::TRACE, "Simulator Runner");
-
-        let mut tickstream = self.tickstream();
-        let sharedmutex = self.shared.clone();
-        let handle: RemoteHandle<()> = crate::util::task::spawn_with_handle((async move || {
-
-            // HACK - use a timeout to increase the liklihood that all tasks have advanced as far as they can
-            // TODO - replace this with executor.all_pending().await ?
-            Delay::new(Duration::from_millis(100)).await;
-
-            // get a chunk of events
-            while let Some(events) = tickstream.next().await {
-                let _guard = span.enter();
-
-                let eventcount = events.len();
-                // run them all events in this tick to completion without looking back in the queue
-                stream::iter(events).for_each(
-                    |rx| async move {
-                        rx.event.deliver().await;
-                    }
-                ).await;
-
-                //Delay::new(Duration::from_millis(50)).await;
-
-                {
-                    let mut shared = sharedmutex.lock().unwrap();
-                    shared.delivered += eventcount as u64;
-                    println!("delivered {}", eventcount);
-                    shared.check_quiescence();
-                }
-
-                //HACK
-                Delay::new(Duration::from_millis(100)).await;
-                // TODO: consider adding a timeout here to check if the simulator might be logjammed
-            }
-
-        })());
+        let handle: RemoteHandle<()> = crate::util::task::spawn_with_handle(
+            Self::run_func(self.tickstream(), self.shared.clone())
+        );
 
         *runner = Some(handle);
 
         true
+    }
+    async fn run_func (mut tickstream: TickStream<E>, sharedmutex: Arc<Mutex<SimulatorInternal<E>>>) {
+
+        let span = span!(Level::TRACE, "Simulator Runner");
+        let _guard = span.enter();
+        // HACK - use a timeout to increase the liklihood that all tasks have advanced as far as they can
+        // TODO - replace this with executor.all_pending().await ?
+        Delay::new(Duration::from_millis(100)).await;
+
+        // get a chunk of events
+        while let Some(events) = tickstream.next().await {
+
+            let eventcount = events.len();
+            // run them all events in this tick to completion without looking back in the queue
+            stream::iter(events).for_each(
+                |rx| async move {
+                    rx.event.deliver().await;
+                }
+            ).await;
+
+            //Delay::new(Duration::from_millis(50)).await;
+
+            {
+                let mut shared = sharedmutex.lock().unwrap();
+                shared.delivered += eventcount as u64;
+                println!("delivered {}", eventcount);
+                shared.check_quiescence();
+            }
+
+            //HACK
+            Delay::new(Duration::from_millis(100)).await;
+            // TODO: consider adding a timeout here to check if the simulator might be logjammed
+        }
     }
     pub async fn quiesce_and_stop (&self) -> bool {
         let mut runner = self.runner.lock().unwrap();

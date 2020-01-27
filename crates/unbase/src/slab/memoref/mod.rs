@@ -111,7 +111,7 @@ impl MemoRef {
     }
     pub fn is_peered_with_slabref(&self, slabref: &SlabRef) -> bool {
         let status = self.peerlist.read().unwrap().iter().any(|peer| {
-            (peer.slabref.0.slab_id == slabref.0.slab_id && peer.status != MemoPeeringStatus::NonParticipating)
+            peer.slabref.0.slab_id == slabref.0.slab_id && peer.status != MemoPeeringStatus::NonParticipating
         });
 
         status

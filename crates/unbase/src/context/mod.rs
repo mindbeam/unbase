@@ -63,14 +63,13 @@ impl Context {
         let applier_slab = slab.clone();
         let applier_stash = stash.clone();
 
-//        let span = span!(Level::TRACE, "Context Applier");
+        let span = span!(Level::TRACE, "Context Applier");
 
-        let applier: RemoteHandle<()> = crate::util::task::spawn_with_handle(
-            rx.for_each(async move |head| {
+        let applier: RemoteHandle<()> = crate::util::task::spawn_with_handle(async move {
+            while let Some(head) = rx.next().await {
+                let _guard = span.enter();
 
-//                let _guard = span.enter();
-
-                // TODO NEXT - how do we handle a head-application error on the background applier?
+                // TODO POSTMERGE - how do we handle a head-application error on the background applier?
                 // Probably shouldn't retry indefinitely.
                 // Some ideas:
                 // a. raise an error event to the holder of the context somehow
@@ -79,8 +78,8 @@ impl Context {
                 // d. employ a healing protocol of some kind - if the data is lost, it's probably going to affect more than just this context
 
                 let _merged_head = applier_stash.apply_head(&applier_slab, &head).await.unwrap();
-            })
-        );
+            };
+        });
 
         let inner = ContextInner {
             slab: slab,
@@ -91,7 +90,7 @@ impl Context {
 
         Context(Arc::new(inner))
     }
-    pub async fn try_fetch_kv(&self, key: &str, val: &str) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn try_fetch_kv(&mut self, key: &str, val: &str) -> Result<Option<SubjectHandle>, RetrieveError> {
         // TODO implement field-specific indexes
         //if I have an index for that field {
         //    use it
