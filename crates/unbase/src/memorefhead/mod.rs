@@ -82,6 +82,7 @@ pub struct MemoRefHeadWithProvenance {
     pub slabref: SlabRef,
 }
 
+/// MemoRefHead takes &SlabHandle on all calls, because it is an agent of storage and referentiality, NOT an enforcer of consistency
 impl MemoRefHead {
 //    pub fn new_record( slab: &SlabHandle ){
 //

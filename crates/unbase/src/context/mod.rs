@@ -111,7 +111,7 @@ impl Context {
         //} else if I am allowed to scan this index...
         let mut index = self.root_index().await?;
 
-        match index.scan_kv(self, key, val).await? {
+        match index.scan_first_kv(self, key, val).await? {
             Some(head) => {
                 let subject = self.get_subject_from_head( head ).await?;
 
@@ -404,32 +404,33 @@ mod test {
     };
 
     use std::collections::HashMap;
+    use crate::slab::SubjectId;
 
-    #[test]
-    fn context_basic() {
+    #[async_test]
+    async fn context_basic() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
         let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
-        let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]    );
-        let head2  = context.add_test_subject(SubjectId::index_test(2), vec![head1] );
-        let head3  = context.add_test_subject(SubjectId::index_test(3), vec![head2] );
-        let _head4 = context.add_test_subject(SubjectId::index_test(4), vec![head3] );
+        let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]    ).await;
+        let head2  = context.add_test_subject(SubjectId::index_test(2), vec![head1] ).await;
+        let head3  = context.add_test_subject(SubjectId::index_test(3), vec![head2] ).await;
+        let _head4 = context.add_test_subject(SubjectId::index_test(4), vec![head3] ).await;
 
         // each preceeding subject should be pruned, leaving us with a fully compacted stash
         assert_eq!(context.stash.concise_contents(),["I4>I3"], "Valid contents");
     }
 
-    #[test]
+    #[async_test]
     fn context_manual_compaction() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
         let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
-        let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]   );
-        let head2  = context.add_test_subject(SubjectId::index_test(2), vec![head1] );
+        let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]   ).await;
+        let head2  = context.add_test_subject(SubjectId::index_test(2), vec![head1] ).await;
 
         {
             // manually defeat compaction
@@ -438,8 +439,8 @@ mod test {
         }
 
         // additional stuff on I2 should prevent it from being pruned by the I3 edge
-        let head3  = context.add_test_subject(SubjectId::index_test(3), vec![head2.clone()] );
-        let head4 = context.add_test_subject(SubjectId::index_test(4), vec![head3.clone()] );
+        let head3  = context.add_test_subject(SubjectId::index_test(3), vec![head2.clone()] ).await;
+        let head4 = context.add_test_subject(SubjectId::index_test(4), vec![head3.clone()] ).await;
 
         assert_eq!(context.stash.concise_contents(),["I2>I1","I4>I3"], "Valid contents");
 

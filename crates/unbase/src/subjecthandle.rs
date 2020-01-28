@@ -37,6 +37,8 @@ pub struct SubjectHandle {
     pub (crate) context: Context
 }
 
+/// SubjectHandle contains a Context (which is an Arc internally) because it IS an enforcer of consistency, and therefore must use the context.
+/// Becasuse SubjectHandle contains a Context reference, it *MUST NOT BE STORED* anywhere other than user code, otherwise we will create a cycle and thus a memory leak
 impl SubjectHandle{
     pub async fn new ( context: &Context, vals: HashMap<String, String> ) -> Result<SubjectHandle,WriteError> {
 

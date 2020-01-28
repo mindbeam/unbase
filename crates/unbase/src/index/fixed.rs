@@ -38,6 +38,7 @@ pub struct IndexFixed {
 }
 
 impl IndexFixed {
+    /// Index takes everything with context, because Index is an enforcer of consistency
     pub fn new (context: &Context, depth: u8) -> IndexFixed {
         let mut debug_info = HashMap::new();
         debug_info.insert("tier".to_string(),  "root".to_string());
@@ -53,7 +54,8 @@ impl IndexFixed {
             depth: depth
         }
     }
-    pub (crate) async fn insert <'a> (&mut self, context: &Context, key: u64, target: MemoRefHead) -> Result<(),WriteError> {
+
+    pub async fn insert <'a> (&mut self, context: &Context, key: u64, target: MemoRefHead) -> Result<(),WriteError> {
         debug!("IndexFixed.insert({}, {:?})", key, target);
 
         // TODO: optimize index node creation so we're not changing relationship as an edit
@@ -170,32 +172,34 @@ impl IndexFixed {
         panic!("Sanity error");
 
     }
-    pub async fn scan_kv( &mut self, context: &Context, key: &str, value: &str ) -> Result<Option<MemoRefHead>, RetrieveError> {
-        // TODO - make scan_concurrent or something like that.
-        // The problem with concurrent scanning is: how do we want to manage output ordering?
-        // Presumably scan should be generic over output Vec<T>
-        // That way, closure execution won't be (deterministically/lexicographically) ordered, but scan() -> Vec<T> will be
-
-        // TODO MERGE - uncomment ( crap, I think we probably do need async closures )
-        self.scan(&context, move |r| {
-//            async {
-//                if let Some(v) = r.get_value(key).await? {
+    pub async fn scan_first_kv(&mut self, context: &Context, key: &str, value: &str ) -> Result<Option<MemoRefHead>, RetrieveError> {
+// TODO POSTMERGE - figure out how the hell to make this work with a closure
+//
+//        // TODO - make scan_concurrent or something like that.
+//        // The problem with concurrent scanning is: how do we want to manage output ordering?
+//        // Presumably scan should be generic over output Vec<T>
+//        // That way, closure execution won't be (deterministically/lexicographically) ordered, but scan() -> Vec<T> will be
+//
+//        // TODO MERGE - uncomment ( crap, I think we probably do need async closures )
+//        self.scan(&context, async move |head| {
+////            async {
+//                if let Some(v) = head.get_value(key).await? {
 //                    Ok(v == value)
 //                } else {
 //                    Ok(false)
 //                }
-//            }
-            futures::future::ready(Ok(false) )
-//            unimplemented!()
-        }).await;
-
-        Ok(None)
-    }
-    pub async fn scan<F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<MemoRefHead>, RetrieveError>
-        where
-            F: Fn( &mut MemoRefHead ) -> Fut,
-            Fut: Future<Output=Result<bool,RetrieveError>>
-    {
+////            }
+////            futures::future::ready(Ok(false) )
+////            unimplemented!()
+//        }).await
+//
+////        Ok(None)
+//    }
+//    pub async fn scan<F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<MemoRefHead>, RetrieveError>
+//        where
+//            F: Fn( &mut MemoRefHead ) -> Fut,
+//            Fut: Future<Output=Result<bool,RetrieveError>>
+//    {
 
         let mut stack : Vec<(MemoRefHead,usize)> = vec![(self.root.clone(),0)];
 
@@ -211,9 +215,19 @@ impl IndexFixed {
                     context.mut_update_head_for_consistency( &mut node ).await?;
                     if let Some(mut head) = node.get_edge(&context.slab, slot_id as RelationSlotId).await? {
 
-                        if f(&mut head).await? {
-                            return Ok(Some(head))
+//                        TODO POSTMERGE - update this to take a closure
+//                        if f(&mut head).await? {
+//                            return Ok(Some(head))
+//                        }
+
+                        context.mut_update_head_for_consistency( &mut node ).await?;
+
+                        if let Some(v) = head.get_value(&context.slab, key).await? {
+                            if v == value {
+                                return Ok(Some(head))
+                            }
                         }
+
                     }
                 }
             } else {
@@ -271,11 +285,11 @@ mod test {
             assert_eq!(index.test_get_subject_handle(&context_a, i).unwrap().unwrap().get_value("record number").unwrap(), i.to_string() );
         }
 
-        let maybe_rec = index.scan_kv(&context_a, "record number","12345").unwrap();
+        let maybe_rec = index.scan_first_kv(&context_a, "record number", "12345").unwrap();
         assert!( maybe_rec.is_some(), "Index scan for record 12345" );
         assert_eq!( maybe_rec.unwrap().get_value("record number").unwrap(), "12345", "Is correct record");
 
-        let maybe_rec = index.scan_kv(&context_a, "record number","275").unwrap();
+        let maybe_rec = index.scan_first_kv(&context_a, "record number", "275").unwrap();
         assert!( maybe_rec.is_some(), "Index scan for record 275" );
         assert_eq!( maybe_rec.unwrap().get_value("record number").unwrap(), "275", "Is correct record");
     }
