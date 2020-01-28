@@ -1,4 +1,3 @@
-//TODO MERGE
 use std::collections::HashMap;
 
 use futures::{
@@ -12,9 +11,11 @@ use crate::{
     memorefhead::MemoRefHead,
     network::SlabRef,
     slab::{
-        MemoId, MemoRef, Memo
-    },
-    subject::SubjectId,
+        MemoId,
+        MemoRef,
+        Memo,
+        SubjectId,
+    }
 };
 
 /// SlabState stores all state for a slab

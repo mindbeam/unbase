@@ -56,7 +56,6 @@ extern crate serde_json;
 
 
 //#[doc(inline)]
-mod subject;
 pub mod network;
 pub mod slab;
 pub mod context;

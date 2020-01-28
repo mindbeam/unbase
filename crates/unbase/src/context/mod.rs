@@ -14,11 +14,8 @@ use crate::{
         MemoId,
         RelationSet,
         RelationSlotId,
-    },
-    subject::{
         SubjectType,
         SubjectId,
-        Subject,
     },
     subjecthandle::{
         SubjectHandle
@@ -112,13 +109,21 @@ impl Context {
         //if I have an index for that field {
         //    use it
         //} else if I am allowed to scan this index...
-        self.root_index(Duration::from_secs(5)).await?.scan_kv(self, key, val).await
-        //}
+        let mut index = self.root_index().await?;
+
+        match index.scan_kv(self, key, val).await? {
+            Some(head) => {
+                let subject = self.get_subject_from_head( head ).await?;
+
+                Ok( Some( subject ) )
+            },
+            None => Ok(None),
+        }
     }
     pub async fn fetch_kv(&self, key: &str, val: &str, wait: Duration) -> Result<SubjectHandle, RetrieveError> {
         let start = Instant::now();
 
-        self.root_index(wait).await?;
+        self.root_index().await?;
 
         // TODO ASYNC NOTIFY
         loop {
@@ -137,13 +142,13 @@ impl Context {
     /// Retrive a Subject from the root index by ID
     pub async fn get_subject_by_id(&self, subject_id: SubjectId) -> Result<Option<SubjectHandle>, RetrieveError> {
 
-        let root_index = self.root_index(Duration::from_secs(5)).await?;
+        let root_index = self.root_index().await?;
 
         match root_index.get(&self, subject_id.id).await? {
             Some(s) => {
                 let sh = SubjectHandle{
                     id: subject_id,
-                    subject: s,
+                    head: s,
                     context: self.clone()
                 };
 
@@ -188,9 +193,9 @@ impl Context {
                 //       was pulled against a sufficiently identical context stash state.
                 //       Perhaps stash edit increment? how can we get this to be really granular?
 
-                let root_index = self.root_index(Duration::from_secs(5)).await?;
+                let root_index = self.root_index().await?;
 
-                match root_index.get_head(&self, subject_id.id).await? {
+                match root_index.get(&self, subject_id.id).await? {
                     Some(mrh) => Ok(mrh),
                     None      => Ok(MemoRefHead::Null)
                 }
@@ -214,8 +219,10 @@ impl Context {
         }
 
     }
-    pub async fn root_index (&self, wait: Duration) -> Result<IndexFixed, RetrieveError> {
+    pub async fn root_index (&self) -> Result<IndexFixed, RetrieveError> {
         let start = Instant::now();
+        // TODO centralized timeout duration config
+        let wait = Duration::from_secs(5);
 
         loop {
             if start.elapsed() > wait{
@@ -223,7 +230,7 @@ impl Context {
             }
 
             if let Ok(node) = self.try_root_index_node() {
-                let index = IndexFixed::new_from_memorefhead(&self, 5, node);
+                let index = IndexFixed::new_from_head(&self, 5, node);
                 return Ok(index);
             }
 
@@ -320,8 +327,9 @@ impl Context {
         // return true;
 
     }
-    pub (crate) async fn insert_into_root_index(&self, subject_id: SubjectId, subject: &Subject) -> Result<(),WriteError> {
-        self.root_index(Duration::from_secs(5)).await?.insert(self, subject_id.id, subject).await
+    pub (crate) async fn update_indices(&self, subject_id: SubjectId, head: &MemoRefHead) -> Result<(),WriteError> {
+        self.root_index().await?.insert(self, subject_id.id, head.clone()).await
+        // TODO - update
     }
 
     /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is made
@@ -329,35 +337,44 @@ impl Context {
         // println!("Context.apply_subject_head({}, {:?}) ", subject_id, head.memo_ids() );
         self.stash.apply_head(&self.slab, head).await
     }
-    pub (crate) async fn get_subject(&self, subject_id: SubjectId) -> Result<Option<Subject>, RetrieveError> {
-        // TODO centralized timeout duration config
-        let root_index = self.root_index(Duration::from_secs(5)).await?;
-        root_index.get(self, subject_id.id).await
-    }
-    /// Retrieve a subject for a known MemoRefHead – ususally used for relationship traversal.
-    /// Any relevant context will also be applied when reconstituting the relevant subject to ensure that our consistency model invariants are met
-    pub async fn get_subject_with_head(&self,  mut head: MemoRefHead)  -> Result<SubjectHandle, RetrieveError> {
+    pub async fn get_subject(&self, subject_id: SubjectId) -> Result<Option<SubjectHandle>, RetrieveError> {
+        let root_index = self.root_index().await?;
 
-        // TODO POSTMERGE - look here when contemplating the unification of Subject and MemoRefHead
-        // I think the contract of SubjectHandle would be that it's been brought up to date against the context
-        // Whereas the contract for MemoRefHead wouldn't offer that
+        match root_index.get(self, subject_id.id).await? {
+            Some(head) => {
+                Ok(Some(SubjectHandle{
+                    id: head.subject_id().ok_or( RetrieveError::InvalidMemoRefHead )?,
+                    head,
+                    context: self.clone()
+                }))
+            },
+            None => Ok(None)
+        }
+
+    }
+    /// Update a given MemoRefHead with any relevant information to ensure that our consistency model invariants are met
+    pub (crate) async fn mut_update_head_for_consistency(&self, head: &mut MemoRefHead) -> Result<(), RetrieveError> {
+
+        // TODO - think about immutable versions of this
 
         if head.len() == 0 {
             return Err(RetrieveError::InvalidMemoRefHead);
         }
 
         if let Some(subject_id) = head.subject_id() {
-            head.apply_mut(&self.stash.get_head(subject_id), &self.slab ).await?;
+            head.mut_apply(&self.stash.get_head(subject_id), &self.slab ).await?;
         }
 
-        let subject = Subject::reconstitute(&self, head)?;
-        return Ok(subject);
+        Ok(())
 
     }
-    pub (crate) async fn get_subject_handle_with_head (&self, head: MemoRefHead)  -> Result<SubjectHandle, RetrieveError> {
+    pub (crate) async fn get_subject_from_head (&self, mut head: MemoRefHead)  -> Result<SubjectHandle, RetrieveError> {
+
+        self.mut_update_head_for_consistency(&mut head).await?;
+
         Ok(SubjectHandle{
             id: head.subject_id().ok_or( RetrieveError::InvalidMemoRefHead )?,
-            subject: self.get_subject_with_head(head).await?,
+            head,
             context: self.clone()
         })
     }

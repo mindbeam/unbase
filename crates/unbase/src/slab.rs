@@ -1,5 +1,3 @@
-//TODO MERGE topic/topo-compaction3
-
 use futures::{
     StreamExt,
     channel::mpsc,
@@ -24,8 +22,9 @@ use crate::{
         Transmitter,
         TransportAddress
     },
-    slab::agent::SlabAgent,
-    subject::SubjectId,
+    slab::{
+        agent::SlabAgent
+    },
 };
 
 use std::sync::{Arc,RwLock,Mutex};

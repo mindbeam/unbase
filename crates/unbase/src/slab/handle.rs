@@ -29,8 +29,6 @@ use crate::{
         MemoBody,
         SlabAnticipatedLifetime,
         MemoId,
-    },
-    subject::{
         SubjectId,
         SubjectType
     },

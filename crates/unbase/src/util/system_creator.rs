@@ -7,8 +7,8 @@ use crate::{
         MemoBody,
         RelationSet,
         SlabHandle,
-    },
-    subject::SubjectType,
+        SubjectType,
+    }
 };
 
 pub struct SystemCreator;

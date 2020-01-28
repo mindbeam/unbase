@@ -72,7 +72,7 @@ async fn player_two {
     udp2.seed_address_from_string("127.0.0.1:12001".to_string());
 
     println!("B - Waiting for root index seed...");
-    context_b.root_index(Duration::from_secs(1)).await.unwrap();
+    context_b.root_index().await.unwrap();
 
     println!("B - Searching for Ping record...");
     let rec_b1 = context_b.fetch_kv("action", "Ping", Duration::from_secs(1)).unwrap().await;

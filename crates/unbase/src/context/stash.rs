@@ -14,12 +14,10 @@ use crate::{
     slab::{
         EdgeLink,
         SlabHandle,
-        RelationSlotId
-    },
-    subject::{
+        RelationSlotId,
         SubjectId,
         SubjectType,
-        SUBJECT_MAX_RELATIONS
+        MAX_SLOTS
     },
 
 };
@@ -316,7 +314,7 @@ impl StashItem {
             subject_id: subject_id,
             head: head,
             //QUESTION: should we preallocate all possible relation slots? or manage the length of relations vec?
-            relations: iter::repeat(None).take(SUBJECT_MAX_RELATIONS).collect(),
+            relations: iter::repeat(None).take(MAX_SLOTS).collect(),
             edit_counter: 1, // Important for existence to count as an edit, as it cannot be the same as non-existence (0)
             ref_count: 0
         }
@@ -368,7 +366,7 @@ impl ItemEditGuard{
     }
     async fn apply_head (&mut self, apply_head: &MemoRefHead, slab: &SlabHandle) -> Result<bool,WriteError> {
         // NO LOCKS IN HERE
-        if !self.head.apply_mut(apply_head, slab ).await? {
+        if !self.head.mut_apply(apply_head, slab ).await? {
             return Ok(false);
         }
         // It is inappropriate here to do a contextualized projection (one which considers the current context stash)

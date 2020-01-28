@@ -4,6 +4,7 @@ use unbase::context::ContextRef;
 use unbase::index::IndexFixed;
 use std::collections::HashMap;
 use futures_await_test::async_test;
+use unbase::SubjectHandle;
 
 #[async_test]
 async fn index_construction() {
@@ -17,7 +18,7 @@ async fn index_construction() {
 
     // Create a new fixed tier index (fancier indexes not necessary for the proof of concept)
 
-    let index = IndexFixed::new(&ContextRef::Strong(context_a.clone()), 5).await;
+    let index = IndexFixed::new(&ContextRef::Strong(context_a.clone()), 5);
 
     assert_eq!( context_a.is_fully_materialized().await, true );
 
@@ -26,7 +27,7 @@ async fn index_construction() {
     let mut vals = HashMap::new();
     vals.insert("record number".to_string(), i.to_string());
 
-    let record = Subject::new(&context_a, vals, false).await.unwrap();
+    let record = SubjectHandle::new(&context_a, vals).await.unwrap();
     index.insert(i, &record).await;
 
     assert_eq!( index.get(1234).await.unwrap().get_value("record number").await.unwrap(), "1234");
@@ -37,7 +38,7 @@ async fn index_construction() {
         let mut vals = HashMap::new();
         vals.insert("record number".to_string(), i.to_string());
 
-        let record = Subject::new(&context_a, vals, false).await.unwrap();
+        let record = SubjectHandle::new(&context_a, vals).await.unwrap();
         index.insert(i, &record).await;
     }
 

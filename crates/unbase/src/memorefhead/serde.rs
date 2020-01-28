@@ -1,11 +1,11 @@
 use crate::{
     memorefhead::MemoRefHead,
-    subject::SubjectId,
     slab::{
         memoref_serde::*,
         MemoRef,
         SlabHandle,
         SlabRef,
+        SubjectId,
     },
     util::serde::{
         DeError,

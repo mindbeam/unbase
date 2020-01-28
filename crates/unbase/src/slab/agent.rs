@@ -11,16 +11,12 @@ use crate::{
     network::{SlabRef, TransmitterArgs, Transmitter, TransportAddress},
     Network,
     slab::{
-        EdgeSet,
+        SubjectId, SubjectType, EdgeSet,
         SlabId, SlabRefInner, SlabPresence, SlabAnticipatedLifetime,
         MemoRef, MemoBody, Memo, MemoInner, MemoRefInner, MemoRefPtr,
         MemoPeerList, MemoPeeringStatus, MemoId, MemoPeer,
         state::SlabState,
     },
-    subject::{
-        SubjectId,
-        SubjectType,
-    }
 };
 use futures::{
     channel::mpsc,

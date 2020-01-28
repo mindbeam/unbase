@@ -9,9 +9,57 @@ use crate::{
     network::{
         TransportAddress, SlabRef
     },
-    slab::SlabId,
-    subject::SubjectId,
+    slab::{
+        SlabId,
+    }
 };
+
+pub const MAX_SLOTS: usize = 256;
+#[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash,Debug,Serialize,Deserialize)]
+
+pub enum SubjectType {
+    IndexNode,
+    Record,
+}
+
+#[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash,Debug,Serialize,Deserialize)]
+pub struct SubjectId {
+    pub id:    u64,
+    pub stype: SubjectType,
+}
+impl <'a> core::cmp::PartialEq<&'a str> for SubjectId {
+    fn eq (&self, other: &&'a str) -> bool {
+        self.concise_string() == *other
+    }
+}
+
+impl SubjectId {
+    pub fn test(test_id: u64) -> Self{
+        SubjectId{
+            id:    test_id,
+            stype: SubjectType::Record
+        }
+    }
+    pub fn index_test(test_id: u64) -> Self{
+        SubjectId{
+            id:    test_id,
+            stype: SubjectType::IndexNode
+        }
+    }
+    pub fn concise_string (&self) -> String {
+        use self::SubjectType::*;
+        match self.stype {
+            IndexNode => format!("I{}", self.id),
+            Record    => format!("R{}", self.id)
+        }
+    }
+}
+
+impl fmt::Display for SubjectId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}-{}", self.stype, self.id)
+    }
+}
 
 /// SlabPresence represents the expected reachability of a given Slab
 /// Including Transport address and anticipated lifetime

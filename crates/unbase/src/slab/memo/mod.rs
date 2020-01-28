@@ -21,9 +21,8 @@ use crate::{
         RelationSet,
         SlabId,
         SlabHandle,
-    },
-    subject::{
-        SubjectId, SubjectType
+        SubjectId,
+        SubjectType,
     }
 };
 use crate::error::RetrieveError;
@@ -96,30 +95,36 @@ impl Memo {
     pub fn get_values (&self) -> Option<(HashMap<String, String>,bool)> {
 
         match self.body {
-            MemoBody::Edit(ref v)
-            => Some((v.clone(),false)),
-            MemoBody::FullyMaterialized { ref v, .. }
-            => Some((v.clone(),true)),
+            MemoBody::Edit(ref v) => {
+                Some((v.clone(),false))
+            },
+            MemoBody::FullyMaterialized { ref v, .. } => {
+                Some((v.clone(),true))
+            },
             _   => None
         }
     }
     pub fn get_relations (&self) -> Option<(RelationSet,bool)> {
 
         match self.body {
-            MemoBody::Relation(ref r)
-            => Some((r.clone(),false)),
-            MemoBody::FullyMaterialized { ref r, .. }
-            => Some((r.clone(),true)),
+            MemoBody::Relation(ref r) => {
+                Some((r.clone(), false))
+            },
+            MemoBody::FullyMaterialized { ref r, .. } => {
+                Some((r.clone(), true))
+            },
             _   => None
         }
     }
     pub fn get_edges (&self) -> Option<(EdgeSet,bool)> {
 
         match self.body {
-            MemoBody::Edge(ref e)
-            => Some((e.clone(),false)),
-            MemoBody::FullyMaterialized { ref e, .. }
-            => Some((e.clone(),true)),
+            MemoBody::Edge(ref e) => {
+                Some((e.clone(),false))
+            },
+            MemoBody::FullyMaterialized { ref e, .. }  => {
+                Some((e.clone(),true))
+            },
             _   => None
         }
     }

@@ -1,5 +1,4 @@
 pub mod serde;
-mod projection;
 
 use crate::{
     error::{
@@ -7,6 +6,8 @@ use crate::{
         WriteError,
     },
     slab::{
+        SubjectType,
+        MAX_SLOTS,
         MemoRef,
         MemoBody,
         Memo,
@@ -14,17 +15,22 @@ use crate::{
         SlabId,
         SlabHandle,
         SlabRef,
-    },
-    subject::{
         SubjectId,
-    }
+        RelationSlotId,
+        EdgeSet,
+        EdgeLink,
+        RelationSet,
+    },
 };
 
 use std::{
     mem,
     fmt,
     slice,
-    collections::VecDeque,
+    collections::{
+        HashMap,
+        VecDeque,
+    },
     pin::Pin,
 };
 
@@ -38,6 +44,7 @@ use futures::{
     }
 };
 
+use tracing::debug;
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -47,6 +54,15 @@ use futures::{
 
 //TODO: consider renaming to OwnedMemoRefHead
 #[derive(Clone, PartialEq)]
+
+// TODO - consider changing this to a linkedlist instead of a Vec, because MOST of the time it's going to be a single memoref
+// This will allow us to save allocations, and potentially have a number of traversal operations happen entirely on the stack?
+//struct Link {
+//    memoref: MemoRef,
+//    //90+% of the time this will be None
+//    next: Option<Box<Link>>
+//}
+
 pub enum MemoRefHead {
     Null,
     Subject{
@@ -67,8 +83,20 @@ pub struct MemoRefHeadWithProvenance {
 }
 
 impl MemoRefHead {
+//    pub fn new_record( slab: &SlabHandle ){
+//
+//    }
+    pub fn new_index ( slab: &SlabHandle, values: HashMap<String,String> ) -> MemoRefHead {
+        let id = slab.generate_subject_id(SubjectType::IndexNode);
+
+        slab.new_memo(
+            Some(id),
+            MemoRefHead::Null,
+            MemoBody::FullyMaterialized {v: values, r: RelationSet::empty(), e: EdgeSet::empty(), t: SubjectType::IndexNode }
+        ).to_head()
+    }
     #[tracing::instrument]
-    pub async fn apply_memoref(&mut self, new: &MemoRef, slab: &SlabHandle ) -> Result<bool,WriteError> {
+    pub async fn mut_apply_memoref(&mut self, new: &MemoRef, slab: &SlabHandle ) -> Result<bool,WriteError> {
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
         // If so, any memorefs that it descends must be removed
@@ -170,37 +198,52 @@ impl MemoRefHead {
         Ok(applied)
     }
     #[tracing::instrument]
-    pub async fn apply_memorefs (&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) {
+    pub async fn mut_apply_memorefs(&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) {
         for new in new_memorefs.iter(){
-            self.apply_memoref(new, slab).await;
+            self.mut_apply_memoref(new, slab).await;
         }
     }
     #[tracing::instrument]
-    pub async fn apply_mut(&mut self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool,WriteError> {
+    pub async fn mut_apply(&mut self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool,WriteError> {
+        match other {
+            MemoRefHead::Null => {
+                Ok(false)
+            },
+            MemoRefHead::Anonymous{ ref head, .. }   => {
+                let mut applied = false;
+                for new in head.iter() {
+                    if self.mut_apply_memoref(new, slab ).await? {
+                        applied = true;
+                    };
+                }
+                Ok(applied)
+            },
+            MemoRefHead::Subject{ ref head, .. } => {
+                let mut applied = false;
+                for new in head.iter() {
+                    if self.mut_apply_memoref(new, slab ).await? {
+                        applied = true;
+                    };
+                }
+                Ok(applied)
+            }
+        }
+    }
+    /// Immutably apply a second head to this one
+    #[tracing::instrument]
+    pub async fn apply(&self, other: &MemoRefHead, slab: &SlabHandle) -> Result<(MemoRefHead, bool),WriteError> {
         let mut applied = false;
-        // TODO make this concurrent?
-        // TODO NEXT - Make this immutable
+        // This is just a temporary API hack so we don't forget to make this nicer later with internal _immutability_.
+        //TODO reimplement this with immutabilityZ
+
+        let mut hack_self = self.clone();
         for new in other.iter(){
-            if self.apply_memoref( new, slab ).await? {
+            if hack_self.mut_apply_memoref(new, slab ).await? {
                 applied = true;
             };
         }
 
-        Ok(applied)
-    }
-    #[tracing::instrument]
-    pub async fn apply(mut self, other: &MemoRefHead, slab: &SlabHandle) -> Result<(MemoRefHead, bool),WriteError> {
-        let mut applied = false;
-        // TODO make this concurrent?
-
-        for new in other.iter(){
-            if self.apply_memoref( new, slab ).await? {
-                applied = true;
-            };
-        }
-
-        //TODO reimplement this with immutability
-        Ok((self, applied))
+        Ok((hack_self, applied))
     }
     pub async fn descends_or_contains (&self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool,RetrieveError> {
 
@@ -323,6 +366,261 @@ impl MemoRefHead {
         }
 
         Ok(true)
+    }
+    /// Notify whomever needs to know that a new subject has been created
+    pub async fn get_value ( &mut self, slab: &SlabHandle, key: &str ) -> Result<Option<String>, RetrieveError> {
+        //TODO: consider creating a consolidated projection routine for most/all uses
+        let mut memostream = self.causal_memo_stream(slab.clone()).boxed();
+        while let Some(memo) = memostream.next().await {
+            //println!("# \t\\ Considering Memo {}", memo.id );
+            if let Some((values, materialized)) = memo?.get_values() {
+                if let Some(v) = values.get(key) {
+                    return Ok(Some(v.clone()));
+                }else if materialized {
+                    return Ok(None); //end of the line here
+                }
+            }
+        }
+
+        Err(RetrieveError::MemoLineageError)
+    }
+    pub async fn get_relation ( &mut self, slab: &SlabHandle, key: RelationSlotId ) -> Result<Option<SubjectId>, RetrieveError> {
+        //println!("# Subject({}).get_relation({})",self.id,key);
+
+        let mut memostream = self.causal_memo_stream(slab.clone());
+        while let Some(memo) = memostream.next().await {
+
+            let memo = memo?;
+            if let Some((relations,materialized)) = memo.get_relations(){
+                debug!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), relations );
+                if let Some(maybe_subject_id) = relations.get(&key) {
+                    return match *maybe_subject_id {
+                        Some(subject_id) => Ok(Some(subject_id)),
+                        None                 => Ok(None)
+                    };
+                }else if materialized {
+                    debug!("\n# \t\\ Not Found (materialized)" );
+                    return Ok(None);
+                }
+            }
+        }
+
+        debug!("Not Found" );
+        Err(RetrieveError::MemoLineageError)
+    }
+    pub async fn get_edge(&mut self, slab: &SlabHandle, key: RelationSlotId ) -> Result<Option<MemoRefHead>, RetrieveError> {
+        let mut memostream = self.causal_memo_stream(slab.clone());
+
+        while let Some(memo) = memostream.next().await {
+
+            let memo = memo?;
+            if let Some((edges,materialized)) = memo.get_edges(){
+                debug!("# \t\\ Considering Memo {}, Head: {:?}, Relations: {:?}", memo.id, memo.get_parent_head(), edges );
+
+                if let Some(head) = edges.get(&key) {
+                    // TODO POSTMERGE this is likely buggy - shouldn't we be looking at all of the memorefs in the head in case of concurrencies?
+
+                    return Ok(Some(head.clone()));
+                }else if materialized {
+                    debug!("\n# \t\\ Not Found (materialized)" );
+                    return Ok(None);
+                }
+            }
+        }
+
+        debug!("Not Found" );
+        Err(RetrieveError::MemoLineageError)
+    }
+    pub async fn set_value (&mut self, slab: &SlabHandle, key: &str, value: &str) -> Result<(),WriteError> {
+        let mut vals = HashMap::new();
+        vals.insert(key.to_string(), value.to_string());
+
+        // TODO - do this in a single swap? (fairly certain that requires unsafe)
+        let mut head = MemoRefHead::Null;
+        std::mem::swap(self, &mut head);
+
+        let mut new_head = slab.new_memo(
+            self.subject_id(),
+            head,
+            MemoBody::Edit(vals)
+        ).to_head();
+
+        std::mem::swap(self, &mut new_head);
+
+        // We shouldn't need to apply the new memoref. It IS the new head
+        // self.apply_memoref(&memoref, &slab).await?;
+
+        Ok(())
+    }
+    pub async fn set_relation (&mut self, slab: &SlabHandle, key: RelationSlotId, relation: &Self) -> Result<(),WriteError> {
+        //println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
+        let mut relationset = RelationSet::empty();
+
+        let subject_id = relation.subject_id().ok_or( WriteError::BadTarget )?;
+
+        relationset.insert( key, subject_id );
+
+        // TODO - do this in a single swap? May require unsafe
+        let mut head = MemoRefHead::Null;
+        std::mem::swap(self, &mut head,);
+
+        let mut new_head = slab.new_memo(
+            self.subject_id(),
+            head,
+            MemoBody::Relation(relationset)
+        ).to_head();
+
+        std::mem::swap(self, &mut new_head);
+
+        // We shouldn't need to apply the new memoref. It IS the new head
+        // self.apply_memoref(&memoref, &slab).await?;
+
+        Ok(())
+    }
+    pub fn set_edge (&mut self, slab: &SlabHandle, key: RelationSlotId, target: MemoRefHead ) {
+        //println!("# Subject({}).set_edge({}, {})", &self.id, key, relation.id);
+
+        let mut edgeset = EdgeSet::empty();
+        edgeset.insert(key, target);
+
+        // TODO - do this in a single swap? May require unsafe
+        let mut parents = MemoRefHead::Null;
+        std::mem::swap(self, &mut parents);
+
+        let mut new_head = slab.new_memo(
+            self.subject_id(),
+            parents,
+            MemoBody::Edge(edgeset)
+        ).to_head();
+
+        std::mem::swap(self, &mut new_head);
+
+        // We shouldn't need to apply the new memoref. It IS the new head
+        // self.apply_memoref(&memoref, &slab).await?;
+    }
+
+    #[tracing::instrument]
+    pub async fn get_all_memo_ids ( &self, slab: SlabHandle ) -> Result<Vec<MemoId>,RetrieveError> {
+        let mut memostream = self.causal_memo_stream( slab );
+
+        let mut memo_ids = Vec::new();
+        while let Some(memo) = memostream.next().await {
+            memo_ids.push(memo?.id);
+        }
+        Ok(memo_ids)
+    }
+//    pub fn fully_materialize( &self, slab: &Slab ) {
+//        // TODO: consider doing as-you-go distance counting to the nearest materialized memo for each descendent
+//        //       as part of the list management. That way we won't have to incur the below computational effort.
+//    }
+
+    // Kind of a brute force way to do this
+    // TODO: Consider calculating deltas during memoref application,
+    //       and use that to perform a minimum cost subject_head_link edit
+
+    // TODO: This projection method is probably wrong, as it does not consider how to handle concurrent edge-setting
+    //       this problem applies to causal_memo_stream itself really, insofar as it should return sets of concurrent memos to be merged rather than individual memos
+    // This in turn raises questions about how relations should be merged
+
+    /// Project all edge links based only on the causal history of this head.
+    /// The name is pretty gnarly, and this is very ripe for refactoring, but at least it says what it does.
+    pub async fn project_all_edge_links_including_empties (&self, slab: &SlabHandle) -> Result<Vec<EdgeLink>,RetrieveError> {
+        let mut edge_links : Vec<Option<EdgeLink>> = Vec::with_capacity(MAX_SLOTS);
+
+        // None is an indication that we've not yet visited this slot, and that it is thus eligible for setting
+        for _ in 0..MAX_SLOTS as usize {
+            edge_links.push(None);
+        }
+
+        let mut memostream = self.causal_memo_stream(slab.clone());
+        while let Some(memo) = memostream.next().await {
+
+            match memo?.body {
+                MemoBody::FullyMaterialized { e : ref edgeset, .. } => {
+
+                    // Iterate over all the entries in this EdgeSet
+                    for (slot_id,rel_head) in &edgeset.0 {
+
+                        // Only consider the non-visited slots
+                        if let None = edge_links[ *slot_id as usize ] {
+                            edge_links[ *slot_id as usize ] = Some(match *rel_head {
+                                MemoRefHead::Null  => EdgeLink::Vacant{ slot_id: *slot_id },
+                                _                  => EdgeLink::Occupied{ slot_id: *slot_id, head: rel_head.clone() }
+                            });
+                        }
+                    }
+
+                    break;
+                    // Fully Materialized memo means we're done here
+                },
+                MemoBody::Edge(ref r) => {
+                    for (slot_id,rel_head) in r.iter() {
+
+                        // Only consider the non-visited slots
+                        if let None = edge_links[ *slot_id as usize ] {
+                            edge_links[ *slot_id as usize ] = Some(
+                                match *rel_head {
+                                    MemoRefHead::Null  => EdgeLink::Vacant{ slot_id: *slot_id },
+                                    _                  => EdgeLink::Occupied{ slot_id: *slot_id, head: rel_head.clone() }
+                                }
+                            )
+                        }
+                    }
+                },
+                _ => {}
+            }
+        }
+
+        let out : Vec<EdgeLink> = edge_links.iter().enumerate().map(|(slot_id,maybe_link)| {
+            // Fill in the non-visited links with vacants
+            match maybe_link {
+                None           => EdgeLink::Vacant{ slot_id: slot_id as RelationSlotId },
+                Some(ref link) => link.clone()
+            }
+        }).collect();
+
+        Ok(out)
+    }
+    /// Contextualized projection of occupied edges
+    pub async fn project_occupied_edges (&self, slab: &SlabHandle) -> Result<Vec<EdgeLink>,RetrieveError> {
+        let mut visited = [false; MAX_SLOTS];
+        let mut edge_links : Vec<EdgeLink> = Vec::new();
+
+        let mut memostream = self.causal_memo_stream(slab.clone());
+        'memo: while let Some(memo) = memostream.next().await {
+
+            let memo = memo?;
+
+            let (edgeset,last) = match memo.body {
+                MemoBody::FullyMaterialized { e : ref edgeset, .. } => {
+                    (edgeset,true)
+                },
+                MemoBody::Edge(ref edgeset) => {
+                    (edgeset,false)
+                },
+                _ => continue 'memo
+            };
+
+            for (slot_id,rel_head) in edgeset.iter() {
+                // Only consider the non-visited slots
+                if !visited[ *slot_id as usize] {
+                    visited[ *slot_id as usize] = true;
+
+                    match *rel_head {
+                        MemoRefHead::Subject{..} | MemoRefHead::Anonymous{..} => {
+                            edge_links.push( EdgeLink::Occupied{ slot_id: *slot_id, head: rel_head.clone() });
+                        },
+                        MemoRefHead::Null => {}
+                    };
+                }
+            }
+
+            if last {
+                break;
+            }
+        }
+
+        Ok(edge_links)
     }
 }
 

@@ -10,9 +10,10 @@ use crate::{
     slab::{
         RelationSlotId,
         MemoId,
-    },
-    subject::{
-        Subject,
+        SlabHandle,
+        MemoBody,
+        RelationSet,
+        EdgeSet,
         SubjectId,
         SubjectType
     },
@@ -24,21 +25,37 @@ use futures::{
     channel::mpsc,
 };
 
+use tracing::debug;
+
+
+// TODO - merge rename SubjectHandle to Entity
 #[derive(Clone)]
 pub struct SubjectHandle {
+    //TODO - remove the redundancy between id and head.subject_id()
     pub id: SubjectId,
-    pub (crate) subject: Subject,
+    pub (crate) head: MemoRefHead,
     pub (crate) context: Context
 }
 
 impl SubjectHandle{
     pub async fn new ( context: &Context, vals: HashMap<String, String> ) -> Result<SubjectHandle,WriteError> {
 
-        let subject = Subject::new(&context, SubjectType::Record, vals ).await?;
+        let slab: &SlabHandle = &context.slab;
+        let id = slab.generate_subject_id(SubjectType::Record);
+
+        debug!("SubjectHandle({}).new()",id);
+
+        let head = slab.new_memo(
+            Some(id),
+            MemoRefHead::Null,
+            MemoBody::FullyMaterialized {v: vals, r: RelationSet::empty(), e: EdgeSet::empty(), t: id.stype.clone() }
+        ).to_head();
+
+        context.update_indices(id, &head ).await?;
 
         let handle = SubjectHandle{
-            id: subject.id,
-            subject: subject,
+            id: id,
+            head: head,
             context: context.clone()
         };
 
@@ -54,35 +71,64 @@ impl SubjectHandle{
         Self::new( context, vals ).await
     }
     pub async fn get_value ( &mut self, key: &str ) -> Result<Option<String>,RetrieveError> {
-        self.subject.get_value(&self.context, key).await
+
+        self.context.mut_update_head_for_consistency( &mut self.head ).await?;
+
+        self.head.get_value(&self.context.slab, key).await
+    }
+    pub async fn get_edge ( &mut self, key: RelationSlotId ) -> Result<Option<SubjectHandle>, RetrieveError> {
+
+        self.context.mut_update_head_for_consistency( &mut self.head ).await?;
+
+        match self.head.get_edge(&self.context.slab, key).await? {
+            Some(head) => {
+                Ok( Some( self.context.get_subject_from_head(head).await? ) )
+            },
+            None => {
+                Ok(None)
+            }
+        }
     }
     pub async fn get_relation ( &mut self, key: RelationSlotId ) -> Result<Option<SubjectHandle>, RetrieveError> {
 
-        match self.subject.get_relation(&self.context, key).await?{
-        Some(rel_sub_subject) => {
-            Ok(Some(SubjectHandle{
-                id: rel_sub_subject.id,
-                context: self.context.clone(),
-                subject: rel_sub_subject
-            }))
+        self.context.mut_update_head_for_consistency( &mut self.head ).await?;
+
+        match self.head.get_relation(&self.context.slab, key).await? {
+            Some(rel_subject_id) => {
+                self.context.get_subject(rel_subject_id).await
             },
             None => Ok(None)
         }
     }
-    pub async fn set_value (&mut self, key: &str, value: &str) -> Result<bool,WriteError> {
-        self.subject.set_value(&self.context, key, value).await
+    pub async fn set_value (&mut self, key: &str, value: &str) -> Result<(),WriteError> {
+
+        self.head.set_value(&self.context.slab, key, value).await?;
+
+        // Update our indices before returning to ensure that subsequence queries against this context are self-consistent
+        self.context.update_indices(self.id, &self.head ).await?;
+
+        Ok(())
     }
     pub async fn set_relation (&mut self, key: RelationSlotId, relation: &Self) -> Result<(),WriteError> {
-        self.subject.set_relation(&self.context, key, &relation.subject).await
+        self.head.set_relation(&self.context.slab, key, &relation.head).await?;
+
+        // Update our indices before returning to ensure that subsequence queries against this context are self-consistent
+        self.context.update_indices(self.id, &self.head ).await?;
+
+        Ok(())
     }
     pub async fn get_all_memo_ids ( &self ) -> Result<Vec<MemoId>,RetrieveError> {
-        self.subject.get_all_memo_ids( self.context.slab.clone() ).await
+        self.head.get_all_memo_ids( self.context.slab.clone() ).await
     }
     pub fn observe (&self) -> mpsc::Receiver<MemoRefHead> {
-        let rx = self.subject.observe(&self.context.slab);
+        let (tx, rx) = mpsc::channel(1000);
 
+        // get an initial value, rather than waiting for the value to change?
+//        tx.send( self.head.clone() ).wait().unwrap();
 
-//        SubjectState{ rx,  }
+        // BUG HERE? - not applying MRH to our head here, but double check as to what we were expecting from indexes
+        self.context.slab.observe_subject( self.id, tx );
+
         rx
     }
 
@@ -96,8 +142,16 @@ impl SubjectHandle{
 impl fmt::Debug for SubjectHandle {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("Subject")
-            .field("subject_id", &self.subject.id)
-            .field("head", &self.subject.head)
+            .field("subject_id", &self.id)
+            .field("head", &self.head)
             .finish()
+    }
+}
+
+impl Drop for SubjectHandle {
+    fn drop (&mut self) {
+        //println!("# Subject({}).drop", &self.id);
+        // TODO: send a drop signal to the owning context via channel
+        // self.drop_channel.send(self.id);
     }
 }
