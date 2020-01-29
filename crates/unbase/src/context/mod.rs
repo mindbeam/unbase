@@ -52,7 +52,7 @@ pub struct Context(Arc<ContextInner>);
 pub struct ContextInner {
     pub slab: SlabHandle,
     pub root_index_node: Arc<Mutex<Option<MemoRefHead>>>,
-    applier: RemoteHandle<()>,
+    _applier: RemoteHandle<()>,
     stash: Stash,
     //pathology:  Option<Box<Fn(String)>> // Something is wrong here, causing compile to fail with a recursion error
 }
@@ -99,7 +99,7 @@ impl Context {
             slab: slab,
             root_index_node: Arc::new(Mutex::new(None)),
             stash,
-            applier,
+            _applier: applier,
         };
 
         Context(Arc::new(inner))
@@ -230,7 +230,7 @@ impl Context {
             }
 
             if let Ok(node) = self.try_root_index_node() {
-                let index = IndexFixed::new_from_head(&self, 5, node);
+                let index = IndexFixed::new_from_head(5, node);
                 return Ok(index);
             }
 
@@ -393,20 +393,18 @@ impl fmt::Debug for Context {
 #[cfg(test)]
 mod test {
     use crate::{
-        context::Context,
         Network,
         Slab,
         slab::{
             EdgeSet,
-            MemoBody
+            MemoBody,
+            SubjectId,
         },
-        subject::SubjectId,
     };
 
     use std::collections::HashMap;
-    use crate::slab::SubjectId;
 
-    #[async_test]
+    #[unbase_test_util::async_test]
     async fn context_basic() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
@@ -422,8 +420,8 @@ mod test {
         assert_eq!(context.stash.concise_contents(),["I4>I3"], "Valid contents");
     }
 
-    #[async_test]
-    fn context_manual_compaction() {
+    #[unbase_test_util::async_test]
+    async fn context_manual_compaction() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
         let context = slab.create_context();
@@ -434,8 +432,8 @@ mod test {
 
         {
             // manually defeat compaction
-            let head = slab.new_memo_basic(head2.subject_id(), head2.clone(), MemoBody::Edit(HashMap::new())).to_head();
-            context.apply_head(&head).unwrap();
+            let head = slab.new_memo(head2.subject_id(), head2.clone(), MemoBody::Edit(HashMap::new())).to_head();
+            context.apply_head(&head).await.unwrap();
         }
 
         // additional stuff on I2 should prevent it from being pruned by the I3 edge
@@ -447,8 +445,8 @@ mod test {
         {
             // manually perform compaction
             let updated_head2 = context.stash.get_head( head2.subject_id().unwrap() );
-            let head = slab.new_memo_basic(head3.subject_id(), head3.clone(), MemoBody::Edge(EdgeSet::single(0, updated_head2))).to_head();
-            context.apply_head(&head).unwrap();
+            let head = slab.new_memo(head3.subject_id(), head3.clone(), MemoBody::Edge(EdgeSet::single(0, updated_head2))).to_head();
+            context.apply_head(&head).await.unwrap();
         }
 
         assert_eq!(context.stash.concise_contents(),["I3>I2", "I4>I3"], "Valid contents");
@@ -456,35 +454,35 @@ mod test {
         {
             // manually perform compaction
             let updated_head3 = context.stash.get_head( head3.subject_id().unwrap() );
-            let head = slab.new_memo_basic(head4.subject_id(), head4, MemoBody::Edge(EdgeSet::single(0, updated_head3))).to_head();
-            context.apply_head(&head).unwrap();
+            let head = slab.new_memo(head4.subject_id(), head4, MemoBody::Edge(EdgeSet::single(0, updated_head3))).to_head();
+            context.apply_head(&head).await.unwrap();
         }
 
         assert_eq!(context.stash.concise_contents(),["I4>I3"], "Valid contents");
     }
 
-    #[test]
-    fn context_auto_compaction() {
+    #[unbase_test_util::async_test]
+    async fn context_auto_compaction() {
         let net = Network::create_new_system();
         let slab = Slab::new(&net);
         let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
-        let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]  );
-        let head2  = context.add_test_subject(SubjectId::index_test(2), vec![head1]);
+        let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]  ).await;
+        let head2  = context.add_test_subject(SubjectId::index_test(2), vec![head1]).await;
 
         {
             // manually defeat compaction
-            let head = slab.new_memo_basic(head2.subject_id(), head2.clone(), MemoBody::Edit(HashMap::new())).to_head();
-            context.apply_head(&head).unwrap();
+            let head = slab.new_memo(head2.subject_id(), head2.clone(), MemoBody::Edit(HashMap::new())).to_head();
+            context.apply_head(&head).await.unwrap();
         }
 
         // additional stuff on I2 should prevent it from being pruned by the I3 edge
-        let head3  = context.add_test_subject(SubjectId::index_test(3), vec![head2] );
+        let head3  = context.add_test_subject(SubjectId::index_test(3), vec![head2] ).await;
         {
             // manually defeat compaction
-            let head = slab.new_memo_basic(head3.subject_id(), head3.clone(), MemoBody::Edit(HashMap::new())).to_head();
-            context.apply_head(&head).unwrap();
+            let head = slab.new_memo(head3.subject_id(), head3.clone(), MemoBody::Edit(HashMap::new())).to_head();
+            context.apply_head(&head).await.unwrap();
         }
 
         // additional stuff on I3 should prevent it from being pruned by the I4 edge
@@ -492,13 +490,13 @@ mod test {
 
         assert_eq!(context.stash.concise_contents(),["I2>I1","I3>I2","I4>I3"], "Valid contents");
 
-        context.compact().unwrap();
+        context.compact().await.unwrap();
 
         assert_eq!(context.stash.concise_contents(),["I4>I3"], "Valid contents");
     }
 
-    // #[test]
-    // fn context_manager_dual_indegree_zero() {
+    // #[unbase_test_util::async_test]
+    // async fn context_manager_dual_indegree_zero() {
     //     let net = Network::create_new_system();
     //     let slab = Slab::new(&net);
     //     let mut context = slab.create_context();
@@ -512,8 +510,8 @@ mod test {
     //     let mut iter = context.subject_head_iter();
     //     assert!(iter.get_subject_ids() == [1,3,2,4], "Valid sequence");
     // }
-    // #[test]
-    // fn repoint_relation() {
+    // #[unbase_test_util::async_test]
+    // async fn repoint_relation() {
     //     let net = Network::create_new_system();
     //     let slab = Slab::new(&net);
     //     let mut context = slab.create_context();
@@ -528,15 +526,16 @@ mod test {
     //     let head4 = context.add_test_subject(4, Some(3), &slab );
 
     //     // Repoint Subject 2 slot 0 to subject 4
-    //     let head2_b = slab.new_memo_basic(Some(2), head2, MemoBody::Relation(RelationSet::single(0,4) )).to_head();
-    //     context.apply_head(4, &head2_b, &slab);
+    //     let head2_b = slab.new_memo(Some(2), head2, MemoBody::Relation(RelationSet::single(0,4) )).to_head();
+    //     context.apply_head(4, &head2_b, &slab).await.unwrap();
 
     //     let mut iter = context.subject_head_iter();
     //     assert!(iter.get_subject_ids() == [1,4,3,2], "Valid sequence");
     // }
-    // #[test]
+
     // it doesn't actually make any sense to "remove" a head from the context
-    // fn context_remove() {
+    // #[unbase_test_util::async_test]
+    // async fn context_remove() {
     //     let net = Network::create_new_system();
     //     let slab = Slab::new(&net);
     //     let mut context = slab.create_context();

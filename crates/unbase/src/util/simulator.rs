@@ -370,8 +370,8 @@ mod test {
         }
     }
 
-    #[test]
-    fn delivery_order() {
+    #[unbase_test_util::async_test]
+    async fn delivery_order() {
         // repeat 10 times due to check for nondeterminism
         for i in 0..10 {
             debug!(%i);

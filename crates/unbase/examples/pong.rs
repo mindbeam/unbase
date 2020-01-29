@@ -1,17 +1,20 @@
-extern crate unbase;
+use unbase::{
+    network::transport::TransportUDP,
+    Network,
+    Slab,
+};
 use std::time::Duration;
 use timer::Delay;
-use unbase::Subject;
 
 #[async_std::main]
 async fn main(){
-    let net = unbase::Network::new();
+    let net = Network::new();
     net.hack_set_next_slab_id(200);
 
-    let udp = unbase::network::transport::TransportUDP::new("127.0.0.1:1337".to_string());
+    let udp = TransportUDP::new("127.0.0.1:1337".to_string());
     net.add_transport( Box::new(udp.clone()) );
 
-    let slab = unbase::Slab::new(&net);
+    let slab = Slab::new(&net);
 
     for i in 0..60 {
         //TODO make it auto retry seeding
@@ -45,7 +48,7 @@ async fn main(){
         Delay::new(Duration::from_millis(500)).await;
     }
 
-    let record = match maybe_record {
+    let mut record = match maybe_record {
         Some(r) => r,
         None =>{
             println!("unable to retrieve subject");

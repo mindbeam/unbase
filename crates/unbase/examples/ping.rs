@@ -1,7 +1,7 @@
 extern crate unbase;
 use std::time::Duration;
 use timer::Delay;
-use unbase::Subject;
+use unbase::SubjectHandle;
 
 #[async_std::main]
 async fn main() {
@@ -11,7 +11,7 @@ async fn main() {
 
     let slab = unbase::Slab::new(&net);
     let context = slab.create_context();
-    let record = Subject::new_kv(&context, "the_ball_goes", "PING").await.unwrap();
+    let mut record = SubjectHandle::new_kv(&context, "the_ball_goes", "PING").await.unwrap();
 
     println!("{:?}", record);
     // ************************************************************************
@@ -25,14 +25,14 @@ async fn main() {
     println!("Waiting for PONGs");
     for _ in 0..5 {
         // Hacky-polling approach for now, push notification coming sooooon!
-        for _ in 0..1000 {
+        for _ in 0usize..1000 {
             println!(".");
-            let value = record.get_value("the_ball_goes").await.unwrap();
+            let value = record.get_value("the_ball_goes").await.unwrap().unwrap();
             if &value == "PONG" {
                 // set a value when a change is detected
 
                 println!("[[[ PONG ]]]");
-                record.set_value("the_ball_goes", "PONG").await;
+                record.set_value("the_ball_goes", "PONG").await.unwrap();
                 break;
             }
 

@@ -5,8 +5,8 @@ use log::*;
 
 //
 //#[cfg(target_os = "wasm32")]
-//#[test]
-//fn basic_record_retrieval_singlethread() {
+//#[unbase_test_util::async_test]
+//async fn basic_record_retrieval_singlethread() {
 //
 //    let net = unbase::Network::create_new_system();
 //    let slab_a = unbase::slab::storage::Memory::new(&net);

@@ -199,10 +199,16 @@ impl MemoRefHead {
         Ok(applied)
     }
     #[tracing::instrument]
-    pub async fn mut_apply_memorefs(&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) {
+    pub async fn mut_apply_memorefs(&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) -> Result<bool,WriteError> {
+        let mut did_apply = false;
+        
         for new in new_memorefs.iter(){
-            self.mut_apply_memoref(new, slab).await;
+            if self.mut_apply_memoref(new, slab).await? {
+                did_apply = true;
+            }
         }
+
+        Ok(did_apply)
     }
     #[tracing::instrument]
     pub async fn mut_apply(&mut self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool,WriteError> {

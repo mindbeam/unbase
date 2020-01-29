@@ -20,10 +20,6 @@ use crate::{
 };
 use futures::{
     channel::mpsc,
-    SinkExt,
-    future::{
-        join_all
-    },
 };
 
 pub struct SlabAgent {
@@ -346,13 +342,14 @@ impl SlabAgent {
     }
 
     #[tracing::instrument]
-    pub async fn recv_memoref (&self, memoref: MemoRef) {
+    pub fn recv_memoref (&self, memoref: MemoRef) {
 
         let subject_id = match memoref.subject_id {
             Some(subject_id) => subject_id,
             None => return,
         };
 
+        // TODO POSTMERGE - come up with a memoref receiving strategy which allows backpressure when the queue is full
 //        let mut futs = Vec::new();
 
         {
@@ -498,7 +495,7 @@ impl SlabAgent {
         ).0
     }
     #[tracing::instrument]
-    pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool){
+    pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool) {
         // TODO: find a way to merge this with assert_memoref to avoid doing duplicative work with regard to peerlist application
 
         let memo = Memo::new(MemoInner {
@@ -535,7 +532,7 @@ impl SlabAgent {
 
         self.recv_memoref(memoref.clone());
 
-        // TODO: reconcile localize_memoref, reconstitute_memo, and recv_memoref
+        // TODO POSTMERGE: reconcile localize_memoref, reconstitute_memo, and recv_memoref
         (memo, memoref, had_memoref)
     }
     #[tracing::instrument]

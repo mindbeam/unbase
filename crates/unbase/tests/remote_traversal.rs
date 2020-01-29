@@ -27,7 +27,7 @@ async fn remote_traversal_simulated() {
     let context_a = slab_a.create_context();
     let _context_b = slab_b.create_context();
 
-    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
+    let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
 
     rec_a1.set_value("animal_sound", "Woof").await;
 
@@ -35,8 +35,8 @@ async fn remote_traversal_simulated() {
 
     simulator.quiesce().await;
 
-    let memo_ids = rec_a1.get_all_memo_ids().await;
-    slab_a.remotize_memos(&memo_ids).expect("failed to remotize memos");
+    let memo_ids = rec_a1.get_all_memo_ids().await.unwrap();
+    slab_a.remotize_memos(&memo_ids, Duration::from_secs(1)).expect("failed to remotize memos");
 
     let value = rec_a1.get_value("animal_sound").await;
     assert_eq!(value, Some("Meow".to_string()));
@@ -62,7 +62,7 @@ async fn remote_traversal_nondeterministic() {
     let context_a = slab_a.create_context();
     let _context_b = slab_b.create_context();
 
-    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
+    let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
 
     rec_a1.set_value("animal_sound","Woof").await;
     rec_a1.set_value("animal_sound","Meow").await;
@@ -70,11 +70,11 @@ async fn remote_traversal_nondeterministic() {
     // TODO - provide a deterministic way to wait for quiescence when not using the simulator
     Delay::new(Duration::from_millis(50)).await;
 
-    slab_a.remotize_memos( &rec_a1.get_all_memo_ids().await ).expect("failed to remotize memos");
+    slab_a.remotize_memos( &rec_a1.get_all_memo_ids().await.unwrap(), Duration::from_secs(1) ).await.expect("failed to remotize memos");
 
     Delay::new(Duration::from_millis(10)).await;
 
-    let value = rec_a1.get_value("animal_sound").await.unwrap();
+    let value = rec_a1.get_value("animal_sound").await.unwrap().unwrap();
     assert_eq!(value,   "Meow");
 
 }
@@ -103,7 +103,7 @@ async fn udp_station_one(){
     Delay::new(Duration::from_millis(150)).await;
 
     // Do some stuff
-    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
+    let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
     rec_a1.set_value("animal_sound", "Woof").await.unwrap();
     rec_a1.set_value("animal_sound", "Meow").await.unwrap();
 
@@ -112,7 +112,7 @@ async fn udp_station_one(){
 
 
     // manually remove the memos
-    slab_a.remotize_memos(&rec_a1.get_all_memo_ids().await, Duration::from_secs(1)).await.expect("failed to remotize memos");
+    slab_a.remotize_memos(&rec_a1.get_all_memo_ids().await.unwrap(), Duration::from_secs(1)).await.expect("failed to remotize memos");
 
     // Not really any strong reason to wait here, except just to play nice and make sure slab_b's peering is updated
     // TODO: test memo expungement/de-peering, followed immediately by MemoRequest for same

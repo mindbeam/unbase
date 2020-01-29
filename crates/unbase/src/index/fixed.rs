@@ -7,26 +7,12 @@ use crate::{
     memorefhead::MemoRefHead,
     slab::{
         RelationSlotId,
-        SubjectType,
         MAX_SLOTS,
-        MemoBody,
-        RelationSet,
-        EdgeSet
     },
-};
-
-use futures::{
-    future::{
-        FutureExt,
-        TryFutureExt,
-        LocalBoxFuture
-    },
-    Future,
 };
 
 use std::{
     collections::HashMap,
-    cell::RefCell,
     fmt,
 };
 
@@ -48,7 +34,7 @@ impl IndexFixed {
             depth: depth
         }
     }
-    pub fn new_from_head(context: &Context, depth: u8, memorefhead: MemoRefHead ) -> IndexFixed {
+    pub fn new_from_head(depth: u8, memorefhead: MemoRefHead ) -> IndexFixed {
         Self {
             root: memorefhead,
             depth: depth
@@ -122,9 +108,8 @@ impl IndexFixed {
     #[doc(hidden)]
     #[cfg(test)]
     pub (crate) async fn test_get_subject_handle(&self, context: &Context, key: u64 ) -> Result<Option<crate::subjecthandle::SubjectHandle>,RetrieveError> {
-        use crate::subjecthandle::SubjectHandle;
         match self.get(context,key).await? {
-            Some(mut head) => {
+            Some(head) => {
 
                 let subject = context.get_subject_from_head( head ).await?;
 
@@ -259,8 +244,8 @@ mod test {
     use crate::{Network, Slab, SubjectHandle};
     use crate::index::IndexFixed;
 
-    #[test]
-    fn index_construction() {
+    #[unbase_test_util::async_test]
+    async fn index_construction() {
 
         let net = Network::create_new_system();
 
@@ -270,27 +255,31 @@ mod test {
 
         // First lets do a single index test
         let i = 12345;
-        let record = SubjectHandle::new_kv(&context_a, "record number", &format!("{}",i)).unwrap();
-        index.insert(&context_a, i,record.head.clone()).unwrap();
+        let record = SubjectHandle::new_kv(&context_a, "record number", &format!("{}",i)).await.unwrap();
+        index.insert(&context_a, i,record.head.clone()).await.unwrap();
 
-        assert_eq!(index.test_get_subject_handle(&context_a, 12345).unwrap().unwrap().get_value("record number").unwrap(), "12345");
+        let mut record2 = index.test_get_subject_handle(&context_a, 12345).await.unwrap().unwrap();
+        let value2 = record2.get_value("record number").await.expect("Ok").expect("Some");
+        assert_eq!(&value2, "12345");
 
         //Ok, now lets torture it a little
         for i in 0..500 {
-            let record = SubjectHandle::new_kv(&context_a, "record number", &format!("{}",i)).unwrap();
-            index.insert(&context_a, i, record.head.clone()).unwrap();
+            let record = SubjectHandle::new_kv(&context_a, "record number", &format!("{}",i)).await.unwrap();
+            index.insert(&context_a, i, record.head.clone()).await.unwrap();
         }
 
         for i in 0..500 {
-            assert_eq!(index.test_get_subject_handle(&context_a, i).unwrap().unwrap().get_value("record number").unwrap(), i.to_string() );
+            let mut rec = index.test_get_subject_handle(&context_a, i).await.expect("Ok").expect("Some");
+            let value = rec.get_value("record number").await.expect("Ok").expect("Some");
+            assert_eq!(value, i.to_string());
         }
 
-        let maybe_rec = index.scan_first_kv(&context_a, "record number", "12345").unwrap();
-        assert!( maybe_rec.is_some(), "Index scan for record 12345" );
-        assert_eq!( maybe_rec.unwrap().get_value("record number").unwrap(), "12345", "Is correct record");
+        let maybe_head = index.scan_first_kv(&context_a, "record number", "12345").await.expect("Ok");
+        assert!(maybe_head.is_some(), "Index scan for record 12345" );
+        assert_eq!(maybe_head.unwrap().get_value(&context_a.slab, "record number").await.unwrap().unwrap(), "12345", "Is correct record");
 
-        let maybe_rec = index.scan_first_kv(&context_a, "record number", "275").unwrap();
-        assert!( maybe_rec.is_some(), "Index scan for record 275" );
-        assert_eq!( maybe_rec.unwrap().get_value("record number").unwrap(), "275", "Is correct record");
+        let maybe_head = index.scan_first_kv(&context_a, "record number", "275").await.unwrap();
+        assert!(maybe_head.is_some(), "Index scan for record 275" );
+        assert_eq!(maybe_head.unwrap().get_value(&context_a.slab, "record number").await.unwrap().unwrap(), "275", "Is correct record");
     }
 }

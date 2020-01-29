@@ -16,8 +16,8 @@ use unbase::network::packet::serde::PacketSeed;
 //use serde_json;
 
 /*
-#[test]
-fn serialize() {
+#[unbase_test_util::async_test]
+async fn serialize() {
 
     let net = unbase::Network::create_new_system();
     //let simulator = unbase::util::simulator::Simulator::new();

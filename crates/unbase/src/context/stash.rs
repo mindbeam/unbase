@@ -185,8 +185,8 @@ impl Stash {
             loop{
                 let mut item : ItemEditGuard = self.get_head_for_edit(subject_id);
 
-                if compare_head.descends_or_contains(item.get_head(), slab).await? { // May block here
-                    item.set_head(MemoRefHead::Null, slab);
+                if compare_head.descends_or_contains(item.get_head(), slab).await? { // May yield here
+                    item.set_head(MemoRefHead::Null, slab).await?;
 
                     if let Ok(Some((_head, _links))) = item.try_save() {
                         // No interlopers. We were successful

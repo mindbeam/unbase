@@ -1,32 +1,39 @@
 #![feature(proc_macro, conservative_impl_trait, generators)]
 
 use unbase::{
+    Network,
+    Slab,
     SubjectHandle,
-    util::task::spawn_with_handle
+    util::{
+        simulator::Simulator,
+        task::spawn_with_handle,
+    },
+
 };
-use futures::stream::Stream;
+use futures::{
+    future::RemoteHandle,
+};
 use std::{
     sync::{Arc,Mutex}
 };
-use futures::future::RemoteHandle;
 
-#[async_test]
+#[unbase_test_util::async_test]
 async fn eventual_basic() {
 
-    let net = unbase::Network::create_new_system();
-    let mut simulator = unbase::network::transport::Simulator::new();
+    let net = Network::create_new_system();
+    let mut simulator = Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 
     simulator.start();
 
-    let context_a = unbase::Slab::new(&net).create_context();
-    let context_b = unbase::Slab::new(&net).create_context();
+    let context_a = Slab::new(&net).create_context();
+    let context_b = Slab::new(&net).create_context();
 
-    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").expect("Subject A1");
+    let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.expect("Subject A1");
     let record_id = rec_a1.id;
 
-    assert!( rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
-    assert!( context_b.get_subject_by_id( record_id ).unwrap().is_none(), "new subject should not yet have conveyed to slab B");
+    assert!( rec_a1.get_value("animal_sound").await.unwrap() == "Moo", "New subject should be internally consistent");
+    assert!( context_b.get_subject_by_id( record_id ).await.unwrap().is_none(), "new subject should not yet have conveyed to slab B");
 
     simulator.quiesce().await;
 
@@ -43,18 +50,18 @@ async fn eventual_basic() {
 }
 
 
-#[async_test]
+#[unbase_test_util::async_test]
 async fn eventual_detail() {
 
-    let net = unbase::Network::create_new_system();
-    let mut simulator = unbase::network::transport::Simulator::new();
+    let net = Network::create_new_system();
+    let mut simulator = Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
     
     simulator.start();
 
-    let slab_a = unbase::Slab::new(&net);
-    let slab_b = unbase::Slab::new(&net);
-    let slab_c = unbase::Slab::new(&net);
+    let slab_a = Slab::new(&net);
+    let slab_b = Slab::new(&net);
+    let slab_c = Slab::new(&net);
 
 
     simulator.quiesce().await;
@@ -73,12 +80,12 @@ async fn eventual_detail() {
 
     simulator.quiesce_and_stop().await;
 
-    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo");
+    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
 
     assert!(rec_a1.is_ok(), "New subject should be created");
     let rec_a1 = rec_a1.unwrap();
 
-    assert!(rec_a1.get_value("animal_sound").unwrap() == "Moo", "New subject should be internally consistent");
+    assert!(rec_a1.get_value("animal_sound").await.unwrap() == "Moo", "New subject should be internally consistent");
 
     //println!("New subject ID {}", rec_a1.id );
 
@@ -90,8 +97,8 @@ async fn eventual_detail() {
     };
 
 
-    assert!(context_b.get_subject_by_id( record_id ).unwrap().is_none(), "new subject should not yet have conveyed to slab B");
-    assert!(context_c.get_subject_by_id( record_id ).unwrap().is_none(), "new subject should not yet have conveyed to slab C");
+    assert!(context_b.get_subject_by_id( record_id ).await.unwrap().is_none(), "new subject should not yet have conveyed to slab B");
+    assert!(context_c.get_subject_by_id( record_id ).await.unwrap().is_none(), "new subject should not yet have conveyed to slab C");
     assert_eq!(
         (
             context_a.get_resident_subject_head_memo_ids(root_index_subject.id).len(),
