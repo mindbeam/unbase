@@ -28,8 +28,10 @@ async fn eventual_basic() {
 
     simulator.start();
 
-    let context_a = Slab::new(&net).create_context();
-    let context_b = Slab::new(&net).create_context();
+    let slab_a = Slab::new(&net);
+    let slab_b = Slab::new(&net);
+    let context_a = slab_a.create_context();
+    let context_b = slab_b.create_context();
 
     let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.expect("Subject A1");
     let record_id = rec_a1.id;

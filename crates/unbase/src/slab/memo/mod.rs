@@ -26,6 +26,7 @@ use crate::{
     }
 };
 use crate::error::RetrieveError;
+use itertools::Itertools;
 
 //pub type MemoId = [u8; 32];
 pub type MemoId = u64;
@@ -171,4 +172,38 @@ impl Memo {
 }
 
 impl MemoBody {
+    pub fn summary( &self ) -> String {
+        use MemoBody::*;
+
+        match self {
+            SlabPresence{ ref p, ref r } =>{
+                if r.is_some() {
+                    format!("SlabPresence({} at {})*", p.slab_id, p.address.to_string())
+                }else{
+                    format!("SlabPresence({} at {})", p.slab_id, p.address.to_string())
+                }
+            }
+            Relation(ref rel_set) => {
+                format!("RelationSet({})", rel_set.to_string() )
+            },
+            Edge(ref edge_set) => {
+                format!("EdgeSet")
+            },
+            Edit(ref e) => {
+                format!("Edit")
+            },
+            FullyMaterialized{ ref v,  ref r, ref e, ref t }  => {
+                format!("FullyMaterialized")
+            },
+            PartiallyMaterialized{ ref v, ref r, ref e, ref t }  => {
+                format!("PartiallyMaterialized")
+            },
+            Peering( ref memo_id, ref subject_id, ref peerlist ) =>{
+                format!("Peering")
+            }
+            MemoRequest( ref memo_ids, ref slabref ) =>{
+                format!("MemoRequest({} to {})", memo_ids.iter().join(","), slabref.slab_id)
+            }
+        }
+    }
 }

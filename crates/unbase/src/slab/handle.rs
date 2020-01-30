@@ -45,7 +45,7 @@ use std::time::{Duration, Instant};
 pub struct SlabHandle {
     pub (crate) my_ref: SlabRef,
     pub (crate) net: Network,
-    pub (crate) dispatch_channel: mpsc::Sender<MemoRef>,
+//    pub (crate) dispatch_channel: mpsc::Sender<MemoRef>,
     pub (crate) agent: Arc<SlabAgent>,
 }
 

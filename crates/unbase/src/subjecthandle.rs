@@ -72,15 +72,18 @@ impl SubjectHandle{
 
         Self::new( context, vals ).await
     }
+    #[tracing::instrument(level = "info")]
     pub async fn get_value ( &mut self, key: &str ) -> Result<Option<String>,RetrieveError> {
 
-        self.context.mut_update_head_for_consistency( &mut self.head ).await?;
+        let copy = self.head.clone();
+        let applied = self.context.mut_update_record_head_for_consistency( &mut self.head ).await?;
+        tracing::info!("called mut_update_record_head_for_consistency. Applied: {:?}\n\tWas {:?}\n\tNow {:?}", applied, copy, self.head);
 
         self.head.get_value(&self.context.slab, key).await
     }
     pub async fn get_edge ( &mut self, key: RelationSlotId ) -> Result<Option<SubjectHandle>, RetrieveError> {
 
-        self.context.mut_update_head_for_consistency( &mut self.head ).await?;
+        self.context.mut_update_record_head_for_consistency( &mut self.head ).await?;
 
         match self.head.get_edge(&self.context.slab, key).await? {
             Some(head) => {
@@ -93,7 +96,7 @@ impl SubjectHandle{
     }
     pub async fn get_relation ( &mut self, key: RelationSlotId ) -> Result<Option<SubjectHandle>, RetrieveError> {
 
-        self.context.mut_update_head_for_consistency( &mut self.head ).await?;
+        self.context.mut_update_record_head_for_consistency( &mut self.head ).await?;
 
         match self.head.get_relation(&self.context.slab, key).await? {
             Some(rel_subject_id) => {
@@ -123,10 +126,10 @@ impl SubjectHandle{
         self.head.get_all_memo_ids( self.context.slab.clone() ).await
     }
     pub fn observe (&self) -> mpsc::Receiver<MemoRefHead> {
-        let (tx, rx) = mpsc::channel(1000);
+        let (mut tx, rx) = mpsc::channel(1000);
 
         // get an initial value, rather than waiting for the value to change?
-//        tx.send( self.head.clone() ).wait().unwrap();
+        tx.try_send( self.head.clone() ).expect("Haven't implemented queue backpressure yet");
 
         // BUG HERE? - not applying MRH to our head here, but double check as to what we were expecting from indexes
         self.context.slab.observe_subject( self.id, tx );

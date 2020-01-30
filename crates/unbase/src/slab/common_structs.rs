@@ -13,6 +13,7 @@ use crate::{
         SlabId,
     }
 };
+use itertools::Itertools;
 
 pub const MAX_SLOTS: usize = 256;
 #[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash,Debug,Serialize,Deserialize)]
@@ -166,6 +167,11 @@ impl RelationSet {
     }
     pub fn insert(&mut self, slot_id: RelationSlotId, subject_id: SubjectId) {
         self.0.insert(slot_id, Some(subject_id));
+    }
+    pub fn to_string(&self) -> String {
+        self.0.iter().map(|(k,v)| {
+            format!("{}:{}", k, v.map(|x| x.to_string()).unwrap_or("None".to_string()) )
+        }).join(",")
     }
 }
 

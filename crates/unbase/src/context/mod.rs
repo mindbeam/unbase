@@ -72,7 +72,7 @@ impl Context {
 
         let stash = Stash::new();
 
-        let (tx, mut rx) = mpsc::channel(1);
+        let (tx, mut rx) = mpsc::channel(1000);
         slab.observe_index( tx );
 
         let applier_slab = slab.clone();
@@ -183,25 +183,6 @@ impl Context {
         }
 
         Ok(memoref_count)
-    }
-    pub async fn get_relevant_subject_head(&self, subject_id: SubjectId) -> Result<MemoRefHead, RetrieveError> {
-        match subject_id {
-            SubjectId{ stype: SubjectType::IndexNode,.. } => {
-                Ok(self.stash.get_head(subject_id).clone())
-            },
-            SubjectId{ stype: SubjectType::Record, .. } => {
-                // TODO: figure out a way to noop here in the case that the SubjectHead in question
-                //       was pulled against a sufficiently identical context stash state.
-                //       Perhaps stash edit increment? how can we get this to be really granular?
-
-                let root_index = self.root_index().await?;
-
-                match root_index.get(&self, subject_id.id).await? {
-                    Some(mrh) => Ok(mrh),
-                    None      => Ok(MemoRefHead::Null)
-                }
-            }
-        }
     }
     pub fn try_root_index_node (&self) -> Result<MemoRefHead,RetrieveError> {
         {
@@ -353,24 +334,63 @@ impl Context {
 
     }
     /// Update a given MemoRefHead with any relevant information to ensure that our consistency model invariants are met
-    pub (crate) async fn mut_update_head_for_consistency(&self, head: &mut MemoRefHead) -> Result<(), RetrieveError> {
+    #[tracing::instrument(level = "info")]
+    pub (crate) async fn mut_update_index_head_for_consistency(&self, mut_head: &mut MemoRefHead) -> Result<bool, RetrieveError> {
 
         // TODO - think about immutable versions of this
 
-        if head.len() == 0 {
-            return Err(RetrieveError::InvalidMemoRefHead(InvalidMemoRefHead::Empty));
-        }
+        assert_ne!(mut_head.len(), 0);
+//        if  {
+//            return Err(RetrieveError::InvalidMemoRefHead(InvalidMemoRefHead::Empty));
+//        }
 
-        if let Some(subject_id) = head.subject_id() {
-            head.mut_apply(&self.stash.get_head(subject_id), &self.slab ).await?;
-        }
+        let apply_head = match mut_head.subject_id() {
+            Some(subject_id @ SubjectId{ stype: SubjectType::IndexNode,.. }) => {
+                self.stash.get_head(subject_id)
+            },
+            _ => panic!("Can only be called for SubjectType::IndexNode heads")
+        };
 
-        Ok(())
+
+        let applied = mut_head.mut_apply(&apply_head, &self.slab ).await?;
+
+        Ok(applied)
+
+    }
+    #[tracing::instrument(level = "info")]
+    pub (crate) async fn mut_update_record_head_for_consistency(&self, mut_head: &mut MemoRefHead) -> Result<bool, RetrieveError> {
+
+        // TODO - think about immutable versions of this
+
+        assert_ne!(mut_head.len(), 0);
+
+//        if mut_head.len() == 0 {
+//            return Err(RetrieveError::InvalidMemoRefHead(InvalidMemoRefHead::Empty));
+//        }
+
+        let apply_head = match mut_head.subject_id() {
+            Some( subject_id @ SubjectId{ stype: SubjectType::Record, .. }) => {
+                // TODO: figure out a way to noop here in the case that the SubjectHead in question
+                //       was pulled against a sufficiently identical context stash state.
+                //       Perhaps stash edit increment? how can we get this to be really granular?
+
+                match self.root_index().await?.get(&self, subject_id.id).await? {
+                    Some(mrh) => mrh,
+                    None      => return Ok(false)
+                }
+            },
+            _ => panic!("Can only be called for SubjectType::Record heads")
+        };
+
+
+        let applied = mut_head.mut_apply(&apply_head, &self.slab ).await?;
+
+        Ok(applied)
 
     }
     pub (crate) async fn get_subject_from_head (&self, mut head: MemoRefHead)  -> Result<SubjectHandle, RetrieveError> {
 
-        self.mut_update_head_for_consistency(&mut head).await?;
+        self.mut_update_record_head_for_consistency(&mut head).await?;
 
         if head.subject_id().is_none() {
             panic!("get_subject_from_head - no subject_id for {:?}", head);

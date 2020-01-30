@@ -48,8 +48,8 @@ pub struct Slab{
     pub (crate) agent: Arc<SlabAgent>,
     pub (crate) net: Network,
     pub my_ref: SlabRef,
-    dispatch_channel: mpsc::Sender<MemoRef>,
-    dispatcher: Arc<RemoteHandle<()>>,
+//    dispatch_channel: mpsc::Sender<MemoRef>,
+//    dispatcher: Arc<RemoteHandle<()>>,
     handle: SlabHandle,
 }
 
@@ -76,25 +76,25 @@ impl Slab {
         let my_ref = SlabRef(Arc::new(my_ref_inner));
         // TODO: figure out how to reconcile this with the simulator
 
-        let (dispatch_tx_channel, dispatch_rx_channel) = mpsc::channel::<MemoRef>(10);
+//        let (dispatch_tx_channel, dispatch_rx_channel) = mpsc::channel::<MemoRef>(10);
 
         let agent = Arc::new(SlabAgent::new(net, my_ref.clone()));
 
-        let dispatcher: RemoteHandle<()> = crate::util::task::spawn_with_handle(
-            Self::run_dispatcher( agent.clone(), dispatch_rx_channel )
-        );
+//        let dispatcher: RemoteHandle<()> = crate::util::task::spawn_with_handle(
+//            Self::run_dispatcher( agent.clone(), dispatch_rx_channel )
+//        );
 
         let handle = SlabHandle {
             my_ref: my_ref.clone(),
             net: net.clone(),
-            dispatch_channel: dispatch_tx_channel.clone(),
+//            dispatch_channel: dispatch_tx_channel.clone(),
             agent: agent.clone()
         };
 
         let me = Slab {
             id,
-            dispatch_channel: dispatch_tx_channel,
-            dispatcher: Arc::new(dispatcher),
+//            dispatch_channel: dispatch_tx_channel,
+//            dispatcher: Arc::new(dispatcher),
             net: net.clone(),
             my_ref: my_ref,
             handle,
@@ -109,7 +109,8 @@ impl Slab {
     }
     async fn run_dispatcher(agent: Arc<SlabAgent>, mut dispatch_rx_channel: mpsc::Receiver<MemoRef>) {
         while let Some(memoref) = dispatch_rx_channel.next().await {
-            agent.recv_memoref(memoref);
+            // TODO POSTMERGE reconcile this with reconstitute_memo
+            agent.notify_local_subscribers(memoref);
         }
     }
     pub fn handle(&self) -> SlabHandle {

@@ -167,9 +167,9 @@ impl SlabAgent {
         };
     }
     /// Perform necessary tasks given a newly arrived memo on this slab
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self), level="trace")]
     pub fn handle_memo_from_other_slab( &self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef ){
-        debug!("SlabAgent({})::handle_memo_from_other_slab({:?})", self.id, memo);
+        tracing::info!("SlabAgent({})::handle_memo_from_other_slab({:?})", self.id, memo);
 
         match memo.body {
             // This Memo is a peering status update for another memo
@@ -343,7 +343,7 @@ impl SlabAgent {
     }
 
     #[tracing::instrument]
-    pub fn recv_memoref (&self, memoref: MemoRef) {
+    pub fn notify_local_subscribers(&self, memoref: MemoRef) {
 
         let subject_id = match memoref.subject_id {
             Some(subject_id) => subject_id,
@@ -382,7 +382,7 @@ impl SlabAgent {
                             if e.is_disconnected() {
                                 senders.swap_remove(i);
                             }else{
-                                panic!("queue is full, and I haven't implemented async sending yet")
+                                panic!("one of the index_subscriptions queues is full, and I haven't implemented async sending yet")
                             }
 
                         }
@@ -406,7 +406,7 @@ impl SlabAgent {
                             if e.is_disconnected() {
                                 senders.swap_remove(i);
                             }else{
-                                panic!("queue is full, and I haven't implemented async sending yet")
+                                panic!("one of the subject_subscriptions queues is full, and I haven't implemented async sending yet")
                             }
 
                         }
@@ -495,7 +495,7 @@ impl SlabAgent {
             peerlist
         ).0
     }
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self), level="debug")]
     pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool) {
         debug!("SlabAgent({})::reconstitute_memo({:?})", self.id, body);
 
@@ -533,7 +533,7 @@ impl SlabAgent {
 
         }
 
-        self.recv_memoref(memoref.clone());
+        self.notify_local_subscribers(memoref.clone());
 
         // TODO POSTMERGE: reconcile localize_memoref, reconstitute_memo, and recv_memoref
         (memo, memoref, had_memoref)

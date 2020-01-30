@@ -45,6 +45,7 @@ use futures::{
 };
 
 use tracing::debug;
+use itertools::Itertools;
 
 // MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
 //
@@ -288,6 +289,20 @@ impl MemoRefHead {
             MemoRefHead::Subject{ ref head, .. } | MemoRefHead::Anonymous{ ref head, .. } => head.iter().map(|m| m.id).collect()
         }
     }
+    pub fn memo_summary (&self) -> String {
+        match *self {
+            MemoRefHead::Null => "Null".to_string(),
+            MemoRefHead::Subject{ ref head, .. } | MemoRefHead::Anonymous{ ref head, .. } => {
+                head.iter().map(|mr| {
+                    if let Some(memo) = mr.get_memo_if_resident() {
+                        format!("{}p[{}]={}", mr.id, memo.parents.memo_ids().iter().join(","), memo.body.summary() )
+                    }else{
+                        format!("^{}", mr.id)
+                    }
+                }).join(",")
+            }
+        }
+    }
     pub fn subject_id (&self) -> Option<SubjectId> {
         match *self {
             MemoRefHead::Null | MemoRefHead::Anonymous{..} => None,
@@ -375,6 +390,7 @@ impl MemoRefHead {
         Ok(true)
     }
     /// Notify whomever needs to know that a new subject has been created
+    #[tracing::instrument]
     pub async fn get_value ( &mut self, slab: &SlabHandle, key: &str ) -> Result<Option<String>, RetrieveError> {
         //TODO: consider creating a consolidated projection routine for most/all uses
         let mut memostream = self.causal_memo_stream(slab.clone()).boxed();
@@ -645,15 +661,15 @@ impl fmt::Debug for MemoRefHead{
             },
             MemoRefHead::Anonymous{ ref head, .. } => {
                 fmt.debug_struct("MemoRefHead::Anonymous")
-                    .field("memo_refs",  head )
-                    //.field("memo_ids", &self.memo_ids() )
+                    // .field("memo_refs",  head )
+                    .field("memos", &self.memo_summary() )
                     .finish()
             }
             MemoRefHead::Subject{ ref subject_id, ref head, .. } => {
                 fmt.debug_struct("MemoRefHead::Subject")
                     .field("subject_id", &subject_id )
-                    .field("memo_refs",  head )
-                    //.field("memo_ids", &self.memo_ids() )
+//                    .field("memo_refs",  head )
+                    .field("memo", &self.memo_summary() )
                     .finish()
             }
         }

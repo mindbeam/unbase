@@ -69,7 +69,7 @@ impl IndexFixed {
                 //println!("]]] end of the line");
 
                 // TODO- this MIGHT not be necessary, because context.apply_head might be doing the same thing.
-                context.mut_update_head_for_consistency(&mut node).await?;
+                context.mut_update_index_head_for_consistency(&mut node).await?;
 
                 node.set_edge(&context.slab, y as RelationSlotId, target);
 
@@ -79,7 +79,7 @@ impl IndexFixed {
                 return Ok(());
             } else {
                 // TODO- this MIGHT not be necessary, because context.apply_head might be doing the same thing.
-                context.mut_update_head_for_consistency(&mut node).await?;
+                context.mut_update_index_head_for_consistency(&mut node).await?;
 
                 match node.get_edge(&context.slab, y).await? {
                     Some(n) => {
@@ -139,13 +139,13 @@ impl IndexFixed {
                 // Leaf node
                 debug!("]]] end of the line");
 
-                context.mut_update_head_for_consistency(&mut node).await?;
+                context.mut_update_index_head_for_consistency(&mut node).await?;
 
                 return node.get_edge(&context.slab, y as RelationSlotId).await;
             } else {
                 // branch
 
-                context.mut_update_head_for_consistency(&mut node).await?;
+                context.mut_update_index_head_for_consistency(&mut node).await?;
 
                 match node.get_edge(&context.slab, y).await? {
                     Some(n) => node = n,
@@ -195,7 +195,7 @@ impl IndexFixed {
 
                 //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
                 for slot_id in 0..MAX_SLOTS {
-                    context.mut_update_head_for_consistency(&mut node).await?;
+                    context.mut_update_index_head_for_consistency(&mut node).await?;
                     if let Some(mut head) = node.get_edge(&context.slab, slot_id as RelationSlotId).await? {
 
 //                        TODO POSTMERGE - update this to take a closure
@@ -203,7 +203,7 @@ impl IndexFixed {
 //                            return Ok(Some(head))
 //                        }
 
-                        context.mut_update_head_for_consistency(&mut node).await?;
+                        context.mut_update_index_head_for_consistency(&mut node).await?;
 
                         if let Some(v) = head.get_value(&context.slab, key).await? {
                             if v == value {
@@ -215,7 +215,7 @@ impl IndexFixed {
             } else {
                 //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
                 for slot_id in 0..MAX_SLOTS {
-                    context.mut_update_head_for_consistency(&mut node).await?;
+                    context.mut_update_index_head_for_consistency(&mut node).await?;
                     if let Some(child) = node.get_edge(&context.slab, slot_id as RelationSlotId).await? {
                         stack.push((child, tier + 1))
                     }

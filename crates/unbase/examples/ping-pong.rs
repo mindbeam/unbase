@@ -32,7 +32,8 @@ async fn player_one() {
     let net1 = Network::create_new_system();
     let udp1 = TransportUDP::new("127.0.0.1:12001".to_string());
     net1.add_transport(Box::new(udp1));
-    let context_a = Slab::new(&net1).create_context();
+    let slab = Slab::new(&net1);
+    let context_a = slab.create_context();
 
     // HACK - need to wait until peering of the root index node is established
     // because we are aren't updating the net's root seed, which is what is being sent when peering is established
@@ -44,11 +45,13 @@ async fn player_one() {
 
     let mut pings = 0;
 
-    while let Some(_) = rec_a1.observe().next().await {
+    while let Some(head) = rec_a1.observe().next().await {
         // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied immediately after this event is sent
         Delay::new(Duration::from_millis(10)).await;
 
-        if "Pong" == rec_a1.get_value("action").await.expect("retrieval").expect("has value") {
+        let value = rec_a1.get_value("action").await.expect("retrieval").expect("found");
+
+        if "Pong" == value {
             println!("A - [ Ping ->       ]");
             rec_a1.set_value("action", "Ping").await.unwrap();
             pings += 1;
@@ -60,6 +63,24 @@ async fn player_one() {
     }
 }
 
+//fn foo () {
+//    MemoRefHead::Subject {
+//        subject_id: SubjectId { id: 9002, stype: Record },
+//        memo_refs: [MemoRef {
+//            id: 5003,
+//            owning_slab_id: 0,
+//            subject_id: Some(SubjectId { id: 9002, stype: Record }),
+//            peerlist: MemoPeerList([MemoPeer { slabref: SlabRef { owning_slab_id: 0, slab_id: 200, presence: [SlabPresence { slab_id: 200, address: "udp:127.0.0.1:12002", lifetime: Unknown }] }, status: Resident }]),
+//            memo: Resident(Memo {
+//                id: 5003,
+//                subject_id: Some(SubjectId { id: 9002, stype: Record }),
+//                parents: MemoRefHead::Null,
+//                body: FullyMaterialized { v: { "action": "Ping" }, r: RelationSet({}), e: EdgeSet({}), t: Record }
+//            })
+//        }]
+//    }
+//}
+
 async fn player_two() {
     let net2 = Network::new();
     net2.hack_set_next_slab_id(200);
@@ -67,7 +88,8 @@ async fn player_two() {
     let udp2 = TransportUDP::new("127.0.0.1:12002".to_string());
     net2.add_transport(Box::new(udp2.clone()));
 
-    let context_b = Slab::new(&net2).create_context();
+    let slab = Slab::new(&net2);
+    let context_b = slab.create_context();
 
     udp2.seed_address_from_string("127.0.0.1:12001".to_string());
 
@@ -85,6 +107,7 @@ async fn player_two() {
         Delay::new(Duration::from_millis(10)).await;
 
         let value = rec_b1.get_value("action").await.expect("it worked").expect("found");
+
         if "Ping" == value {
             println!("B - [       <- Pong ]");
             rec_b1.set_value("action", "Pong").await.unwrap();
