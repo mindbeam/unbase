@@ -44,8 +44,8 @@ async fn remote_traversal_simulated() {
     simulator.quiesce_and_stop().await;
 
     assert_eq!( simulator.get_sent().unwrap(), 37 );
-    assert_eq!( simulator.get_delivered().unwrap(), 27 );
-    assert_eq!( simulator.get_clock().unwrap(), 9 );
+    assert_eq!( simulator.get_delivered().unwrap(), 37 );
+    assert_eq!( simulator.get_clock().unwrap(), 7 );
 }
 
 #[async_test]
