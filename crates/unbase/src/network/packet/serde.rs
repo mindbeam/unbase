@@ -44,6 +44,7 @@ impl<'a> Visitor for PacketSeed<'a> {
     fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
        where V: SeqVisitor
     {
+
        let from_slab_id: SlabId = match visitor.visit()? {
            Some(value) => value,
            None => {
@@ -56,7 +57,6 @@ impl<'a> Visitor for PacketSeed<'a> {
                return Err(DeError::invalid_length(1, &self));
            }
        };
-
 
        let dest_slab;
        if to_slab_id == 0 {

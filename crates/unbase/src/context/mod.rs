@@ -4,6 +4,7 @@ use crate::{
     error::{
         WriteError,
         RetrieveError,
+        InvalidMemoRefHead,
     },
     index::IndexFixed,
     slab::{
@@ -44,7 +45,7 @@ use futures::{
     StreamExt,
 };
 
-use tracing::{span, Level};
+use tracing::{span, Level, debug};
 
 #[derive(Clone)]
 pub struct Context(Arc<ContextInner>);
@@ -313,19 +314,17 @@ impl Context {
             }
         }
 
-        println!("COMPACT Before: {:?}, After: {:?}", before, self.stash.concise_contents() );
+        debug!("COMPACT Before: {:?}, After: {:?}", before, self.stash.concise_contents() );
         Ok(())
     }
 
-    pub fn is_fully_materialized(&self) -> bool {
-        unimplemented!();
-        // for subject_head in self.manager.subject_head_iter() {
-        //     if !subject_head.head.is_fully_materialized(&self.slab) {
-        //         return false;
-        //     }
-        // }
-        // return true;
-
+    pub async fn is_fully_materialized(&self) -> Result<bool,RetrieveError> {
+        for head in self.stash.iter() {
+             if ! head.is_fully_materialized(&self.slab).await? {
+                 return Ok(false);
+             }
+         }
+         return Ok(true);
     }
     pub (crate) async fn update_indices(&self, subject_id: SubjectId, head: &MemoRefHead) -> Result<(),WriteError> {
         self.root_index().await?.insert(self, subject_id.id, head.clone()).await
@@ -342,8 +341,9 @@ impl Context {
 
         match root_index.get(self, subject_id.id).await? {
             Some(head) => {
+
                 Ok(Some(SubjectHandle{
-                    id: head.subject_id().ok_or( RetrieveError::InvalidMemoRefHead )?,
+                    id: head.subject_id().ok_or( RetrieveError::InvalidMemoRefHead(InvalidMemoRefHead::MissingSubjectId) )?,
                     head,
                     context: self.clone()
                 }))
@@ -358,7 +358,7 @@ impl Context {
         // TODO - think about immutable versions of this
 
         if head.len() == 0 {
-            return Err(RetrieveError::InvalidMemoRefHead);
+            return Err(RetrieveError::InvalidMemoRefHead(InvalidMemoRefHead::Empty));
         }
 
         if let Some(subject_id) = head.subject_id() {
@@ -372,8 +372,12 @@ impl Context {
 
         self.mut_update_head_for_consistency(&mut head).await?;
 
+        if head.subject_id().is_none() {
+            panic!("get_subject_from_head - no subject_id for {:?}", head);
+        }
+
         Ok(SubjectHandle{
-            id: head.subject_id().ok_or( RetrieveError::InvalidMemoRefHead )?,
+            id: head.subject_id().ok_or( RetrieveError::InvalidMemoRefHead(InvalidMemoRefHead::MissingSubjectId) )?,
             head,
             context: self.clone()
         })

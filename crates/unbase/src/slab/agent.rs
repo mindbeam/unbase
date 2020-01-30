@@ -169,6 +169,7 @@ impl SlabAgent {
     /// Perform necessary tasks given a newly arrived memo on this slab
     #[tracing::instrument]
     pub fn handle_memo_from_other_slab( &self, memo: &Memo, memoref: &MemoRef, origin_slabref: &SlabRef ){
+        debug!("SlabAgent({})::handle_memo_from_other_slab({:?})", self.id, memo);
 
         match memo.body {
             // This Memo is a peering status update for another memo
@@ -496,6 +497,8 @@ impl SlabAgent {
     }
     #[tracing::instrument]
     pub fn reconstitute_memo ( &self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList ) -> (Memo,MemoRef,bool) {
+        debug!("SlabAgent({})::reconstitute_memo({:?})", self.id, body);
+
         // TODO: find a way to merge this with assert_memoref to avoid doing duplicative work with regard to peerlist application
 
         let memo = Memo::new(MemoInner {

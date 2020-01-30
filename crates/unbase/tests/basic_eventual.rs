@@ -40,7 +40,7 @@ async fn basic_eventual() {
     let mut context_b = slab_b.create_context();
     let mut context_c = slab_c.create_context();
 
-    let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await;
+    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await;
     assert!(rec_a1.is_ok(), "New subject should be created");
     let mut rec_a1 = rec_a1.unwrap();
 
@@ -54,23 +54,23 @@ async fn basic_eventual() {
     let record_id = rec_a1.id;
 
     // TODO: move this to another test
-    let root_index_subject_id = if let Some(ref s) = *context_a.inner.0.root_index.read().unwrap() {
-        s.get_root_id()
-    }else{
-        panic!("sanity error - uninitialized context");
-    };
+//    let root_index_subject_id = if let Some(ref s) = context_a.root_index().unwrap() {
+//        s.get_root_id()
+//    }else{
+//        panic!("sanity error - uninitialized context");
+//    };
 
     assert_eq!(context_b.get_subject_by_id(record_id).await.unwrap_err(), RetrieveError::NotFound, "new subject should not yet have conveyed to slab B");
     assert_eq!(context_c.get_subject_by_id(record_id).await.unwrap_err(), RetrieveError::NotFound, "new subject should not yet have conveyed to slab C");
 
     simulator.quiesce().await;
 
-    debug!("Root Index = {:?}", context_b.get_resident_subject_head_memo_ids(root_index_subject_id)  );
+//    debug!("Root Index = {:?}", context_b.get_resident_subject_head_memo_ids(root_index_subject_id)  );
 
     // TODO: replace this – Temporary way to magically, instantly send context
     debug!("Manually exchanging context from Context A to Context B - Count of MemoRefs: {}", context_a.hack_send_context(&mut context_b).await.expect("it worked") );
     debug!("Manually exchanging context from Context A to Context C - Count of MemoRefs: {}", context_a.hack_send_context(&mut context_c).await.expect("it worked") );
-    debug!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
+//    debug!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
 
     let rec_b1 = context_b.get_subject_by_id( record_id ).await.expect("it worked");
     let rec_c1 = context_c.get_subject_by_id( record_id ).await.expect("it worked");
@@ -79,22 +79,22 @@ async fn basic_eventual() {
     assert!(rec_c1.is_some(), "new subject should now have conveyed to slab C");
 
     let mut rec_b1 = rec_b1.expect("found");
-    let rec_c1 = rec_c1.unwrap();
+    let mut rec_c1 = rec_c1.unwrap();
 
-    assert!(rec_b1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
-    assert!(rec_c1.get_value("animal_sound").await.unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
+    assert!(rec_b1.get_value("animal_sound").await.unwrap().unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
+    assert!(rec_c1.get_value("animal_sound").await.unwrap().unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
 
-    assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(), "Moo");
-    assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(), "Moo");
-    assert_eq!(rec_c1.get_value("animal_sound").await.unwrap(), "Moo");
+    assert_eq!(rec_a1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");
+    assert_eq!(rec_b1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");
+    assert_eq!(rec_c1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");
 
     // Now lets make some changes
 
-    rec_b1.set_value("animal_type","Bovine").await;
-    assert_eq!(rec_b1.get_value("animal_type").await.unwrap(), "Bovine");
-    assert_eq!(rec_b1.get_value("animal_sound").await.unwrap(),   "Moo");
+    rec_b1.set_value("animal_type","Bovine").await.unwrap();
+    assert_eq!(rec_b1.get_value("animal_type").await.unwrap().unwrap(), "Bovine");
+    assert_eq!(rec_b1.get_value("animal_sound").await.unwrap().unwrap(),   "Moo");
 
-    rec_b1.set_value("animal_sound","Woof").await;
+    rec_b1.set_value("animal_sound","Woof").await.unwrap();
     rec_b1.set_value("animal_type","Kanine").await.unwrap();
     assert_eq!(rec_b1.get_value("animal_sound").await.unwrap().unwrap(), "Woof");
     assert_eq!(rec_b1.get_value("animal_type").await.unwrap().unwrap(),  "Kanine");

@@ -40,7 +40,6 @@ use std::{
 // use std::collections::BTreeMap;
 use super::packet::serde::PacketSeed;
 use tracing::{
-    debug,
     error,
     trace,
 };
@@ -75,10 +74,8 @@ impl TransportUDP {
     /// UDP Transport
     /// TODO: update this to use task spawn
     /// ```
-    /// use std::{thread,time};
-    /// use unbase::{Network,Slab,SubjectHandle};
-    /// use unbase::network::transport::TransportUDP;
-    /// thread::spawn(|| {
+    /// use unbase::{Network,Slab,SubjectHandle, network::transport::TransportUDP};
+    ///
     ///     let net1 = Network::create_new_system();
     ///     let udp1 = TransportUDP::new("127.0.0.1:12021".to_string());
     ///     net1.add_transport( Box::new(udp1) );
@@ -86,7 +83,7 @@ impl TransportUDP {
     ///
     ///     // HACK - wait for slab_b to be on the peer list, and to be hooked in to our root_index_seed
     ///     thread::sleep( time::Duration::from_millis(150) );
-    ///     let beast_a = SubjectHandle::new_kv(&context_a, "beast", "Lion").expect("write successful");
+    ///     let beast_a = SubjectHandle::new_kv(&context_a, "beast", "Lion").await.expect("write successful");
     ///     beast_a.set_value("sound","Grraaawrrr").expect("write successful");
     ///
     ///     // Hang out so we can help thread 2
@@ -146,9 +143,9 @@ impl TransportUDP {
                     dest_slab_id:   &packet.to_slab_id,
                 };
 
-                debug!("UDP SEND FROM {} TO {} -> {}: {:?} {:?} {:?}", &packet.from_slab_id, &packet.to_slab_id, &packet.memo.id, &packet.memo.body, &packet.memo.parents.memo_ids(), &packet.peerlist.slab_ids() );
                 let b = serde_json::to_vec( &SerializeWrapper(&packet, &helper) ).expect("serde_json::to_vec");
 
+                trace!("UDP SEND FROM {} ({}) TO {} ({}): {}", &packet.from_slab_id, socket.local_addr().unwrap(), packet.to_slab_id, &to_address.address, String::from_utf8(b.clone()).unwrap() );
                 //HACK: we're trusting that each memo is smaller than 64k
                 socket.send_to(&b, &to_address.address).expect("Failed to send");
             }
@@ -266,13 +263,16 @@ impl Transport for TransportUDP {
         let rx_handle : thread::JoinHandle<()> = thread::spawn(move || {
             let mut buf = [0; 65536];
 
+            let local_addr = rx_socket.local_addr().unwrap();
+
             while let Ok((amt, src)) = rx_socket.recv_from(&mut buf) {
 
                 if let Some(net) = net_weak.upgrade() {
 
                     //TODO: create a protocol encode/decode module and abstract away the serde stuff
                     //ouch, my brain - I Think I finally understand ser::de::DeserializeSeed
-                    trace!("DESERIALIZE          {}", String::from_utf8(buf.to_vec()).unwrap());
+
+                    tracing::info!("UDP RECV BY {} FROM {}: {}", local_addr, src, String::from_utf8(buf.to_vec()).unwrap() );
                     let mut deserializer = serde_json::Deserializer::from_slice(&buf[0..amt]);
 
                     let packet_seed : PacketSeed = PacketSeed{

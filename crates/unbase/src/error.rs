@@ -3,11 +3,17 @@ pub enum RetrieveError {
     NotFound,
     NotFoundByDeadline,
     AccessDenied,
-    InvalidMemoRefHead,
+    InvalidMemoRefHead(InvalidMemoRefHead),
     IndexNotInitialized,
     SlabError,
     MemoLineageError,
     WriteError(Box<WriteError>),
+}
+
+#[derive(PartialEq, Debug)]
+pub enum InvalidMemoRefHead{
+    MissingSubjectId,
+    Empty,
 }
 
 #[derive(PartialEq, Debug)]

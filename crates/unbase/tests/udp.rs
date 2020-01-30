@@ -16,7 +16,7 @@ use unbase::{
 use tracing::info;
 
 #[unbase_test_util::async_test]
-async fn test_udp() {
+async fn test_udp1() {
     unbase_test_util::init_test_logger();
 
     let t1 = test1_node_a();
@@ -27,27 +27,27 @@ async fn test_udp() {
 
 
 async fn test1_node_a() {
-    let net1 = unbase::Network::create_new_system();
-    let udp1 = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
-    net1.add_transport(Box::new(udp1.clone()));
-    let _slab_a = unbase::Slab::new(&net1);
+    let net = unbase::Network::create_new_system();
+    let udp = unbase::network::transport::TransportUDP::new("127.0.0.1:51001".to_string());
+    net.add_transport(Box::new(udp.clone()));
+    let _slab = unbase::Slab::new(&net);
+
     Delay::new(Duration::from_millis(500)).await;
 
     info!("Node A is done!");
 }
 
 async fn test1_node_b() {
+    // HACK - Ensure slab_a is listening
     Delay::new(Duration::from_millis(50)).await;
 
-    let net2 = unbase::Network::new();
-    net2.hack_set_next_slab_id(200);
+    let net = unbase::Network::new();
+    net.hack_set_next_slab_id(200);
+    let udp = unbase::network::transport::TransportUDP::new("127.0.0.1:51002".to_string());
+    net.add_transport(Box::new(udp.clone()));
+    let _slab = unbase::Slab::new(&net);
 
-    let udp2 = unbase::network::transport::TransportUDP::new("127.0.0.1:1337".to_string());
-    net2.add_transport(Box::new(udp2.clone()));
-
-    let _slab_b = unbase::Slab::new(&net2);
-
-    udp2.seed_address_from_string("127.0.0.1:12345".to_string());
+    udp.seed_address_from_string("127.0.0.1:51001".to_string());
     Delay::new(Duration::from_millis(500)).await;
 
     info!("Node B is done!");
@@ -65,13 +65,16 @@ async fn test_udp2() {
 }
 
 async fn test2_node_a() {
-    let net1 = Network::create_new_system();
-    let udp1 = TransportUDP::new("127.0.0.1:12021".to_string());
-    net1.add_transport(Box::new(udp1));
-    let context_a = Slab::new(&net1).create_context();
+    let net = Network::create_new_system();
+    let udp = TransportUDP::new("127.0.0.1:52001".to_string());
+    net.add_transport(Box::new(udp));
+
+    let slab_a = Slab::new(&net);
+    let context_a = slab_a.create_context();
 
     // HACK - wait for slab_b to be on the peer list, and to be hooked in to our root_index_seed
     Delay::new(Duration::from_millis(150)).await;
+
     let mut beast_a = SubjectHandle::new_kv(&context_a, "beast", "Lion").await.expect("write successful");
     beast_a.set_value("sound", "Grraaawrrr").await.expect("write successful");
 
@@ -81,16 +84,18 @@ async fn test2_node_a() {
 
 async fn test2_node_b() {
     // HACK - Ensure slab_a is listening
-    Delay::new(Duration::from_millis(20)).await;
+    Delay::new(Duration::from_millis(50)).await;
 
     let net2 = Network::new();
     net2.hack_set_next_slab_id(200);
-    let udp2 = TransportUDP::new("127.0.0.1:12022".to_string());
+    let udp2 = TransportUDP::new("127.0.0.1:52002".to_string());
     net2.add_transport(Box::new(udp2.clone()));
     let slab_b = Slab::new(&net2);
-    udp2.seed_address_from_string("127.0.0.1:12021".to_string());
+
+    udp2.seed_address_from_string("127.0.0.1:52001".to_string());
     let context_b = slab_b.create_context();
-    let mut beast_b = context_b.fetch_kv("beast", "Lion", Duration::from_secs(1)).await.expect("it worked");
-    println!("The {} goes {}", beast_b.get_value("beast").await.expect("it worked").expect("has value"), beast_b.get_value("sound").await.expect("it worked").expect("has value"))
-    ;
+
+
+    let mut beast_b = context_b.fetch_kv("beast", "Lion", Duration::from_secs(1)).await.expect("fetch_kv");
+    info!("The {} goes {}", beast_b.get_value("beast").await.expect("it worked").expect("has value"), beast_b.get_value("sound").await.expect("it worked").expect("has value"));
 }

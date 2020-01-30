@@ -1,43 +1,45 @@
 extern crate unbase;
+use unbase::{
+    network::transport::TransportUDP,
+    Network,
+    Slab,
+    SubjectHandle,
+};
+use futures::{
+    StreamExt,
+};
 use std::time::Duration;
 use timer::Delay;
-use unbase::SubjectHandle;
 
 #[async_std::main]
 async fn main() {
-    let net = unbase::Network::create_new_system();
-    let udp = unbase::network::transport::TransportUDP::new("127.0.0.1:12345".to_string());
-    net.add_transport( Box::new(udp.clone()) );
+    let net1 = Network::create_new_system();
+    let udp1 = TransportUDP::new("127.0.0.1:12001".to_string());
+    net1.add_transport(Box::new(udp1));
+    let context_a = Slab::new(&net1).create_context();
 
-    let slab = unbase::Slab::new(&net);
-    let context = slab.create_context();
-    let mut record = SubjectHandle::new_kv(&context, "the_ball_goes", "PING").await.unwrap();
+    // HACK - need to wait until peering of the root index node is established
+    // because we are aren't updating the net's root seed, which is what is being sent when peering is established
+    // TODO: establish some kind of positive pressure to push out index nodes
+    Delay::new(Duration::from_millis(700)).await;
 
-    println!("{:?}", record);
-    // ************************************************************************
-    // NOTE: have to use polling for now to detect when the subject has changed
-    // because push notification (though planned) isn't implemented yet :)
-    // ************************************************************************
+    println!("A - Sending Initial Ping");
+    let mut rec_a1 = SubjectHandle::new_kv(&context_a, "action", "Ping").await.unwrap();
 
-    // use the original copy of the subject, or look it up by sub
+    let mut pings = 0;
 
-    println!("Serving the ball! (PING)");
-    println!("Waiting for PONGs");
-    for _ in 0..5 {
-        // Hacky-polling approach for now, push notification coming sooooon!
-        for _ in 0usize..1000 {
-            println!(".");
-            let value = record.get_value("the_ball_goes").await.unwrap().unwrap();
-            if &value == "PONG" {
-                // set a value when a change is detected
+    while let Some(_) = rec_a1.observe().next().await {
+        // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied immediately after this event is sent
+        Delay::new(Duration::from_millis(10)).await;
 
-                println!("[[[ PONG ]]]");
-                record.set_value("the_ball_goes", "PONG").await.unwrap();
-                break;
+        if "Pong" == rec_a1.get_value("action").await.expect("retrieval").expect("has value") {
+            println!("A - [ Ping ->       ]");
+            rec_a1.set_value("action", "Ping").await.unwrap();
+            pings += 1;
+
+            if pings >= 10 {
+                break
             }
-
-            Delay::new(Duration::from_millis(100)).await;
         }
     }
-
 }

@@ -29,17 +29,17 @@ async fn remote_traversal_simulated() {
 
     let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
 
-    rec_a1.set_value("animal_sound", "Woof").await;
+    rec_a1.set_value("animal_sound", "Woof").await.unwrap();
 
-    rec_a1.set_value("animal_sound", "Meow").await;
+    rec_a1.set_value("animal_sound", "Meow").await.unwrap();
 
     simulator.quiesce().await;
 
     let memo_ids = rec_a1.get_all_memo_ids().await.unwrap();
-    slab_a.remotize_memos(&memo_ids, Duration::from_secs(1)).expect("failed to remotize memos");
+    slab_a.remotize_memos(&memo_ids, Duration::from_secs(1)).await.expect("failed to remotize memos");
 
     let value = rec_a1.get_value("animal_sound").await;
-    assert_eq!(value, Some("Meow".to_string()));
+    assert_eq!(value, Ok(Some("Meow".to_string())));
 
     simulator.quiesce_and_stop().await;
 
@@ -64,8 +64,8 @@ async fn remote_traversal_nondeterministic() {
 
     let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
 
-    rec_a1.set_value("animal_sound","Woof").await;
-    rec_a1.set_value("animal_sound","Meow").await;
+    rec_a1.set_value("animal_sound","Woof").await.unwrap();
+    rec_a1.set_value("animal_sound","Meow").await.unwrap();
 
     // TODO - provide a deterministic way to wait for quiescence when not using the simulator
     Delay::new(Duration::from_millis(50)).await;
@@ -119,7 +119,7 @@ async fn udp_station_one(){
     Delay::new(Duration::from_millis(50)).await;
 
     // now lets see if we can project rec_a1 animal_sound. This will require memo retrieval from slab_b
-    assert_eq!(rec_a1.get_value("animal_sound").await.unwrap(), "Meow");
+    assert_eq!(rec_a1.get_value("animal_sound").await.unwrap().unwrap(), "Meow");
 
     // can't free the slab yet, because we have to respond to traffic from station two
     Delay::new(Duration::from_millis(500)).await;

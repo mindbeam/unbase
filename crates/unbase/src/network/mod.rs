@@ -109,10 +109,13 @@ impl Network {
         return None;
     }
     fn get_representative_slab(&self) -> Option<SlabHandle> {
+
         for slabhandle in self.slabs.read().unwrap().iter() {
             if slabhandle.is_running() {
+
                 return Some((*slabhandle).clone());
             }
+
             // TODO - scrub non-resident slabs
         }
         return None;

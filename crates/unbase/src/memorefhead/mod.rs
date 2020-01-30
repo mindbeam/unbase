@@ -442,12 +442,14 @@ impl MemoRefHead {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
+        let subject_id = self.subject_id();
+
         // TODO - do this in a single swap? (fairly certain that requires unsafe)
         let mut head = MemoRefHead::Null;
         std::mem::swap(self, &mut head);
 
         let mut new_head = slab.new_memo(
-            self.subject_id(),
+            subject_id,
             head,
             MemoBody::Edit(vals)
         ).to_head();
@@ -467,12 +469,14 @@ impl MemoRefHead {
 
         relationset.insert( key, subject_id );
 
+        let subject_id = self.subject_id();
+
         // TODO - do this in a single swap? May require unsafe
         let mut head = MemoRefHead::Null;
         std::mem::swap(self, &mut head,);
 
         let mut new_head = slab.new_memo(
-            self.subject_id(),
+            subject_id,
             head,
             MemoBody::Relation(relationset)
         ).to_head();
@@ -485,17 +489,19 @@ impl MemoRefHead {
         Ok(())
     }
     pub fn set_edge (&mut self, slab: &SlabHandle, key: RelationSlotId, target: MemoRefHead ) {
-        //println!("# Subject({}).set_edge({}, {})", &self.id, key, relation.id);
+        debug!("# Subject({:?}).set_edge({}, {:?})", &self.subject_id(), key, target.subject_id() );
 
         let mut edgeset = EdgeSet::empty();
         edgeset.insert(key, target);
+
+        let subject_id = self.subject_id();
 
         // TODO - do this in a single swap? May require unsafe
         let mut parents = MemoRefHead::Null;
         std::mem::swap(self, &mut parents);
 
         let mut new_head = slab.new_memo(
-            self.subject_id(),
+            subject_id,
             parents,
             MemoBody::Edge(edgeset)
         ).to_head();

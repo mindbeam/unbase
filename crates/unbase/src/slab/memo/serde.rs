@@ -14,6 +14,8 @@ use ::serde::*;
 use ::serde::ser::*;
 use ::serde::de::*;
 
+use tracing::{debug};
+
 pub struct MemoBodySeed<'a> { dest_slab: &'a SlabHandle, origin_slabref: &'a SlabRef }
 #[derive(Clone)]
 pub struct MBMemoRequestSeed<'a> { dest_slab: &'a SlabHandle, origin_slabref: &'a SlabRef  }
@@ -171,7 +173,8 @@ impl<'a> Visitor for MemoSeed<'a>{
                 return Err(DeError::invalid_length(3, &self));
             }
         };
-        //println!("SERDE calling reconstitute_memo");
+
+        debug!("SERDE calling reconstitute_memo");
         let _memo = self.dest_slab.agent.reconstitute_memo(id, subject_id, parents, body, self.origin_slabref, &self.peerlist ).0;
 
         Ok(())
@@ -436,18 +439,20 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
     fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
         where Visitor: MapVisitor,
     {
+
         let mut memo_ids : Option<MemoId> = None;
         let mut subject_id: Option<Option<SubjectId>> = None;
         let mut peerlist   : Option<MemoPeerList> = None;
         while let Some(key) = visitor.visit_key()? {
             match key {
                 'i' => memo_ids  = visitor.visit_value()?,
-                'j' => subject_id = visitor.visit_value()?,
+                'j' => subject_id = Some(visitor.visit_value()?),
                 'l' => peerlist  = Some(MemoPeerList::new(visitor.visit_value_seed(VecSeed(MemoPeerSeed{ dest_slab: self.dest_slab }))?)),
                 _   => {}
             }
         }
 
+        tracing::info!("{:?}, {:?}, {:?}", memo_ids.is_some(), subject_id.is_some(), peerlist.is_some());
         if memo_ids.is_some() && subject_id.is_some() && peerlist.is_some() {
 
             Ok(MemoBody::Peering(

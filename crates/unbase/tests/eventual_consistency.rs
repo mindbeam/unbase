@@ -1,4 +1,4 @@
-#![feature(proc_macro, conservative_impl_trait, generators)]
+#![feature(async_closure)]
 
 use unbase::{
     Network,
@@ -12,6 +12,8 @@ use unbase::{
 };
 use futures::{
     future::RemoteHandle,
+    StreamExt,
+
 };
 use std::{
     sync::{Arc,Mutex}
@@ -21,7 +23,7 @@ use std::{
 async fn eventual_basic() {
 
     let net = Network::create_new_system();
-    let mut simulator = Simulator::new();
+    let simulator = Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
 
     simulator.start();
@@ -32,21 +34,21 @@ async fn eventual_basic() {
     let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.expect("Subject A1");
     let record_id = rec_a1.id;
 
-    assert!( rec_a1.get_value("animal_sound").await.unwrap() == "Moo", "New subject should be internally consistent");
+    assert!( rec_a1.get_value("animal_sound").await.unwrap().unwrap() == "Moo", "New subject should be internally consistent");
     assert!( context_b.get_subject_by_id( record_id ).await.unwrap().is_none(), "new subject should not yet have conveyed to slab B");
 
     simulator.quiesce().await;
 
-    let rec_b1 = context_b.get_subject_by_id( record_id ).unwrap();
+    let rec_b1 = context_b.get_subject_by_id( record_id ).await.unwrap();
     assert!(rec_b1.is_some(), "new subject should now have conveyed to slab B");
 
-    let rec_b1 = rec_b1.unwrap();
+    let mut rec_b1 = rec_b1.unwrap();
 
-    rec_b1.set_value("animal_sound","Woof").unwrap();
+    rec_b1.set_value("animal_sound","Woof").await.unwrap();
 
     simulator.quiesce().await;
 
-    assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Woof");
+    assert_eq!(rec_a1.get_value("animal_sound").await.unwrap().unwrap(),   "Woof");
 }
 
 
@@ -54,7 +56,7 @@ async fn eventual_basic() {
 async fn eventual_detail() {
 
     let net = Network::create_new_system();
-    let mut simulator = Simulator::new();
+    let simulator = Simulator::new();
     net.add_transport( Box::new(simulator.clone()) );
     
     simulator.start();
@@ -80,83 +82,79 @@ async fn eventual_detail() {
 
     simulator.quiesce_and_stop().await;
 
-    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.unwrap();
+    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await;
 
     assert!(rec_a1.is_ok(), "New subject should be created");
-    let rec_a1 = rec_a1.unwrap();
+    let mut rec_a1 = rec_a1.unwrap();
 
-    assert!(rec_a1.get_value("animal_sound").await.unwrap() == "Moo", "New subject should be internally consistent");
+    assert!(rec_a1.get_value("animal_sound").await.unwrap().unwrap() == "Moo", "New subject should be internally consistent");
 
     //println!("New subject ID {}", rec_a1.id );
 
     let record_id = rec_a1.id;
-    let root_index_subject = if let Some(ref s) = *context_a.root_index.read().unwrap() {
-        s.get_root_subject_handle(&context_a).unwrap()
-    }else{
-        panic!("sanity error - uninitialized context");
-    };
-
+    let root_index = context_a.root_index().await.unwrap();
 
     assert!(context_b.get_subject_by_id( record_id ).await.unwrap().is_none(), "new subject should not yet have conveyed to slab B");
     assert!(context_c.get_subject_by_id( record_id ).await.unwrap().is_none(), "new subject should not yet have conveyed to slab C");
     assert_eq!(
         (
-            context_a.get_resident_subject_head_memo_ids(root_index_subject.id).len(),
-            context_b.get_resident_subject_head_memo_ids(root_index_subject.id).len()
+            context_a.get_resident_subject_head_memo_ids(root_index.get_root_subject_id() ).len(),
+            context_b.get_resident_subject_head_memo_ids(root_index.get_root_subject_id() ).len()
         ), (1,0), "Context A should  be seeded with the root index, and B should not" );
 
     simulator.start();
     simulator.quiesce().await;
 
-    assert_eq!(context_b.get_resident_subject_head_memo_ids(root_index_subject.id).len(), 1, "Context b should now be seeded with the root index" );
+    assert_eq!(context_b.get_resident_subject_head_memo_ids(root_index.get_root_subject_id() ).len(), 1, "Context b should now be seeded with the root index" );
 
 
-    let rec_b1 = context_b.get_subject_by_id( record_id ).unwrap();
-    let rec_c1 = context_c.get_subject_by_id( record_id ).unwrap();
+    let rec_b1 = context_b.get_subject_by_id( record_id ).await.unwrap();
+    let rec_c1 = context_c.get_subject_by_id( record_id ).await.unwrap();
 
     //println!("RID: {}", record_id);
     assert!(rec_b1.is_some(), "new subject should now have conveyed to slab B");
     assert!(rec_c1.is_some(), "new subject should now have conveyed to slab C");
 
-    let rec_b1 = rec_b1.unwrap();
-    let rec_c1 = rec_c1.unwrap();
+    let mut rec_b1 = rec_b1.unwrap();
+    let mut rec_c1 = rec_c1.unwrap();
 
-    let rec_c1_clone = rec_c1.clone();
+    let mut rec_c1_clone = rec_c1.clone();
 
     let last_observed_sound_c = Arc::new(Mutex::new(String::new()));
-    
+
+    let _applier : RemoteHandle<()>;
     {
         let last_observed_sound_c = last_observed_sound_c.clone();
 
-        let applier: RemoteHandle<()> = spawn_with_handle(move || {
-            let stream = rec_c1_clone.observe();
-            for _ in stream.wait() {
-                let sound = rec_c1_clone.get_value("animal_sound").unwrap();
+        _applier = spawn_with_handle((async move || {
+            let mut stream = rec_c1_clone.observe();
+            while let Some(_) = stream.next().await {
+                let sound = rec_c1_clone.get_value("animal_sound").await.unwrap().unwrap();
                 *last_observed_sound_c.lock().unwrap() = sound.clone();
                 //println!("rec_c1 changed. animal_sound is {}", sound );
             }
-        });
+        })());
     }
 
     simulator.quiesce().await;
 
-    assert!(rec_b1.get_value("animal_sound").unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
-    assert!(rec_c1.get_value("animal_sound").unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
+    assert!(rec_b1.get_value("animal_sound").await.unwrap().unwrap() == "Moo", "Subject read from Slab B should be internally consistent");
+    assert!(rec_c1.get_value("animal_sound").await.unwrap().unwrap() == "Moo", "Subject read from Slab C should be internally consistent");
 
-    assert_eq!(rec_a1.get_value("animal_sound").unwrap(), "Moo");
-    assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Moo");
-    assert_eq!(rec_c1.get_value("animal_sound").unwrap(), "Moo");
+    assert_eq!(rec_a1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");
+    assert_eq!(rec_b1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");
+    assert_eq!(rec_c1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");
 
-    rec_b1.set_value("animal_type","Bovine").unwrap();
-    assert_eq!(rec_b1.get_value("animal_type").unwrap(), "Bovine");
-    assert_eq!(rec_b1.get_value("animal_sound").unwrap(),   "Moo");
+    rec_b1.set_value("animal_type","Bovine").await.unwrap();
+    assert_eq!(rec_b1.get_value("animal_type").await.unwrap().unwrap(), "Bovine");
+    assert_eq!(rec_b1.get_value("animal_sound").await.unwrap().unwrap(),   "Moo");
 
-    assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Moo");
+    assert_eq!(rec_a1.get_value("animal_sound").await.unwrap().unwrap(),   "Moo");
 
-    rec_b1.set_value("animal_sound","Woof").unwrap();
-    rec_b1.set_value("animal_type","Kanine").unwrap();
-    assert_eq!(rec_b1.get_value("animal_sound").unwrap(), "Woof");
-    assert_eq!(rec_b1.get_value("animal_type").unwrap(),  "Kanine");
+    rec_b1.set_value("animal_sound","Woof").await.unwrap();
+    rec_b1.set_value("animal_type","Kanine").await.unwrap();
+    assert_eq!(rec_b1.get_value("animal_sound").await.unwrap().unwrap(), "Woof");
+    assert_eq!(rec_b1.get_value("animal_type").await.unwrap().unwrap(),  "Kanine");
 
     // TODO add wait_ticks back to simulator
 //    simulator.wait_ticks(5);
@@ -168,7 +166,7 @@ async fn eventual_detail() {
     assert_eq!( context_b.concise_contents(), &expected_contents );
 
     assert_eq!(*last_observed_sound_c.lock().unwrap(),      "Woof");
-    assert_eq!(rec_a1.get_value("animal_sound").unwrap(),   "Woof");
-    assert_eq!(rec_a1.get_value("animal_type").unwrap(),    "Kanine");
+    assert_eq!(rec_a1.get_value("animal_sound").await.unwrap().unwrap(),   "Woof");
+    assert_eq!(rec_a1.get_value("animal_type").await.unwrap().unwrap(),    "Kanine");
 
 }

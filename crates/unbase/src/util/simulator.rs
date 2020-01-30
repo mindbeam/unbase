@@ -271,7 +271,7 @@ impl <E: SimEvent + 'static + Send + fmt::Debug> Simulator<E> {
             {
                 let mut shared = sharedmutex.lock().unwrap();
                 shared.delivered += eventcount as u64;
-                println!("delivered {}", eventcount);
+                debug!("delivered {}", eventcount);
                 shared.check_quiescence();
             }
 

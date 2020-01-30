@@ -29,6 +29,7 @@ use crate::{
 
 use std::sync::{Arc,RwLock,Mutex};
 use std::ops::Deref;
+use tracing::info;
 
 mod state;
 pub (crate) mod agent;
@@ -131,6 +132,7 @@ impl Slab {
 
 impl Drop for Slab {
     fn drop(&mut self) {
+        info!("Slab {} was dropped - Shutting down", self.id);
         self.agent.stop();
         self.net.deregister_local_slab(self.id);
     }

@@ -1,8 +1,4 @@
 
-use wasm_bindgen::prelude::*;
-use wasm_bindgen_test::*;
-use log::*;
-
 //
 //#[cfg(target_os = "wasm32")]
 //#[unbase_test_util::async_test]
@@ -25,10 +21,10 @@ use log::*;
 //    assert!(record_retrieved.is_ok(), "Failed to retrieve record")
 //
 //}
-
-#[wasm_bindgen_test]
-fn pass(){
-    unbase_test_util::init_test_logger();
-    assert_eq!(1, 1)
-
-}
+//
+//#[wasm_bindgen_test]
+//fn pass(){
+//    unbase_test_util::init_test_logger();
+//    assert_eq!(1, 1)
+//
+//}
