@@ -107,12 +107,12 @@ impl Slab {
 
         me
     }
-    async fn run_dispatcher(agent: Arc<SlabAgent>, mut dispatch_rx_channel: mpsc::Receiver<MemoRef>) {
-        while let Some(memoref) = dispatch_rx_channel.next().await {
-            // TODO POSTMERGE reconcile this with reconstitute_memo
-            agent.notify_local_subscribers(memoref);
-        }
-    }
+//    async fn run_dispatcher(agent: Arc<SlabAgent>, mut dispatch_rx_channel: mpsc::Receiver<MemoRef>) {
+//        while let Some(memoref) = dispatch_rx_channel.next().await {
+//            // TODO POSTMERGE reconcile this with reconstitute_memo
+//            agent.notify_local_subscribers(memoref);
+//        }
+//    }
     pub fn handle(&self) -> SlabHandle {
         self.handle.clone()
     }

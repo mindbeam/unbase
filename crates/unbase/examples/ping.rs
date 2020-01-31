@@ -27,7 +27,7 @@ async fn main() {
     Delay::new(Duration::from_millis(7000)).await;
 
 
-    let mut rec_a1 = SubjectHandle::new_kv(&context_a, "action", "Ping").await.unwrap();
+    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "action", "Ping").await.unwrap();
 
     let mut pings = 0;
 

@@ -40,7 +40,7 @@ async fn basic_eventual() {
     let mut context_b = slab_b.create_context();
     let mut context_c = slab_c.create_context();
 
-    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await;
+    let rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "animal_sound", "Moo").await;
     assert!(rec_a1.is_ok(), "New subject should be created");
     let mut rec_a1 = rec_a1.unwrap();
 

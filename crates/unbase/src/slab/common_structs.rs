@@ -41,12 +41,15 @@ impl SubjectId {
             stype: SubjectType::Record
         }
     }
+    /// Create a SubjectId with a SubjectType of IndexNode and a manually provided id
+    /// Used by the test suite
     pub fn index_test(test_id: u64) -> Self{
         SubjectId{
             id:    test_id,
             stype: SubjectType::IndexNode
         }
     }
+    /// Human readable version of the SubjectID which denotes whether the subject is an (I)ndex or a (R)ecord type
     pub fn concise_string (&self) -> String {
         use self::SubjectType::*;
         match self.stype {

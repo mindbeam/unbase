@@ -75,7 +75,7 @@ async fn test2_node_a() {
     // HACK - wait for slab_b to be on the peer list, and to be hooked in to our root_index_seed
     Delay::new(Duration::from_millis(150)).await;
 
-    let mut beast_a = SubjectHandle::new_kv(&context_a, "beast", "Lion").await.expect("write successful");
+    let mut beast_a = SubjectHandle::new_with_single_kv(&context_a, "beast", "Lion").await.expect("write successful");
     beast_a.set_value("sound", "Grraaawrrr").await.expect("write successful");
 
     // Hang out so we can help task 2

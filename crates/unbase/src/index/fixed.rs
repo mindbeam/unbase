@@ -263,7 +263,7 @@ mod test {
 
         // First lets do a single index test
         let i = 12345;
-        let record = SubjectHandle::new_kv(&context_a, "record number", &format!("{}", i)).await.unwrap();
+        let record = SubjectHandle::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await.unwrap();
         index.insert(&context_a, i, record.head.clone()).await.unwrap();
 
         let mut record2 = index.test_get_subject_handle(&context_a, 12345).await.unwrap().unwrap();
@@ -272,7 +272,7 @@ mod test {
 
         // Ok, now lets torture it a little
         for i in 0..500 {
-            let record = SubjectHandle::new_kv(&context_a, "record number", &format!("{}", i)).await.unwrap();
+            let record = SubjectHandle::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await.unwrap();
             index.insert(&context_a, i, record.head.clone()).await.unwrap();
         }
 

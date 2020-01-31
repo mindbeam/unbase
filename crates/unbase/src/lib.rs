@@ -25,19 +25,26 @@
 //! record. Rather than storing state, state is projected as needed to satisfy user queries.
 //!
 //! ```
-//! async fn run () {
-//!     let net     = unbase::Network::create_new_system(); // use new, except for the very first time
-//!     let slab    = unbase::Slab::new(&net);
-//!     let context = slab.create_context();
+//! # use unbase::error::RetrieveError;
+//! # use unbase::{Network, Slab, SubjectHandle};
+//! # async fn run () {
+//!     let net     = Network::create_new_system(); // use new, except for the very first time
+//!     let slab    = Slab::new(&net);              // Slab exits when you drop this
+//!     let context = slab.create_context();        // Context is your view of the world. A "client" app would have one of these
 //!
-//!     let record  = unbase::SubjectHandle::new_kv(&context, "beast","Tiger").unwrap();
-//!     let record2 = context.fetch_kv("beast","Tiger").await.expect("it worked").expect("it was found");
-//!     record.set_value("sound","Rawwr").await;
+//!     // Lets say one part of the app creates a record
+//!     let mut original_record  = SubjectHandle::new_with_single_kv(&context, "beast","Tiger").await.expect("The record creation didn't fail");
 //!
-//!     assert_eq!(record2.get_value("sound").await.unwrap(), "Rawwr");
-//! }
+//!     // another part of the app happens to be looking for a Tiger record
+//!     let mut record_copy = context.try_fetch_kv("beast","Tiger").await.expect("the fetch didn't fail").expect("and we found a record");
 //!
-//! async_std::task::block_on(run())
+//!     // Now we change the value on the original one
+//!     original_record.set_value("sound","Rawwr").await.expect("the set_value didn't fail");
+//!
+//!     // And we can see that the change on the copy
+//!     assert_eq!(record_copy.get_value("sound").await, Ok(Some("Rawwr".to_string())));
+//! # }
+//! # async_std::task::block_on(run())
 //! ```
 
 #![feature(type_alias_impl_trait)]

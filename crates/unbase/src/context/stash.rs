@@ -21,9 +21,71 @@ use crate::{
     },
 
 };
-/// Stash of Subject MemoRefHeads which must be considered for state projection
+/// # What is a Stash?
+/// Stash is very important to the operation of unbase - It is the beating heart of its consistency model.
+///
+/// A Stash is a special set containing [`MemoRefHead`](crate::memorefhead::MemoRefHead) and their Edges which must be
+/// considered for state projection. It assumes that MemoRefHeads which are put into it have a *heirarchical* relationship
+/// with each other. Even if that heirarchy isn't fully represented in the Stash, it must exist, and of course be free of cycles.
+///
+/// Because each unbase node (Slab) may relocate data with other peers, it may not have sufficient data locally to project
+/// state consistently when a given value is requested later. By itself, this would be way worse than eventual consistency,
+/// because one minute it would be consistent, and the next it would lose edits you just made on the same node. Worse still,
+/// it may never reconverge!
+///
+/// Most systems use a total order, or sharding (or both) to achieve consistency – but the express goal of unbase is to NOT do that.
+/// Instead, we use the Stash during the projection process to make sure we have a monotonic view of the world. We may not have all
+/// The data, but at least we'll know when we're missing something, and that's useful.
+///
+/// So, whenever we write data into the system, it must be copied to the stash, otherwise we might forget! Similarly, whenever we
+/// read data from the system, we must consult the stash to make sure we're considering all the data we should. Easy peasy, right?
+///
+/// # Stash Compaction
+/// Well, there's a bit of a downside to writing all edits into the stash: It'll fill up and get huge! If we kept all this data,
+/// it would be at least the same size as a full log of all edits ever made. That's no good! We want the stash to be as compact
+/// as possible. But how do we do that if we're always putting stuff into it? This is actually a very common design pattern. It's
+/// called an immutable/persistent data structure. You build a b-tree, and when you write a record, you create a new copy of the
+/// leaf pointing to that record, and the parent node pointing to that, and so on up to the root node. The whole thing is beautifully
+/// immutable, *except* for the *one* mutable reference to the root node. That root node is your "Stash"
+///
+/// Unfortunately if we try to implement unbase this way, we'll have an explosion of traffic! Remember, we have to play nicely with
+/// others. How do we merge those edits? We would have to send each other N+1 write operations (where N is the depth of the B-tree)
+/// for each edit. And then we'd have to emit new edits for each of those containing the merged versions of the B-tree nodes, and
+/// and then we're have to repeat the process for other edits we receive from other nodes, and so on. It's a runaway cascade,
+/// commonly referred to as "Write amplification", and it's very bad.
+///
+/// So what can we do instead? Well, much like an immutable/persistent data structure, each edit generates a new leaf node of the
+/// B-tree, and that gets put into the stash. But we don't immediately generate new parent B-tree nodes. We let it simmer a bit.
+/// Whereas the "Stash" for an immutable/persistent data structure is a set of exactly *one* mutable reference to the root node,
+/// our Stash is a set of *N* mutable references to different non-root (plus exactly one root) B-tree nodes. We have to add new
+/// nodes whenever we do an edit, but periodically we can issue new non-leaf B-tree nodes which reference one (or ideally more)
+/// leaf nodes which were in the stash. We also do this for non-leaf parents, and so on, all the way up to the root node, but
+/// the frequency of our doing so drops precipitously as we get closer to the root node.
+///
+/// *Crucially* because we put the new non-leaf node in the stash, we can remove those which it points to!
+/// We can do this because we know that the B-tree must be traversed to locate the record, and the nodes we removed from the stash
+/// will be considered _vicariously_ because we kept the parent node pointing to them. As such a Stash automatically prunes MemoRefHeads
+/// which are descended-by-or-equal-to *any* of the Edges of any MemoRefHead inserted into the stash.
+/// ```
+/// # use unbase::{Slab,Network,slab::{SubjectId},memorefhead::MemoRefHead,context::stash::Stash};
+/// # async_std::task::block_on(async {
+/// # let net = Network::create_new_system();
+/// # let slab = Slab::new(&net);
+/// # let slabhandle = slab.handle();
+///
+/// let stash = Stash::new();
+///
+/// let head1  = stash.add_test_head(&slab, SubjectId::index_test(1), vec![] ).await;
+/// let head2  = stash.add_test_head(&slab, SubjectId::index_test(2), vec![] ).await;
+/// let head3  = stash.add_test_head(&slab, SubjectId::index_test(3), vec![head1, MemoRefHead::Null, head2]).await;
+///
+///  assert_eq!(stash.concise_contents(), "I3>I1,_,I2");
+/// # });
+/// ```
+///
+/// See [concise_contents](Stash::concise_contents) for a simple way to visualize the contents of the stash
 #[derive(Clone, Default)]
-pub (in super) struct Stash{
+pub struct Stash{
     inner: Arc<Mutex<StashInner>>
 }
 #[derive(Default)]
@@ -56,8 +118,24 @@ impl Stash {
     pub fn subject_ids(&self) -> Vec<SubjectId> {
         self.inner.lock().unwrap().index.iter().map(|i| i.0.clone() ).collect()
     }
+    /// Return a human readable description of all the [`MemoRefHead`](crate::memorefhead::MemoRefHead)s currently in the stash,
+    /// and the other [`MemoRefHead`](crate::memorefhead::MemoRefHead)s referenced by their edges (in slot-positional order).
+    ///
+    /// This is represented as: *Subject id 1* > Relations *A,B*; *SubjectID 2* > Relations *C,D*
+    ///
+    /// For example:
+    ///
+    ///   I2>I1;I7>I2,_,I4
+    ///
+    ///   would indicate that the stash contains:
+    ///   * A Head for subject I2 (SubjectType::Index) with slot 0 pointing to I1.
+    ///   * A Head for subject I3 (SubjectType::Index) with slot 0 pointing to I2, slot 1 pointing to nothing, slot 2 pointing to I4
+    ///
+    ///   Note that in this scenario, the stash _does not_ contain heads for I1 or I4, but knows of their existence.
+    ///   These are "Phantom" members of the stash, and exist in the stash only as placeholders in anticipation of
+    ///   potential future traffic on the part of those Subjects
     #[allow(dead_code)]
-    pub fn concise_contents(&self) -> Vec<String> {
+    pub fn concise_contents(&self) -> String {
         let inner = self.inner.lock().unwrap();
 
         let mut out = Vec::with_capacity(inner.items.len());
@@ -66,11 +144,12 @@ impl Stash {
 
             let mut outstring = String::new();
             if let MemoRefHead::Null = item.head{
-                //outstring.push_str("*"); // This is a phantom member of the stash, whose purpose is only to serve as a placeholder
+                // This is a phantom member of the stash, whose purpose is only to serve as a placeholder
                 continue;
             }
             outstring.push_str( &subject_id.concise_string() );
 
+            // determine the last occupied slot so we don't have
             let last_occupied_relation_slot = item.relations.iter().enumerate().filter(|&(_,x)| x.is_some() ).last();
 
             if let Some((slot_id,_)) = last_occupied_relation_slot {
@@ -87,7 +166,7 @@ impl Stash {
             out.push(outstring);
         }
 
-        out
+        out.join(";")
     }
     /// Returns an iterator for all MemoRefHeads presently in the stash
     pub (crate) fn iter (&self) -> StashIterator {
@@ -203,6 +282,28 @@ impl Stash {
         }
 
         Ok(false)
+    }
+    /// Create a new [`MemoRefHead`](crate::memorefhead::MemoRefHead) for testing purposes, and immediately add it to the context
+    /// Returns a clone of the newly created + added [`MemoRefHead`](crate::memorefhead::MemoRefHead)
+    pub async fn add_test_head(&self, slab: &SlabHandle, subject_id: SubjectId, relations: Vec<MemoRefHead>) -> MemoRefHead {
+        use std::collections::HashMap;
+        use crate::slab::{EdgeSet, MemoBody, RelationSet};
+
+        let mut edgeset = EdgeSet::empty();
+
+        for (slot_id, mrh) in relations.iter().enumerate() {
+            if let &MemoRefHead::Subject{..} = mrh {
+                edgeset.insert(slot_id as RelationSlotId, mrh.clone())
+            }
+        }
+
+        let head = slab.new_memo(
+            Some(subject_id),
+            MemoRefHead::Null,
+            MemoBody::FullyMaterialized { v: HashMap::new(), r: RelationSet::empty(), e: edgeset, t: subject_id.stype }
+        ).to_head();
+
+        self.apply_head(slab, &head).await.expect("apply head")
     }
 }
 

@@ -41,7 +41,7 @@ async fn player_one() {
     Delay::new(Duration::from_millis(700)).await;
 
     println!("A - Sending Initial Ping");
-    let mut rec_a1 = SubjectHandle::new_kv(&context_a, "action", "Ping").await.unwrap();
+    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "action", "Ping").await.unwrap();
 
     let mut pings = 0;
 

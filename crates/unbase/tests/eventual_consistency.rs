@@ -33,7 +33,7 @@ async fn eventual_basic() {
     let context_a = slab_a.create_context();
     let context_b = slab_b.create_context();
 
-    let mut rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await.expect("Subject A1");
+    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "animal_sound", "Moo").await.expect("Subject A1");
     let record_id = rec_a1.id;
 
     assert!( rec_a1.get_value("animal_sound").await.unwrap().unwrap() == "Moo", "New subject should be internally consistent");
@@ -84,7 +84,7 @@ async fn eventual_detail() {
 
     simulator.quiesce_and_stop().await;
 
-    let rec_a1 = SubjectHandle::new_kv(&context_a, "animal_sound", "Moo").await;
+    let rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "animal_sound", "Moo").await;
 
     assert!(rec_a1.is_ok(), "New subject should be created");
     let mut rec_a1 = rec_a1.unwrap();
@@ -163,9 +163,9 @@ async fn eventual_detail() {
     simulator.quiesce().await;
 
     // Nowwww it should have propagated
-    let expected_contents = ["I9001>I9003", "I9003>I9004", "I9004>I9005", "I9005>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,I9006", "I9006>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,R9002"];
-    assert_eq!( context_a.concise_contents(),  &expected_contents );
-    assert_eq!( context_b.concise_contents(), &expected_contents );
+    let expected_contents = "I9001>I9003;I9003>I9004;I9004>I9005;I9005>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,I9006;I9006>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,R9002";
+    assert_eq!( context_a.concise_contents(),  expected_contents );
+    assert_eq!( context_b.concise_contents(), expected_contents );
 
     assert_eq!(*last_observed_sound_c.lock().unwrap(),      "Woof");
     assert_eq!(rec_a1.get_value("animal_sound").await.unwrap().unwrap(),   "Woof");

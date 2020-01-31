@@ -659,13 +659,13 @@ impl fmt::Debug for MemoRefHead{
             MemoRefHead::Null       => {
                 fmt.debug_struct("MemoRefHead::Null").finish()
             },
-            MemoRefHead::Anonymous{ ref head, .. } => {
+            MemoRefHead::Anonymous{ .. } => {
                 fmt.debug_struct("MemoRefHead::Anonymous")
                     // .field("memo_refs",  head )
                     .field("memos", &self.memo_summary() )
                     .finish()
             }
-            MemoRefHead::Subject{ ref subject_id, ref head, .. } => {
+            MemoRefHead::Subject{ ref subject_id, .. } => {
                 fmt.debug_struct("MemoRefHead::Subject")
                     .field("subject_id", &subject_id )
 //                    .field("memo_refs",  head )

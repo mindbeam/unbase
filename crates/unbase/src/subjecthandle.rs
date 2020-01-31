@@ -66,7 +66,7 @@ impl SubjectHandle{
     pub async fn new_blank ( context: &Context ) -> Result<SubjectHandle,WriteError> {
         Self::new( context, HashMap::new() ).await
     }
-    pub async fn new_kv ( context: &Context, key: &str, value: &str ) -> Result<SubjectHandle,WriteError> {
+    pub async fn new_with_single_kv(context: &Context, key: &str, value: &str ) -> Result<SubjectHandle,WriteError> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 

@@ -20,7 +20,7 @@ async fn basic_record_retrieval() {
 
     let record_id;
     {
-        let record = SubjectHandle::new_kv(&context_a, "animal_type","Cat").await.unwrap();
+        let record = SubjectHandle::new_with_single_kv(&context_a, "animal_type", "Cat").await.unwrap();
 
         debug!("Record {:?}", record );
         record_id = record.id;
@@ -45,7 +45,7 @@ async fn basic_record_retrieval_simulator() {
 
     let record_id;
     {
-        let record = SubjectHandle::new_kv(&context_a, "animal_type","Cat").await.unwrap();
+        let record = SubjectHandle::new_with_single_kv(&context_a, "animal_type", "Cat").await.unwrap();
 
         debug!("Record {:?}", record );
         record_id = record.id;

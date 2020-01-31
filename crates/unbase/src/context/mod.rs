@@ -159,7 +159,7 @@ impl Context {
         }
     }
 
-    pub fn concise_contents (&self) -> Vec<String> {
+    pub fn concise_contents (&self) -> String {
         self.stash.concise_contents()
     }
 
@@ -233,7 +233,9 @@ impl Context {
         // Arc::ptr_eq(&self.inner,&other.inner)
     }
 
-    pub async fn add_test_subject(&self, subject_id: SubjectId, relations: Vec<MemoRefHead>) -> MemoRefHead {
+    /// Create a new [`MemoRefHead`](crate::memorefhead::MemoRefHead) for testing purposes, and immediately add it to the context
+    /// Returns a clone of the newly created + added [`MemoRefHead`](crate::memorefhead::MemoRefHead)
+    pub async fn add_test_head(&self, subject_id: SubjectId, relations: Vec<MemoRefHead>) -> MemoRefHead {
 
         let mut edgeset = EdgeSet::empty();
 
@@ -435,13 +437,13 @@ mod test {
         let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
-        let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]    ).await;
-        let head2  = context.add_test_subject(SubjectId::index_test(2), vec![head1] ).await;
-        let head3  = context.add_test_subject(SubjectId::index_test(3), vec![head2] ).await;
-        let _head4 = context.add_test_subject(SubjectId::index_test(4), vec![head3] ).await;
+        let head1  = context.add_test_head(SubjectId::index_test(1), vec![]    ).await;
+        let head2  = context.add_test_head(SubjectId::index_test(2), vec![head1] ).await;
+        let head3  = context.add_test_head(SubjectId::index_test(3), vec![head2] ).await;
+        let _head4 = context.add_test_head(SubjectId::index_test(4), vec![head3] ).await;
 
         // each preceeding subject should be pruned, leaving us with a fully compacted stash
-        assert_eq!(context.stash.concise_contents(),["I4>I3"], "Valid contents");
+        assert_eq!(context.stash.concise_contents(),"I4>I3", "Valid contents");
     }
 
     #[unbase_test_util::async_test]
@@ -451,8 +453,8 @@ mod test {
         let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
-        let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]   ).await;
-        let head2  = context.add_test_subject(SubjectId::index_test(2), vec![head1] ).await;
+        let head1  = context.add_test_head(SubjectId::index_test(1), vec![]   ).await;
+        let head2  = context.add_test_head(SubjectId::index_test(2), vec![head1] ).await;
 
         {
             // manually defeat compaction
@@ -461,10 +463,10 @@ mod test {
         }
 
         // additional stuff on I2 should prevent it from being pruned by the I3 edge
-        let head3  = context.add_test_subject(SubjectId::index_test(3), vec![head2.clone()] ).await;
-        let head4 = context.add_test_subject(SubjectId::index_test(4), vec![head3.clone()] ).await;
+        let head3  = context.add_test_head(SubjectId::index_test(3), vec![head2.clone()] ).await;
+        let head4 = context.add_test_head(SubjectId::index_test(4), vec![head3.clone()] ).await;
 
-        assert_eq!(context.stash.concise_contents(),["I2>I1","I4>I3"], "Valid contents");
+        assert_eq!(context.stash.concise_contents(),"I2>I1;I4>I3", "Valid contents");
 
         {
             // manually perform compaction
@@ -473,7 +475,7 @@ mod test {
             context.apply_head(&head).await.unwrap();
         }
 
-        assert_eq!(context.stash.concise_contents(),["I3>I2", "I4>I3"], "Valid contents");
+        assert_eq!(context.stash.concise_contents(),"I3>I2;I4>I3", "Valid contents");
 
         {
             // manually perform compaction
@@ -482,7 +484,7 @@ mod test {
             context.apply_head(&head).await.unwrap();
         }
 
-        assert_eq!(context.stash.concise_contents(),["I4>I3"], "Valid contents");
+        assert_eq!(context.stash.concise_contents(),"I4>I3", "Valid contents");
     }
 
     #[unbase_test_util::async_test]
@@ -492,17 +494,23 @@ mod test {
         let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
-        let head1  = context.add_test_subject(SubjectId::index_test(1), vec![]  ).await;
-        let head2  = context.add_test_subject(SubjectId::index_test(2), vec![head1]).await;
+        let head1  = context.add_test_head(SubjectId::index_test(1), vec![]  ).await;
 
+        println!("MARK 1 {:?}", context.stash.concise_contents());
+
+        let head2  = context.add_test_head(SubjectId::index_test(2), vec![head1]).await;
+
+        println!("MARK 2 {:?}", context.stash.concise_contents());
         {
             // manually defeat compaction
             let head = slab.new_memo(head2.subject_id(), head2.clone(), MemoBody::Edit(HashMap::new())).to_head();
             context.apply_head(&head).await.unwrap();
         }
 
+        println!("MARK 3 {:?}", context.stash.concise_contents());
+
         // additional stuff on I2 should prevent it from being pruned by the I3 edge
-        let head3  = context.add_test_subject(SubjectId::index_test(3), vec![head2] ).await;
+        let head3  = context.add_test_head(SubjectId::index_test(3), vec![head2] ).await;
         {
             // manually defeat compaction
             let head = slab.new_memo(head3.subject_id(), head3.clone(), MemoBody::Edit(HashMap::new())).to_head();
@@ -510,13 +518,13 @@ mod test {
         }
 
         // additional stuff on I3 should prevent it from being pruned by the I4 edge
-        let _head4 = context.add_test_subject(SubjectId::index_test(4), vec![head3] );
+        let _head4 = context.add_test_head(SubjectId::index_test(4), vec![head3] );
 
-        assert_eq!(context.stash.concise_contents(),["I2>I1","I3>I2","I4>I3"], "Valid contents");
+        assert_eq!(context.stash.concise_contents(),"I2>I1;I3>I2;I4>I3", "Valid contents");
 
         context.compact().await.unwrap();
 
-        assert_eq!(context.stash.concise_contents(),["I4>I3"], "Valid contents");
+        assert_eq!(context.stash.concise_contents(),"I4>I3", "Valid contents");
     }
 
     // #[unbase_test_util::async_test]
