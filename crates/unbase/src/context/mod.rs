@@ -518,7 +518,7 @@ mod test {
         }
 
         // additional stuff on I3 should prevent it from being pruned by the I4 edge
-        let _head4 = context.add_test_head(SubjectId::index_test(4), vec![head3] );
+        let _head4 = context.add_test_head(SubjectId::index_test(4), vec![head3] ).await;
 
         assert_eq!(context.stash.concise_contents(),"I2>I1;I3>I2;I4>I3", "Valid contents");
 
