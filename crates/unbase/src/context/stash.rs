@@ -132,8 +132,10 @@ impl Stash {
     ///   * A Head for subject I3 (SubjectType::Index) with slot 0 pointing to I2, slot 1 pointing to nothing, slot 2 pointing to I4
     ///
     ///   Note that in this scenario, the stash _does not_ contain heads for I1 or I4, but knows of their existence.
-    ///   These are "Phantom" members of the stash, and exist in the stash only as placeholders in anticipation of
-    ///   potential future traffic on the part of those Subjects
+    ///   They may have been in the stash previously, then removed because they were "descended" by and edge of another Head,
+    ///   Or they may never have been added in the first place. Regardless, the stash needs to be aware of these edges.
+    ///   These are "Phantom" members of the stash, and are used as placeholders in anticipation of potential future traffic
+    ///   on the part of those Subjects.
     #[allow(dead_code)]
     pub fn concise_contents(&self) -> String {
         let inner = self.inner.lock().unwrap();

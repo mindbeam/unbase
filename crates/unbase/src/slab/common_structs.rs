@@ -198,7 +198,7 @@ pub enum EdgeLink{
         head:       MemoRefHead
     }
 }
-
+// TODO: consider making this a Vec
 #[derive(Clone, Debug, Default)]
 pub struct EdgeSet (pub HashMap<RelationSlotId, MemoRefHead>);
 

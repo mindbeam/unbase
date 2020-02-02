@@ -235,11 +235,11 @@ impl Context {
 
     /// Create a new [`MemoRefHead`](crate::memorefhead::MemoRefHead) for testing purposes, and immediately add it to the context
     /// Returns a clone of the newly created + added [`MemoRefHead`](crate::memorefhead::MemoRefHead)
-    pub async fn add_test_head(&self, subject_id: SubjectId, relations: Vec<MemoRefHead>) -> MemoRefHead {
+    pub async fn add_test_head(&self, subject_id: SubjectId, edges: Vec<MemoRefHead>) -> MemoRefHead {
 
         let mut edgeset = EdgeSet::empty();
 
-        for (slot_id, mrh) in relations.iter().enumerate() {
+        for (slot_id, mrh) in edges.iter().enumerate() {
             if let &MemoRefHead::Subject{..} = mrh {
                 edgeset.insert(slot_id as RelationSlotId, mrh.clone())
             }
@@ -259,21 +259,27 @@ impl Context {
     /// Then we can remove the now-referenced subject heads, and repeat the process in a topological fashion, confident that these
     /// referenced subject heads will necessarily be included in subsequent projection as a result.
     pub async fn compact(&self) -> Result<(), WriteError>  {
-        let before = self.stash.concise_contents();
+//        let before = self.stash.concise_contents();
 
         //TODO: implement topological MRH iterator for stash
-        //      non-topological iteration will yield sub-optimal compaction
+        //      right now we're just doing a linear pass, which will
+        //      yield sub-optimal compaction
 
         // iterate all heads in the stash
         for parent_mrh in self.stash.iter() {
+            // TODO POSTMERGE - ideally we'd have a better signal for when we have
+            //                  reached the end of a given concurrent set of memos
+            //                  versus doing a descends test
             let mut updated_edges = EdgeSet::empty();
 
+            // Note: project_occupied_edges DOES NOT consider the contents of the stash for this head's subject. That's intentional
             for edgelink in parent_mrh.project_occupied_edges(&self.slab).await? {
                 if let EdgeLink::Occupied{slot_id,head:edge_mrh} = edgelink {
 
                     if let Some(subject_id) = edge_mrh.subject_id(){
                         if let stash_mrh @ MemoRefHead::Subject{..} = self.stash.get_head(subject_id) {
                             // looking for cases where the stash is fresher than the edge
+
                             if stash_mrh.descends_or_contains(&edge_mrh, &self.slab).await?{
                                 updated_edges.insert( slot_id, stash_mrh );
                             }
@@ -289,7 +295,7 @@ impl Context {
 
                 let head = self.slab.new_memo(
                     Some(subject_id),
-                    MemoRefHead::Null,
+                    parent_mrh,
                     memobody.clone()
                 ).to_head();
 
@@ -297,7 +303,7 @@ impl Context {
             }
         }
 
-        debug!("COMPACT Before: {:?}, After: {:?}", before, self.stash.concise_contents() );
+//        debug!("COMPACT Before: {:?}, After: {:?}", before, self.stash.concise_contents() );
         Ok(())
     }
 
@@ -496,28 +502,25 @@ mod test {
         // 4 -> 3 -> 2 -> 1
         let head1  = context.add_test_head(SubjectId::index_test(1), vec![]  ).await;
 
-        println!("MARK 1 {:?}", context.stash.concise_contents());
-
+        // head1 gets pruned because it's included as an edge here, and there are no newer edits for it in the stash
         let head2  = context.add_test_head(SubjectId::index_test(2), vec![head1]).await;
 
-        println!("MARK 2 {:?}", context.stash.concise_contents());
         {
-            // manually defeat compaction
+            // defeat stash pruning during apply_head(head3) by adding an update to the head which is newer than its head2 edge
             let head = slab.new_memo(head2.subject_id(), head2.clone(), MemoBody::Edit(HashMap::new())).to_head();
             context.apply_head(&head).await.unwrap();
         }
 
-        println!("MARK 3 {:?}", context.stash.concise_contents());
-
-        // additional stuff on I2 should prevent it from being pruned by the I3 edge
+        // additional edit on I2 present in context, but not in this edge should prevent it from being pruned by the apply_head(head3)
         let head3  = context.add_test_head(SubjectId::index_test(3), vec![head2] ).await;
+
         {
-            // manually defeat compaction
+            // defeat stash pruning during apply_head(head4) by adding an update to the head which is newer than its head3 edge
             let head = slab.new_memo(head3.subject_id(), head3.clone(), MemoBody::Edit(HashMap::new())).to_head();
             context.apply_head(&head).await.unwrap();
         }
 
-        // additional stuff on I3 should prevent it from being pruned by the I4 edge
+        // additional edit on I3 present in context, but not in this edge should prevent it from being pruned during the apply_head(head4)
         let _head4 = context.add_test_head(SubjectId::index_test(4), vec![head3] ).await;
 
         assert_eq!(context.stash.concise_contents(),"I2>I1;I3>I2;I4>I3", "Valid contents");

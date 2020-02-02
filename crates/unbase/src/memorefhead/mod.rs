@@ -265,6 +265,7 @@ impl MemoRefHead {
                     MemoRefHead::Null             => Ok(false),
                     MemoRefHead::Subject{ head: ref other_head, .. } | MemoRefHead::Anonymous{ head: ref other_head, .. } => {
                         if head.len() == 0 || other_head.len() == 0 {
+                            println!("ONE IS ZERO");
                             return Ok(false) // searching for positive descendency, not merely non-ascendency
                         }
                         for memoref in head.iter(){
@@ -610,7 +611,7 @@ impl MemoRefHead {
 
         Ok(out)
     }
-    /// Contextualized projection of occupied edges
+    /// Contextualized projection of edges for occupied slots
     pub async fn project_occupied_edges (&self, slab: &SlabHandle) -> Result<Vec<EdgeLink>,RetrieveError> {
         let mut visited = [false; MAX_SLOTS];
         let mut edge_links : Vec<EdgeLink> = Vec::new();
@@ -631,6 +632,9 @@ impl MemoRefHead {
             };
 
             for (slot_id,rel_head) in edgeset.iter() {
+                // TODO POSTMERGE - I believe this is wrong. Need to consider concurrencies.
+                //                  Also, should probably stop whenever we hit a FullyMaterialized
+
                 // Only consider the non-visited slots
                 if !visited[ *slot_id as usize] {
                     visited[ *slot_id as usize] = true;
