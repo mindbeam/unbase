@@ -28,21 +28,28 @@
 //! # use unbase::error::RetrieveError;
 //! # use unbase::{Network, Slab, SubjectHandle};
 //! # async fn run () {
-//!     let net     = Network::create_new_system(); // use new, except for the very first time
-//!     let slab    = Slab::new(&net);              // Slab exits when you drop this
-//!     let context = slab.create_context();        // Context is your view of the world. A "client" app would have one of these
+//! let net = Network::create_new_system(); // use new, except for the very first time
+//! let slab = Slab::new(&net); // Slab exits when you drop this
+//! let context = slab.create_context(); // Context is your view of the world. A "client" app would have one of these
 //!
-//!     // Lets say one part of the app creates a record
-//!     let mut original_record  = SubjectHandle::new_with_single_kv(&context, "beast","Tiger").await.expect("The record creation didn't fail");
+//! // Lets say one part of the app creates a record
+//! let mut original_record =
+//!     SubjectHandle::new_with_single_kv(&context, "beast", "Tiger").await
+//!                                                                  .expect("The record creation didn't fail");
 //!
-//!     // another part of the app happens to be looking for a Tiger record
-//!     let mut record_copy = context.try_fetch_kv("beast","Tiger").await.expect("the fetch didn't fail").expect("and we found a record");
+//! // another part of the app happens to be looking for a Tiger record
+//! let mut record_copy = context.try_fetch_kv("beast", "Tiger")
+//!                              .await
+//!                              .expect("the fetch didn't fail")
+//!                              .expect("and we found a record");
 //!
-//!     // Now we change the value on the original one
-//!     original_record.set_value("sound","Rawwr").await.expect("the set_value didn't fail");
+//! // Now we change the value on the original one
+//! original_record.set_value("sound", "Rawwr")
+//!                .await
+//!                .expect("the set_value didn't fail");
 //!
-//!     // And we can see that the change on the copy
-//!     assert_eq!(record_copy.get_value("sound").await, Ok(Some("Rawwr".to_string())));
+//! // And we can see that the change on the copy
+//! assert_eq!(record_copy.get_value("sound").await, Ok(Some("Rawwr".to_string())));
 //! # }
 //! # async_std::task::block_on(run())
 //! ```
@@ -52,26 +59,27 @@
 #![doc(html_root_url = "https://unba.se")]
 //#![recursion_limit = "42"]
 
-//extern crate core;
-//extern crate linked_hash_map;
-//extern crate itertools;
+// extern crate core;
+// extern crate linked_hash_map;
+// extern crate itertools;
 
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
-
 //#[doc(inline)]
-pub mod network;
-pub mod slab;
 pub mod context;
 pub mod error;
 pub mod index;
 pub mod memorefhead;
-pub mod util;
+pub mod network;
+pub mod slab;
 pub mod subjecthandle;
+pub mod util;
 
-pub use crate::network::Network;
-pub use crate::subjecthandle::SubjectHandle;
-pub use crate::slab::Slab;
+pub use crate::{
+    network::Network,
+    slab::Slab,
+    subjecthandle::SubjectHandle,
+};

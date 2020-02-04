@@ -1,31 +1,43 @@
+use crate::{
+    network::TransportAddress,
+    slab::SlabId,
+};
 use std::fmt;
-use crate::network::{TransportAddress};
-use crate::slab::SlabId;
 
-use ::serde::ser::{Serialize};
-pub use ::serde::ser::{Serializer,SerializeStruct,SerializeSeq,SerializeMap};
-pub use ::serde::de::{Deserializer,DeserializeSeed,Visitor,SeqVisitor};
+use ::serde::ser::Serialize;
+pub use ::serde::{
+    de::{
+        DeserializeSeed,
+        Deserializer,
+        SeqVisitor,
+        Visitor,
+    },
+    ser::{
+        SerializeMap,
+        SerializeSeq,
+        SerializeStruct,
+        Serializer,
+    },
+};
 
-pub use ::serde::ser::Error as SerError;
-pub use ::serde::de::Error as DeError;
+pub use ::serde::{
+    de::Error as DeError,
+    ser::Error as SerError,
+};
 
 pub struct SerializeHelper<'a> {
-    pub dest_slab_id: &'a SlabId,
-    pub return_address: &'a TransportAddress
+    pub dest_slab_id:   &'a SlabId,
+    pub return_address: &'a TransportAddress,
 }
 
-pub struct SerializeWrapper<'a, T: 'a> (
-    pub &'a T,
-    pub &'a SerializeHelper<'a>
-);
+pub struct SerializeWrapper<'a, T: 'a>(pub &'a T, pub &'a SerializeHelper<'a>);
 
 pub trait StatefulSerialize {
     fn serialize<S>(&self, serializer: S, state: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer;
 }
 
-impl<'a, T> Serialize for SerializeWrapper<'a, T>
-    where T: StatefulSerialize
+impl<'a, T> Serialize for SerializeWrapper<'a, T> where T: StatefulSerialize
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
@@ -34,38 +46,39 @@ impl<'a, T> Serialize for SerializeWrapper<'a, T>
     }
 }
 
-impl<T> StatefulSerialize for Vec<T>
-      where T: StatefulSerialize
+impl<T> StatefulSerialize for Vec<T> where T: StatefulSerialize
 {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
-        for e in self.iter(){
-            seq.serialize_element( &SerializeWrapper( e, helper ) )?;
+        for e in self.iter() {
+            seq.serialize_element(&SerializeWrapper(e, helper))?;
         }
         seq.end()
     }
 }
-impl<'a, T> StatefulSerialize for &'a Vec<T>
-      where T: StatefulSerialize
+impl<'a, T> StatefulSerialize for &'a Vec<T> where T: StatefulSerialize
 {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
-        for e in self.iter(){
-            seq.serialize_element( &SerializeWrapper( e, helper ) )?;
+        for e in self.iter() {
+            seq.serialize_element(&SerializeWrapper(e, helper))?;
         }
         seq.end()
     }
 }
 // whoops, looks like I need a macro for n-tuples?
 
-use core::hash::{Hash, BuildHasher};
+use core::hash::{
+    BuildHasher,
+    Hash,
+};
 use std::collections::HashMap;
 
-impl<K,V,H> StatefulSerialize for HashMap<K,V,H>
+impl<K, V, H> StatefulSerialize for HashMap<K, V, H>
     where K: Serialize + Eq + Hash,
           V: StatefulSerialize,
           H: BuildHasher
@@ -80,37 +93,30 @@ impl<K,V,H> StatefulSerialize for HashMap<K,V,H>
         };
         let mut serializer = serializer.serialize_map(hint)?;
         for (key, value) in iter {
-            serializer.serialize_entry(&key, &SerializeWrapper(value,helper))?;
+            serializer.serialize_entry(&key, &SerializeWrapper(value, helper))?;
         }
         serializer.end()
-
     }
 }
 
-impl<T> StatefulSerialize for Option<T>
-      where T: StatefulSerialize
+impl<T> StatefulSerialize for Option<T> where T: StatefulSerialize
 {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         match self {
-            &Some(ref v) =>{
-                serializer.serialize_some( &SerializeWrapper( v, helper ) )
-            }
-            &None => {
-                serializer.serialize_none()
-            }
+            &Some(ref v) => serializer.serialize_some(&SerializeWrapper(v, helper)),
+            &None => serializer.serialize_none(),
         }
     }
 }
 
-
 pub struct VecSeed<S>(pub S);
 
-impl<S> DeserializeSeed for VecSeed<S>
-    where S: DeserializeSeed + Clone
+impl<S> DeserializeSeed for VecSeed<S> where S: DeserializeSeed + Clone
 {
     type Value = Vec<S::Value>;
+
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
@@ -118,24 +124,22 @@ impl<S> DeserializeSeed for VecSeed<S>
     }
 }
 
-impl<S> Visitor for VecSeed<S>
-    where S: DeserializeSeed + Clone
+impl<S> Visitor for VecSeed<S> where S: DeserializeSeed + Clone
 {
     type Value = Vec<S::Value>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-       formatter.write_str("sequence")
+        formatter.write_str("sequence")
     }
 
     fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
-       where V: SeqVisitor
+        where V: SeqVisitor
     {
+        let mut out: Vec<S::Value> = Vec::new();
 
-        let mut out : Vec<S::Value> = Vec::new();
-
-        while let Some(v) = visitor.visit_seed( self.0.clone() )? {
+        while let Some(v) = visitor.visit_seed(self.0.clone())? {
             out.push(v);
-        };
+        }
 
         Ok(out)
     }
@@ -143,8 +147,7 @@ impl<S> Visitor for VecSeed<S>
 /// optional one.
 pub struct OptionSeed<S>(pub S);
 
-impl<S> Visitor for OptionSeed<S>
-    where S: DeserializeSeed
+impl<S> Visitor for OptionSeed<S> where S: DeserializeSeed
 {
     type Value = Option<S::Value>;
 
@@ -165,8 +168,7 @@ impl<S> Visitor for OptionSeed<S>
     }
 }
 
-impl<S> DeserializeSeed for OptionSeed<S>
-    where S: DeserializeSeed
+impl<S> DeserializeSeed for OptionSeed<S> where S: DeserializeSeed
 {
     type Value = Option<S::Value>;
 

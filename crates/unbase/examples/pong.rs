@@ -1,17 +1,15 @@
+use futures::StreamExt;
 use unbase::{
     network::transport::TransportUDP,
     Network,
     Slab,
-};
-use futures::{
-    StreamExt
 };
 
 use std::time::Duration;
 use timer::Delay;
 
 #[async_std::main]
-async fn main(){
+async fn main() {
     let net = Network::new();
     net.hack_set_next_slab_id(200);
 
@@ -29,13 +27,16 @@ async fn main(){
     context.root_index().await.unwrap();
 
     println!("B - Searching for Ping record...");
-    let mut record = context.fetch_kv("action", "Ping", Duration::from_secs(30)).await.unwrap();
+    let mut record = context.fetch_kv("action", "Ping", Duration::from_secs(30))
+                            .await
+                            .unwrap();
     println!("B - Found Ping record.");
 
     let mut pongs = 0;
     let mut obs = record.observe();
     while let Some(_) = obs.next().await {
-        // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied immediately after this event is sent
+        // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied
+        // immediately after this event is sent
         Delay::new(Duration::from_millis(10)).await;
 
         let value = record.get_value("action").await.expect("it worked").expect("found");
@@ -45,7 +46,7 @@ async fn main(){
             pongs += 1;
 
             if pongs >= 10 {
-                break
+                break;
             }
         }
     }

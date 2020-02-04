@@ -9,7 +9,5 @@ mod tests {
     use super::async_test;
 
     #[async_test]
-    async fn it_works() {
-
-    }
+    async fn it_works() {}
 }

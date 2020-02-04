@@ -2,20 +2,25 @@
 //! pluggable transports that allow connections between slabs. A `Transport` knows how to make
 //! `Transmitter`s which can be used to send `Memo`s.
 
+mod blackhole;
 mod local_direct;
 pub mod simulator;
 mod udp;
-mod blackhole;
 
-pub use self::udp::*;
-pub use self::local_direct::LocalDirect;
-pub use self::blackhole::Blackhole;
-pub use super::transmitter::{Transmitter, DynamicDispatchTransmitter};
+pub use self::{
+    blackhole::Blackhole,
+    local_direct::LocalDirect,
+    udp::*,
+};
+pub use super::transmitter::{
+    DynamicDispatchTransmitter,
+    Transmitter,
+};
 
 use crate::network::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub enum TransportAddress{
+pub enum TransportAddress {
     Blackhole,
     Simulator,
     Local,
@@ -24,36 +29,33 @@ pub enum TransportAddress{
     WebRTP,
     SCMP,
     Bluetooth,
-    ShamefulTCP // SHAME! SHAME! SHAME! ( yes, I _really_ want to discourage people from using TCP )
+    ShamefulTCP, // SHAME! SHAME! SHAME! ( yes, I _really_ want to discourage people from using TCP )
 }
 
 pub trait Transport {
-    fn make_transmitter(
-        &self,
-        args: &TransmitterArgs,
-    ) -> Option<Transmitter>;
-    fn is_local        (  &self ) -> bool;
-    fn bind_network    (  &self, network: &Network );
-    fn unbind_network  (  &self, network: &Network );
-    fn get_return_address  ( &self, address: &TransportAddress ) -> Option<TransportAddress>;
+    fn make_transmitter(&self, args: &TransmitterArgs) -> Option<Transmitter>;
+    fn is_local(&self) -> bool;
+    fn bind_network(&self, network: &Network);
+    fn unbind_network(&self, network: &Network);
+    fn get_return_address(&self, address: &TransportAddress) -> Option<TransportAddress>;
 }
 
 impl TransportAddress {
-    pub fn to_string (&self) -> String {
-
+    pub fn to_string(&self) -> String {
         use self::TransportAddress::*;
         match self {
-            &Simulator   => "Simulator".to_string(),
-            &Local       => "Local".to_string(),
-            &UDP(ref a)  => a.to_string(),
-            _            => "UNKNOWN".to_string(),
+            &Simulator => "Simulator".to_string(),
+            &Local => "Local".to_string(),
+            &UDP(ref a) => a.to_string(),
+            _ => "UNKNOWN".to_string(),
         }
     }
-    pub fn is_local (&self) -> bool {
+
+    pub fn is_local(&self) -> bool {
         match self {
-            &TransportAddress::Local      => true,
-            &TransportAddress::Simulator  => true,
-            _                             => false
+            &TransportAddress::Local => true,
+            &TransportAddress::Simulator => true,
+            _ => false,
         }
     }
 }

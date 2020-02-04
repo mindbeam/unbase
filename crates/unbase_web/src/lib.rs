@@ -1,10 +1,9 @@
-
 pub mod util;
 
-//use wasm_bindgen::prelude::*;
-//use wasm_bindgen_futures::futures_0_3::*;
+// use wasm_bindgen::prelude::*;
+// use wasm_bindgen_futures::futures_0_3::*;
 
-use log::{info};
+use log::info;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
@@ -18,10 +17,9 @@ pub fn start() {
 #[wasm_bindgen]
 pub fn greet(name: &str) {
     info!("Hello, {}!", name)
-//    use web_sys::console;
-//    console::log_1(&JsValue::from_str(format!("Hello, {}!", name).as_str()));
+    //    use web_sys::console;
+    //    console::log_1(&JsValue::from_str(format!("Hello, {}!", name).as_str()));
 }
-
 
 #[cfg(test)]
 mod tests {

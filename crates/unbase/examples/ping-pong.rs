@@ -1,11 +1,11 @@
 extern crate unbase;
 
-use std::time::Duration;
-use timer::Delay;
 use futures::{
     join,
     StreamExt,
 };
+use std::time::Duration;
+use timer::Delay;
 use unbase::{
     network::transport::TransportUDP,
     Network,
@@ -16,16 +16,16 @@ use unbase::{
 /// This example is a rudimentary interaction between two remote nodes
 /// As of the time of this writing, the desired convergence properties of the system are not really implemented.
 /// For now we are relying on the size of the cluster being smaller than the memo peering target,
-/// rather than gossip (once the record has been made resident) or index convergence (prior to the record being located).
+/// rather than gossip (once the record has been made resident) or index convergence (prior to the record being
+/// located).
 #[async_std::main]
-async fn main () {
+async fn main() {
     unbase_test_util::init_test_logger();
 
     let p1 = player_one();
     let p2 = player_two();
 
-    join!{ p1, p2 };
-
+    join! { p1, p2 };
 }
 
 async fn player_one() {
@@ -41,12 +41,14 @@ async fn player_one() {
     Delay::new(Duration::from_millis(700)).await;
 
     println!("A - Sending Initial Ping");
-    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "action", "Ping").await.unwrap();
+    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "action", "Ping").await
+                                                                                    .unwrap();
 
     let mut pings = 0;
 
     while let Some(head) = rec_a1.observe().next().await {
-        // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied immediately after this event is sent
+        // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied
+        // immediately after this event is sent
         Delay::new(Duration::from_millis(10)).await;
 
         let value = rec_a1.get_value("action").await.expect("retrieval").expect("found");
@@ -57,22 +59,22 @@ async fn player_one() {
             pings += 1;
 
             if pings >= 10 {
-                break
+                break;
             }
         }
     }
 }
 
-//fn foo () {
+// fn foo () {
 //    MemoRefHead::Subject {
 //        subject_id: SubjectId { id: 9002, stype: Record },
 //        memo_refs: [MemoRef {
 //            id: 5003,
 //            owning_slab_id: 0,
 //            subject_id: Some(SubjectId { id: 9002, stype: Record }),
-//            peerlist: MemoPeerList([MemoPeer { slabref: SlabRef { owning_slab_id: 0, slab_id: 200, presence: [SlabPresence { slab_id: 200, address: "udp:127.0.0.1:12002", lifetime: Unknown }] }, status: Resident }]),
-//            memo: Resident(Memo {
-//                id: 5003,
+//            peerlist: MemoPeerList([MemoPeer { slabref: SlabRef { owning_slab_id: 0, slab_id: 200, presence:
+// [SlabPresence { slab_id: 200, address: "udp:127.0.0.1:12002", lifetime: Unknown }] }, status: Resident }]),
+// memo: Resident(Memo {                id: 5003,
 //                subject_id: Some(SubjectId { id: 9002, stype: Record }),
 //                parents: MemoRefHead::Null,
 //                body: FullyMaterialized { v: { "action": "Ping" }, r: RelationSet({}), e: EdgeSet({}), t: Record }
@@ -97,13 +99,16 @@ async fn player_two() {
     context_b.root_index().await.unwrap();
 
     println!("B - Searching for Ping record...");
-    let mut rec_b1 = context_b.fetch_kv("action", "Ping", Duration::from_secs(1)).await.unwrap();
+    let mut rec_b1 = context_b.fetch_kv("action", "Ping", Duration::from_secs(1))
+                              .await
+                              .unwrap();
     println!("B - Found Ping record.");
 
     let mut pongs = 0;
     let mut obs = rec_b1.observe();
     while let Some(_) = obs.next().await {
-        // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied immediately after this event is sent
+        // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied
+        // immediately after this event is sent
         Delay::new(Duration::from_millis(10)).await;
 
         let value = rec_b1.get_value("action").await.expect("it worked").expect("found");
@@ -114,7 +119,7 @@ async fn player_two() {
             pongs += 1;
 
             if pongs >= 10 {
-                break
+                break;
             }
         }
     }

@@ -1,8 +1,7 @@
-
 //
 //#[cfg(target_os = "wasm32")]
 //#[unbase_test_util::async_test]
-//async fn basic_record_retrieval_singlethread() {
+// async fn basic_record_retrieval_singlethread() {
 //
 //    let net = unbase::Network::create_new_system();
 //    let slab_a = unbase::slab::storage::Memory::new(&net);
@@ -23,7 +22,7 @@
 //}
 //
 //#[wasm_bindgen_test]
-//fn pass(){
+// fn pass(){
 //    unbase_test_util::init_test_logger();
 //    assert_eq!(1, 1)
 //

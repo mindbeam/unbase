@@ -11,13 +11,13 @@ pub enum RetrieveError {
 }
 
 #[derive(PartialEq, Debug)]
-pub enum InvalidMemoRefHead{
+pub enum InvalidMemoRefHead {
     MissingSubjectId,
     Empty,
 }
 
 #[derive(PartialEq, Debug)]
-pub enum WriteError{
+pub enum WriteError {
     Unknown,
     RetrieveError(Box<RetrieveError>),
     // This is silly. TODO - break this cycle and remove the Box
@@ -25,8 +25,8 @@ pub enum WriteError{
 }
 
 #[derive(PartialEq, Debug)]
-pub enum ObserveError{
-    Unknown
+pub enum ObserveError {
+    Unknown,
 }
 
 impl core::convert::From<()> for ObserveError {
@@ -46,8 +46,8 @@ impl core::convert::From<WriteError> for RetrieveError {
 }
 
 #[derive(PartialEq, Debug)]
-pub enum StorageOpDeclined{
- InsufficientPeering
+pub enum StorageOpDeclined {
+    InsufficientPeering,
 }
 
 #[derive(PartialEq, Debug)]

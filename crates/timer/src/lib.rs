@@ -13,8 +13,8 @@ pub use crate::wasm::Delay;
 #[cfg(test)]
 mod tests {
     use crate::Delay;
-    use std::time::Duration;
     use log::info;
+    use std::time::Duration;
 
     #[unbase_test_util::async_test]
     async fn three_one_second_delays_future() {

@@ -1,15 +1,13 @@
 extern crate unbase;
+use futures::StreamExt;
+use std::time::Duration;
+use timer::Delay;
 use unbase::{
     network::transport::TransportUDP,
     Network,
     Slab,
     SubjectHandle,
 };
-use futures::{
-    StreamExt,
-};
-use std::time::Duration;
-use timer::Delay;
 
 #[async_std::main]
 async fn main() {
@@ -26,13 +24,14 @@ async fn main() {
     // TODO: establish some kind of positive pressure to push out index nodes
     Delay::new(Duration::from_millis(7000)).await;
 
-
-    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "action", "Ping").await.unwrap();
+    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "action", "Ping").await
+                                                                                    .unwrap();
 
     let mut pings = 0;
 
     while let Some(_) = rec_a1.observe().next().await {
-        // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied immediately after this event is sent
+        // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied
+        // immediately after this event is sent
         Delay::new(Duration::from_millis(10)).await;
 
         if "Pong" == rec_a1.get_value("action").await.expect("retrieval").expect("has value") {
@@ -41,7 +40,7 @@ async fn main() {
             pings += 1;
 
             if pings >= 10 {
-                break
+                break;
             }
         }
     }

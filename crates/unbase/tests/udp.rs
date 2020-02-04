@@ -1,16 +1,14 @@
 #![feature(async_closure)]
 
-use timer::Delay;
-use std::time::Duration;
+use futures::join;
 use futures_await_test::async_test;
-use futures::{
-    join,
-};
+use std::time::Duration;
+use timer::Delay;
 use unbase::{
     network::transport::TransportUDP,
     Network,
     Slab,
-    SubjectHandle
+    SubjectHandle,
 };
 
 use tracing::info;
@@ -22,9 +20,8 @@ async fn test_udp1() {
     let t1 = test1_node_a();
     let t2 = test1_node_b();
 
-    join!{ t1, t2 };
+    join! { t1, t2 };
 }
-
 
 async fn test1_node_a() {
     let net = unbase::Network::create_new_system();
@@ -61,7 +58,7 @@ async fn test_udp2() {
     let t1 = test2_node_a();
     let t2 = test2_node_b();
 
-    join!{ t1, t2 };
+    join! { t1, t2 };
 }
 
 async fn test2_node_a() {
@@ -75,8 +72,11 @@ async fn test2_node_a() {
     // HACK - wait for slab_b to be on the peer list, and to be hooked in to our root_index_seed
     Delay::new(Duration::from_millis(150)).await;
 
-    let mut beast_a = SubjectHandle::new_with_single_kv(&context_a, "beast", "Lion").await.expect("write successful");
-    beast_a.set_value("sound", "Grraaawrrr").await.expect("write successful");
+    let mut beast_a = SubjectHandle::new_with_single_kv(&context_a, "beast", "Lion").await
+                                                                                    .expect("write successful");
+    beast_a.set_value("sound", "Grraaawrrr")
+           .await
+           .expect("write successful");
 
     // Hang out so we can help task 2
     Delay::new(Duration::from_millis(500)).await;
@@ -95,7 +95,10 @@ async fn test2_node_b() {
     udp2.seed_address_from_string("127.0.0.1:52001".to_string());
     let context_b = slab_b.create_context();
 
-
-    let mut beast_b = context_b.fetch_kv("beast", "Lion", Duration::from_secs(1)).await.expect("fetch_kv");
-    info!("The {} goes {}", beast_b.get_value("beast").await.expect("it worked").expect("has value"), beast_b.get_value("sound").await.expect("it worked").expect("has value"));
+    let mut beast_b = context_b.fetch_kv("beast", "Lion", Duration::from_secs(1))
+                               .await
+                               .expect("fetch_kv");
+    info!("The {} goes {}",
+          beast_b.get_value("beast").await.expect("it worked").expect("has value"),
+          beast_b.get_value("sound").await.expect("it worked").expect("has value"));
 }

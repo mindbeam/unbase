@@ -1,20 +1,32 @@
-
-use std::time::Duration;
+use futures::{
+    task::{
+        AtomicWaker,
+        Context,
+        Poll,
+    },
+    Future,
+};
+use std::{
+    pin::Pin,
+    sync::{
+        atomic::{
+            AtomicBool,
+            Ordering,
+        },
+        Arc,
+    },
+    time::Duration,
+};
 use wasm_bindgen::prelude::*;
-use futures::{Future,task::Poll};
-use futures::task::{Context,AtomicWaker};
-use std::pin::Pin;
-use std::sync::Arc;
-use std::sync::atomic::{Ordering,AtomicBool};
 
 pub struct Delay {
-    id: JsValue,
-    inner: Arc<Inner>,
+    id:       JsValue,
+    inner:    Arc<Inner>,
     _closure: Closure<dyn FnMut()>,
 }
 
 pub struct Inner {
-    set: AtomicBool,
+    set:   AtomicBool,
     waker: AtomicWaker,
 }
 
@@ -29,33 +41,27 @@ extern "C" {
 
 impl Delay {
     pub fn new(dur: Duration) -> Delay {
-        let millis = dur
-            .as_secs()
-            .checked_mul(1000)
-            .unwrap()
-            .checked_add(dur.subsec_millis() as u64)
-            .unwrap() as i32; // TODO: checked cast
+        let millis = dur.as_secs()
+                        .checked_mul(1000)
+                        .unwrap()
+                        .checked_add(dur.subsec_millis() as u64)
+                        .unwrap() as i32; // TODO: checked cast
 
-        let inner = Arc::new(Inner {
-            waker: AtomicWaker::new(),
-            set: AtomicBool::new(false)
-        });
+        let inner = Arc::new(Inner { waker: AtomicWaker::new(),
+                                     set:   AtomicBool::new(false), });
 
         let inner2 = inner.clone();
 
         let cb = Closure::wrap(Box::new(move || {
-            inner2.set.store(true, Ordering::SeqCst);
-            inner2.waker.wake();
-
-        }) as Box<dyn FnMut()>);
+                                   inner2.set.store(true, Ordering::SeqCst);
+                                   inner2.waker.wake();
+                               }) as Box<dyn FnMut()>);
 
         let id = set_timeout(&cb, millis);
 
-        Delay {
-            id: id,
-            inner: inner,
-            _closure: cb,
-        }
+        Delay { id,
+                inner,
+                _closure: cb }
     }
 }
 
@@ -84,32 +90,32 @@ impl Drop for Delay {
 #[cfg(test)]
 mod tests {
 
-//    use web_sys::console::log_1;
-//
-//    use super::Delay;
-//    use std::time::Duration;
-//
-//    use wasm_bindgen::prelude::*;
-//    use wasm_bindgen_test::*;
-//
-//    extern crate futures;
-//    extern crate js_sys;
-//    extern crate wasm_bindgen_futures;
-//
-//    #[wasm_bindgen_test]
-//    async fn three_one_second_delays_future()  {
-//        log_1(&JsValue::from_str("immediate log"));
-//
-//        Delay::new(Duration::from_millis(10)).await;
-//
-//        log_1(&JsValue::from_str("log after 10ms"));
-//
-//        Delay::new(Duration::from_millis(10)).await;
-//
-//        log_1(&JsValue::from_str("second log after 10ms"));
-//
-//        Delay::new(Duration::from_millis(10)).await;
-//
-//        log_1(&JsValue::from_str("third log after 10ms"));
-//    }
+    //    use web_sys::console::log_1;
+    //
+    //    use super::Delay;
+    //    use std::time::Duration;
+    //
+    //    use wasm_bindgen::prelude::*;
+    //    use wasm_bindgen_test::*;
+    //
+    //    extern crate futures;
+    //    extern crate js_sys;
+    //    extern crate wasm_bindgen_futures;
+    //
+    //    #[wasm_bindgen_test]
+    //    async fn three_one_second_delays_future()  {
+    //        log_1(&JsValue::from_str("immediate log"));
+    //
+    //        Delay::new(Duration::from_millis(10)).await;
+    //
+    //        log_1(&JsValue::from_str("log after 10ms"));
+    //
+    //        Delay::new(Duration::from_millis(10)).await;
+    //
+    //        log_1(&JsValue::from_str("second log after 10ms"));
+    //
+    //        Delay::new(Duration::from_millis(10)).await;
+    //
+    //        log_1(&JsValue::from_str("third log after 10ms"));
+    //    }
 }

@@ -6,8 +6,8 @@ use crate::{
     },
     memorefhead::MemoRefHead,
     slab::{
-        SubjectId,
         RelationSlotId,
+        SubjectId,
         MAX_SLOTS,
     },
 };
@@ -20,7 +20,7 @@ use std::{
 use tracing::debug;
 
 pub struct IndexFixed {
-    root: MemoRefHead,
+    root:  MemoRefHead,
     depth: u8,
 }
 
@@ -30,20 +30,19 @@ impl IndexFixed {
         let mut debug_info = HashMap::new();
         debug_info.insert("tier".to_string(), "root".to_string());
 
-        Self {
-            root: MemoRefHead::new_index(&context.slab, debug_info),
-            depth: depth,
-        }
+        Self { root: MemoRefHead::new_index(&context.slab, debug_info),
+               depth }
     }
+
     pub fn new_from_head(depth: u8, memorefhead: MemoRefHead) -> IndexFixed {
-        Self {
-            root: memorefhead,
-            depth: depth,
-        }
+        Self { root: memorefhead,
+               depth }
     }
+
     pub fn get_root_subject_id(&self) -> SubjectId {
         self.root.subject_id().unwrap()
     }
+
     pub async fn insert<'a>(&mut self, context: &Context, key: u64, target: MemoRefHead) -> Result<(), WriteError> {
         debug!("IndexFixed.insert({}, {:?})", key, target);
 
@@ -62,11 +61,11 @@ impl IndexFixed {
             let x = MAX_SLOTS.pow(exponent as u32);
             let y = ((key / (x as u64)) % MAX_SLOTS as u64) as RelationSlotId;
 
-            //println!("Tier {}, {}, {}", tier, x, y );
+            // println!("Tier {}, {}, {}", tier, x, y );
 
             if exponent == 0 {
                 // Leaf node
-                //println!("]]] end of the line");
+                // println!("]]] end of the line");
 
                 // TODO- this MIGHT not be necessary, because context.apply_head might be doing the same thing.
                 context.mut_update_index_head_for_consistency(&mut node).await?;
@@ -85,7 +84,7 @@ impl IndexFixed {
                     Some(n) => {
                         node = n;
                         tier += 1;
-                    }
+                    },
                     None => {
                         let mut debug_info = HashMap::new();
                         debug_info.insert("tier".to_string(), tier.to_string());
@@ -93,7 +92,8 @@ impl IndexFixed {
                         let next_node = MemoRefHead::new_index(&context.slab, debug_info);
 
                         // apply the new_node head to the context
-                        // TODO POSTMERGE - determine if we can skip this apply_head because we're about to do it for the updated parent node
+                        // TODO POSTMERGE - determine if we can skip this apply_head because we're about to do it for
+                        // the updated parent node
                         context.apply_head(&next_node).await?;
 
                         node.set_edge(&context.slab, y, next_node.clone());
@@ -102,33 +102,36 @@ impl IndexFixed {
 
                         node = next_node;
                         tier += 1;
-                    }
+                    },
                 }
             }
         }
     }
+
     /// Convenience method for the test suite
     #[doc(hidden)]
     #[cfg(test)]
-    pub(crate) async fn test_get_subject_handle(&self, context: &Context, key: u64) -> Result<Option<crate::subjecthandle::SubjectHandle>, RetrieveError> {
+    pub(crate) async fn test_get_subject_handle(
+        &self, context: &Context, key: u64)
+        -> Result<Option<crate::subjecthandle::SubjectHandle>, RetrieveError> {
         match self.get(context, key).await? {
             Some(head) => {
                 let subject = context.get_subject_from_head(head).await?;
 
                 Ok(Some(subject))
-            }
-            None => Ok(None)
+            },
+            None => Ok(None),
         }
     }
+
     #[tracing::instrument]
     pub async fn get(&self, context: &Context, key: u64) -> Result<Option<MemoRefHead>, RetrieveError> {
-
-        //TODO: this is dumb, figure out how to borrow here
+        // TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
         let mut node = self.root.clone();
         let max = MAX_SLOTS as u64;
 
-        //let mut n;
+        // let mut n;
         for tier in 0..self.depth {
             let exponent = (self.depth - 1) - tier;
             let x = max.pow(exponent as u32);
@@ -152,56 +155,57 @@ impl IndexFixed {
                     None => return Ok(None),
                 }
             }
-        };
+        }
 
         panic!("Sanity error");
     }
-    pub async fn scan_first_kv(&mut self, context: &Context, key: &str, value: &str) -> Result<Option<MemoRefHead>, RetrieveError> {
-// TODO POSTMERGE - figure out how the hell to make this work with a closure
-//
-//        // TODO - make scan_concurrent or something like that.
-//        // The problem with concurrent scanning is: how do we want to manage output ordering?
-//        // Presumably scan should be generic over output Vec<T>
-//        // That way, closure execution won't be (deterministically/lexicographically) ordered, but scan() -> Vec<T> will be
-//
-//        // TODO MERGE - uncomment ( crap, I think we probably do need async closures )
-//        self.scan(&context, async move |head| {
-////            async {
-//                if let Some(v) = head.get_value(key).await? {
-//                    Ok(v == value)
-//                } else {
-//                    Ok(false)
-//                }
-////            }
-////            futures::future::ready(Ok(false) )
-////            unimplemented!()
-//        }).await
-//
-////        Ok(None)
-//    }
-//    pub async fn scan<F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<MemoRefHead>, RetrieveError>
-//        where
-//            F: Fn( &mut MemoRefHead ) -> Fut,
-//            Fut: Future<Output=Result<bool,RetrieveError>>
-//    {
+
+    pub async fn scan_first_kv(&mut self, context: &Context, key: &str, value: &str)
+                               -> Result<Option<MemoRefHead>, RetrieveError> {
+        // TODO POSTMERGE - figure out how the hell to make this work with a closure
+        //
+        //        // TODO - make scan_concurrent or something like that.
+        //        // The problem with concurrent scanning is: how do we want to manage output ordering?
+        //        // Presumably scan should be generic over output Vec<T>
+        //        // That way, closure execution won't be (deterministically/lexicographically) ordered, but scan() ->
+        // Vec<T> will be
+        //
+        //        // TODO MERGE - uncomment ( crap, I think we probably do need async closures )
+        //        self.scan(&context, async move |head| {
+        ////            async {
+        //                if let Some(v) = head.get_value(key).await? {
+        //                    Ok(v == value)
+        //                } else {
+        //                    Ok(false)
+        //                }
+        ////            }
+        ////            futures::future::ready(Ok(false) )
+        ////            unimplemented!()
+        //        }).await
+        //
+        ////        Ok(None)
+        //    }
+        //    pub async fn scan<F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<MemoRefHead>,
+        // RetrieveError>        where
+        //            F: Fn( &mut MemoRefHead ) -> Fut,
+        //            Fut: Future<Output=Result<bool,RetrieveError>>
+        //    {
 
         let mut stack: Vec<(MemoRefHead, usize)> = vec![(self.root.clone(), 0)];
 
         while let Some((mut node, tier)) = stack.pop() {
             if tier as u8 == self.depth - 1 {
-
                 // TODO NEXT / WIP: finish converting this to stack based recursion.
                 // Seems the compiler doesn't like something here. Most likely has to do with
 
-                //println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
+                // println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
                 for slot_id in 0..MAX_SLOTS {
                     context.mut_update_index_head_for_consistency(&mut node).await?;
                     if let Some(mut head) = node.get_edge(&context.slab, slot_id as RelationSlotId).await? {
-
-//                        TODO POSTMERGE - update this to take a closure
-//                        if f(&mut head).await? {
-//                            return Ok(Some(head))
-//                        }
+                        //                        TODO POSTMERGE - update this to take a closure
+                        //                        if f(&mut head).await? {
+                        //                            return Ok(Some(head))
+                        //                        }
 
                         context.mut_update_index_head_for_consistency(&mut node).await?;
 
@@ -213,7 +217,7 @@ impl IndexFixed {
                     }
                 }
             } else {
-                //println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
+                // println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
                 for slot_id in 0..MAX_SLOTS {
                     context.mut_update_index_head_for_consistency(&mut node).await?;
                     if let Some(child) = node.get_edge(&context.slab, slot_id as RelationSlotId).await? {
@@ -223,30 +227,24 @@ impl IndexFixed {
             }
         }
 
-
         Ok(None)
     }
 }
 
 impl fmt::Debug for IndexFixed {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("IndexFixed")
-            .finish()
+        fmt.debug_struct("IndexFixed").finish()
     }
 }
-
-
 
 #[cfg(test)]
 mod test {
     use crate::{
-        SubjectHandle,
-        index::{
-            IndexFixed
-        },
+        index::IndexFixed,
+        util::simulator::Simulator,
         Network,
         Slab,
-        util::simulator::Simulator
+        SubjectHandle,
     };
 
     #[unbase_test_util::async_test]
@@ -263,7 +261,8 @@ mod test {
 
         // First lets do a single index test
         let i = 12345;
-        let record = SubjectHandle::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await.unwrap();
+        let record = SubjectHandle::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await
+                                                                                                      .unwrap();
         index.insert(&context_a, i, record.head.clone()).await.unwrap();
 
         let mut record2 = index.test_get_subject_handle(&context_a, 12345).await.unwrap().unwrap();
@@ -272,25 +271,43 @@ mod test {
 
         // Ok, now lets torture it a little
         for i in 0..500 {
-            let record = SubjectHandle::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await.unwrap();
+            let record = SubjectHandle::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await
+                                                                                                          .unwrap();
             index.insert(&context_a, i, record.head.clone()).await.unwrap();
         }
 
         for i in 0..500 {
-            let mut rec = index.test_get_subject_handle(&context_a, i).await.expect("Ok").expect("Some");
+            let mut rec = index.test_get_subject_handle(&context_a, i)
+                               .await
+                               .expect("Ok")
+                               .expect("Some");
             let value = rec.get_value("record number").await.expect("Ok").expect("Some");
             assert_eq!(value, i.to_string());
         }
 
-        //assert_eq!( context_a.is_fully_materialized(), false );
-        //context_a.fully_materialize();
+        // assert_eq!( context_a.is_fully_materialized(), false );
+        // context_a.fully_materialize();
 
-        let maybe_head = index.scan_first_kv(&context_a, "record number", "12345").await.expect("Ok");
+        let maybe_head = index.scan_first_kv(&context_a, "record number", "12345")
+                              .await
+                              .expect("Ok");
         assert!(maybe_head.is_some(), "Index scan for record 12345");
-        assert_eq!(maybe_head.unwrap().get_value(&context_a.slab, "record number").await.unwrap().unwrap(), "12345", "Is correct record");
+        assert_eq!(maybe_head.unwrap()
+                             .get_value(&context_a.slab, "record number")
+                             .await
+                             .unwrap()
+                             .unwrap(),
+                   "12345",
+                   "Is correct record");
 
         let maybe_head = index.scan_first_kv(&context_a, "record number", "275").await.unwrap();
         assert!(maybe_head.is_some(), "Index scan for record 275");
-        assert_eq!(maybe_head.unwrap().get_value(&context_a.slab, "record number").await.unwrap().unwrap(), "275", "Is correct record");
+        assert_eq!(maybe_head.unwrap()
+                             .get_value(&context_a.slab, "record number")
+                             .await
+                             .unwrap()
+                             .unwrap(),
+                   "275",
+                   "Is correct record");
     }
 }

@@ -2,69 +2,76 @@ use core::ops::Deref;
 
 pub mod serde;
 use super::*;
-use crate::memorefhead::MemoRefHead;
-use crate::error::RetrieveError;
+use crate::{
+    error::RetrieveError,
+    memorefhead::MemoRefHead,
+};
 
-use std::sync::{Arc,RwLock};
-use std::fmt;
-use tracing::{warn};
+use std::{
+    fmt,
+    sync::{
+        Arc,
+        RwLock,
+    },
+};
+use tracing::warn;
 
 #[derive(Clone)]
 pub struct MemoRef(pub Arc<MemoRefInner>);
 
 impl Deref for MemoRef {
     type Target = MemoRefInner;
+
     fn deref(&self) -> &MemoRefInner {
         &*self.0
     }
 }
 
 pub struct MemoRefInner {
-    pub id:       MemoId,
+    pub id:             MemoId,
     pub owning_slab_id: SlabId, // TODO - rename and conditionalize with a macro
-    pub subject_id: Option<SubjectId>,
-    pub peerlist: RwLock<MemoPeerList>,
-    pub ptr:      RwLock<MemoRefPtr>,
+    pub subject_id:     Option<SubjectId>,
+    pub peerlist:       RwLock<MemoPeerList>,
+    pub ptr:            RwLock<MemoRefPtr>,
 }
 
 #[derive(Debug)]
 pub enum MemoRefPtr {
     Resident(Memo),
-    Remote
+    Remote,
 }
 
 impl MemoRefPtr {
-    pub fn to_peering_status (&self) -> MemoPeeringStatus {
+    pub fn to_peering_status(&self) -> MemoPeeringStatus {
         match self {
             &MemoRefPtr::Resident(_) => MemoPeeringStatus::Resident,
-            &MemoRefPtr::Remote      => MemoPeeringStatus::Participating
+            &MemoRefPtr::Remote => MemoPeeringStatus::Participating,
         }
     }
 }
 
 impl MemoRef {
-    pub fn to_head (&self) -> MemoRefHead {
+    pub fn to_head(&self) -> MemoRefHead {
         match self.subject_id {
-            None => MemoRefHead::Anonymous{
-                owning_slab_id: self.owning_slab_id,
-                head: vec![self.clone()]
+            None => {
+                MemoRefHead::Anonymous { owning_slab_id: self.owning_slab_id,
+                                         head:           vec![self.clone()], }
             },
-            Some(subject_id) =>
-                MemoRefHead::Subject {
-                    owning_slab_id: self.owning_slab_id,
-                    subject_id: subject_id,
-                    head: vec![self.clone()]
-                }
+            Some(subject_id) => {
+                MemoRefHead::Subject { owning_slab_id: self.owning_slab_id,
+                                       subject_id,
+                                       head: vec![self.clone()] }
+            },
         }
     }
-    pub fn apply_peers ( &self, apply_peerlist: &MemoPeerList ) -> bool {
 
+    pub fn apply_peers(&self, apply_peerlist: &MemoPeerList) -> bool {
         let peerlist = &mut *self.peerlist.write().unwrap();
         let mut acted = false;
         for apply_peer in apply_peerlist.0.clone() {
             if apply_peer.slabref.slab_id == self.owning_slab_id {
                 warn!("WARNING - not allowed to apply self-peer");
-                //panic!("memoref.apply_peers is not allowed to apply for self-peers");
+                // panic!("memoref.apply_peers is not allowed to apply for self-peers");
                 continue;
             }
             if peerlist.apply_peer(apply_peer) {
@@ -73,13 +80,12 @@ impl MemoRef {
         }
         acted
     }
-    pub fn get_peerlist_for_peer (&self, my_ref: &SlabRef, maybe_dest_slab_id: Option<SlabId>) -> MemoPeerList {
-        let mut list : Vec<MemoPeer> = Vec::new();
 
-        list.push(MemoPeer{
-            slabref: my_ref.clone(),
-            status: self.ptr.read().unwrap().to_peering_status()
-        });
+    pub fn get_peerlist_for_peer(&self, my_ref: &SlabRef, maybe_dest_slab_id: Option<SlabId>) -> MemoPeerList {
+        let mut list: Vec<MemoPeer> = Vec::new();
+
+        list.push(MemoPeer { slabref: my_ref.clone(),
+                             status:  self.ptr.read().unwrap().to_peering_status(), });
 
         // Tell the peer about all other presences except for ones belonging to them
         // we don't need to tell them they have it. They know, they were there :)
@@ -90,37 +96,45 @@ impl MemoRef {
                     list.push((*peer).clone());
                 }
             }
-        }else{
+        } else {
             list.append(&mut self.peerlist.read().unwrap().0.clone());
         }
 
         MemoPeerList::new(list)
-
     }
+
     pub fn is_resident(&self) -> bool {
         match *self.ptr.read().unwrap() {
             MemoRefPtr::Resident(_) => true,
-            _                       => false
+            _ => false,
         }
     }
+
     pub fn get_memo_if_resident(&self) -> Option<Memo> {
         match *self.ptr.read().unwrap() {
             MemoRefPtr::Resident(ref memo) => Some(memo.clone()),
-            _ => None
+            _ => None,
         }
     }
+
     pub fn is_peered_with_slabref(&self, slabref: &SlabRef) -> bool {
-        let status = self.peerlist.read().unwrap().iter().any(|peer| {
-            peer.slabref.0.slab_id == slabref.0.slab_id && peer.status != MemoPeeringStatus::NonParticipating
-        });
+        let status =
+            self.peerlist
+                .read()
+                .unwrap()
+                .iter()
+                .any(|peer| {
+                    peer.slabref.0.slab_id == slabref.0.slab_id && peer.status != MemoPeeringStatus::NonParticipating
+                });
 
         status
     }
 
     #[tracing::instrument(level = "debug")]
-    pub async fn get_memo (self, slab: SlabHandle) -> Result<Memo,RetrieveError> {
+    pub async fn get_memo(self, slab: SlabHandle) -> Result<Memo, RetrieveError> {
         if self.owning_slab_id != slab.my_ref.slab_id {
-            assert!(self.owning_slab_id == slab.my_ref.slab_id, "requesting slab does not match owning slab");
+            assert!(self.owning_slab_id == slab.my_ref.slab_id,
+                    "requesting slab does not match owning slab");
         }
 
         // This seems pretty crude, but using channels for now in the interest of expediency
@@ -132,26 +146,32 @@ impl MemoRef {
 
         slab.request_memo(self.clone()).await
     }
+
     #[tracing::instrument]
-    pub async fn descends (&self, memoref: &MemoRef, slab: &SlabHandle) -> Result<bool,RetrieveError> {
+    pub async fn descends(&self, memoref: &MemoRef, slab: &SlabHandle) -> Result<bool, RetrieveError> {
         assert!(self.owning_slab_id == slab.my_ref.slab_id);
         // TODO get rid of clones here
 
-        if self.clone().get_memo( slab.clone() ).await?.descends(&memoref, slab).await? {
+        if self.clone()
+               .get_memo(slab.clone())
+               .await?
+               .descends(&memoref, slab)
+               .await?
+        {
             Ok(true)
-        }else{
+        } else {
             Ok(false)
         }
     }
-    pub fn update_peer (&self, slabref: &SlabRef, status: MemoPeeringStatus) -> bool {
 
+    pub fn update_peer(&self, slabref: &SlabRef, status: MemoPeeringStatus) -> bool {
         let mut acted = false;
         let mut found = false;
         let ref mut list = self.peerlist.write().unwrap().0;
         for peer in list.iter_mut() {
             if peer.slabref.slab_id == self.owning_slab_id {
                 warn!("WARNING - not allowed to apply self-peer");
-                //panic!("memoref.update_peers is not allowed to apply for self-peers");
+                // panic!("memoref.update_peers is not allowed to apply for self-peers");
                 continue;
             }
             if peer.slabref.slab_id == slabref.slab_id {
@@ -167,24 +187,22 @@ impl MemoRef {
 
         if !found {
             acted = true;
-            list.push(MemoPeer{
-                slabref: slabref.clone(),
-                status: status.clone()
-            })
+            list.push(MemoPeer { slabref: slabref.clone(),
+                                 status:  status.clone(), })
         }
 
         acted
     }
 }
 
-impl fmt::Debug for MemoRef{
+impl fmt::Debug for MemoRef {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("MemoRef")
            .field("id", &self.id)
            .field("owning_slab_id", &self.owning_slab_id)
            .field("subject_id", &self.subject_id)
            .field("peerlist", &*self.peerlist.read().unwrap())
-           .field("memo", &*self.ptr.read().unwrap() )
+           .field("memo", &*self.ptr.read().unwrap())
            .finish()
     }
 }
@@ -196,7 +214,7 @@ impl PartialEq for MemoRef {
     }
 }
 
-impl Drop for MemoRefInner{
+impl Drop for MemoRefInner {
     fn drop(&mut self) {
         //
     }
