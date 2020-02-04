@@ -4,7 +4,7 @@ pub mod serde;
 use super::*;
 use crate::{
     error::RetrieveError,
-    memorefhead::MemoRefHead,
+    head::Head,
 };
 
 use std::{
@@ -51,14 +51,14 @@ impl MemoRefPtr {
 }
 
 impl MemoRef {
-    pub fn to_head(&self) -> MemoRefHead {
+    pub fn to_head(&self) -> Head {
         match self.subject_id {
             None => {
-                MemoRefHead::Anonymous { owning_slab_id: self.owning_slab_id,
+                Head::Anonymous { owning_slab_id: self.owning_slab_id,
                                          head:           vec![self.clone()], }
             },
             Some(subject_id) => {
-                MemoRefHead::Subject { owning_slab_id: self.owning_slab_id,
+                Head::Subject { owning_slab_id: self.owning_slab_id,
                                        subject_id,
                                        head: vec![self.clone()] }
             },

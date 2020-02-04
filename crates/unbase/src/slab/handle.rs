@@ -14,7 +14,7 @@ use crate::{
         RetrieveError,
         StorageOpDeclined,
     },
-    memorefhead::MemoRefHead,
+    head::Head,
     network::{
         SlabRef,
         TransportAddress,
@@ -60,7 +60,7 @@ impl SlabHandle {
     //        unimplemented!()
     //    }
 
-    pub(crate) fn observe_subject(&self, subject_id: SubjectId, tx: mpsc::Sender<MemoRefHead>) {
+    pub(crate) fn observe_subject(&self, subject_id: SubjectId, tx: mpsc::Sender<Head>) {
         self.agent.observe_subject(subject_id, tx)
     }
 
@@ -71,7 +71,7 @@ impl SlabHandle {
 
         // formulate the request
         let request_memo = self.new_memo(None,
-                                         MemoRefHead::Null,
+                                         Head::Null,
                                          MemoBody::MemoRequest(vec![memoref.id], self.my_ref.clone()));
 
         use std::time;
@@ -117,13 +117,13 @@ impl SlabHandle {
     }
 
     #[tracing::instrument]
-    pub fn new_memo(&self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
+    pub fn new_memo(&self, subject_id: Option<SubjectId>, parents: Head, body: MemoBody) -> MemoRef {
         self.agent.new_memo(subject_id, parents, body)
     }
 
     #[tracing::instrument]
     pub fn new_memo_noparent(&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
-        self.agent.new_memo(subject_id, MemoRefHead::Null, body)
+        self.agent.new_memo(subject_id, Head::Null, body)
     }
 
     pub fn generate_subject_id(&self, stype: SubjectType) -> SubjectId {
@@ -179,7 +179,7 @@ impl SlabHandle {
         self.agent.count_of_memos_reduntantly_received()
     }
 
-    pub(crate) fn observe_index(&self, tx: mpsc::Sender<MemoRefHead>) {
+    pub(crate) fn observe_index(&self, tx: mpsc::Sender<Head>) {
         self.agent.observe_index(tx)
     }
 }

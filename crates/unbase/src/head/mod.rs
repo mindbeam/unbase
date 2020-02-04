@@ -45,13 +45,13 @@ use futures::{
 use itertools::Itertools;
 use tracing::debug;
 
-// MemoRefHead is a list of MemoRefs that constitute the "head" of a given causal chain
+// Head is a list of MemoRefs that constitute the "head" of a given causal chain
 //
 // This "head" is rather like a git HEAD, insofar as it is intended to contain only the youngest
 // descendents of a given causal chain. It provides mechanisms for applying memorefs, or applying
-// other MemoRefHeads such that the mutated list may be pruned as appropriate given the above.
+// other Heads such that the mutated list may be pruned as appropriate given the above.
 
-// TODO: consider renaming to OwnedMemoRefHead
+// TODO: consider renaming to OwnedHead
 #[derive(Clone, PartialEq)]
 
 // TODO - consider changing this to a linkedlist instead of a Vec, because MOST of the time it's going to be a single
@@ -62,7 +62,7 @@ use tracing::debug;
 //    next: Option<Box<Link>>
 //}
 
-pub enum MemoRefHead {
+pub enum Head {
     Null,
     Subject {
         owning_slab_id: SlabId,
@@ -75,23 +75,23 @@ pub enum MemoRefHead {
     },
 }
 
-// TODO: consider renaming to ExternalMemoRefHead or something like that
-pub struct MemoRefHeadWithProvenance {
-    pub memorefhead: MemoRefHead,
+// TODO: consider renaming to ExternalHead or something like that
+pub struct HeadWithProvenance {
+    pub head: Head,
     pub slabref:     SlabRef,
 }
 
-/// MemoRefHead takes &SlabHandle on all calls, because it is an agent of storage and referentiality, NOT an enforcer of
+/// Head takes &SlabHandle on all calls, because it is an agent of storage and referentiality, NOT an enforcer of
 /// consistency
-impl MemoRefHead {
+impl Head {
     //    pub fn new_record( slab: &SlabHandle ){
     //
     //    }
-    pub fn new_index(slab: &SlabHandle, values: HashMap<String, String>) -> MemoRefHead {
+    pub fn new_index(slab: &SlabHandle, values: HashMap<String, String>) -> Head {
         let id = slab.generate_subject_id(SubjectType::IndexNode);
 
         slab.new_memo(Some(id),
-                      MemoRefHead::Null,
+                      Head::Null,
                       MemoBody::FullyMaterialized { v: values,
                                                     r: RelationSet::empty(),
                                                     e: EdgeSet::empty(),
@@ -104,20 +104,20 @@ impl MemoRefHead {
         // Conditionally add the new memoref only if it descends any memorefs in the head
         // If so, any memorefs that it descends must be removed
         let head = match self {
-            MemoRefHead::Null => {
+            Head::Null => {
                 if let Some(subject_id) = new.subject_id {
-                    *self = MemoRefHead::Subject { owning_slab_id: new.owning_slab_id,
+                    *self = Head::Subject { owning_slab_id: new.owning_slab_id,
                                                    head: vec![new.clone()],
                                                    subject_id };
                 } else {
-                    *self = MemoRefHead::Anonymous { owning_slab_id: new.owning_slab_id,
+                    *self = Head::Anonymous { owning_slab_id: new.owning_slab_id,
                                                      head:           vec![new.clone()], };
                 }
 
                 return Ok(true);
             },
-            MemoRefHead::Anonymous { ref mut head, .. } => head,
-            MemoRefHead::Subject { ref mut head, .. } => head,
+            Head::Anonymous { ref mut head, .. } => head,
+            Head::Subject { ref mut head, .. } => head,
         };
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
@@ -176,7 +176,7 @@ impl MemoRefHead {
             // then it must be concurrent
 
             head.push(new.clone());
-            applied = true; // The memoref was "applied" to the MemoRefHead
+            applied = true; // The memoref was "applied" to the Head
         }
 
         // This memoref was applied if it was concurrent, or descends one or more previous memos
@@ -205,10 +205,10 @@ impl MemoRefHead {
     }
 
     #[tracing::instrument]
-    pub async fn mut_apply(&mut self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool, WriteError> {
+    pub async fn mut_apply(&mut self, other: &Head, slab: &SlabHandle) -> Result<bool, WriteError> {
         match other {
-            MemoRefHead::Null => Ok(false),
-            MemoRefHead::Anonymous { ref head, .. } => {
+            Head::Null => Ok(false),
+            Head::Anonymous { ref head, .. } => {
                 let mut applied = false;
                 for new in head.iter() {
                     if self.mut_apply_memoref(new, slab).await? {
@@ -217,7 +217,7 @@ impl MemoRefHead {
                 }
                 Ok(applied)
             },
-            MemoRefHead::Subject { ref head, .. } => {
+            Head::Subject { ref head, .. } => {
                 let mut applied = false;
                 for new in head.iter() {
                     if self.mut_apply_memoref(new, slab).await? {
@@ -231,7 +231,7 @@ impl MemoRefHead {
 
     /// Immutably apply a second head to this one
     #[tracing::instrument]
-    pub async fn apply(&self, other: &MemoRefHead, slab: &SlabHandle) -> Result<(MemoRefHead, bool), WriteError> {
+    pub async fn apply(&self, other: &Head, slab: &SlabHandle) -> Result<(Head, bool), WriteError> {
         let mut applied = false;
         // This is just a temporary API hack so we don't forget to make this nicer later with internal _immutability_.
         // TODO reimplement this with immutabilityZ
@@ -246,17 +246,17 @@ impl MemoRefHead {
         Ok((hack_self, applied))
     }
 
-    pub async fn descends_or_contains(&self, other: &MemoRefHead, slab: &SlabHandle) -> Result<bool, RetrieveError> {
+    pub async fn descends_or_contains(&self, other: &Head, slab: &SlabHandle) -> Result<bool, RetrieveError> {
         // there's probably a more efficient way to do this than iterating over the cartesian product
         // we can get away with it for now though I think
         // TODO: revisit when beacons are implemented
         match *self {
-            MemoRefHead::Null => Ok(false),
-            MemoRefHead::Subject { ref head, .. } | MemoRefHead::Anonymous { ref head, .. } => {
+            Head::Null => Ok(false),
+            Head::Subject { ref head, .. } | Head::Anonymous { ref head, .. } => {
                 match *other {
-                    MemoRefHead::Null => Ok(false),
-                    MemoRefHead::Subject { head: ref other_head, .. }
-                    | MemoRefHead::Anonymous { head: ref other_head, .. } => {
+                    Head::Null => Ok(false),
+                    Head::Subject { head: ref other_head, .. }
+                    | Head::Anonymous { head: ref other_head, .. } => {
                         if head.len() == 0 || other_head.len() == 0 {
                             println!("ONE IS ZERO");
                             return Ok(false); // searching for positive descendency, not merely non-ascendency
@@ -280,8 +280,8 @@ impl MemoRefHead {
 
     pub fn memo_ids(&self) -> Vec<MemoId> {
         match *self {
-            MemoRefHead::Null => Vec::new(),
-            MemoRefHead::Subject { ref head, .. } | MemoRefHead::Anonymous { ref head, .. } => {
+            Head::Null => Vec::new(),
+            Head::Subject { ref head, .. } | Head::Anonymous { ref head, .. } => {
                 head.iter().map(|m| m.id).collect()
             },
         }
@@ -289,8 +289,8 @@ impl MemoRefHead {
 
     pub fn memo_summary(&self) -> String {
         match *self {
-            MemoRefHead::Null => "Null".to_string(),
-            MemoRefHead::Subject { ref head, .. } | MemoRefHead::Anonymous { ref head, .. } => {
+            Head::Null => "Null".to_string(),
+            Head::Subject { ref head, .. } | Head::Anonymous { ref head, .. } => {
                 head.iter()
                     .map(|mr| {
                         if let Some(memo) = mr.get_memo_if_resident() {
@@ -309,47 +309,47 @@ impl MemoRefHead {
 
     pub fn subject_id(&self) -> Option<SubjectId> {
         match *self {
-            MemoRefHead::Null | MemoRefHead::Anonymous { .. } => None,
-            MemoRefHead::Subject { subject_id, .. } => Some(subject_id),
+            Head::Null | Head::Anonymous { .. } => None,
+            Head::Subject { subject_id, .. } => Some(subject_id),
         }
     }
 
     pub fn owning_slab_id(&self) -> Option<SlabId> {
         match *self {
-            MemoRefHead::Null => None,
-            MemoRefHead::Anonymous { owning_slab_id, .. } => Some(owning_slab_id),
-            MemoRefHead::Subject { owning_slab_id, .. } => Some(owning_slab_id),
+            Head::Null => None,
+            Head::Anonymous { owning_slab_id, .. } => Some(owning_slab_id),
+            Head::Subject { owning_slab_id, .. } => Some(owning_slab_id),
         }
     }
 
     pub fn is_some(&self) -> bool {
         match *self {
-            MemoRefHead::Null => false,
+            Head::Null => false,
             _ => true,
         }
     }
 
     pub fn to_vec(&self) -> Vec<MemoRef> {
         match *self {
-            MemoRefHead::Null => vec![],
-            MemoRefHead::Anonymous { ref head, .. } => head.clone(),
-            MemoRefHead::Subject { ref head, .. } => head.clone(),
+            Head::Null => vec![],
+            Head::Anonymous { ref head, .. } => head.clone(),
+            Head::Subject { ref head, .. } => head.clone(),
         }
     }
 
     pub fn to_vecdeque(&self) -> VecDeque<MemoRef> {
         match *self {
-            MemoRefHead::Null => VecDeque::new(),
-            MemoRefHead::Anonymous { ref head, .. } => VecDeque::from(head.clone()),
-            MemoRefHead::Subject { ref head, .. } => VecDeque::from(head.clone()),
+            Head::Null => VecDeque::new(),
+            Head::Anonymous { ref head, .. } => VecDeque::from(head.clone()),
+            Head::Subject { ref head, .. } => VecDeque::from(head.clone()),
         }
     }
 
     pub fn len(&self) -> usize {
         match *self {
-            MemoRefHead::Null => 0,
-            MemoRefHead::Anonymous { ref head, .. } => head.len(),
-            MemoRefHead::Subject { ref head, .. } => head.len(),
+            Head::Null => 0,
+            Head::Anonymous { ref head, .. } => head.len(),
+            Head::Subject { ref head, .. } => head.len(),
         }
     }
 
@@ -358,18 +358,18 @@ impl MemoRefHead {
         static EMPTY: &'static [MemoRef] = &[];
 
         match *self {
-            MemoRefHead::Null => EMPTY.iter(), // HACK
-            MemoRefHead::Anonymous { ref head, .. } => head.iter(),
-            MemoRefHead::Subject { ref head, .. } => head.iter(),
+            Head::Null => EMPTY.iter(), // HACK
+            Head::Anonymous { ref head, .. } => head.iter(),
+            Head::Subject { ref head, .. } => head.iter(),
         }
     }
 
     #[tracing::instrument]
     fn to_stream_vecdeque(&self, slab: &SlabHandle) -> VecDeque<CausalMemoStreamItem> {
         let head = match self {
-            MemoRefHead::Null => return VecDeque::new(),
-            MemoRefHead::Anonymous { ref head, .. } => head,
-            MemoRefHead::Subject { ref head, .. } => head,
+            Head::Null => return VecDeque::new(),
+            Head::Anonymous { ref head, .. } => head,
+            Head::Subject { ref head, .. } => head,
         };
 
         head.iter()
@@ -449,7 +449,7 @@ impl MemoRefHead {
     }
 
     pub async fn get_edge(&mut self, slab: &SlabHandle, key: RelationSlotId)
-                          -> Result<Option<MemoRefHead>, RetrieveError> {
+                          -> Result<Option<Head>, RetrieveError> {
         let mut memostream = self.causal_memo_stream(slab.clone());
 
         while let Some(memo) = memostream.next().await {
@@ -483,7 +483,7 @@ impl MemoRefHead {
         let subject_id = self.subject_id();
 
         // TODO - do this in a single swap? (fairly certain that requires unsafe)
-        let mut head = MemoRefHead::Null;
+        let mut head = Head::Null;
         std::mem::swap(self, &mut head);
 
         let mut new_head = slab.new_memo(subject_id, head, MemoBody::Edit(vals)).to_head();
@@ -508,7 +508,7 @@ impl MemoRefHead {
         let subject_id = self.subject_id();
 
         // TODO - do this in a single swap? May require unsafe
-        let mut head = MemoRefHead::Null;
+        let mut head = Head::Null;
         std::mem::swap(self, &mut head);
 
         let mut new_head = slab.new_memo(subject_id, head, MemoBody::Relation(relationset))
@@ -522,7 +522,7 @@ impl MemoRefHead {
         Ok(())
     }
 
-    pub fn set_edge(&mut self, slab: &SlabHandle, key: RelationSlotId, target: MemoRefHead) {
+    pub fn set_edge(&mut self, slab: &SlabHandle, key: RelationSlotId, target: Head) {
         debug!("# Subject({:?}).set_edge({}, {:?})",
                &self.subject_id(),
                key,
@@ -534,7 +534,7 @@ impl MemoRefHead {
         let subject_id = self.subject_id();
 
         // TODO - do this in a single swap? May require unsafe
-        let mut parents = MemoRefHead::Null;
+        let mut parents = Head::Null;
         std::mem::swap(self, &mut parents);
 
         let mut new_head = slab.new_memo(subject_id, parents, MemoBody::Edge(edgeset)).to_head();
@@ -591,7 +591,7 @@ impl MemoRefHead {
                         if let None = edge_links[*slot_id as usize] {
                             edge_links[*slot_id as usize] =
                                 Some(match *rel_head {
-                                         MemoRefHead::Null => EdgeLink::Vacant { slot_id: *slot_id },
+                                         Head::Null => EdgeLink::Vacant { slot_id: *slot_id },
                                          _ => {
                                              EdgeLink::Occupied { slot_id: *slot_id,
                                                                   head:    rel_head.clone(), }
@@ -609,7 +609,7 @@ impl MemoRefHead {
                         if let None = edge_links[*slot_id as usize] {
                             edge_links[*slot_id as usize] =
                                 Some(match *rel_head {
-                                         MemoRefHead::Null => EdgeLink::Vacant { slot_id: *slot_id },
+                                         Head::Null => EdgeLink::Vacant { slot_id: *slot_id },
                                          _ => {
                                              EdgeLink::Occupied { slot_id: *slot_id,
                                                                   head:    rel_head.clone(), }
@@ -660,11 +660,11 @@ impl MemoRefHead {
                     visited[*slot_id as usize] = true;
 
                     match *rel_head {
-                        MemoRefHead::Subject { .. } | MemoRefHead::Anonymous { .. } => {
+                        Head::Subject { .. } | Head::Anonymous { .. } => {
                             edge_links.push(EdgeLink::Occupied { slot_id: *slot_id,
                                                                  head:    rel_head.clone(), });
                         },
-                        MemoRefHead::Null => {},
+                        Head::Null => {},
                     };
                 }
             }
@@ -678,18 +678,18 @@ impl MemoRefHead {
     }
 }
 
-impl fmt::Debug for MemoRefHead {
+impl fmt::Debug for Head {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            MemoRefHead::Null => fmt.debug_struct("MemoRefHead::Null").finish(),
-            MemoRefHead::Anonymous { .. } => {
-                fmt.debug_struct("MemoRefHead::Anonymous")
+            Head::Null => fmt.debug_struct("Head::Null").finish(),
+            Head::Anonymous { .. } => {
+                fmt.debug_struct("Head::Anonymous")
                    // .field("memo_refs",  head )
                    .field("memos", &self.memo_summary())
                    .finish()
             },
-            MemoRefHead::Subject { ref subject_id, .. } => {
-                fmt.debug_struct("MemoRefHead::Subject")
+            Head::Subject { ref subject_id, .. } => {
+                fmt.debug_struct("Head::Subject")
                    .field("subject_id", &subject_id)
                    //                    .field("memo_refs",  head )
                    .field("memo", &self.memo_summary())
@@ -728,7 +728,7 @@ impl fmt::Debug for CausalMemoStream {
 // Going with the iterator for now in the interest of simplicity
 impl CausalMemoStream {
     #[tracing::instrument]
-    pub fn from_head(head: &MemoRefHead, slab: SlabHandle) -> Self {
+    pub fn from_head(head: &Head, slab: SlabHandle) -> Self {
         match head.owning_slab_id() {
             Some(id) if id != slab.my_ref.slab_id => {
                 panic!("requesting slab does not match owning slab");

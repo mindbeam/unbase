@@ -11,7 +11,7 @@ use tracing::debug;
 
 use crate::{
     error::StorageOpDeclined,
-    memorefhead::MemoRefHead,
+    head::Head,
     network::{
         SlabRef,
         Transmitter,
@@ -99,7 +99,7 @@ impl SlabAgent {
     }
 
     #[tracing::instrument]
-    pub fn new_memo(&self, subject_id: Option<SubjectId>, parents: MemoRefHead, body: MemoBody) -> MemoRef {
+    pub fn new_memo(&self, subject_id: Option<SubjectId>, parents: Head, body: MemoBody) -> MemoRef {
         let memo_id = {
             let mut state = self.state.write().unwrap();
             state.counters.last_memo_id += 1;
@@ -180,7 +180,7 @@ impl SlabAgent {
         rx
     }
 
-    pub fn observe_index(&self, tx: mpsc::Sender<MemoRefHead>) {
+    pub fn observe_index(&self, tx: mpsc::Sender<Head>) {
         let mut state = self.state.write().unwrap();
         state.index_subscriptions.push(tx);
     }
@@ -211,7 +211,7 @@ impl SlabAgent {
             MemoBody::SlabPresence { p: ref presence,
                                      r: ref root_index_seed, } => {
                 match root_index_seed {
-                    &MemoRefHead::Subject { .. } | &MemoRefHead::Anonymous { .. } => {
+                    &Head::Subject { .. } | &Head::Anonymous { .. } => {
                         // HACK - this should be done inside the deserialize
                         for memoref in root_index_seed.iter() {
                             memoref.update_peer(origin_slabref, MemoPeeringStatus::Resident);
@@ -219,11 +219,11 @@ impl SlabAgent {
 
                         self.net.apply_root_index_seed(&presence, root_index_seed, &self.my_ref);
                     },
-                    &MemoRefHead::Null => {},
+                    &Head::Null => {},
                 }
 
                 let mut reply = false;
-                if let &MemoRefHead::Null = root_index_seed {
+                if let &Head::Null = root_index_seed {
                     reply = true;
                 }
 
@@ -346,7 +346,7 @@ impl SlabAgent {
         }
     }
 
-    pub(crate) fn observe_subject(&self, subject_id: SubjectId, tx: mpsc::Sender<MemoRefHead>) {
+    pub(crate) fn observe_subject(&self, subject_id: SubjectId, tx: mpsc::Sender<Head>) {
         let mut state = self.state.write().unwrap();
 
         match state.subject_subscriptions.entry(subject_id) {
@@ -444,13 +444,13 @@ impl SlabAgent {
     }
 
     #[tracing::instrument]
-    pub fn localize_memorefhead(&self, mrh: &MemoRefHead, from_slabref: &SlabRef, include_memos: bool) -> MemoRefHead {
+    pub fn localize_head(&self, mrh: &Head, from_slabref: &SlabRef, include_memos: bool) -> Head {
         let local_from_slabref = self.localize_slabref(&from_slabref);
 
         match mrh {
-            MemoRefHead::Null => MemoRefHead::Null,
-            MemoRefHead::Anonymous { ref head, .. } => {
-                MemoRefHead::Anonymous { owning_slab_id: self.id,
+            Head::Null => Head::Null,
+            Head::Anonymous { ref head, .. } => {
+                Head::Anonymous { owning_slab_id: self.id,
                                          head:
                                              head.iter()
                                                  .map(|mr| {
@@ -458,8 +458,8 @@ impl SlabAgent {
                                                  })
                                                  .collect(), }
             },
-            MemoRefHead::Subject { subject_id, ref head, .. } => {
-                MemoRefHead::Subject { owning_slab_id: self.id,
+            Head::Subject { subject_id, ref head, .. } => {
+                Head::Subject { owning_slab_id: self.id,
                                        subject_id:     subject_id.clone(),
                                        head:
                                            head.iter()
@@ -508,7 +508,7 @@ impl SlabAgent {
         // TODO - simplify this
         self.reconstitute_memo(memo.id,
                                memo.subject_id,
-                               self.localize_memorefhead(&memo.parents, from_slabref, false),
+                               self.localize_head(&memo.parents, from_slabref, false),
                                self.localize_memobody(&memo.body, from_slabref),
                                from_slabref,
                                peerlist)
@@ -516,7 +516,7 @@ impl SlabAgent {
     }
 
     #[tracing::instrument(skip(self), level = "debug")]
-    pub fn reconstitute_memo(&self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: MemoRefHead,
+    pub fn reconstitute_memo(&self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: Head,
                              body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList)
                              -> (Memo, MemoRef, bool) {
         debug!("SlabAgent({})::reconstitute_memo({:?})", self.id, body);
@@ -567,7 +567,7 @@ impl SlabAgent {
         match mb {
             &MemoBody::SlabPresence { ref p, ref r } => {
                 MemoBody::SlabPresence { p: p.clone(),
-                                         r: self.localize_memorefhead(r, from_slabref, true), }
+                                         r: self.localize_head(r, from_slabref, true), }
             },
             &MemoBody::Relation(ref relationset) => {
                 // No slab localization is needed for relationsets
@@ -616,7 +616,7 @@ impl SlabAgent {
     pub fn localize_edgeset(&self, edgeset: &EdgeSet, from_slabref: &SlabRef) -> EdgeSet {
         let new = edgeset.0
                          .iter()
-                         .map(|(slot_id, mrh)| (*slot_id, self.localize_memorefhead(mrh, from_slabref, false)))
+                         .map(|(slot_id, mrh)| (*slot_id, self.localize_head(mrh, from_slabref, false)))
                          .collect();
 
         EdgeSet(new)

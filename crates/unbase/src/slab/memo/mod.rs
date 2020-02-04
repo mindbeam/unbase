@@ -15,7 +15,7 @@ use std::{
 
 use crate::{
     error::RetrieveError,
-    memorefhead::MemoRefHead,
+    head::Head,
     network::{
         SlabPresence,
         SlabRef,
@@ -53,7 +53,7 @@ pub struct MemoInner {
     pub id:             u64,
     pub subject_id:     Option<SubjectId>,
     pub owning_slab_id: SlabId,
-    pub parents:        MemoRefHead,
+    pub parents: Head,
     pub body:           MemoBody,
 }
 
@@ -61,7 +61,7 @@ pub struct MemoInner {
 pub enum MemoBody {
     SlabPresence {
         p: SlabPresence,
-        r: MemoRefHead,
+        r: Head,
     }, // TODO: split out root_index_seed conveyance to another memobody type
     Relation(RelationSet),
     Edge(EdgeSet),
@@ -107,7 +107,7 @@ impl Memo {
         Memo(Arc::new(inner))
     }
 
-    pub fn get_parent_head(&self) -> MemoRefHead {
+    pub fn get_parent_head(&self) -> Head {
         self.parents.clone()
     }
 

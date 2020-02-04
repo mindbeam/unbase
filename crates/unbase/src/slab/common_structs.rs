@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    memorefhead::MemoRefHead,
+    head::Head,
     network::{
         SlabRef,
         TransportAddress,
@@ -200,25 +200,25 @@ pub enum EdgeLink {
     },
     Occupied {
         slot_id: RelationSlotId,
-        head:    MemoRefHead,
+        head: Head,
     },
 }
 // TODO: consider making this a Vec
 #[derive(Clone, Debug, Default)]
-pub struct EdgeSet(pub HashMap<RelationSlotId, MemoRefHead>);
+pub struct EdgeSet(pub HashMap<RelationSlotId, Head>);
 
 impl EdgeSet {
     pub fn empty() -> Self {
         EdgeSet(HashMap::new())
     }
 
-    pub fn single(slot_id: RelationSlotId, head: MemoRefHead) -> Self {
+    pub fn single(slot_id: RelationSlotId, head: Head) -> Self {
         let mut hashmap = HashMap::new();
         hashmap.insert(slot_id as RelationSlotId, head);
         EdgeSet(hashmap)
     }
 
-    pub fn insert(&mut self, slot_id: RelationSlotId, head: MemoRefHead) {
+    pub fn insert(&mut self, slot_id: RelationSlotId, head: Head) {
         self.0.insert(slot_id, head);
     }
 
@@ -228,9 +228,9 @@ impl EdgeSet {
 }
 
 impl Deref for EdgeSet {
-    type Target = HashMap<RelationSlotId, MemoRefHead>;
+    type Target = HashMap<RelationSlotId, Head>;
 
-    fn deref(&self) -> &HashMap<RelationSlotId, MemoRefHead> {
+    fn deref(&self) -> &HashMap<RelationSlotId, Head> {
         &self.0
     }
 }

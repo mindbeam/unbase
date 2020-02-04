@@ -23,7 +23,7 @@ pub use crate::slab::{
 use crate::util::system_creator::SystemCreator;
 
 use crate::{
-    memorefhead::MemoRefHead,
+    head::Head,
     slab::{
         SlabHandle,
         SlabId,
@@ -55,7 +55,7 @@ pub struct NetworkInner {
     next_slab_id:      RwLock<u32>,
     slabs:             RwLock<Vec<SlabHandle>>,
     transports:        RwLock<Vec<Box<dyn Transport + Send + Sync>>>,
-    root_index_seed:   RwLock<Option<(MemoRefHead, SlabRef)>>,
+    root_index_seed:   RwLock<Option<(Head, SlabRef)>>,
     create_new_system: bool,
 }
 
@@ -213,7 +213,7 @@ impl Network {
             if r.1.slab_id == slab_id {
                 if let Some(new_slab) = self.get_representative_slab() {
                     let owned_slabref = new_slab.agent.localize_slabref(&r.1);
-                    r.0 = new_slab.agent.localize_memorefhead(&r.0, &owned_slabref, false);
+                    r.0 = new_slab.agent.localize_head(&r.0, &owned_slabref, false);
                     r.1 = new_slab.my_ref.clone();
                     return;
                 }
@@ -227,22 +227,22 @@ impl Network {
         root_index_seed.take();
     }
 
-    pub fn get_root_index_seed(&self, slab: &SlabHandle) -> MemoRefHead {
+    pub fn get_root_index_seed(&self, slab: &SlabHandle) -> Head {
         let root_index_seed = { self.root_index_seed.read().expect("root_index_seed read lock").clone() };
 
         match root_index_seed {
-            Some((ref seed, ref from_slabref)) => slab.agent.localize_memorefhead(seed, from_slabref, true),
-            None => MemoRefHead::Null,
+            Some((ref seed, ref from_slabref)) => slab.agent.localize_head(seed, from_slabref, true),
+            None => Head::Null,
         }
     }
 
     #[tracing::instrument]
-    pub fn get_root_index_seed_for_agent(&self, agent: &SlabAgent) -> MemoRefHead {
+    pub fn get_root_index_seed_for_agent(&self, agent: &SlabAgent) -> Head {
         let root_index_seed = self.root_index_seed.read().expect("root_index_seed read lock");
 
         match *root_index_seed {
-            Some((ref seed, ref from_slabref)) => agent.localize_memorefhead(seed, from_slabref, true),
-            None => MemoRefHead::Null,
+            Some((ref seed, ref from_slabref)) => agent.localize_head(seed, from_slabref, true),
+            None => Head::Null,
         }
     }
 
@@ -269,7 +269,7 @@ impl Network {
     /// TODO: how do we decide if we want to accept this?
     ///       do we just take any system seed that is sent to us when unseeded?
     ///       Probably good enough for Alpha, but obviously not good enough for Beta
-    pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &MemoRefHead,
+    pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &Head,
                                  resident_slabref: &SlabRef)
                                  -> bool {
         {

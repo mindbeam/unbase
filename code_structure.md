@@ -60,7 +60,7 @@ MemoRef - Reference to a specific Memo, whether remote or local
   It is essential that MemoRefs provide an efficient way to traverse to the referenced Memo when it's resident.
   Thus, this is not a part of the Slab, but rather a surrogate of the Slab. Ideally each memoRef would actually be a projection of relevant peering memos which reference its target Memo.
 
-MemoRefHead
+Head
 
 Context
 

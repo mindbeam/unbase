@@ -2,12 +2,12 @@ pub mod stash;
 
 use crate::{
     error::{
-        InvalidMemoRefHead,
+        InvalidHead,
         RetrieveError,
         WriteError,
     },
     index::IndexFixed,
-    memorefhead::MemoRefHead,
+    head::Head,
     slab::{
         EdgeLink,
         EdgeSet,
@@ -56,7 +56,7 @@ pub struct Context(Arc<ContextInner>);
 
 pub struct ContextInner {
     pub slab:            SlabHandle,
-    pub root_index_node: Arc<Mutex<Option<MemoRefHead>>>,
+    pub root_index_node: Arc<Mutex<Option<Head>>>,
     _applier:            RemoteHandle<()>,
     stash:               Stash,
     // pathology:  Option<Box<Fn(String)>> // Something is wrong here, causing compile to fail with a recursion error
@@ -182,14 +182,14 @@ impl Context {
         for head in self.stash.iter() {
             memoref_count += head.len();
 
-            let apply_head = other.slab.agent.localize_memorefhead(&head, &from_slabref, false);
+            let apply_head = other.slab.agent.localize_head(&head, &from_slabref, false);
             other.apply_head(&apply_head).await?;
         }
 
         Ok(memoref_count)
     }
 
-    pub fn try_root_index_node(&self) -> Result<MemoRefHead, RetrieveError> {
+    pub fn try_root_index_node(&self) -> Result<Head, RetrieveError> {
         {
             if let Some(ref node) = *self.root_index_node.lock().unwrap() {
                 return Ok(node.clone());
@@ -225,7 +225,7 @@ impl Context {
         }
     }
 
-    pub fn get_resident_subject_head(&self, subject_id: SubjectId) -> MemoRefHead {
+    pub fn get_resident_subject_head(&self, subject_id: SubjectId) -> Head {
         self.stash.get_head(subject_id).clone()
     }
 
@@ -241,20 +241,20 @@ impl Context {
         // Arc::ptr_eq(&self.inner,&other.inner)
     }
 
-    /// Create a new [`MemoRefHead`](crate::memorefhead::MemoRefHead) for testing purposes, and immediately add it to
-    /// the context Returns a clone of the newly created + added [`MemoRefHead`](crate::memorefhead::MemoRefHead)
-    pub async fn add_test_head(&self, subject_id: SubjectId, edges: Vec<MemoRefHead>) -> MemoRefHead {
+    /// Create a new [`Head`](crate::head::Head) for testing purposes, and immediately add it to
+    /// the context Returns a clone of the newly created + added [`Head`](crate::head::Head)
+    pub async fn add_test_head(&self, subject_id: SubjectId, edges: Vec<Head>) -> Head {
         let mut edgeset = EdgeSet::empty();
 
         for (slot_id, mrh) in edges.iter().enumerate() {
-            if let &MemoRefHead::Subject { .. } = mrh {
+            if let &Head::Subject { .. } = mrh {
                 edgeset.insert(slot_id as RelationSlotId, mrh.clone())
             }
         }
 
         let head = self.slab
                        .new_memo(Some(subject_id),
-                                 MemoRefHead::Null,
+                                 Head::Null,
                                  MemoBody::FullyMaterialized { v: HashMap::new(),
                                                                r: RelationSet::empty(),
                                                                e: edgeset,
@@ -290,7 +290,7 @@ impl Context {
                                             head: edge_mrh, } = edgelink
                 {
                     if let Some(subject_id) = edge_mrh.subject_id() {
-                        if let stash_mrh @ MemoRefHead::Subject { .. } = self.stash.get_head(subject_id) {
+                        if let stash_mrh @ Head::Subject { .. } = self.stash.get_head(subject_id) {
                             // looking for cases where the stash is fresher than the edge
 
                             if stash_mrh.descends_or_contains(&edge_mrh, &self.slab).await? {
@@ -327,14 +327,14 @@ impl Context {
         return Ok(true);
     }
 
-    pub(crate) async fn update_indices(&self, subject_id: SubjectId, head: &MemoRefHead) -> Result<(), WriteError> {
+    pub(crate) async fn update_indices(&self, subject_id: SubjectId, head: &Head) -> Result<(), WriteError> {
         self.root_index().await?.insert(self, subject_id.id, head.clone()).await
         // TODO - update
     }
 
     /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is
     /// made
-    pub(crate) async fn apply_head(&self, head: &MemoRefHead) -> Result<MemoRefHead, WriteError> {
+    pub(crate) async fn apply_head(&self, head: &Head) -> Result<Head, WriteError> {
         // println!("Context.apply_subject_head({}, {:?}) ", subject_id, head.memo_ids() );
         self.stash.apply_head(&self.slab, head).await
     }
@@ -344,8 +344,8 @@ impl Context {
 
         match root_index.get(self, subject_id.id).await? {
             Some(head) => Ok(Some(SubjectHandle {
-                id: head.subject_id().ok_or(RetrieveError::InvalidMemoRefHead(
-                    InvalidMemoRefHead::MissingSubjectId,
+                id: head.subject_id().ok_or(RetrieveError::InvalidHead(
+                    InvalidHead::MissingSubjectId,
                 ))?,
                 head,
                 context: self.clone(),
@@ -354,15 +354,15 @@ impl Context {
         }
     }
 
-    /// Update a given MemoRefHead with any relevant information to ensure that our consistency model invariants are met
+    /// Update a given Head with any relevant information to ensure that our consistency model invariants are met
     #[tracing::instrument(level = "info")]
-    pub(crate) async fn mut_update_index_head_for_consistency(&self, mut_head: &mut MemoRefHead)
+    pub(crate) async fn mut_update_index_head_for_consistency(&self, mut_head: &mut Head)
                                                               -> Result<bool, RetrieveError> {
         // TODO - think about immutable versions of this
 
         assert_ne!(mut_head.len(), 0);
         //        if  {
-        //            return Err(RetrieveError::InvalidMemoRefHead(InvalidMemoRefHead::Empty));
+        //            return Err(RetrieveError::InvalidHead(InvalidHead::Empty));
         //        }
 
         let apply_head = match mut_head.subject_id() {
@@ -377,14 +377,14 @@ impl Context {
     }
 
     #[tracing::instrument(level = "info")]
-    pub(crate) async fn mut_update_record_head_for_consistency(&self, mut_head: &mut MemoRefHead)
+    pub(crate) async fn mut_update_record_head_for_consistency(&self, mut_head: &mut Head)
                                                                -> Result<bool, RetrieveError> {
         // TODO - think about immutable versions of this
 
         assert_ne!(mut_head.len(), 0);
 
         //        if mut_head.len() == 0 {
-        //            return Err(RetrieveError::InvalidMemoRefHead(InvalidMemoRefHead::Empty));
+        //            return Err(RetrieveError::InvalidHead(InvalidHead::Empty));
         //        }
 
         let apply_head = match mut_head.subject_id() {
@@ -407,7 +407,7 @@ impl Context {
         Ok(applied)
     }
 
-    pub(crate) async fn get_subject_from_head(&self, mut head: MemoRefHead) -> Result<SubjectHandle, RetrieveError> {
+    pub(crate) async fn get_subject_from_head(&self, mut head: Head) -> Result<SubjectHandle, RetrieveError> {
         self.mut_update_record_head_for_consistency(&mut head).await?;
 
         if head.subject_id().is_none() {
@@ -415,7 +415,7 @@ impl Context {
         }
 
         Ok(SubjectHandle { id: head.subject_id()
-                                   .ok_or(RetrieveError::InvalidMemoRefHead(InvalidMemoRefHead::MissingSubjectId))?,
+                                   .ok_or(RetrieveError::InvalidHead(InvalidHead::MissingSubjectId))?,
                            head,
                            context: self.clone() })
     }

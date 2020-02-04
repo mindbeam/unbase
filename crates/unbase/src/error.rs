@@ -3,7 +3,7 @@ pub enum RetrieveError {
     NotFound,
     NotFoundByDeadline,
     AccessDenied,
-    InvalidMemoRefHead(InvalidMemoRefHead),
+    InvalidHead(InvalidHead),
     IndexNotInitialized,
     SlabError,
     MemoLineageError,
@@ -11,7 +11,7 @@ pub enum RetrieveError {
 }
 
 #[derive(PartialEq, Debug)]
-pub enum InvalidMemoRefHead {
+pub enum InvalidHead {
     MissingSubjectId,
     Empty,
 }

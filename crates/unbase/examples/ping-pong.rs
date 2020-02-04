@@ -66,7 +66,7 @@ async fn player_one() {
 }
 
 // fn foo () {
-//    MemoRefHead::Subject {
+//    Head::Subject {
 //        subject_id: SubjectId { id: 9002, stype: Record },
 //        memo_refs: [MemoRef {
 //            id: 5003,
@@ -76,7 +76,7 @@ async fn player_one() {
 // [SlabPresence { slab_id: 200, address: "udp:127.0.0.1:12002", lifetime: Unknown }] }, status: Resident }]),
 // memo: Resident(Memo {                id: 5003,
 //                subject_id: Some(SubjectId { id: 9002, stype: Record }),
-//                parents: MemoRefHead::Null,
+//                parents: Head::Null,
 //                body: FullyMaterialized { v: { "action": "Ping" }, r: RelationSet({}), e: EdgeSet({}), t: Record }
 //            })
 //        }]

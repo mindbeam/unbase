@@ -1,5 +1,5 @@
 use crate::{
-    memorefhead::MemoRefHead,
+    head::Head,
     network::{
         transmitter::DynamicDispatchTransmitter,
         Network,
@@ -153,7 +153,7 @@ impl TransportUDP {
                                           lifetime: SlabAnticipatedLifetime::Unknown, };
 
             let hello = slab.new_memo(None,
-                                      MemoRefHead::Null,
+                                      Head::Null,
                                       MemoBody::SlabPresence { p: presence,
                                                                r: net.get_root_index_seed(&slab), });
 

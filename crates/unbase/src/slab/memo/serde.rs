@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-    memorefhead::serde::*,
+    head::serde::*,
     slab::{
         memoref::serde::MemoPeerSeed,
         slabref::serde::SlabRefSeed,
@@ -131,7 +131,7 @@ impl<'a> StatefulSerialize for &'a RelationSet {
     }
 }
 
-impl StatefulSerialize for (SubjectId, MemoRefHead) {
+impl StatefulSerialize for (SubjectId, Head) {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
@@ -190,7 +190,7 @@ impl<'a> Visitor for MemoSeed<'a> {
             },
         };
 
-        let parents: MemoRefHead = match visitor.visit_seed(MemoRefHeadSeed { dest_slab:      self.dest_slab,
+        let parents: Head = match visitor.visit_seed(HeadSeed { dest_slab:      self.dest_slab,
                                                                               origin_slabref: self.origin_slabref, })?
         {
             Some(value) => value,
@@ -381,10 +381,10 @@ impl<'a> Visitor for EdgeSetSeed<'a> {
     fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
         where Visitor: MapVisitor
     {
-        let mut values: HashMap<RelationSlotId, MemoRefHead> = HashMap::new();
+        let mut values: HashMap<RelationSlotId, Head> = HashMap::new();
 
         while let Some(slot) = visitor.visit_key()? {
-            let mrh = visitor.visit_value_seed(MemoRefHeadSeed { dest_slab:      self.dest_slab,
+            let mrh = visitor.visit_value_seed(HeadSeed { dest_slab:      self.dest_slab,
                                                                  origin_slabref: self.origin_slabref, })?;
             values.insert(slot, mrh);
         }
@@ -414,12 +414,12 @@ impl<'a> Visitor for MBSlabPresenceSeed<'a> {
         where Visitor: MapVisitor
     {
         let mut presence = None;
-        let mut root_index_seed: Option<MemoRefHead> = None;
+        let mut root_index_seed: Option<Head> = None;
         while let Some(key) = visitor.visit_key()? {
             match key {
                 'p' => presence = visitor.visit_value()?,
                 'r' => {
-                    root_index_seed = Some(visitor.visit_value_seed(MemoRefHeadSeed { dest_slab:      self.dest_slab,
+                    root_index_seed = Some(visitor.visit_value_seed(HeadSeed { dest_slab:      self.dest_slab,
                                                                                       origin_slabref:
                                                                                           self.origin_slabref, })?)
                 },

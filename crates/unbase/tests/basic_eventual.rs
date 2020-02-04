@@ -66,7 +66,7 @@ async fn basic_eventual() {
     //        panic!("sanity error - uninitialized context");
     //    };
 
-    assert!(context_b.get_subject_by_id(record_id).await.expect("query succeeded").is_none() "new subject should not yet have conveyed to slab B");
+    assert!(context_b.get_subject_by_id(record_id).await.expect("query succeeded").is_none(), "new subject should not yet have conveyed to slab B");
     assert!(context_c.get_subject_by_id(record_id)
                      .await
                      .expect("query succeeded")

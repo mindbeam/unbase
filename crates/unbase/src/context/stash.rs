@@ -10,7 +10,7 @@ use std::{
 
 use crate::{
     error::WriteError,
-    memorefhead::MemoRefHead,
+    head::Head,
     slab::{
         EdgeLink,
         RelationSlotId,
@@ -23,8 +23,8 @@ use crate::{
 /// # What is a Stash?
 /// Stash is very important to the operation of unbase - It is the beating heart of its consistency model.
 ///
-/// A Stash is a special set containing [`MemoRefHead`](crate::memorefhead::MemoRefHead) and their Edges which must be
-/// considered for state projection. It assumes that MemoRefHeads which are put into it have a *heirarchical*
+/// A Stash is a special set containing [`Head`](crate::head::Head) and their Edges which must be
+/// considered for state projection. It assumes that Heads which are put into it have a *heirarchical*
 /// relationship with each other. Even if that heirarchy isn't fully represented in the Stash, it must exist, and of
 /// course be free of cycles.
 ///
@@ -68,9 +68,11 @@ use crate::{
 /// *Crucially* because we put the new non-leaf node in the stash, we can remove those which it points to!
 /// We can do this because we know that the B-tree must be traversed to locate the record, and the nodes we removed from
 /// the stash will be considered _vicariously_ because we kept the parent node pointing to them. As such a Stash
-/// automatically prunes MemoRefHeads which are descended-by-or-equal-to *any* of the Edges of any MemoRefHead inserted
-/// into the stash. ```
-/// # use unbase::{Slab,Network,slab::{SubjectId},memorefhead::MemoRefHead,context::stash::Stash};
+/// automatically prunes Heads which are descended-by-or-equal-to *any* of the Edges of any Head inserted
+/// into the stash.
+///
+/// ```
+/// # use unbase::{Slab,Network,slab::SubjectId,head::Head,context::stash::Stash};
 /// # async_std::task::block_on(async {
 /// # let net = Network::create_new_system();
 /// # let slab = Slab::new(&net);
@@ -80,7 +82,7 @@ use crate::{
 ///
 /// let head1 = stash.add_test_head(&slab, SubjectId::index_test(1), vec![]).await;
 /// let head2 = stash.add_test_head(&slab, SubjectId::index_test(2), vec![]).await;
-/// let head3 = stash.add_test_head(&slab, SubjectId::index_test(3), vec![head1, MemoRefHead::Null, head2])
+/// let head3 = stash.add_test_head(&slab, SubjectId::index_test(3), vec![head1, Head::Null, head2])
 ///                  .await;
 ///
 /// assert_eq!(stash.concise_contents(), "I3>I1,_,I2");
@@ -128,8 +130,8 @@ impl Stash {
         self.inner.lock().unwrap().index.iter().map(|i| i.0.clone()).collect()
     }
 
-    /// Return a human readable description of all the [`MemoRefHead`](crate::memorefhead::MemoRefHead)s currently in
-    /// the stash, and the other [`MemoRefHead`](crate::memorefhead::MemoRefHead)s referenced by their edges (in
+    /// Return a human readable description of all the [`Head`](crate::head::Head)s currently in
+    /// the stash, and the other [`Head`](crate::head::Head)s referenced by their edges (in
     /// slot-positional order).
     ///
     /// This is represented as: *Subject id 1* > Relations *A,B*; *SubjectID 2* > Relations *C,D*
@@ -157,7 +159,7 @@ impl Stash {
             let item = inner.items[item_id].as_ref().unwrap();
 
             let mut outstring = String::new();
-            if let MemoRefHead::Null = item.head {
+            if let Head::Null = item.head {
                 // This is a phantom member of the stash, whose purpose is only to serve as a placeholder
                 continue;
             }
@@ -189,30 +191,30 @@ impl Stash {
         out.join(";")
     }
 
-    /// Returns an iterator for all MemoRefHeads presently in the stash
+    /// Returns an iterator for all Heads presently in the stash
     pub(crate) fn iter(&self) -> StashIterator {
         StashIterator::new(&self.inner)
     }
 
-    /// Get MemoRefHead (if resident) for the provided subject_id
-    pub fn get_head(&self, subject_id: SubjectId) -> MemoRefHead {
+    /// Get Head (if resident) for the provided subject_id
+    pub fn get_head(&self, subject_id: SubjectId) -> Head {
         let inner = self.inner.lock().unwrap();
 
         match inner.get_item_id_for_subject(subject_id) {
             Some(item_id) => inner.items[item_id].as_ref().unwrap().head.clone(),
-            None => MemoRefHead::Null,
+            None => Head::Null,
         }
     }
 
-    /// Apply the a MemoRefHead to the stash, such that we may use it for consistency enforcement of later queries.
-    /// Return the post-application MemoRefHead which is a product of the MRH for the subject in question which was
+    /// Apply the a Head to the stash, such that we may use it for consistency enforcement of later queries.
+    /// Return the post-application Head which is a product of the MRH for the subject in question which was
     /// already the stash (if any) and that which was provided. Automatically project relations for the subject in
-    /// question and remove any MemoRefHeads which are referred to.
+    /// question and remove any Heads which are referred to.
     ///
     /// Assuming tree-structured data (as is the case for index nodes) the post-compaction contents of the stash are
     /// logically equivalent to the pre-compaction contents, despite being physically smaller.
-    /// Note: Only MemoRefHeads of SubjectType::IndexNode may be applied. All others will panic.
-    pub async fn apply_head(&self, slab: &SlabHandle, apply_head: &MemoRefHead) -> Result<MemoRefHead, WriteError> {
+    /// Note: Only Heads of SubjectType::IndexNode may be applied. All others will panic.
+    pub async fn apply_head(&self, slab: &SlabHandle, apply_head: &Head) -> Result<Head, WriteError> {
         // IMPORTANT! no locks may be held for longer than a single statement in this scope.
         // happens-before determination may require remote memo retrieval, which is a blocking operation.
 
@@ -280,15 +282,15 @@ impl Stash {
     /// The logical contents of the stash are the same before and after the removal of the direct contents, thus
     /// allowing
     //  compaction without loss of meaning.
-    pub async fn prune_head(&self, slab: &SlabHandle, compare_head: &MemoRefHead) -> Result<bool, WriteError> {
+    pub async fn prune_head(&self, slab: &SlabHandle, compare_head: &Head) -> Result<bool, WriteError> {
         // compare_head is the non contextualized-projection of the edge head
-        if let &MemoRefHead::Subject { subject_id, .. } = compare_head {
+        if let &Head::Subject { subject_id, .. } = compare_head {
             loop {
                 let mut item: ItemEditGuard = self.get_head_for_edit(subject_id);
 
                 if compare_head.descends_or_contains(item.get_head(), slab).await? {
                     // May yield here
-                    item.set_head(MemoRefHead::Null, slab).await?;
+                    item.set_head(Head::Null, slab).await?;
 
                     if let Ok(Some((_head, _links))) = item.try_save() {
                         // No interlopers. We were successful
@@ -307,10 +309,10 @@ impl Stash {
         Ok(false)
     }
 
-    /// Create a new [`MemoRefHead`](crate::memorefhead::MemoRefHead) for testing purposes, and immediately add it to
-    /// the context Returns a clone of the newly created + added [`MemoRefHead`](crate::memorefhead::MemoRefHead)
-    pub async fn add_test_head(&self, slab: &SlabHandle, subject_id: SubjectId, relations: Vec<MemoRefHead>)
-                               -> MemoRefHead {
+    /// Create a new [`Head`](crate::head::Head) for testing purposes, and immediately add it to
+    /// the context Returns a clone of the newly created + added [`Head`](crate::head::Head)
+    pub async fn add_test_head(&self, slab: &SlabHandle, subject_id: SubjectId, relations: Vec<Head>)
+                               -> Head {
         use crate::slab::{
             EdgeSet,
             MemoBody,
@@ -321,13 +323,13 @@ impl Stash {
         let mut edgeset = EdgeSet::empty();
 
         for (slot_id, mrh) in relations.iter().enumerate() {
-            if let &MemoRefHead::Subject { .. } = mrh {
+            if let &Head::Subject { .. } = mrh {
                 edgeset.insert(slot_id as RelationSlotId, mrh.clone())
             }
         }
 
         let head = slab.new_memo(Some(subject_id),
-                                 MemoRefHead::Null,
+                                 Head::Null,
                                  MemoBody::FullyMaterialized { v: HashMap::new(),
                                                                r: RelationSet::empty(),
                                                                e: edgeset,
@@ -352,7 +354,7 @@ impl StashInner {
         match index.binary_search_by(|x| x.0.cmp(&subject_id)) {
             Ok(i) => index[i].1,
             Err(i) => {
-                let item = StashItem::new(subject_id, MemoRefHead::Null);
+                let item = StashItem::new(subject_id, Head::Null);
 
                 let item_id = if let Some(item_id) = self.vacancies.pop() {
                     self.items[item_id] = Some(item);
@@ -415,7 +417,7 @@ impl StashInner {
     fn conditional_remove_item(&mut self, item_id: ItemId) {
         let (remove, subject_id) = {
             let item = self.items[item_id].as_ref().expect("increment_item on None");
-            (item.ref_count == 0 && item.head == MemoRefHead::Null, item.subject_id)
+            (item.ref_count == 0 && item.head == Head::Null, item.subject_id)
         };
 
         if remove {
@@ -432,14 +434,14 @@ impl StashInner {
 #[derive(Debug)]
 struct StashItem {
     subject_id:   SubjectId,
-    head:         MemoRefHead,
+    head: Head,
     relations:    Vec<Option<ItemId>>,
     edit_counter: usize,
     ref_count:    usize,
 }
 
 impl StashItem {
-    fn new(subject_id: SubjectId, head: MemoRefHead) -> Self {
+    fn new(subject_id: SubjectId, head: Head) -> Self {
         StashItem { subject_id,
                     head,
                     // QUESTION: should we preallocate all possible relation slots? or manage the length of relations
@@ -453,7 +455,7 @@ impl StashItem {
 // Tentative design for ItemGuard
 struct ItemEditGuard {
     item_id:      ItemId,
-    head:         MemoRefHead,
+    head: Head,
     links:        Option<Vec<EdgeLink>>,
     did_edit:     bool,
     edit_counter: usize,
@@ -480,11 +482,11 @@ impl ItemEditGuard {
                         inner_arc }
     }
 
-    fn get_head(&self) -> &MemoRefHead {
+    fn get_head(&self) -> &Head {
         &self.head
     }
 
-    async fn set_head(&mut self, set_head: MemoRefHead, slab: &SlabHandle) -> Result<(), WriteError> {
+    async fn set_head(&mut self, set_head: Head, slab: &SlabHandle) -> Result<(), WriteError> {
         self.head = set_head;
         // It is inappropriate here to do a contextualized projection (one which considers the current context stash)
         // and the head vs stash descends check would always return true, which is not useful for pruning.
@@ -493,7 +495,7 @@ impl ItemEditGuard {
         Ok(())
     }
 
-    async fn apply_head(&mut self, apply_head: &MemoRefHead, slab: &SlabHandle) -> Result<bool, WriteError> {
+    async fn apply_head(&mut self, apply_head: &Head, slab: &SlabHandle) -> Result<bool, WriteError> {
         // NO LOCKS IN HERE
         if !self.head.mut_apply(apply_head, slab).await? {
             return Ok(false);
@@ -506,7 +508,7 @@ impl ItemEditGuard {
         return Ok(true);
     }
 
-    fn try_save(mut self) -> Result<Option<(MemoRefHead, Vec<EdgeLink>)>, ()> {
+    fn try_save(mut self) -> Result<Option<(Head, Vec<EdgeLink>)>, ()> {
         if !self.did_edit {
             return Ok(None);
         }
@@ -530,7 +532,7 @@ impl ItemEditGuard {
                 },
                 &EdgeLink::Occupied { slot_id,
                                       head: ref rel_head, } => {
-                    if let &MemoRefHead::Subject { subject_id: rel_subject_id,
+                    if let &Head::Subject { subject_id: rel_subject_id,
                                                    .. } = rel_head
                     {
                         let rel_item_id = inner.assert_item(rel_subject_id);
@@ -548,8 +550,8 @@ impl ItemEditGuard {
 
         // IMPORTANT - because we consume self, drop will run after we return, ths calling decrement_item
         //             which is crucial for the evaluation of item removal in the case that we
-        //             just set head to MemoRefHead::Null (essentially the same as unsetting)
-        return Ok(Some((mem::replace(&mut self.head, MemoRefHead::Null),
+        //             just set head to Head::Null (essentially the same as unsetting)
+        return Ok(Some((mem::replace(&mut self.head, Head::Null),
                         mem::replace(&mut self.links, None).unwrap())));
     }
 }
@@ -574,14 +576,14 @@ impl StashIterator {
     }
 }
 
-/// Rudimentary MemoRefHead iterator. It operates under the assumptions that:
+/// Rudimentary Head iterator. It operates under the assumptions that:
 /// 1. The contents of the stash may change mid-iteration
-/// 2. We do not wish to visit two MemoRefHeads bearing the same subject_id twice
+/// 2. We do not wish to visit two Heads bearing the same subject_id twice
 /// It's possible however that there are some circumstances where we may want to violate #2,
-/// for instance if the MemoRefHead for subject X is advanced, but we are mid iteration and
+/// for instance if the Head for subject X is advanced, but we are mid iteration and
 /// have already issued an item for subject X. This may be a pertinent modality for some use cases.
 impl Iterator for StashIterator {
-    type Item = MemoRefHead;
+    type Item = Head;
 
     fn next(&mut self) -> Option<Self::Item> {
         let inner = self.inner.lock().unwrap();

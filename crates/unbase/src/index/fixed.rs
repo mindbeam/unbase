@@ -4,7 +4,7 @@ use crate::{
         RetrieveError,
         WriteError,
     },
-    memorefhead::MemoRefHead,
+    head::Head,
     slab::{
         RelationSlotId,
         SubjectId,
@@ -20,7 +20,7 @@ use std::{
 use tracing::debug;
 
 pub struct IndexFixed {
-    root:  MemoRefHead,
+    root: Head,
     depth: u8,
 }
 
@@ -30,12 +30,12 @@ impl IndexFixed {
         let mut debug_info = HashMap::new();
         debug_info.insert("tier".to_string(), "root".to_string());
 
-        Self { root: MemoRefHead::new_index(&context.slab, debug_info),
+        Self { root: Head::new_index(&context.slab, debug_info),
                depth }
     }
 
-    pub fn new_from_head(depth: u8, memorefhead: MemoRefHead) -> IndexFixed {
-        Self { root: memorefhead,
+    pub fn new_from_head(depth: u8, head: Head) -> IndexFixed {
+        Self { root: head,
                depth }
     }
 
@@ -43,7 +43,7 @@ impl IndexFixed {
         self.root.subject_id().unwrap()
     }
 
-    pub async fn insert<'a>(&mut self, context: &Context, key: u64, target: MemoRefHead) -> Result<(), WriteError> {
+    pub async fn insert<'a>(&mut self, context: &Context, key: u64, target: Head) -> Result<(), WriteError> {
         debug!("IndexFixed.insert({}, {:?})", key, target);
 
         // TODO: optimize index node creation so we're not changing relationship as an edit
@@ -89,7 +89,7 @@ impl IndexFixed {
                         let mut debug_info = HashMap::new();
                         debug_info.insert("tier".to_string(), tier.to_string());
 
-                        let next_node = MemoRefHead::new_index(&context.slab, debug_info);
+                        let next_node = Head::new_index(&context.slab, debug_info);
 
                         // apply the new_node head to the context
                         // TODO POSTMERGE - determine if we can skip this apply_head because we're about to do it for
@@ -125,7 +125,7 @@ impl IndexFixed {
     }
 
     #[tracing::instrument]
-    pub async fn get(&self, context: &Context, key: u64) -> Result<Option<MemoRefHead>, RetrieveError> {
+    pub async fn get(&self, context: &Context, key: u64) -> Result<Option<Head>, RetrieveError> {
         // TODO: this is dumb, figure out how to borrow here
         //      and replace with borrows for nested subjects
         let mut node = self.root.clone();
@@ -161,7 +161,7 @@ impl IndexFixed {
     }
 
     pub async fn scan_first_kv(&mut self, context: &Context, key: &str, value: &str)
-                               -> Result<Option<MemoRefHead>, RetrieveError> {
+                               -> Result<Option<Head>, RetrieveError> {
         // TODO POSTMERGE - figure out how the hell to make this work with a closure
         //
         //        // TODO - make scan_concurrent or something like that.
@@ -185,13 +185,13 @@ impl IndexFixed {
         //
         ////        Ok(None)
         //    }
-        //    pub async fn scan<F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<MemoRefHead>,
+        //    pub async fn scan<F, Fut> ( &mut self, context: &Context, f: F ) -> Result<Option<Head>,
         // RetrieveError>        where
-        //            F: Fn( &mut MemoRefHead ) -> Fut,
+        //            F: Fn( &mut Head ) -> Fut,
         //            Fut: Future<Output=Result<bool,RetrieveError>>
         //    {
 
-        let mut stack: Vec<(MemoRefHead, usize)> = vec![(self.root.clone(), 0)];
+        let mut stack: Vec<(Head, usize)> = vec![(self.root.clone(), 0)];
 
         while let Some((mut node, tier)) = stack.pop() {
             if tier as u8 == self.depth - 1 {

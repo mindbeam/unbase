@@ -4,7 +4,7 @@ use crate::{
         RetrieveError,
         WriteError,
     },
-    memorefhead::MemoRefHead,
+    head::Head,
     slab::{
         EdgeSet,
         MemoBody,
@@ -30,7 +30,7 @@ use tracing::debug;
 pub struct SubjectHandle {
     // TODO - remove the redundancy between id and head.subject_id()
     pub id:             SubjectId,
-    pub(crate) head:    MemoRefHead,
+    pub(crate) head: Head,
     pub(crate) context: Context,
 }
 
@@ -45,7 +45,7 @@ impl SubjectHandle {
         debug!("SubjectHandle({}).new()", id);
 
         let head = slab.new_memo(Some(id),
-                                 MemoRefHead::Null,
+                                 Head::Null,
                                  MemoBody::FullyMaterialized { v: vals,
                                                                r: RelationSet::empty(),
                                                                e: EdgeSet::empty(),
@@ -132,7 +132,7 @@ impl SubjectHandle {
         self.head.get_all_memo_ids(self.context.slab.clone()).await
     }
 
-    pub fn observe(&self) -> mpsc::Receiver<MemoRefHead> {
+    pub fn observe(&self) -> mpsc::Receiver<Head> {
         let (mut tx, rx) = mpsc::channel(1000);
 
         // get an initial value, rather than waiting for the value to change?

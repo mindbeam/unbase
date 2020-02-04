@@ -72,7 +72,7 @@ extern crate serde_json;
 pub mod context;
 pub mod error;
 pub mod index;
-pub mod memorefhead;
+pub mod head;
 pub mod network;
 pub mod slab;
 pub mod subjecthandle;

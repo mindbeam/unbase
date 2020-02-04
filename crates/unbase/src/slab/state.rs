@@ -6,7 +6,7 @@ use futures::channel::{
 };
 
 use crate::{
-    memorefhead::MemoRefHead,
+    head::Head,
     network::SlabRef,
     slab::{
         Memo,
@@ -24,8 +24,8 @@ pub(super) struct SlabState {
     pub counters:              SlabCounters,
     pub peer_refs:             Vec<SlabRef>,
     pub memo_wait_channels:    HashMap<MemoId, Vec<oneshot::Sender<Memo>>>,
-    pub subject_subscriptions: HashMap<SubjectId, Vec<mpsc::Sender<MemoRefHead>>>,
-    pub index_subscriptions:   Vec<mpsc::Sender<MemoRefHead>>,
+    pub subject_subscriptions: HashMap<SubjectId, Vec<mpsc::Sender<Head>>>,
+    pub index_subscriptions:   Vec<mpsc::Sender<Head>>,
     pub running:               bool,
 }
 

@@ -18,7 +18,7 @@ pub enum MemoOrigin<'a>{
     pub fn put_memos(&self, memo_origin: &MemoOrigin, mut memos: Vec<Memo> ) -> Vec<MemoRef>{
 
         // TODO: Evaluate more efficient ways to group these memos by subject
-        let mut subject_updates : HashMap<SubjectId, MemoRefHead> = HashMap::new();
+        let mut subject_updates : HashMap<SubjectId, Head> = HashMap::new();
         let mut memorefs = Vec::with_capacity( memos.len() );
         let mut pre_existing = 0u64;
 
@@ -29,7 +29,7 @@ pub enum MemoOrigin<'a>{
             self.handle_memoref( memo_origin, &memoref ); // located in memohandling.rs
 
             if let Some(subject_id) = memoref.subject_id {
-                let mut head = subject_updates.entry( subject_id ).or_insert( MemoRefHead::new() );
+                let mut head = subject_updates.entry( subject_id ).or_insert( Head::new() );
                 head.apply_memoref(&memoref, self);
             }
 
