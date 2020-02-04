@@ -64,24 +64,6 @@ async fn player_one() {
     }
 }
 
-// fn foo () {
-//    Head::Entity {
-//        entity_id: EntityId { id: 9002, stype: Record },
-//        memo_refs: [MemoRef {
-//            id: 5003,
-//            owning_slab_id: 0,
-//            entity_id: Some(EntityId { id: 9002, stype: Record }),
-//            peerlist: MemoPeerList([MemoPeer { slabref: SlabRef { owning_slab_id: 0, slab_id: 200, presence:
-// [SlabPresence { slab_id: 200, address: "udp:127.0.0.1:12002", lifetime: Unknown }] }, status: Resident }]),
-// memo: Resident(Memo {                id: 5003,
-//                entity_id: Some(EntityId { id: 9002, stype: Record }),
-//                parents: Head::Null,
-//                body: FullyMaterialized { v: { "action": "Ping" }, r: RelationSet({}), e: EdgeSet({}), t: Record }
-//            })
-//        }]
-//    }
-//}
-
 async fn player_two() {
     let net2 = Network::new();
     net2.hack_set_next_slab_id(200);
