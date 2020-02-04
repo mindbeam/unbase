@@ -12,7 +12,7 @@ pub enum RetrieveError {
 
 #[derive(PartialEq, Debug)]
 pub enum InvalidHead {
-    MissingSubjectId,
+    MissingEntityId,
     Empty,
 }
 

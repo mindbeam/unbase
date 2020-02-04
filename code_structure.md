@@ -38,14 +38,14 @@ SlabPresence - The ID, TransportAddress, and expected lifetime of a given Slab
 
   SlabPresence differs slightly from SlabRef insofar as it does not intend to actually reference a slab, but merely contain it's presence information for a given transport at a given time.
 
-Memo - An immutable message - SubjectId, Parent MemoRefs, Body
+Memo - An immutable message - EntityId, Parent MemoRefs, Body
   * Serializable for network transport
 
   Memo Bodies: ( some of which contain SlabRefs or MemoRefs )
     SlabPresence - Advertisement of a given SlabPresence (and it's present root index seed. Likely to be split apart later)
-    Relation - Edit one or more relations for a given SubjectId
-    Edit - Edit one or more fields for a given SubjectId
-    FullyMaterialized - A fully materialized representation of state for a given SubjectId
+    Relation - Edit one or more relations for a given EntityId
+    Edit - Edit one or more fields for a given EntityId
+    FullyMaterialized - A fully materialized representation of state for a given EntityId
     PartiallyMaterialized - Reserved for future use
     Peering – Update peering for a (different) Memo to indicate that it is available, tracked, or neither by a given Slab
     MemoRequest - Please send this list of memos to this SlabRef

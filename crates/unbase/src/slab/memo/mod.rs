@@ -27,8 +27,8 @@ use crate::{
         RelationSet,
         SlabHandle,
         SlabId,
-        SubjectId,
-        SubjectType,
+        EntityId,
+        EntityType,
     },
 };
 use itertools::Itertools;
@@ -51,7 +51,7 @@ impl Deref for Memo {
 
 pub struct MemoInner {
     pub id:             u64,
-    pub subject_id:     Option<SubjectId>,
+    pub entity_id:     Option<EntityId>,
     pub owning_slab_id: SlabId,
     pub parents: Head,
     pub body:           MemoBody,
@@ -70,15 +70,15 @@ pub enum MemoBody {
         v: HashMap<String, String>,
         r: RelationSet,
         e: EdgeSet,
-        t: SubjectType,
+        t: EntityType,
     },
     PartiallyMaterialized {
         v: HashMap<String, String>,
         r: RelationSet,
         e: EdgeSet,
-        t: SubjectType,
+        t: EntityType,
     },
-    Peering(MemoId, Option<SubjectId>, MemoPeerList),
+    Peering(MemoId, Option<EntityId>, MemoPeerList),
     MemoRequest(Vec<MemoId>, SlabRef),
 }
 
@@ -95,7 +95,7 @@ impl fmt::Debug for Memo {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("Memo")
            .field("id", &self.id)
-           .field("subject_id", &self.subject_id)
+           .field("entity_id", &self.entity_id)
            .field("parents", &self.parents)
            .field("body", &self.body)
            .finish()
@@ -194,7 +194,7 @@ impl MemoBody {
                                     ref r,
                                     ref e,
                                     ref t, } => format!("PartiallyMaterialized"),
-            Peering(ref memo_id, ref subject_id, ref peerlist) => format!("Peering"),
+            Peering(ref memo_id, ref entity_id, ref peerlist) => format!("Peering"),
             MemoRequest(ref memo_ids, ref slabref) => {
                 format!("MemoRequest({} to {})", memo_ids.iter().join(","), slabref.slab_id)
             },

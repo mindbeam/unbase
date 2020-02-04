@@ -11,7 +11,7 @@ use tracing::{
     span,
     Level,
 };
-use unbase::SubjectHandle;
+use unbase::Entity;
 
 #[async_test]
 async fn remote_traversal_simulated() {
@@ -32,7 +32,7 @@ async fn remote_traversal_simulated() {
     let context_a = slab_a.create_context();
     let _context_b = slab_b.create_context();
 
-    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "animal_sound", "Moo").await
+    let mut rec_a1 = Entity::new_with_single_kv(&context_a, "animal_sound", "Moo").await
                                                                                          .unwrap();
 
     rec_a1.set_value("animal_sound", "Woof").await.unwrap();
@@ -70,7 +70,7 @@ async fn remote_traversal_nondeterministic() {
     let context_a = slab_a.create_context();
     let _context_b = slab_b.create_context();
 
-    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "animal_sound", "Moo").await
+    let mut rec_a1 = Entity::new_with_single_kv(&context_a, "animal_sound", "Moo").await
                                                                                          .unwrap();
 
     rec_a1.set_value("animal_sound", "Woof").await.unwrap();
@@ -113,7 +113,7 @@ async fn udp_station_one() {
     Delay::new(Duration::from_millis(150)).await;
 
     // Do some stuff
-    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "animal_sound", "Moo").await
+    let mut rec_a1 = Entity::new_with_single_kv(&context_a, "animal_sound", "Moo").await
                                                                                          .unwrap();
     rec_a1.set_value("animal_sound", "Woof").await.unwrap();
     rec_a1.set_value("animal_sound", "Meow").await.unwrap();

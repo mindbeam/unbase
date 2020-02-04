@@ -5,7 +5,7 @@ use unbase::{
     util::simulator::Simulator,
     Network,
     Slab,
-    SubjectHandle,
+    Entity,
 };
 
 use tracing::debug;
@@ -41,8 +41,8 @@ async fn basic_eventual() {
     let mut context_b = slab_b.create_context();
     let mut context_c = slab_c.create_context();
 
-    let rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "animal_sound", "Moo").await;
-    assert!(rec_a1.is_ok(), "New subject should be created");
+    let rec_a1 = Entity::new_with_single_kv(&context_a, "animal_sound", "Moo").await;
+    assert!(rec_a1.is_ok(), "New entity should be created");
     let mut rec_a1 = rec_a1.unwrap();
 
     assert!(rec_a1.get_value("animal_sound")
@@ -50,53 +50,53 @@ async fn basic_eventual() {
                   .expect("retrieval")
                   .expect("has value")
             == "Moo",
-            "New subject should be internally consistent");
+            "New entity should be internally consistent");
 
     // TODO: consolidation is necessary for eventual consistency to work
     // context_a.fully_consolidate();
 
-    debug!("New subject ID {}", rec_a1.id);
+    debug!("New entity ID {}", rec_a1.id);
 
     let record_id = rec_a1.id;
 
     // TODO: move this to another test
-    //    let root_index_subject_id = if let Some(ref s) = context_a.root_index().unwrap() {
+    //    let root_index_entity_id = if let Some(ref s) = context_a.root_index().unwrap() {
     //        s.get_root_id()
     //    }else{
     //        panic!("sanity error - uninitialized context");
     //    };
 
-    assert!(context_b.get_subject_by_id(record_id).await.expect("query succeeded").is_none(), "new subject should not yet have conveyed to slab B");
-    assert!(context_c.get_subject_by_id(record_id)
+    assert!(context_b.get_entity_by_id(record_id).await.expect("query succeeded").is_none(), "new entity should not yet have conveyed to slab B");
+    assert!(context_c.get_entity_by_id(record_id)
                      .await
                      .expect("query succeeded")
                      .is_none(),
-            "new subject should not yet have conveyed to slab C");
+            "new entity should not yet have conveyed to slab C");
 
     simulator.quiesce().await;
 
-    //    debug!("Root Index = {:?}", context_b.get_resident_subject_head_memo_ids(root_index_subject_id)  );
+    //    debug!("Root Index = {:?}", context_b.get_resident_entity_head_memo_ids(root_index_entity_id)  );
 
     // TODO: replace this – Temporary way to magically, instantly send context
     debug!("Manually exchanging context from Context A to Context B - Count of MemoRefs: {}",
            context_a.hack_send_context(&mut context_b).await.expect("it worked"));
     debug!("Manually exchanging context from Context A to Context C - Count of MemoRefs: {}",
            context_a.hack_send_context(&mut context_c).await.expect("it worked"));
-    //    debug!("Root Index = {:?}", context_b.get_subject_head_memo_ids(root_index_subject_id)  );
+    //    debug!("Root Index = {:?}", context_b.get_entity_head_memo_ids(root_index_entity_id)  );
 
-    let rec_b1 = context_b.get_subject_by_id(record_id).await.expect("it worked");
-    let rec_c1 = context_c.get_subject_by_id(record_id).await.expect("it worked");
+    let rec_b1 = context_b.get_entity_by_id(record_id).await.expect("it worked");
+    let rec_c1 = context_c.get_entity_by_id(record_id).await.expect("it worked");
 
-    assert!(rec_b1.is_some(), "new subject should now have conveyed to slab B");
-    assert!(rec_c1.is_some(), "new subject should now have conveyed to slab C");
+    assert!(rec_b1.is_some(), "new entity should now have conveyed to slab B");
+    assert!(rec_c1.is_some(), "new entity should now have conveyed to slab C");
 
     let mut rec_b1 = rec_b1.expect("found");
     let mut rec_c1 = rec_c1.unwrap();
 
     assert!(rec_b1.get_value("animal_sound").await.unwrap().unwrap() == "Moo",
-            "Subject read from Slab B should be internally consistent");
+            "Entity read from Slab B should be internally consistent");
     assert!(rec_c1.get_value("animal_sound").await.unwrap().unwrap() == "Moo",
-            "Subject read from Slab C should be internally consistent");
+            "Entity read from Slab C should be internally consistent");
 
     assert_eq!(rec_a1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");
     assert_eq!(rec_b1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");

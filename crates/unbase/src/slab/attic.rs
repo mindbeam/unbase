@@ -17,8 +17,8 @@ pub enum MemoOrigin<'a>{
 /*
     pub fn put_memos(&self, memo_origin: &MemoOrigin, mut memos: Vec<Memo> ) -> Vec<MemoRef>{
 
-        // TODO: Evaluate more efficient ways to group these memos by subject
-        let mut subject_updates : HashMap<SubjectId, Head> = HashMap::new();
+        // TODO: Evaluate more efficient ways to group these memos by entity
+        let mut entity_updates : HashMap<EntityId, Head> = HashMap::new();
         let mut memorefs = Vec::with_capacity( memos.len() );
         let mut pre_existing = 0u64;
 
@@ -28,8 +28,8 @@ pub enum MemoOrigin<'a>{
 
             self.handle_memoref( memo_origin, &memoref ); // located in memohandling.rs
 
-            if let Some(subject_id) = memoref.subject_id {
-                let mut head = subject_updates.entry( subject_id ).or_insert( Head::new() );
+            if let Some(entity_id) = memoref.entity_id {
+                let mut head = entity_updates.entry( entity_id ).or_insert( Head::new() );
                 head.apply_memoref(&memoref, self);
             }
 
@@ -42,8 +42,8 @@ pub enum MemoOrigin<'a>{
             counters.memos_redundantly_received += pre_existing;
         }
 
-        for (subject_id,head) in subject_updates {
-            self.dispatch_subject_head(subject_id, &head);
+        for (entity_id,head) in entity_updates {
+            self.dispatch_entity_head(entity_id, &head);
         }
 
         memorefs

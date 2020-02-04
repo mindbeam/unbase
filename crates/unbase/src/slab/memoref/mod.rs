@@ -30,7 +30,7 @@ impl Deref for MemoRef {
 pub struct MemoRefInner {
     pub id:             MemoId,
     pub owning_slab_id: SlabId, // TODO - rename and conditionalize with a macro
-    pub subject_id:     Option<SubjectId>,
+    pub entity_id:     Option<EntityId>,
     pub peerlist:       RwLock<MemoPeerList>,
     pub ptr:            RwLock<MemoRefPtr>,
 }
@@ -52,14 +52,14 @@ impl MemoRefPtr {
 
 impl MemoRef {
     pub fn to_head(&self) -> Head {
-        match self.subject_id {
+        match self.entity_id {
             None => {
                 Head::Anonymous { owning_slab_id: self.owning_slab_id,
                                          head:           vec![self.clone()], }
             },
-            Some(subject_id) => {
-                Head::Subject { owning_slab_id: self.owning_slab_id,
-                                       subject_id,
+            Some(entity_id) => {
+                Head::Entity { owning_slab_id: self.owning_slab_id,
+                    entity_id: entity_id,
                                        head: vec![self.clone()] }
             },
         }
@@ -200,7 +200,7 @@ impl fmt::Debug for MemoRef {
         fmt.debug_struct("MemoRef")
            .field("id", &self.id)
            .field("owning_slab_id", &self.owning_slab_id)
-           .field("subject_id", &self.subject_id)
+           .field("entity_id", &self.entity_id)
            .field("peerlist", &*self.peerlist.read().unwrap())
            .field("memo", &*self.ptr.read().unwrap())
            .finish()

@@ -27,8 +27,8 @@ use crate::{
         MemoRef,
         SlabAnticipatedLifetime,
         SlabPresence,
-        SubjectId,
-        SubjectType,
+        EntityId,
+        EntityType,
     },
     Network,
 };
@@ -55,13 +55,13 @@ impl SlabHandle {
         self.agent.is_running()
     }
 
-    //    pub fn assert_memoref(&self, memo_id: MemoId, subject_id: Option<SubjectId>, peerlist: MemoPeerList, memo:
+    //    pub fn assert_memoref(&self, memo_id: MemoId, entity_id: Option<EntityId>, peerlist: MemoPeerList, memo:
     // Option<Memo>) -> (MemoRef, bool) {        // agent.rs
     //        unimplemented!()
     //    }
 
-    pub(crate) fn observe_subject(&self, subject_id: SubjectId, tx: mpsc::Sender<Head>) {
-        self.agent.observe_subject(subject_id, tx)
+    pub(crate) fn observe_entity(&self, entity_id: EntityId, tx: mpsc::Sender<Head>) {
+        self.agent.observe_entity(entity_id, tx)
     }
 
     #[tracing::instrument]
@@ -117,17 +117,17 @@ impl SlabHandle {
     }
 
     #[tracing::instrument]
-    pub fn new_memo(&self, subject_id: Option<SubjectId>, parents: Head, body: MemoBody) -> MemoRef {
-        self.agent.new_memo(subject_id, parents, body)
+    pub fn new_memo(&self, entity_id: Option<EntityId>, parents: Head, body: MemoBody) -> MemoRef {
+        self.agent.new_memo(entity_id, parents, body)
     }
 
     #[tracing::instrument]
-    pub fn new_memo_noparent(&self, subject_id: Option<SubjectId>, body: MemoBody) -> MemoRef {
-        self.agent.new_memo(subject_id, Head::Null, body)
+    pub fn new_memo_noparent(&self, entity_id: Option<EntityId>, body: MemoBody) -> MemoRef {
+        self.agent.new_memo(entity_id, Head::Null, body)
     }
 
-    pub fn generate_subject_id(&self, stype: SubjectType) -> SubjectId {
-        self.agent.generate_subject_id(stype)
+    pub fn generate_entity_id(&self, stype: EntityType) -> EntityId {
+        self.agent.generate_entity_id(stype)
     }
 
     #[tracing::instrument]

@@ -5,7 +5,7 @@ use crate::{
         MemoRef,
         SlabHandle,
         SlabRef,
-        SubjectId,
+        EntityId,
     },
     util::serde::{
         DeError,
@@ -35,11 +35,12 @@ impl StatefulSerialize for Head {
                 sv.serialize_field("h", &SerializeWrapper(head, helper))?;
                 sv.end()
             },
-            Head::Subject { ref subject_id,
+            Head::Entity {
+                entity_id: ref entity_id,
                                    ref head,
                                    .. } => {
-                let mut sv = serializer.serialize_struct_variant("Head", 2, "Subject", 3)?;
-                sv.serialize_field("s", &subject_id)?;
+                let mut sv = serializer.serialize_struct_variant("Head", 2, "Entity", 3)?;
+                sv.serialize_field("s", &entity_id)?;
                 sv.serialize_field("h", &SerializeWrapper(&head, helper))?;
                 sv.end()
             },
@@ -53,10 +54,10 @@ pub struct HeadSeed<'a> {
 }
 
 #[derive(Deserialize)]
-enum MRHVariant {
+enum HeadVariant {
     Null,
     Anonymous,
-    Subject,
+    Entity,
 }
 
 impl<'a> DeserializeSeed for HeadSeed<'a> {
@@ -65,9 +66,9 @@ impl<'a> DeserializeSeed for HeadSeed<'a> {
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where D: Deserializer
     {
-        const MRH_VARIANTS: &'static [&'static str] = &["Null", "Anonymous", "Subject"];
+        const HEAD_VARIANTS: &'static [&'static str] = &["Null", "Anonymous", "Entity"];
 
-        deserializer.deserialize_enum("Head", MRH_VARIANTS, self)
+        deserializer.deserialize_enum("Head", HEAD_VARIANTS, self)
     }
 }
 
@@ -82,13 +83,13 @@ impl<'a> Visitor for HeadSeed<'a> {
         where V: EnumVisitor
     {
         let foo = match visitor.visit_variant()? {
-            (MRHVariant::Null, variant) => variant.visit_newtype_seed(MRHNullSeed {}),
-            (MRHVariant::Anonymous, variant) => {
-                variant.visit_newtype_seed(MRHAnonymousSeed { dest_slab:      self.dest_slab,
+            (HeadVariant::Null, variant) => variant.visit_newtype_seed(HeadNullSeed {}),
+            (HeadVariant::Anonymous, variant) => {
+                variant.visit_newtype_seed(HeadAnonymousSeed { dest_slab:      self.dest_slab,
                                                               origin_slabref: self.origin_slabref, })
             },
-            (MRHVariant::Subject, variant) => {
-                variant.visit_newtype_seed(MRHSubjectSeed { dest_slab:      self.dest_slab,
+            (HeadVariant::Entity, variant) => {
+                variant.visit_newtype_seed(HeadEntitySeed { dest_slab:      self.dest_slab,
                                                             origin_slabref: self.origin_slabref, })
             },
         };
@@ -97,9 +98,9 @@ impl<'a> Visitor for HeadSeed<'a> {
     }
 }
 
-struct MRHNullSeed {}
+struct HeadNullSeed {}
 
-impl<'a> DeserializeSeed for MRHNullSeed {
+impl<'a> DeserializeSeed for HeadNullSeed {
     type Value = Head;
 
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
@@ -108,7 +109,7 @@ impl<'a> DeserializeSeed for MRHNullSeed {
         deserializer.deserialize(self)
     }
 }
-impl<'a> Visitor for MRHNullSeed {
+impl<'a> Visitor for HeadNullSeed {
     type Value = Head;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -122,12 +123,12 @@ impl<'a> Visitor for MRHNullSeed {
     }
 }
 
-struct MRHAnonymousSeed<'a> {
+struct HeadAnonymousSeed<'a> {
     dest_slab:      &'a SlabHandle,
     origin_slabref: &'a SlabRef,
 }
 
-impl<'a> DeserializeSeed for MRHAnonymousSeed<'a> {
+impl<'a> DeserializeSeed for HeadAnonymousSeed<'a> {
     type Value = Head;
 
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
@@ -136,7 +137,7 @@ impl<'a> DeserializeSeed for MRHAnonymousSeed<'a> {
         deserializer.deserialize(self)
     }
 }
-impl<'a> Visitor for MRHAnonymousSeed<'a> {
+impl<'a> Visitor for HeadAnonymousSeed<'a> {
     type Value = Head;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -166,11 +167,11 @@ impl<'a> Visitor for MRHAnonymousSeed<'a> {
     }
 }
 
-struct MRHSubjectSeed<'a> {
+struct HeadEntitySeed<'a> {
     dest_slab:      &'a SlabHandle,
     origin_slabref: &'a SlabRef,
 }
-impl<'a> DeserializeSeed for MRHSubjectSeed<'a> {
+impl<'a> DeserializeSeed for HeadEntitySeed<'a> {
     type Value = Head;
 
     fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
@@ -179,21 +180,21 @@ impl<'a> DeserializeSeed for MRHSubjectSeed<'a> {
         deserializer.deserialize(self)
     }
 }
-impl<'a> Visitor for MRHSubjectSeed<'a> {
+impl<'a> Visitor for HeadEntitySeed<'a> {
     type Value = Head;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("Head::Subject")
+        formatter.write_str("Head::Entity")
     }
 
     fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
         where Visitor: MapVisitor
     {
         let mut head: Option<Vec<MemoRef>> = None;
-        let mut subject_id: Option<SubjectId> = None;
+        let mut entity_id: Option<EntityId> = None;
         while let Some(key) = visitor.visit_key()? {
             match key {
-                's' => subject_id = Some(visitor.visit_value()?),
+                's' => entity_id = Some(visitor.visit_value()?),
                 'h' => {
                     head = Some(visitor.visit_value_seed(VecSeed(MemoRefSeed { dest_slab:      self.dest_slab,
                                                                         origin_slabref: self.origin_slabref, }))?)
@@ -202,10 +203,10 @@ impl<'a> Visitor for MRHSubjectSeed<'a> {
             }
         }
 
-        if head.is_some() && subject_id.is_some() {
-            Ok(Head::Subject { owning_slab_id: self.dest_slab.my_ref.slab_id,
+        if head.is_some() && entity_id.is_some() {
+            Ok(Head::Entity { owning_slab_id: self.dest_slab.my_ref.slab_id,
                                       head:           head.unwrap(),
-                                      subject_id:     subject_id.unwrap(), })
+                                      entity_id:     entity_id.unwrap(), })
         } else {
             Err(DeError::invalid_length(0, &self))
         }

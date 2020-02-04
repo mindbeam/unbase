@@ -227,7 +227,7 @@ The purpose is to create a distributed monotonic clock which is self-tuning to c
 ### Notes:
 
 * implementation clarification ( What did we win? )
-* Introduce: Model or Subject or Topic ( this is a design goal )
+* Introduce: Model or Entity or Topic ( this is a design goal )
 * Why do I need a consistency model for my index.
 * To make the system scalable I need to be able to spread my data around without a priori planning ( also a design goal )
 * But I also need to be able to find it!

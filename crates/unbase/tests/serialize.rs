@@ -5,7 +5,7 @@ extern crate serde_json;
 
 // use serde::de::*;
 //
-// use unbase::subject::Subject;
+// use unbase::entity::Entity;
 // use unbase::memo::{Memo,PeeringStatus};
 // use unbase::slab::Slab;
 // use unbase::network::{Network,Packet};
@@ -22,7 +22,7 @@ extern crate serde_json;
 // let slab_a = unbase::Slab::new(&net);
 // let context_a = slab_a.create_context();
 //
-// let record = Subject::new_kv(&context_a, "animal_type","Cat").unwrap();
+// let record = Entity::new_kv(&context_a, "animal_type","Cat").unwrap();
 //
 //
 //
@@ -35,7 +35,7 @@ extern crate serde_json;
 //
 // }
 //
-// fn check_roundtrip(record: &Subject, net: &Network, slab: &Slab){
+// fn check_roundtrip(record: &Entity, net: &Network, slab: &Slab){
 //
 // let memo = &record.get_head().to_vec()[0].get_memo(slab).unwrap();
 //

@@ -1,16 +1,16 @@
 use context::Context;
-use subject::{SubjectId,SubjectField};
+use entity::{EntityId,EntityField};
 
 pub struct Query{
     parts: Vec<QueryPart>,
     context: Context
 }
 pub struct QueryPart {
-    fields: Vec<SubjectField>,
+    fields: Vec<EntityField>,
     criteria: QueryPartCriteria
 }
 pub enum QueryPartCriteria {
-    BySubjectId: { id: Vec<SubjectId> }
+    ByEntityId: { id: Vec<EntityId> }
     ByFieldComparison
 }
 

@@ -6,8 +6,8 @@ use crate::{
     },
     head::Head,
     slab::{
-        RelationSlotId,
-        SubjectId,
+        SlotId,
+        EntityId,
         MAX_SLOTS,
     },
 };
@@ -39,8 +39,8 @@ impl IndexFixed {
                depth }
     }
 
-    pub fn get_root_subject_id(&self) -> SubjectId {
-        self.root.subject_id().unwrap()
+    pub fn get_root_entity_id(&self) -> EntityId {
+        self.root.entity_id().unwrap()
     }
 
     pub async fn insert<'a>(&mut self, context: &Context, key: u64, target: Head) -> Result<(), WriteError> {
@@ -56,10 +56,10 @@ impl IndexFixed {
         loop {
             // TODO: refactor this in a way that is generalizable for strings and such
             // Could just assume we're dealing with whole bytes here, but I'd rather
-            // allow for SUBJECT_MAX_RELATIONS <> 256. Values like 128, 512, 1024 may not be entirely ridiculous
+            // allow for ENTITY_MAX_RELATIONS <> 256. Values like 128, 512, 1024 may not be entirely ridiculous
             let exponent: u32 = (self.depth as u32 - 1) - tier as u32;
             let x = MAX_SLOTS.pow(exponent as u32);
-            let y = ((key / (x as u64)) % MAX_SLOTS as u64) as RelationSlotId;
+            let y = ((key / (x as u64)) % MAX_SLOTS as u64) as SlotId;
 
             // println!("Tier {}, {}, {}", tier, x, y );
 
@@ -70,7 +70,7 @@ impl IndexFixed {
                 // TODO- this MIGHT not be necessary, because context.apply_head might be doing the same thing.
                 context.mut_update_index_head_for_consistency(&mut node).await?;
 
-                node.set_edge(&context.slab, y as RelationSlotId, target);
+                node.set_edge(&context.slab, y as SlotId, target);
 
                 // Apply the updated head to the context
                 context.apply_head(&node).await?;
@@ -111,14 +111,14 @@ impl IndexFixed {
     /// Convenience method for the test suite
     #[doc(hidden)]
     #[cfg(test)]
-    pub(crate) async fn test_get_subject_handle(
+    pub(crate) async fn test_get_entity_handle(
         &self, context: &Context, key: u64)
-        -> Result<Option<crate::subjecthandle::SubjectHandle>, RetrieveError> {
+        -> Result<Option<crate::entity::Entity>, RetrieveError> {
         match self.get(context, key).await? {
             Some(head) => {
-                let subject = context.get_subject_from_head(head).await?;
+                let entity = context.get_entity_from_head(head).await?;
 
-                Ok(Some(subject))
+                Ok(Some(entity))
             },
             None => Ok(None),
         }
@@ -127,7 +127,7 @@ impl IndexFixed {
     #[tracing::instrument]
     pub async fn get(&self, context: &Context, key: u64) -> Result<Option<Head>, RetrieveError> {
         // TODO: this is dumb, figure out how to borrow here
-        //      and replace with borrows for nested subjects
+        //      and replace with borrows for nested entities
         let mut node = self.root.clone();
         let max = MAX_SLOTS as u64;
 
@@ -135,7 +135,7 @@ impl IndexFixed {
         for tier in 0..self.depth {
             let exponent = (self.depth - 1) - tier;
             let x = max.pow(exponent as u32);
-            let y = ((key / (x as u64)) % max) as RelationSlotId;
+            let y = ((key / (x as u64)) % max) as SlotId;
             debug!("Tier {}, {}, {}", tier, x, y);
 
             if exponent == 0 {
@@ -144,7 +144,7 @@ impl IndexFixed {
 
                 context.mut_update_index_head_for_consistency(&mut node).await?;
 
-                return node.get_edge(&context.slab, y as RelationSlotId).await;
+                return node.get_edge(&context.slab, y as SlotId).await;
             } else {
                 // branch
 
@@ -201,7 +201,7 @@ impl IndexFixed {
                 // println!("LAST Non-leaf node   {}, {}, {}", node.id, tier, self.depth );
                 for slot_id in 0..MAX_SLOTS {
                     context.mut_update_index_head_for_consistency(&mut node).await?;
-                    if let Some(mut head) = node.get_edge(&context.slab, slot_id as RelationSlotId).await? {
+                    if let Some(mut head) = node.get_edge(&context.slab, slot_id as SlotId).await? {
                         //                        TODO POSTMERGE - update this to take a closure
                         //                        if f(&mut head).await? {
                         //                            return Ok(Some(head))
@@ -220,7 +220,7 @@ impl IndexFixed {
                 // println!("RECURSE {}, {}, {}", node.id, tier, self.depth );
                 for slot_id in 0..MAX_SLOTS {
                     context.mut_update_index_head_for_consistency(&mut node).await?;
-                    if let Some(child) = node.get_edge(&context.slab, slot_id as RelationSlotId).await? {
+                    if let Some(child) = node.get_edge(&context.slab, slot_id as SlotId).await? {
                         stack.push((child, tier + 1))
                     }
                 }
@@ -244,7 +244,7 @@ mod test {
         util::simulator::Simulator,
         Network,
         Slab,
-        SubjectHandle,
+        Entity,
     };
 
     #[unbase_test_util::async_test]
@@ -261,23 +261,23 @@ mod test {
 
         // First lets do a single index test
         let i = 12345;
-        let record = SubjectHandle::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await
+        let record = Entity::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await
                                                                                                       .unwrap();
         index.insert(&context_a, i, record.head.clone()).await.unwrap();
 
-        let mut record2 = index.test_get_subject_handle(&context_a, 12345).await.unwrap().unwrap();
+        let mut record2 = index.test_get_entity_handle(&context_a, 12345).await.unwrap().unwrap();
         let value2 = record2.get_value("record number").await.expect("Ok").expect("Some");
         assert_eq!(&value2, "12345");
 
         // Ok, now lets torture it a little
         for i in 0..500 {
-            let record = SubjectHandle::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await
+            let record = Entity::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await
                                                                                                           .unwrap();
             index.insert(&context_a, i, record.head.clone()).await.unwrap();
         }
 
         for i in 0..500 {
-            let mut rec = index.test_get_subject_handle(&context_a, i)
+            let mut rec = index.test_get_entity_handle(&context_a, i)
                                .await
                                .expect("Ok")
                                .expect("Some");

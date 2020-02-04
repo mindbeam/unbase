@@ -21,12 +21,12 @@
 //! - [`Context`](./context/struct.Context.html) Enforces the consistency model, allows for queries
 //! to be executed
 //!
-//! - [`Subject`](./subject/struct.Subject.html) Conceptually similar to an Object, or an RDBMS
+//! - [`Entity`](./entity/struct.Entity.html) Conceptually similar to an Object, or an RDBMS
 //! record. Rather than storing state, state is projected as needed to satisfy user queries.
 //!
 //! ```
 //! # use unbase::error::RetrieveError;
-//! # use unbase::{Network, Slab, SubjectHandle};
+//! # use unbase::{Network, Slab, Entity};
 //! # async fn run () {
 //! let net = Network::create_new_system(); // use new, except for the very first time
 //! let slab = Slab::new(&net); // Slab exits when you drop this
@@ -34,7 +34,7 @@
 //!
 //! // Lets say one part of the app creates a record
 //! let mut original_record =
-//!     SubjectHandle::new_with_single_kv(&context, "beast", "Tiger").await
+//!     Entity::new_with_single_kv(&context, "beast", "Tiger").await
 //!                                                                  .expect("The record creation didn't fail");
 //!
 //! // another part of the app happens to be looking for a Tiger record
@@ -75,11 +75,11 @@ pub mod index;
 pub mod head;
 pub mod network;
 pub mod slab;
-pub mod subjecthandle;
+pub mod entity;
 pub mod util;
 
 pub use crate::{
     network::Network,
     slab::Slab,
-    subjecthandle::SubjectHandle,
+    entity::Entity,
 };

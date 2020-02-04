@@ -1,14 +1,14 @@
 Notes / Outstanding questions:
     Consistency Model and context compression:
-        Note: An index is a tree of Subjects. Other non-index-related Subjects may form a graph. Removing subject head X from the context
+        Note: An index is a tree of Entities. Other non-index-related Entities may form a graph. Removing entity head X from the context
             manager upon its descendent(or identical) reference by N known paths is sufficient to preserve the consistency invariant
-            *only* if there are N total possible paths to Subject X. If it's possible that there are N+1 total paths, we have the
+            *only* if there are N total possible paths to Entity X. If it's possible that there are N+1 total paths, we have the
             potential for an invariant violation, as the N+1th path may not reference a sufficiently recent head. As such, we must either
-            abstain from removal of Subject head X from the query context until all possible referents can be assured to posess
+            abstain from removal of Entity head X from the query context until all possible referents can be assured to posess
             a descendant or equal relation head (easy to determine for trees, IE: the root index), OR we must supplement the relationship
             travesal with a root_index traversal.
         
-        1. Does it make sense to create different classes of Subjects, such that the tree/graph differentiation is codified?
+        1. Does it make sense to create different classes of Entities, such that the tree/graph differentiation is codified?
            At the cost of increased potential for conflicts, this would improve safety by preventing illegal writes, and remove the burdon
            of the decision from the querying party. (What if A -> B then somebody else writes X -> B? is this a real risk?)
         2. Does the context compression scheme still make sense as designed, given that consistency model enforcement requires a root_index lookup for
@@ -25,11 +25,11 @@ Steps remaining prior to topic/topo-compression3 merge:
  [ ] Think about edge concurrencies. Balanced-tree seems like a good exercise
  [~] Edge/Relation bifurcation
  [ ] The thing compiles
- [X] Subject type differentiation and detection
- [ ] Subject subscriptions
+ [X] Entity type differentiation and detection
+ [ ] Entity subscriptions
  [ ] Context compaction
  [ ] Observer interface
- [ ] Channels for Slab -> Context -> Subject
+ [ ] Channels for Slab -> Context -> Entity
  [ ] Clean up Factorization diagram 
 
 
@@ -42,16 +42,16 @@ Steps Believed necessary for the passage of the first self-consistency test case
 [X] Enable MemoRef management by the Slab
   [X] For the memo itself
   [X] For memo -> parent memos
-[X] Finish renaming Record -> Subject
-[X] Finish basic subject subscription plumbing
+[X] Finish renaming Record -> Entity
+[X] Finish basic entity subscription plumbing
 [X] Implement rudimentary simulator
 [X] stop endless memo emission / bouncing
-[~] Subject indexes
-    [X] Dummy subject head index
-    [X] All received memos get mindlessly jammed into subject head index
-    [X] subject head index is actually pruned to leave only the head memos
-    [X] subject head index is itself built from memos
-    [X] bootstrap subject index which requires the subject index (turns out to be simple graph traversal. The index doesn't use index, duh)
+[~] Entity indexes
+    [X] Dummy entity head index
+    [X] All received memos get mindlessly jammed into entity head index
+    [X] entity head index is actually pruned to leave only the head memos
+    [X] entity head index is itself built from memos
+    [X] bootstrap entity index which requires the entity index (turns out to be simple graph traversal. The index doesn't use index, duh)
     [ ] local subscriptions should be no different from nonlocal subscriptions§
 [X] memo body
 [X] memo peering
@@ -68,12 +68,12 @@ Steps Believed necessary for the passage of the first self-consistency test case
   [ ] Consolidate multiple peering changes into a single peering memo
   [ ] Emit Goodbye memos for slabs that are shutting down
   [X] Local Peering Memos?
-  [ ] Determine if Subject-Peering is necessary for indexes (peering which is silently subsumed by newer memos)
+  [ ] Determine if Entity-Peering is necessary for indexes (peering which is silently subsumed by newer memos)
 [ ] Hash-based Memo ID generation
   [ ] Lazy hash generation
       Memos which are never transmitted to another slab should never have MemoIds assigned.
       Hard linkage precludes the need for MemoId generation. Only necessary when transmitting.
-  [ ] Commutatively merge-able Subjects:
+  [ ] Commutatively merge-able Entities:
       hash of: type (edit/keyframe?), values, tier/context, *fully materialized references*
       How do we prefer a keyframe memo vs the head of a chain of edit memos?
       They'll have identical checksums.
@@ -84,7 +84,7 @@ Steps Believed necessary for the passage of the first self-consistency test case
       Barring a cryptographically secure commutative
       hash, the necessary commutative property is defeated by inclusion of the precursors,
       which will vary dramatically.
-  [ ] Standard Subjects: hash of values, references, parent
+  [ ] Standard Entities: hash of values, references, parent
 [ ] Very basic testing
   [ ] basic asymmetric communication scenarios ( memo conveyed from SlabA->SlabB but not C, etc )
   [ ] basic data loss scenarios

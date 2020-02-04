@@ -16,7 +16,7 @@ A calculated probability that a given [Memo](#memo) will not be lost. Each [Slab
 #### <a>Durability Target</a>
 
 The desired minimum [Durability Score](#durability-score) for a given [Memo](#memo)
-This value may be set by policy for a given subject, or defaulted by system policy.
+This value may be set by policy for a given entity, or defaulted by system policy.
 
 <br>
 

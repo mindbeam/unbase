@@ -10,7 +10,7 @@ use unbase::{
     network::transport::TransportUDP,
     Network,
     Slab,
-    SubjectHandle,
+    Entity,
 };
 
 /// This example is a rudimentary interaction between two remote nodes
@@ -41,7 +41,7 @@ async fn player_one() {
     Delay::new(Duration::from_millis(700)).await;
 
     println!("A - Sending Initial Ping");
-    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "action", "Ping").await
+    let mut rec_a1 = Entity::new_with_single_kv(&context_a, "action", "Ping").await
                                                                                     .unwrap();
 
     let mut pings = 0;
@@ -66,16 +66,16 @@ async fn player_one() {
 }
 
 // fn foo () {
-//    Head::Subject {
-//        subject_id: SubjectId { id: 9002, stype: Record },
+//    Head::Entity {
+//        entity_id: EntityId { id: 9002, stype: Record },
 //        memo_refs: [MemoRef {
 //            id: 5003,
 //            owning_slab_id: 0,
-//            subject_id: Some(SubjectId { id: 9002, stype: Record }),
+//            entity_id: Some(EntityId { id: 9002, stype: Record }),
 //            peerlist: MemoPeerList([MemoPeer { slabref: SlabRef { owning_slab_id: 0, slab_id: 200, presence:
 // [SlabPresence { slab_id: 200, address: "udp:127.0.0.1:12002", lifetime: Unknown }] }, status: Resident }]),
 // memo: Resident(Memo {                id: 5003,
-//                subject_id: Some(SubjectId { id: 9002, stype: Record }),
+//                entity_id: Some(EntityId { id: 9002, stype: Record }),
 //                parents: Head::Null,
 //                body: FullyMaterialized { v: { "action": "Ping" }, r: RelationSet({}), e: EdgeSet({}), t: Record }
 //            })

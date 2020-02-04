@@ -15,7 +15,7 @@ use unbase::{
     },
     Network,
     Slab,
-    SubjectHandle,
+    Entity,
 };
 
 #[unbase_test_util::async_test]
@@ -31,19 +31,19 @@ async fn eventual_basic() {
     let context_a = slab_a.create_context();
     let context_b = slab_b.create_context();
 
-    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "animal_sound", "Moo").await
-                                                                                         .expect("Subject A1");
+    let mut rec_a1 = Entity::new_with_single_kv(&context_a, "animal_sound", "Moo").await
+                                                                                         .expect("Entity A1");
     let record_id = rec_a1.id;
 
     assert!(rec_a1.get_value("animal_sound").await.unwrap().unwrap() == "Moo",
-            "New subject should be internally consistent");
-    assert!(context_b.get_subject_by_id(record_id).await.unwrap().is_none(),
-            "new subject should not yet have conveyed to slab B");
+            "New entity should be internally consistent");
+    assert!(context_b.get_entity_by_id(record_id).await.unwrap().is_none(),
+            "new entity should not yet have conveyed to slab B");
 
     simulator.quiesce().await;
 
-    let rec_b1 = context_b.get_subject_by_id(record_id).await.unwrap();
-    assert!(rec_b1.is_some(), "new subject should now have conveyed to slab B");
+    let rec_b1 = context_b.get_entity_by_id(record_id).await.unwrap();
+    assert!(rec_b1.is_some(), "new entity should now have conveyed to slab B");
 
     let mut rec_b1 = rec_b1.unwrap();
 
@@ -82,46 +82,46 @@ async fn eventual_detail() {
 
     simulator.quiesce_and_stop().await;
 
-    let rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "animal_sound", "Moo").await;
+    let rec_a1 = Entity::new_with_single_kv(&context_a, "animal_sound", "Moo").await;
 
-    assert!(rec_a1.is_ok(), "New subject should be created");
+    assert!(rec_a1.is_ok(), "New entity should be created");
     let mut rec_a1 = rec_a1.unwrap();
 
     assert!(rec_a1.get_value("animal_sound").await.unwrap().unwrap() == "Moo",
-            "New subject should be internally consistent");
+            "New entity should be internally consistent");
 
-    // println!("New subject ID {}", rec_a1.id );
+    // println!("New entity ID {}", rec_a1.id );
 
     let record_id = rec_a1.id;
     let root_index = context_a.root_index().await.unwrap();
 
-    assert!(context_b.get_subject_by_id(record_id).await.unwrap().is_none(),
-            "new subject should not yet have conveyed to slab B");
-    assert!(context_c.get_subject_by_id(record_id).await.unwrap().is_none(),
-            "new subject should not yet have conveyed to slab C");
+    assert!(context_b.get_entity_by_id(record_id).await.unwrap().is_none(),
+            "new entity should not yet have conveyed to slab B");
+    assert!(context_c.get_entity_by_id(record_id).await.unwrap().is_none(),
+            "new entity should not yet have conveyed to slab C");
 
     // Not sure how this formerly worked, but I can see no reason why the context wouldnt have the root index head,
     // since it gets it directly from Network. Something has clearly changed in the merge, but I'm not sure what
     //    assert_eq!(
     //        (
-    //            context_a.get_resident_subject_head_memo_ids(root_index.get_root_subject_id() ).len(),
-    //            context_b.get_resident_subject_head_memo_ids(root_index.get_root_subject_id() ).len()
+    //            context_a.get_resident_entity_head_memo_ids(root_index.get_root_entity_id() ).len(),
+    //            context_b.get_resident_entity_head_memo_ids(root_index.get_root_entity_id() ).len()
     //        ), (1,0), "Context A should be seeded with the root index, and B should not" );
 
     simulator.start();
     simulator.quiesce().await;
 
-    assert_eq!(context_b.get_resident_subject_head_memo_ids(root_index.get_root_subject_id())
+    assert_eq!(context_b.get_resident_entity_head_memo_ids(root_index.get_root_entity_id())
                         .len(),
                1,
                "Context b should now be seeded with the root index");
 
-    let rec_b1 = context_b.get_subject_by_id(record_id).await.unwrap();
-    let rec_c1 = context_c.get_subject_by_id(record_id).await.unwrap();
+    let rec_b1 = context_b.get_entity_by_id(record_id).await.unwrap();
+    let rec_c1 = context_c.get_entity_by_id(record_id).await.unwrap();
 
     // println!("RID: {}", record_id);
-    assert!(rec_b1.is_some(), "new subject should now have conveyed to slab B");
-    assert!(rec_c1.is_some(), "new subject should now have conveyed to slab C");
+    assert!(rec_b1.is_some(), "new entity should now have conveyed to slab B");
+    assert!(rec_c1.is_some(), "new entity should now have conveyed to slab C");
 
     let mut rec_b1 = rec_b1.unwrap();
     let mut rec_c1 = rec_c1.unwrap();
@@ -147,9 +147,9 @@ async fn eventual_detail() {
     simulator.quiesce().await;
 
     assert!(rec_b1.get_value("animal_sound").await.unwrap().unwrap() == "Moo",
-            "Subject read from Slab B should be internally consistent");
+            "Entity read from Slab B should be internally consistent");
     assert!(rec_c1.get_value("animal_sound").await.unwrap().unwrap() == "Moo",
-            "Subject read from Slab C should be internally consistent");
+            "Entity read from Slab C should be internally consistent");
 
     assert_eq!(rec_a1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");
     assert_eq!(rec_b1.get_value("animal_sound").await.unwrap().unwrap(), "Moo");

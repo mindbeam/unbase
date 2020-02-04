@@ -35,8 +35,8 @@ use crate::{
         SlabId,
         SlabPresence,
         SlabRefInner,
-        SubjectId,
-        SubjectType,
+        EntityId,
+        EntityType,
     },
     Network,
 };
@@ -99,7 +99,7 @@ impl SlabAgent {
     }
 
     #[tracing::instrument]
-    pub fn new_memo(&self, subject_id: Option<SubjectId>, parents: Head, body: MemoBody) -> MemoRef {
+    pub fn new_memo(&self, entity_id: Option<EntityId>, parents: Head, body: MemoBody) -> MemoRef {
         let memo_id = {
             let mut state = self.state.write().unwrap();
             state.counters.last_memo_id += 1;
@@ -110,23 +110,23 @@ impl SlabAgent {
 
         let memo = Memo::new(MemoInner { id: memo_id,
                                          owning_slab_id: self.id,
-                                         subject_id,
+                                         entity_id,
                                          parents,
                                          body });
 
         let (memoref, _had_memoref) =
-            self.assert_memoref(memo.id, memo.subject_id, MemoPeerList(Vec::new()), Some(memo));
+            self.assert_memoref(memo.id, memo.entity_id, MemoPeerList(Vec::new()), Some(memo));
         self.consider_emit_memo(&memoref);
 
         memoref
     }
 
-    pub fn generate_subject_id(&self, stype: SubjectType) -> SubjectId {
+    pub fn generate_entity_id(&self, stype: EntityType) -> EntityId {
         let mut state = self.state.write().unwrap();
-        state.counters.last_subject_id += 1;
-        let id = (self.id as u64).rotate_left(32) | state.counters.last_subject_id as u64;
+        state.counters.last_entity_id += 1;
+        let id = (self.id as u64).rotate_left(32) | state.counters.last_entity_id as u64;
 
-        SubjectId { id, stype }
+        EntityId { id, stype }
     }
 
     #[tracing::instrument]
@@ -211,7 +211,7 @@ impl SlabAgent {
             MemoBody::SlabPresence { p: ref presence,
                                      r: ref root_index_seed, } => {
                 match root_index_seed {
-                    &Head::Subject { .. } | &Head::Anonymous { .. } => {
+                    &Head::Entity { .. } | &Head::Anonymous { .. } => {
                         // HACK - this should be done inside the deserialize
                         for memoref in root_index_seed.iter() {
                             memoref.update_peer(origin_slabref, MemoPeeringStatus::Resident);
@@ -248,8 +248,8 @@ impl SlabAgent {
                     }
                 }
             },
-            MemoBody::Peering(memo_id, subject_id, ref peerlist) => {
-                let (peered_memoref, _had_memo) = self.assert_memoref(memo_id, subject_id, peerlist.clone(), None);
+            MemoBody::Peering(memo_id, entity_id, ref peerlist) => {
+                let (peered_memoref, _had_memo) = self.assert_memoref(memo_id, entity_id, peerlist.clone(), None);
 
                 // Don't peer with yourself
                 for peer in peerlist.iter().filter(|p| p.slabref.0.slab_id != self.id) {
@@ -339,17 +339,17 @@ impl SlabAgent {
                 self.new_memo(None,
                               memoref.to_head(),
                               MemoBody::Peering(memoref.id,
-                                                memoref.subject_id,
+                                                memoref.entity_id,
                                                 memoref.get_peerlist_for_peer(&self.my_ref,
                                                                               Some(origin_slabref.slab_id))));
             origin_slabref.send(&self.my_ref, &peering_memoref);
         }
     }
 
-    pub(crate) fn observe_subject(&self, subject_id: SubjectId, tx: mpsc::Sender<Head>) {
+    pub(crate) fn observe_entity(&self, entity_id: EntityId, tx: mpsc::Sender<Head>) {
         let mut state = self.state.write().unwrap();
 
-        match state.subject_subscriptions.entry(subject_id) {
+        match state.entity_subscriptions.entry(entity_id) {
             Entry::Vacant(e) => {
                 e.insert(vec![tx]);
             },
@@ -361,8 +361,8 @@ impl SlabAgent {
 
     #[tracing::instrument]
     pub fn notify_local_subscribers(&self, memoref: MemoRef) {
-        let subject_id = match memoref.subject_id {
-            Some(subject_id) => subject_id,
+        let entity_id = match memoref.entity_id {
+            Some(entity_id) => entity_id,
             None => return,
         };
 
@@ -372,7 +372,7 @@ impl SlabAgent {
         {
             let mut state = self.state.write().unwrap();
 
-            if let SubjectType::IndexNode = subject_id.stype {
+            if let EntityType::IndexNode = entity_id.stype {
                 // TODO3 - update this to consider popularity of this node, and/or common points of reference with a
                 // given context selective hearing?
 
@@ -403,7 +403,7 @@ impl SlabAgent {
                 }
             }
 
-            if let Some(ref mut senders) = state.subject_subscriptions.get_mut(&subject_id) {
+            if let Some(ref mut senders) = state.entity_subscriptions.get_mut(&entity_id) {
                 let len = senders.len();
                 for i in (0..len).rev() {
                     let r = { senders[i].try_send(memoref.to_head()) };
@@ -415,7 +415,7 @@ impl SlabAgent {
                             if e.is_disconnected() {
                                 senders.swap_remove(i);
                             } else {
-                                panic!("one of the subject_subscriptions queues is full, and I haven't implemented \
+                                panic!("one of the entity_subscriptions queues is full, and I haven't implemented \
                                         async sending yet")
                             }
                         },
@@ -444,10 +444,10 @@ impl SlabAgent {
     }
 
     #[tracing::instrument]
-    pub fn localize_head(&self, mrh: &Head, from_slabref: &SlabRef, include_memos: bool) -> Head {
+    pub fn localize_head(&self, head: &Head, from_slabref: &SlabRef, include_memos: bool) -> Head {
         let local_from_slabref = self.localize_slabref(&from_slabref);
 
-        match mrh {
+        match head {
             Head::Null => Head::Null,
             Head::Anonymous { ref head, .. } => {
                 Head::Anonymous { owning_slab_id: self.id,
@@ -458,14 +458,14 @@ impl SlabAgent {
                                                  })
                                                  .collect(), }
             },
-            Head::Subject { subject_id, ref head, .. } => {
-                Head::Subject { owning_slab_id: self.id,
-                                       subject_id:     subject_id.clone(),
+            Head::Entity { entity_id: entity_id, ref head, .. } => {
+                Head::Entity { owning_slab_id: self.id,
+                                       entity_id:     entity_id.clone(),
                                        head:
                                            head.iter()
                                                .map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos))
                                                .collect(), }
-            },
+            }
         }
     }
 
@@ -486,7 +486,7 @@ impl SlabAgent {
 
         // TODO - reduce the redundant work here. We're basically asserting the memoref twice
         let memoref =
-            self.assert_memoref(memoref.id, memoref.subject_id, peerlist.clone(), match include_memo {
+            self.assert_memoref(memoref.id, memoref.entity_id, peerlist.clone(), match include_memo {
                     true => {
                         match *memoref.ptr.read().unwrap() {
                             MemoRefPtr::Resident(ref m) => Some(self.localize_memo(m, from_slabref, &peerlist)),
@@ -507,7 +507,7 @@ impl SlabAgent {
 
         // TODO - simplify this
         self.reconstitute_memo(memo.id,
-                               memo.subject_id,
+                               memo.entity_id,
                                self.localize_head(&memo.parents, from_slabref, false),
                                self.localize_memobody(&memo.body, from_slabref),
                                from_slabref,
@@ -516,7 +516,7 @@ impl SlabAgent {
     }
 
     #[tracing::instrument(skip(self), level = "debug")]
-    pub fn reconstitute_memo(&self, memo_id: MemoId, subject_id: Option<SubjectId>, parents: Head,
+    pub fn reconstitute_memo(&self, memo_id: MemoId, entity_id: Option<EntityId>, parents: Head,
                              body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList)
                              -> (Memo, MemoRef, bool) {
         debug!("SlabAgent({})::reconstitute_memo({:?})", self.id, body);
@@ -526,12 +526,12 @@ impl SlabAgent {
 
         let memo = Memo::new(MemoInner { id: memo_id,
                                          owning_slab_id: self.id,
-                                         subject_id,
+                                         entity_id,
                                          parents,
                                          body });
 
         let (memoref, had_memoref) =
-            self.assert_memoref(memo.id, memo.subject_id, peerlist.clone(), Some(memo.clone()));
+            self.assert_memoref(memo.id, memo.entity_id, peerlist.clone(), Some(memo.clone()));
 
         {
             let mut state = self.state.write().unwrap();
@@ -547,7 +547,7 @@ impl SlabAgent {
             self.check_memo_waiters(memo);
             // TODO1 - figure out eventual consistency index update behavior. Think fairly hard about blockchain fan-in
             // / block-tree NOTE: this might be a correct place to employ selective hearing. Highest
-            // liklihood if the subject is in any of our contexts, otherwise
+            // liklihood if the entity is in any of our contexts, otherwise
 
             self.handle_memo_from_other_slab(memo, &memoref, &origin_slabref);
             self.do_peering(&memoref, &origin_slabref);
@@ -594,8 +594,8 @@ impl SlabAgent {
                                                   t: t.clone(), }
             },
 
-            &MemoBody::Peering(memo_id, subject_id, ref peerlist) => {
-                MemoBody::Peering(memo_id, subject_id, self.localize_peerlist(peerlist))
+            &MemoBody::Peering(memo_id, entity_id, ref peerlist) => {
+                MemoBody::Peering(memo_id, entity_id, self.localize_peerlist(peerlist))
             },
             &MemoBody::MemoRequest(ref memo_ids, ref slabref) => {
                 MemoBody::MemoRequest(memo_ids.clone(), self.localize_slabref(slabref))
@@ -616,7 +616,7 @@ impl SlabAgent {
     pub fn localize_edgeset(&self, edgeset: &EdgeSet, from_slabref: &SlabRef) -> EdgeSet {
         let new = edgeset.0
                          .iter()
-                         .map(|(slot_id, mrh)| (*slot_id, self.localize_head(mrh, from_slabref, false)))
+                         .map(|(slot_id, head)| (*slot_id, self.localize_head(head, from_slabref, false)))
                          .collect();
 
         EdgeSet(new)
@@ -642,7 +642,7 @@ impl SlabAgent {
                                                 memoref.to_head(),
                                                 MemoBody::Peering(
                 memoref.id,
-                memoref.subject_id,
+                memoref.entity_id,
                 MemoPeerList::new(vec![MemoPeer { slabref: self.my_ref.clone(),
                                                   status:  MemoPeeringStatus::Resident, }]),
             ),
@@ -688,7 +688,7 @@ impl SlabAgent {
                                             memoref.to_head(),
                                             MemoBody::Peering(
             memoref.id,
-            memoref.subject_id,
+            memoref.entity_id,
             MemoPeerList::new(vec![MemoPeer { slabref: self.my_ref.clone(),
                                               status:  MemoPeeringStatus::Participating, }]),
         ),
@@ -704,7 +704,7 @@ impl SlabAgent {
     }
 
     #[tracing::instrument]
-    pub fn assert_memoref(&self, memo_id: MemoId, subject_id: Option<SubjectId>, peerlist: MemoPeerList,
+    pub fn assert_memoref(&self, memo_id: MemoId, entity_id: Option<EntityId>, peerlist: MemoPeerList,
                           memo: Option<Memo>)
                           -> (MemoRef, bool) {
         let had_memoref;
@@ -712,7 +712,7 @@ impl SlabAgent {
             Entry::Vacant(o) => {
                 let mr = MemoRef(Arc::new(MemoRefInner { id: memo_id,
                                                          owning_slab_id: self.id,
-                                                         subject_id,
+                                                         entity_id,
                                                          peerlist: RwLock::new(peerlist),
                                                          ptr: RwLock::new(match memo {
                                                                               Some(m) => {

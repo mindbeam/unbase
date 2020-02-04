@@ -59,4 +59,4 @@ The objective of Unbase is to create a unified data/application framework, which
 <br>
 <br>
 
-<a name="footnote1">1</a>: Using the term "offline" for conversational understanding. There is no such thing as "Online" or "Offline" except as observed from a specific point in space and using a subjective metric.<br>
+<a name="footnote1">1</a>: Using the term "offline" for conversational understanding. There is no such thing as "Online" or "Offline" except as observed from a specific point in space and using a entityive metric.<br>

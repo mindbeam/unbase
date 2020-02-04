@@ -12,7 +12,7 @@ use crate::{
         Memo,
         MemoId,
         MemoRef,
-        SubjectId,
+        EntityId,
     },
 };
 
@@ -24,7 +24,7 @@ pub(super) struct SlabState {
     pub counters:              SlabCounters,
     pub peer_refs:             Vec<SlabRef>,
     pub memo_wait_channels:    HashMap<MemoId, Vec<oneshot::Sender<Memo>>>,
-    pub subject_subscriptions: HashMap<SubjectId, Vec<mpsc::Sender<Head>>>,
+    pub entity_subscriptions: HashMap<EntityId, Vec<mpsc::Sender<Head>>>,
     pub index_subscriptions:   Vec<mpsc::Sender<Head>>,
     pub running:               bool,
 }
@@ -32,7 +32,7 @@ pub(super) struct SlabState {
 #[derive(Debug)]
 pub(crate) struct SlabCounters {
     pub last_memo_id:               u32,
-    pub last_subject_id:            u32,
+    pub last_entity_id:            u32,
     pub memos_received:             u64,
     pub memos_redundantly_received: u64,
 }
@@ -44,12 +44,12 @@ impl SlabState {
     pub fn new() -> Self {
         SlabState { memorefs_by_id:        HashMap::new(),
                     counters:              SlabCounters { last_memo_id:               5000,
-                                                          last_subject_id:            9000,
+                                                          last_entity_id:            9000,
                                                           memos_received:             0,
                                                           memos_redundantly_received: 0, },
                     peer_refs:             Vec::new(),
                     memo_wait_channels:    HashMap::new(),
-                    subject_subscriptions: HashMap::new(),
+                    entity_subscriptions: HashMap::new(),
                     index_subscriptions:   Vec::new(),
                     running:               true, }
     }

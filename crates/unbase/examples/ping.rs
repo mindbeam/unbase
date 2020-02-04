@@ -6,7 +6,7 @@ use unbase::{
     network::transport::TransportUDP,
     Network,
     Slab,
-    SubjectHandle,
+    Entity,
 };
 
 #[async_std::main]
@@ -24,7 +24,7 @@ async fn main() {
     // TODO: establish some kind of positive pressure to push out index nodes
     Delay::new(Duration::from_millis(7000)).await;
 
-    let mut rec_a1 = SubjectHandle::new_with_single_kv(&context_a, "action", "Ping").await
+    let mut rec_a1 = Entity::new_with_single_kv(&context_a, "action", "Ping").await
                                                                                     .unwrap();
 
     let mut pings = 0;

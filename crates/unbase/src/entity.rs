@@ -10,10 +10,10 @@ use crate::{
         MemoBody,
         MemoId,
         RelationSet,
-        RelationSlotId,
+        SlotId,
         SlabHandle,
-        SubjectId,
-        SubjectType,
+        EntityId,
+        EntityType,
     },
 };
 
@@ -25,24 +25,23 @@ use std::{
 
 use tracing::debug;
 
-// TODO - merge rename SubjectHandle to Entity
 #[derive(Clone)]
-pub struct SubjectHandle {
-    // TODO - remove the redundancy between id and head.subject_id()
-    pub id:             SubjectId,
+pub struct Entity {
+    // TODO - remove the redundancy between id and head.entity_id()
+    pub id: EntityId,
     pub(crate) head: Head,
     pub(crate) context: Context,
 }
 
-/// SubjectHandle contains a Context (which is an Arc internally) because it IS an enforcer of consistency, and
-/// therefore must use the context. Becasuse SubjectHandle contains a Context reference, it *MUST NOT BE STORED*
+/// Entity contains a Context (which is an Arc internally) because it IS an enforcer of consistency, and
+/// therefore must use the context. Becasuse Entity contains a Context reference, it *MUST NOT BE STORED*
 /// anywhere other than user code, otherwise we will create a cycle and thus a memory leak
-impl SubjectHandle {
-    pub async fn new(context: &Context, vals: HashMap<String, String>) -> Result<SubjectHandle, WriteError> {
+impl Entity {
+    pub async fn new(context: &Context, vals: HashMap<String, String>) -> Result<Entity, WriteError> {
         let slab: &SlabHandle = &context.slab;
-        let id = slab.generate_subject_id(SubjectType::Record);
+        let id = slab.generate_entity_id(EntityType::Record);
 
-        debug!("SubjectHandle({}).new()", id);
+        debug!("Entity({}).new()", id);
 
         let head = slab.new_memo(Some(id),
                                  Head::Null,
@@ -54,18 +53,18 @@ impl SubjectHandle {
 
         context.update_indices(id, &head).await?;
 
-        let handle = SubjectHandle { id,
+        let handle = Entity { id,
                                      head,
                                      context: context.clone() };
 
         Ok(handle)
     }
 
-    pub async fn new_blank(context: &Context) -> Result<SubjectHandle, WriteError> {
+    pub async fn new_blank(context: &Context) -> Result<Entity, WriteError> {
         Self::new(context, HashMap::new()).await
     }
 
-    pub async fn new_with_single_kv(context: &Context, key: &str, value: &str) -> Result<SubjectHandle, WriteError> {
+    pub async fn new_with_single_kv(context: &Context, key: &str, value: &str) -> Result<Entity, WriteError> {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
@@ -86,24 +85,24 @@ impl SubjectHandle {
         self.head.get_value(&self.context.slab, key).await
     }
 
-    pub async fn get_edge(&mut self, key: RelationSlotId) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn get_edge(&mut self, key: SlotId) -> Result<Option<Entity>, RetrieveError> {
         self.context
             .mut_update_record_head_for_consistency(&mut self.head)
             .await?;
 
         match self.head.get_edge(&self.context.slab, key).await? {
-            Some(head) => Ok(Some(self.context.get_subject_from_head(head).await?)),
+            Some(head) => Ok(Some(self.context.get_entity_from_head(head).await?)),
             None => Ok(None),
         }
     }
 
-    pub async fn get_relation(&mut self, key: RelationSlotId) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn get_relation(&mut self, key: SlotId) -> Result<Option<Entity>, RetrieveError> {
         self.context
             .mut_update_record_head_for_consistency(&mut self.head)
             .await?;
 
         match self.head.get_relation(&self.context.slab, key).await? {
-            Some(rel_subject_id) => self.context.get_subject(rel_subject_id).await,
+            Some(rel_entity_id) => self.context.get_entity(rel_entity_id).await,
             None => Ok(None),
         }
     }
@@ -118,7 +117,7 @@ impl SubjectHandle {
         Ok(())
     }
 
-    pub async fn set_relation(&mut self, key: RelationSlotId, relation: &Self) -> Result<(), WriteError> {
+    pub async fn set_relation(&mut self, key: SlotId, relation: &Self) -> Result<(), WriteError> {
         self.head.set_relation(&self.context.slab, key, &relation.head).await?;
 
         // Update our indices before returning to ensure that subsequence queries against this context are
@@ -139,30 +138,30 @@ impl SubjectHandle {
         tx.try_send(self.head.clone())
           .expect("Haven't implemented queue backpressure yet");
 
-        // BUG HERE? - not applying MRH to our head here, but double check as to what we were expecting from indexes
-        self.context.slab.observe_subject(self.id, tx);
+        // BUG HERE? - not applying Head to our head here, but double check as to what we were expecting from indexes
+        self.context.slab.observe_entity(self.id, tx);
 
         rx
     }
 }
 
 // TODO POSTMERGE dig into https://docs.rs/futures-signals/0.3.11/futures_signals/tutorial/index.html and think about API
-// struct SubjectState {
-//    subject: SubjectHandle,
+// struct EntityState {
+//    entity: Entity,
 //}
 
-impl fmt::Debug for SubjectHandle {
+impl fmt::Debug for Entity {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("Subject")
-           .field("subject_id", &self.id)
+        fmt.debug_struct("Entity")
+           .field("entity_id", &self.id)
            .field("head", &self.head)
            .finish()
     }
 }
 
-impl Drop for SubjectHandle {
+impl Drop for Entity {
     fn drop(&mut self) {
-        // println!("# Subject({}).drop", &self.id);
+        // println!("# Entity({}).drop", &self.id);
         // TODO: send a drop signal to the owning context via channel
         // self.drop_channel.send(self.id);
     }

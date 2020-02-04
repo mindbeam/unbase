@@ -17,38 +17,38 @@ use itertools::Itertools;
 pub const MAX_SLOTS: usize = 256;
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
 
-pub enum SubjectType {
+pub enum EntityType {
     IndexNode,
     Record,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
-pub struct SubjectId {
+pub struct EntityId {
     pub id:    u64,
-    pub stype: SubjectType,
+    pub stype: EntityType,
 }
-impl<'a> core::cmp::PartialEq<&'a str> for SubjectId {
+impl<'a> core::cmp::PartialEq<&'a str> for EntityId {
     fn eq(&self, other: &&'a str) -> bool {
         self.concise_string() == *other
     }
 }
 
-impl SubjectId {
+impl EntityId {
     pub fn test(test_id: u64) -> Self {
-        SubjectId { id:    test_id,
-                    stype: SubjectType::Record, }
+        EntityId { id:    test_id,
+                    stype: EntityType::Record, }
     }
 
-    /// Create a SubjectId with a SubjectType of IndexNode and a manually provided id
+    /// Create a EntityId with a EntityType of IndexNode and a manually provided id
     /// Used by the test suite
     pub fn index_test(test_id: u64) -> Self {
-        SubjectId { id:    test_id,
-                    stype: SubjectType::IndexNode, }
+        EntityId { id:    test_id,
+                    stype: EntityType::IndexNode, }
     }
 
-    /// Human readable version of the SubjectID which denotes whether the subject is an (I)ndex or a (R)ecord type
+    /// Human readable version of the EntityID which denotes whether the entity is an (I)ndex or a (R)ecord type
     pub fn concise_string(&self) -> String {
-        use self::SubjectType::*;
+        use self::EntityType::*;
         match self.stype {
             IndexNode => format!("I{}", self.id),
             Record => format!("R{}", self.id),
@@ -56,7 +56,7 @@ impl SubjectId {
     }
 }
 
-impl fmt::Display for SubjectId {
+impl fmt::Display for EntityId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}-{}", self.stype, self.id)
     }
@@ -155,24 +155,24 @@ pub enum MemoPeeringStatus {
     Unknown,
 }
 
-pub type RelationSlotId = u8;
+pub type SlotId = u8;
 
 #[derive(Clone, Debug, Serialize)]
-pub struct RelationSet(pub HashMap<RelationSlotId, Option<SubjectId>>);
+pub struct RelationSet(pub HashMap<SlotId, Option<EntityId>>);
 
 impl RelationSet {
     pub fn empty() -> Self {
         RelationSet(HashMap::new())
     }
 
-    pub fn single(slot_id: RelationSlotId, subject_id: SubjectId) -> Self {
+    pub fn single(slot_id: SlotId, entity_id: EntityId) -> Self {
         let mut hashmap = HashMap::new();
-        hashmap.insert(slot_id, Some(subject_id));
+        hashmap.insert(slot_id, Some(entity_id));
         RelationSet(hashmap)
     }
 
-    pub fn insert(&mut self, slot_id: RelationSlotId, subject_id: SubjectId) {
-        self.0.insert(slot_id, Some(subject_id));
+    pub fn insert(&mut self, slot_id: SlotId, entity_id: EntityId) {
+        self.0.insert(slot_id, Some(entity_id));
     }
 
     pub fn to_string(&self) -> String {
@@ -184,9 +184,9 @@ impl RelationSet {
 }
 
 impl Deref for RelationSet {
-    type Target = HashMap<RelationSlotId, Option<SubjectId>>;
+    type Target = HashMap<SlotId, Option<EntityId>>;
 
-    fn deref(&self) -> &HashMap<RelationSlotId, Option<SubjectId>> {
+    fn deref(&self) -> &HashMap<SlotId, Option<EntityId>> {
         &self.0
     }
 }
@@ -196,29 +196,29 @@ impl Deref for RelationSet {
 #[derive(Clone, Debug)]
 pub enum EdgeLink {
     Vacant {
-        slot_id: RelationSlotId,
+        slot_id: SlotId,
     },
     Occupied {
-        slot_id: RelationSlotId,
+        slot_id: SlotId,
         head: Head,
     },
 }
 // TODO: consider making this a Vec
 #[derive(Clone, Debug, Default)]
-pub struct EdgeSet(pub HashMap<RelationSlotId, Head>);
+pub struct EdgeSet(pub HashMap<SlotId, Head>);
 
 impl EdgeSet {
     pub fn empty() -> Self {
         EdgeSet(HashMap::new())
     }
 
-    pub fn single(slot_id: RelationSlotId, head: Head) -> Self {
+    pub fn single(slot_id: SlotId, head: Head) -> Self {
         let mut hashmap = HashMap::new();
-        hashmap.insert(slot_id as RelationSlotId, head);
+        hashmap.insert(slot_id as SlotId, head);
         EdgeSet(hashmap)
     }
 
-    pub fn insert(&mut self, slot_id: RelationSlotId, head: Head) {
+    pub fn insert(&mut self, slot_id: SlotId, head: Head) {
         self.0.insert(slot_id, head);
     }
 
@@ -228,9 +228,9 @@ impl EdgeSet {
 }
 
 impl Deref for EdgeSet {
-    type Target = HashMap<RelationSlotId, Head>;
+    type Target = HashMap<SlotId, Head>;
 
-    fn deref(&self) -> &HashMap<RelationSlotId, Head> {
+    fn deref(&self) -> &HashMap<SlotId, Head> {
         &self.0
     }
 }

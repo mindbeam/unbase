@@ -14,12 +14,12 @@ use crate::{
         MemoBody,
         MemoId,
         RelationSet,
-        RelationSlotId,
+        SlotId,
         SlabHandle,
-        SubjectId,
-        SubjectType,
+        EntityId,
+        EntityType,
     },
-    subjecthandle::SubjectHandle,
+    entity::Entity,
 };
 
 use self::stash::Stash;
@@ -109,7 +109,7 @@ impl Context {
         Context(Arc::new(inner))
     }
 
-    pub async fn try_fetch_kv(&self, key: &str, val: &str) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn try_fetch_kv(&self, key: &str, val: &str) -> Result<Option<Entity>, RetrieveError> {
         // TODO implement field-specific indexes
         // if I have an index for that field {
         //    use it
@@ -118,15 +118,15 @@ impl Context {
 
         match index.scan_first_kv(self, key, val).await? {
             Some(head) => {
-                let subject = self.get_subject_from_head(head).await?;
+                let entity = self.get_entity_from_head(head).await?;
 
-                Ok(Some(subject))
+                Ok(Some(entity))
             },
             None => Ok(None),
         }
     }
 
-    pub async fn fetch_kv(&self, key: &str, val: &str, wait: Duration) -> Result<SubjectHandle, RetrieveError> {
+    pub async fn fetch_kv(&self, key: &str, val: &str, wait: Duration) -> Result<Entity, RetrieveError> {
         let start = Instant::now();
 
         self.root_index().await?;
@@ -146,13 +146,13 @@ impl Context {
         }
     }
 
-    /// Retrive a Subject from the root index by ID
-    pub async fn get_subject_by_id(&self, subject_id: SubjectId) -> Result<Option<SubjectHandle>, RetrieveError> {
+    /// Retrive a Entity from the root index by ID
+    pub async fn get_entity_by_id(&self, entity_id: EntityId) -> Result<Option<Entity>, RetrieveError> {
         let root_index = self.root_index().await?;
 
-        match root_index.get(&self, subject_id.id).await? {
+        match root_index.get(&self, entity_id.id).await? {
             Some(s) => {
-                let sh = SubjectHandle { id:      subject_id,
+                let sh = Entity { id:      entity_id,
                                          head:    s,
                                          context: self.clone(), };
 
@@ -166,7 +166,7 @@ impl Context {
         self.stash.concise_contents()
     }
 
-    // Magically transport subject heads into another context in the same process.
+    // Magically transport entity heads into another context in the same process.
     // This is a temporary hack for testing purposes until such time as proper context exchange is enabled
     // QUESTION: should context exchanges be happening constantly, but often ignored? or requested? Probably the former,
     //           sent based on an interval and/or compaction ( which would also likely be based on an interval and/or
@@ -225,12 +225,12 @@ impl Context {
         }
     }
 
-    pub fn get_resident_subject_head(&self, subject_id: SubjectId) -> Head {
-        self.stash.get_head(subject_id).clone()
+    pub fn get_resident_entity_head(&self, entity_id: EntityId) -> Head {
+        self.stash.get_head(entity_id).clone()
     }
 
-    pub fn get_resident_subject_head_memo_ids(&self, subject_id: SubjectId) -> Vec<MemoId> {
-        self.get_resident_subject_head(subject_id).memo_ids()
+    pub fn get_resident_entity_head_memo_ids(&self, entity_id: EntityId) -> Vec<MemoId> {
+        self.get_resident_entity_head(entity_id).memo_ids()
     }
 
     pub fn cmp(&self, other: &Self) -> bool {
@@ -243,58 +243,58 @@ impl Context {
 
     /// Create a new [`Head`](crate::head::Head) for testing purposes, and immediately add it to
     /// the context Returns a clone of the newly created + added [`Head`](crate::head::Head)
-    pub async fn add_test_head(&self, subject_id: SubjectId, edges: Vec<Head>) -> Head {
+    pub async fn add_test_head(&self, entity_id: EntityId, edges: Vec<Head>) -> Head {
         let mut edgeset = EdgeSet::empty();
 
-        for (slot_id, mrh) in edges.iter().enumerate() {
-            if let &Head::Subject { .. } = mrh {
-                edgeset.insert(slot_id as RelationSlotId, mrh.clone())
+        for (slot_id, head) in edges.iter().enumerate() {
+            if let &Head::Entity { .. } = head {
+                edgeset.insert(slot_id as SlotId, head.clone())
             }
         }
 
         let head = self.slab
-                       .new_memo(Some(subject_id),
+                       .new_memo(Some(entity_id),
                                  Head::Null,
                                  MemoBody::FullyMaterialized { v: HashMap::new(),
                                                                r: RelationSet::empty(),
                                                                e: edgeset,
-                                                               t: subject_id.stype, })
+                                                               t: entity_id.stype, })
                        .to_head();
 
         self.apply_head(&head).await.expect("apply head")
     }
 
     /// Attempt to compress the present query context.
-    /// We do this by issuing Relation memos for any subject heads which reference other subject heads presently in the
-    /// query context. Then we can remove the now-referenced subject heads, and repeat the process in a topological
-    /// fashion, confident that these referenced subject heads will necessarily be included in subsequent projection
+    /// We do this by issuing Relation memos for any entity heads which reference other entity heads presently in the
+    /// query context. Then we can remove the now-referenced entity heads, and repeat the process in a topological
+    /// fashion, confident that these referenced entity heads will necessarily be included in subsequent projection
     /// as a result.
     pub async fn compact(&self) -> Result<(), WriteError> {
         //        let before = self.stash.concise_contents();
 
-        // TODO: implement topological MRH iterator for stash
+        // TODO: implement topological Head iterator for stash
         //      right now we're just doing a linear pass, which will
         //      yield sub-optimal compaction
 
         // iterate all heads in the stash
-        for parent_mrh in self.stash.iter() {
+        for parent_head in self.stash.iter() {
             // TODO POSTMERGE - ideally we'd have a better signal for when we have
             //                  reached the end of a given concurrent set of memos
             //                  versus doing a descends test
             let mut updated_edges = EdgeSet::empty();
 
-            // Note: project_occupied_edges DOES NOT consider the contents of the stash for this head's subject. That's
+            // Note: project_occupied_edges DOES NOT consider the contents of the stash for this head's entity. That's
             // intentional
-            for edgelink in parent_mrh.project_occupied_edges(&self.slab).await? {
+            for edgelink in parent_head.project_occupied_edges(&self.slab).await? {
                 if let EdgeLink::Occupied { slot_id,
-                                            head: edge_mrh, } = edgelink
+                                            head: edge_head, } = edgelink
                 {
-                    if let Some(subject_id) = edge_mrh.subject_id() {
-                        if let stash_mrh @ Head::Subject { .. } = self.stash.get_head(subject_id) {
+                    if let Some(entity_id) = edge_head.entity_id() {
+                        if let stash_head @ Head::Entity { .. } = self.stash.get_head(entity_id) {
                             // looking for cases where the stash is fresher than the edge
 
-                            if stash_mrh.descends_or_contains(&edge_mrh, &self.slab).await? {
-                                updated_edges.insert(slot_id, stash_mrh);
+                            if stash_head.descends_or_contains(&edge_head, &self.slab).await? {
+                                updated_edges.insert(slot_id, stash_head);
                             }
                         }
                     }
@@ -304,10 +304,10 @@ impl Context {
             if updated_edges.len() > 0 {
                 // TODO: When should this be materialized?
                 let memobody = MemoBody::Edge(updated_edges);
-                let subject_id = parent_mrh.subject_id().unwrap();
+                let entity_id = parent_head.entity_id().unwrap();
 
                 let head = self.slab
-                               .new_memo(Some(subject_id), parent_mrh, memobody.clone())
+                               .new_memo(Some(entity_id), parent_head, memobody.clone())
                                .to_head();
 
                 self.apply_head(&head).await?;
@@ -327,25 +327,25 @@ impl Context {
         return Ok(true);
     }
 
-    pub(crate) async fn update_indices(&self, subject_id: SubjectId, head: &Head) -> Result<(), WriteError> {
-        self.root_index().await?.insert(self, subject_id.id, head.clone()).await
+    pub(crate) async fn update_indices(&self, entity_id: EntityId, head: &Head) -> Result<(), WriteError> {
+        self.root_index().await?.insert(self, entity_id.id, head.clone()).await
         // TODO - update
     }
 
-    /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Subject when an edit is
+    /// Called by the Slab whenever memos matching one of our subscriptions comes in, or by the Entity when an edit is
     /// made
     pub(crate) async fn apply_head(&self, head: &Head) -> Result<Head, WriteError> {
-        // println!("Context.apply_subject_head({}, {:?}) ", subject_id, head.memo_ids() );
+        // println!("Context.apply_entity_head({}, {:?}) ", entity_id, head.memo_ids() );
         self.stash.apply_head(&self.slab, head).await
     }
 
-    pub async fn get_subject(&self, subject_id: SubjectId) -> Result<Option<SubjectHandle>, RetrieveError> {
+    pub async fn get_entity(&self, entity_id: EntityId) -> Result<Option<Entity>, RetrieveError> {
         let root_index = self.root_index().await?;
 
-        match root_index.get(self, subject_id.id).await? {
-            Some(head) => Ok(Some(SubjectHandle {
-                id: head.subject_id().ok_or(RetrieveError::InvalidHead(
-                    InvalidHead::MissingSubjectId,
+        match root_index.get(self, entity_id.id).await? {
+            Some(head) => Ok(Some(Entity {
+                id: head.entity_id().ok_or(RetrieveError::InvalidHead(
+                    InvalidHead::MissingEntityId,
                 ))?,
                 head,
                 context: self.clone(),
@@ -365,10 +365,10 @@ impl Context {
         //            return Err(RetrieveError::InvalidHead(InvalidHead::Empty));
         //        }
 
-        let apply_head = match mut_head.subject_id() {
-            Some(subject_id @ SubjectId { stype: SubjectType::IndexNode,
-                             .. }) => self.stash.get_head(subject_id),
-            _ => panic!("Can only be called for SubjectType::IndexNode heads"),
+        let apply_head = match mut_head.entity_id() {
+            Some(entity_id @ EntityId { stype: EntityType::IndexNode,
+                             .. }) => self.stash.get_head(entity_id),
+            _ => panic!("Can only be called for EntityType::IndexNode heads"),
         };
 
         let applied = mut_head.mut_apply(&apply_head, &self.slab).await?;
@@ -387,19 +387,19 @@ impl Context {
         //            return Err(RetrieveError::InvalidHead(InvalidHead::Empty));
         //        }
 
-        let apply_head = match mut_head.subject_id() {
-            Some(subject_id @ SubjectId { stype: SubjectType::Record,
+        let apply_head = match mut_head.entity_id() {
+            Some(entity_id @ EntityId { stype: EntityType::Record,
                              .. }) => {
-                // TODO: figure out a way to noop here in the case that the SubjectHead in question
+                // TODO: figure out a way to noop here in the case that the EntityHead in question
                 //       was pulled against a sufficiently identical context stash state.
                 //       Perhaps stash edit increment? how can we get this to be really granular?
 
-                match self.root_index().await?.get(&self, subject_id.id).await? {
-                    Some(mrh) => mrh,
+                match self.root_index().await?.get(&self, entity_id.id).await? {
+                    Some(head) => head,
                     None => return Ok(false),
                 }
             },
-            _ => panic!("Can only be called for SubjectType::Record heads"),
+            _ => panic!("Can only be called for EntityType::Record heads"),
         };
 
         let applied = mut_head.mut_apply(&apply_head, &self.slab).await?;
@@ -407,15 +407,15 @@ impl Context {
         Ok(applied)
     }
 
-    pub(crate) async fn get_subject_from_head(&self, mut head: Head) -> Result<SubjectHandle, RetrieveError> {
+    pub(crate) async fn get_entity_from_head(&self, mut head: Head) -> Result<Entity, RetrieveError> {
         self.mut_update_record_head_for_consistency(&mut head).await?;
 
-        if head.subject_id().is_none() {
-            panic!("get_subject_from_head - no subject_id for {:?}", head);
+        if head.entity_id().is_none() {
+            panic!("get_entity_from_head - no entity_id for {:?}", head);
         }
 
-        Ok(SubjectHandle { id: head.subject_id()
-                                   .ok_or(RetrieveError::InvalidHead(InvalidHead::MissingSubjectId))?,
+        Ok(Entity { id: head.entity_id()
+                                   .ok_or(RetrieveError::InvalidHead(InvalidHead::MissingEntityId))?,
                            head,
                            context: self.clone() })
     }
@@ -424,7 +424,7 @@ impl Context {
 impl fmt::Debug for Context {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("ContextShared")
-           .field("subject_heads", &self.stash.subject_ids())
+           .field("entity_heads", &self.stash.entity_ids())
            .finish()
     }
 }
@@ -435,7 +435,7 @@ mod test {
         slab::{
             EdgeSet,
             MemoBody,
-            SubjectId,
+            EntityId,
         },
         Network,
         Slab,
@@ -450,12 +450,12 @@ mod test {
         let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
-        let head1 = context.add_test_head(SubjectId::index_test(1), vec![]).await;
-        let head2 = context.add_test_head(SubjectId::index_test(2), vec![head1]).await;
-        let head3 = context.add_test_head(SubjectId::index_test(3), vec![head2]).await;
-        let _head4 = context.add_test_head(SubjectId::index_test(4), vec![head3]).await;
+        let head1 = context.add_test_head(EntityId::index_test(1), vec![]).await;
+        let head2 = context.add_test_head(EntityId::index_test(2), vec![head1]).await;
+        let head3 = context.add_test_head(EntityId::index_test(3), vec![head2]).await;
+        let _head4 = context.add_test_head(EntityId::index_test(4), vec![head3]).await;
 
-        // each preceeding subject should be pruned, leaving us with a fully compacted stash
+        // each preceeding entity should be pruned, leaving us with a fully compacted stash
         assert_eq!(context.stash.concise_contents(), "I4>I3", "Valid contents");
     }
 
@@ -466,28 +466,28 @@ mod test {
         let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
-        let head1 = context.add_test_head(SubjectId::index_test(1), vec![]).await;
-        let head2 = context.add_test_head(SubjectId::index_test(2), vec![head1]).await;
+        let head1 = context.add_test_head(EntityId::index_test(1), vec![]).await;
+        let head2 = context.add_test_head(EntityId::index_test(2), vec![head1]).await;
 
         {
             // manually defeat compaction
-            let head = slab.new_memo(head2.subject_id(), head2.clone(), MemoBody::Edit(HashMap::new()))
+            let head = slab.new_memo(head2.entity_id(), head2.clone(), MemoBody::Edit(HashMap::new()))
                            .to_head();
             context.apply_head(&head).await.unwrap();
         }
 
         // additional stuff on I2 should prevent it from being pruned by the I3 edge
-        let head3 = context.add_test_head(SubjectId::index_test(3), vec![head2.clone()])
+        let head3 = context.add_test_head(EntityId::index_test(3), vec![head2.clone()])
                            .await;
-        let head4 = context.add_test_head(SubjectId::index_test(4), vec![head3.clone()])
+        let head4 = context.add_test_head(EntityId::index_test(4), vec![head3.clone()])
                            .await;
 
         assert_eq!(context.stash.concise_contents(), "I2>I1;I4>I3", "Valid contents");
 
         {
             // manually perform compaction
-            let updated_head2 = context.stash.get_head(head2.subject_id().unwrap());
-            let head = slab.new_memo(head3.subject_id(),
+            let updated_head2 = context.stash.get_head(head2.entity_id().unwrap());
+            let head = slab.new_memo(head3.entity_id(),
                                      head3.clone(),
                                      MemoBody::Edge(EdgeSet::single(0, updated_head2)))
                            .to_head();
@@ -498,8 +498,8 @@ mod test {
 
         {
             // manually perform compaction
-            let updated_head3 = context.stash.get_head(head3.subject_id().unwrap());
-            let head = slab.new_memo(head4.subject_id(),
+            let updated_head3 = context.stash.get_head(head3.entity_id().unwrap());
+            let head = slab.new_memo(head4.entity_id(),
                                      head4,
                                      MemoBody::Edge(EdgeSet::single(0, updated_head3)))
                            .to_head();
@@ -516,34 +516,34 @@ mod test {
         let context = slab.create_context();
 
         // 4 -> 3 -> 2 -> 1
-        let head1 = context.add_test_head(SubjectId::index_test(1), vec![]).await;
+        let head1 = context.add_test_head(EntityId::index_test(1), vec![]).await;
 
         // head1 gets pruned because it's included as an edge here, and there are no newer edits for it in the stash
-        let head2 = context.add_test_head(SubjectId::index_test(2), vec![head1]).await;
+        let head2 = context.add_test_head(EntityId::index_test(2), vec![head1]).await;
 
         {
             // defeat stash pruning during apply_head(head3) by adding an update to the head which is newer than its
             // head2 edge
-            let head = slab.new_memo(head2.subject_id(), head2.clone(), MemoBody::Edit(HashMap::new()))
+            let head = slab.new_memo(head2.entity_id(), head2.clone(), MemoBody::Edit(HashMap::new()))
                            .to_head();
             context.apply_head(&head).await.unwrap();
         }
 
         // additional edit on I2 present in context, but not in this edge should prevent it from being pruned by the
         // apply_head(head3)
-        let head3 = context.add_test_head(SubjectId::index_test(3), vec![head2]).await;
+        let head3 = context.add_test_head(EntityId::index_test(3), vec![head2]).await;
 
         {
             // defeat stash pruning during apply_head(head4) by adding an update to the head which is newer than its
             // head3 edge
-            let head = slab.new_memo(head3.subject_id(), head3.clone(), MemoBody::Edit(HashMap::new()))
+            let head = slab.new_memo(head3.entity_id(), head3.clone(), MemoBody::Edit(HashMap::new()))
                            .to_head();
             context.apply_head(&head).await.unwrap();
         }
 
         // additional edit on I3 present in context, but not in this edge should prevent it from being pruned during the
         // apply_head(head4)
-        let _head4 = context.add_test_head(SubjectId::index_test(4), vec![head3]).await;
+        let _head4 = context.add_test_head(EntityId::index_test(4), vec![head3]).await;
 
         assert_eq!(context.stash.concise_contents(), "I2>I1;I3>I2;I4>I3", "Valid contents");
 
@@ -559,13 +559,13 @@ mod test {
     //     let mut context = slab.create_context();
 
     //     // 2 -> 1, 4 -> 3
-    //     let head1 = context.add_test_subject(1, None, &slab        );
-    //     let head2 = context.add_test_subject(2, Some(1), &slab );
-    //     let head3 = context.add_test_subject(3, None,        &slab );
-    //     let head4 = context.add_test_subject(4, Some(3), &slab );
+    //     let head1 = context.add_test_entity(1, None, &slab        );
+    //     let head2 = context.add_test_entity(2, Some(1), &slab );
+    //     let head3 = context.add_test_entity(3, None,        &slab );
+    //     let head4 = context.add_test_entity(4, Some(3), &slab );
 
-    //     let mut iter = context.subject_head_iter();
-    //     assert!(iter.get_subject_ids() == [1,3,2,4], "Valid sequence");
+    //     let mut iter = context.entity_head_iter();
+    //     assert!(iter.get_entity_ids() == [1,3,2,4], "Valid sequence");
     // }
     // #[unbase_test_util::async_test]
     // async fn repoint_relation() {
@@ -577,17 +577,17 @@ mod test {
     //     // Then:
     //     // 2 -> 4
 
-    //     let head1 = context.add_test_subject(1, None, &slab        );
-    //     let head2 = context.add_test_subject(2, Some(1), &slab );
-    //     let head3 = context.add_test_subject(3, None,        &slab );
-    //     let head4 = context.add_test_subject(4, Some(3), &slab );
+    //     let head1 = context.add_test_entity(1, None, &slab        );
+    //     let head2 = context.add_test_entity(2, Some(1), &slab );
+    //     let head3 = context.add_test_entity(3, None,        &slab );
+    //     let head4 = context.add_test_entity(4, Some(3), &slab );
 
-    //     // Repoint Subject 2 slot 0 to subject 4
+    //     // Repoint Entity 2 slot 0 to entity 4
     //     let head2_b = slab.new_memo(Some(2), head2, MemoBody::Relation(RelationSet::single(0,4) )).to_head();
     //     context.apply_head(4, &head2_b, &slab).await.unwrap();
 
-    //     let mut iter = context.subject_head_iter();
-    //     assert!(iter.get_subject_ids() == [1,4,3,2], "Valid sequence");
+    //     let mut iter = context.entity_head_iter();
+    //     assert!(iter.get_entity_ids() == [1,4,3,2], "Valid sequence");
     // }
 
     // it doesn't actually make any sense to "remove" a head from the context
@@ -597,33 +597,33 @@ mod test {
     //     let slab = Slab::new(&net);
     //     let mut context = slab.create_context();
 
-    //     // Subject 1 is pointing to nooobody
+    //     // Entity 1 is pointing to nooobody
     //     let head1 = slab.new_memo_basic_noparent(Some(1), MemoBody::FullyMaterialized { v: HashMap::new(), r:
     // RelationSet::empty() }).to_head();     context.apply_head(1, head1.project_all_edge_links(&slab),
     // head1.clone());
 
-    //     // Subject 2 slot 0 is pointing to Subject 1
+    //     // Entity 2 slot 0 is pointing to Entity 1
     //     let head2 = slab.new_memo_basic_noparent(Some(2), MemoBody::FullyMaterialized { v: HashMap::new(), r:
     // RelationSet::single(0, 1) }).to_head();     context.apply_head(2, head2.project_all_edge_links(&slab),
     // head2.clone());
 
-    //     //Subject 3 slot 0 is pointing to Subject 2
+    //     //Entity 3 slot 0 is pointing to Entity 2
     //     let head3 = slab.new_memo_basic_noparent(Some(3), MemoBody::FullyMaterialized { v: HashMap::new(), r:
     // RelationSet::single(0, 2) }).to_head();     context.apply_head(3, head3.project_all_edge_links(&slab),
     // head3.clone());
 
     //     // 2[0] -> 1
     //     // 3[0] -> 2
-    //     // Subject 1 should have indirect_references = 2
+    //     // Entity 1 should have indirect_references = 2
 
     //     context.remove_head(2);
 
-    //     let mut iter = context.subject_head_iter();
-    //     // for subject_head in iter {
-    //     //     println!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
+    //     let mut iter = context.entity_head_iter();
+    //     // for entity_head in iter {
+    //     //     println!("{} is {}", entity_head.entity_id, entity_head.indirect_references );
     //     // }
-    //     assert_eq!(3, iter.next().expect("iter result 3 should be present").subject_id);
-    //     assert_eq!(1, iter.next().expect("iter result 1 should be present").subject_id);
+    //     assert_eq!(3, iter.next().expect("iter result 3 should be present").entity_id);
+    //     assert_eq!(1, iter.next().expect("iter result 1 should be present").entity_id);
     //     assert!(iter.next().is_none(), "iter should have ended");
     // }
     // #[test]
@@ -632,61 +632,61 @@ mod test {
     //     let slab = Slab::new(&net);
     //     let mut context = slab.create_context();
 
-    //     // Subject 1 is pointing to nooobody
+    //     // Entity 1 is pointing to nooobody
     //     let head1 = slab.new_memo_basic_noparent(Some(1), MemoBody::FullyMaterialized { v: HashMap::new(), r:
     // RelationSet::empty() }).to_head();     context.apply_head(1, head1.project_all_edge_links(&slab),
     // head1.clone());
 
-    //     assert_eq!(manager.subject_count(), 1);
-    //     assert_eq!(manager.subject_head_count(), 1);
+    //     assert_eq!(manager.entity_count(), 1);
+    //     assert_eq!(manager.entity_head_count(), 1);
     //     assert_eq!(manager.vacancies(), 0);
     //     context.remove_head(1);
-    //     assert_eq!(manager.subject_count(), 0);
-    //     assert_eq!(manager.subject_head_count(), 0);
+    //     assert_eq!(manager.entity_count(), 0);
+    //     assert_eq!(manager.entity_head_count(), 0);
     //     assert_eq!(manager.vacancies(), 1);
 
-    //     // Subject 2 slot 0 is pointing to Subject 1
+    //     // Entity 2 slot 0 is pointing to Entity 1
     //     let head2 = slab.new_memo_basic_noparent(Some(2), MemoBody::FullyMaterialized { v: HashMap::new(), r:
     // RelationSet::single(0, 1) }).to_head();     context.apply_head(2, head2.project_all_edge_links(&slab),
     // head2.clone());
 
-    //     assert_eq!(manager.subject_count(), 2);
-    //     assert_eq!(manager.subject_head_count(), 1);
+    //     assert_eq!(manager.entity_count(), 2);
+    //     assert_eq!(manager.entity_head_count(), 1);
     //     assert_eq!(manager.vacancies(), 0);
     //     context.remove_head(2);
-    //     assert_eq!(manager.subject_count(), 0);
-    //     assert_eq!(manager.subject_head_count(), 0);
+    //     assert_eq!(manager.entity_count(), 0);
+    //     assert_eq!(manager.entity_head_count(), 0);
     //     assert_eq!(manager.vacancies(), 2);
 
-    //     //Subject 3 slot 0 is pointing to nobody
+    //     //Entity 3 slot 0 is pointing to nobody
     //     let head3 = slab.new_memo_basic_noparent(Some(3), MemoBody::FullyMaterialized { v: HashMap::new(), r:
     // RelationSet::empty() }).to_head();     context.apply_head(3, head3.project_all_edge_links(&slab),
     // head3.clone());
 
-    //     assert_eq!(manager.subject_count(), 1);
-    //     assert_eq!(manager.subject_head_count(), 1);
+    //     assert_eq!(manager.entity_count(), 1);
+    //     assert_eq!(manager.entity_head_count(), 1);
     //     assert_eq!(manager.vacancies(), 1);
     //     context.remove_head(3);
-    //     assert_eq!(manager.subject_count(), 0);
-    //     assert_eq!(manager.subject_head_count(), 0);
+    //     assert_eq!(manager.entity_count(), 0);
+    //     assert_eq!(manager.entity_head_count(), 0);
     //     assert_eq!(manager.vacancies(), 2);
 
-    //     // Subject 4 slot 0 is pointing to Subject 3
+    //     // Entity 4 slot 0 is pointing to Entity 3
     //     let head4 = slab.new_memo_basic_noparent(Some(4), MemoBody::FullyMaterialized { v: HashMap::new(), r:
     // RelationSet::single(0, 3) }).to_head();     context.apply_head(4, head4.project_all_edge_links(&slab),
     // head4);
 
-    //     assert_eq!(manager.subject_count(), 2);
-    //     assert_eq!(manager.subject_head_count(), 1);
+    //     assert_eq!(manager.entity_count(), 2);
+    //     assert_eq!(manager.entity_head_count(), 1);
     //     assert_eq!(manager.vacancies(), 0);
     //     context.remove_head(4);
-    //     assert_eq!(manager.subject_count(), 0);
-    //     assert_eq!(manager.subject_head_count(), 0);
+    //     assert_eq!(manager.entity_count(), 0);
+    //     assert_eq!(manager.entity_head_count(), 0);
     //     assert_eq!(manager.vacancies(), 2);
 
-    //     let mut iter = context.subject_head_iter();
-    //     // for subject_head in iter {
-    //     //     println!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
+    //     let mut iter = context.entity_head_iter();
+    //     // for entity_head in iter {
+    //     //     println!("{} is {}", entity_head.entity_id, entity_head.indirect_references );
     //     // }
     //     assert!(iter.next().is_none(), "iter should have ended");
     // }
@@ -708,35 +708,35 @@ mod test {
     //         }
     //     }));
 
-    //     let head1 = context.add_test_subject(1, None,        &slab);    // Subject 1 is pointing to nooobody
+    //     let head1 = context.add_test_entity(1, None,        &slab);    // Entity 1 is pointing to nooobody
 
     //     let lock = interloper.lock().unwrap();
     //     let t1 = thread::spawn(|| {
     //         // should block at the first pre_increment
-    //         let head2 = context.add_test_subject(2, Some(head1), &slab);    // Subject 2 slot 0 is pointing to
-    // Subject 1         let head3 = context.add_test_subject(3, Some(head2), &slab);    // Subject 3 slot 0 is
-    // pointing to Subject 2     });
+    //         let head2 = context.add_test_entity(2, Some(head1), &slab);    // Entity 2 slot 0 is pointing to
+    // Entity 1         let head3 = context.add_test_entity(3, Some(head2), &slab);    // Entity 3 slot 0 is
+    // pointing to Entity 2     });
 
     //     context.remove_head(1);
     //     drop(lock);
 
     //     t1.join();
 
-    //     assert_eq!(manager.contains_subject(1),      true  );
-    //     assert_eq!(manager.contains_subject_head(1), false );
-    //     assert_eq!(manager.contains_subject_head(2), true  );
-    //     assert_eq!(manager.contains_subject_head(3), true  );
+    //     assert_eq!(manager.contains_entity(1),      true  );
+    //     assert_eq!(manager.contains_entity_head(1), false );
+    //     assert_eq!(manager.contains_entity_head(2), true  );
+    //     assert_eq!(manager.contains_entity_head(3), true  );
 
     //     // 2[0] -> 1
     //     // 3[0] -> 2
-    //     // Subject 1 should have indirect_references = 2
+    //     // Entity 1 should have indirect_references = 2
 
-    //     let mut iter = context.subject_head_iter();
-    //     // for subject_head in iter {
-    //     //     println!("{} is {}", subject_head.subject_id, subject_head.indirect_references );
+    //     let mut iter = context.entity_head_iter();
+    //     // for entity_head in iter {
+    //     //     println!("{} is {}", entity_head.entity_id, entity_head.indirect_references );
     //     // }
-    //     assert_eq!(2, iter.next().expect("iter result 2 should be present").subject_id);
-    //     assert_eq!(3, iter.next().expect("iter result 1 should be present").subject_id);
+    //     assert_eq!(2, iter.next().expect("iter result 2 should be present").entity_id);
+    //     assert_eq!(3, iter.next().expect("iter result 1 should be present").entity_id);
     //     assert!(iter.next().is_none(), "iter should have ended");
     // }
 }

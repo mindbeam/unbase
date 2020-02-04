@@ -13,10 +13,10 @@ use crate::{
     head::Head,
     slab::{
         EdgeLink,
-        RelationSlotId,
+        SlotId,
         SlabHandle,
-        SubjectId,
-        SubjectType,
+        EntityId,
+        EntityType,
         MAX_SLOTS,
     },
 };
@@ -72,7 +72,7 @@ use crate::{
 /// into the stash.
 ///
 /// ```
-/// # use unbase::{Slab,Network,slab::SubjectId,head::Head,context::stash::Stash};
+/// # use unbase::{Slab,Network,slab::EntityId,head::Head,context::stash::Stash};
 /// # async_std::task::block_on(async {
 /// # let net = Network::create_new_system();
 /// # let slab = Slab::new(&net);
@@ -80,9 +80,9 @@ use crate::{
 ///
 /// let stash = Stash::new();
 ///
-/// let head1 = stash.add_test_head(&slab, SubjectId::index_test(1), vec![]).await;
-/// let head2 = stash.add_test_head(&slab, SubjectId::index_test(2), vec![]).await;
-/// let head3 = stash.add_test_head(&slab, SubjectId::index_test(3), vec![head1, Head::Null, head2])
+/// let head1 = stash.add_test_head(&slab, EntityId::index_test(1), vec![]).await;
+/// let head2 = stash.add_test_head(&slab, EntityId::index_test(2), vec![]).await;
+/// let head3 = stash.add_test_head(&slab, EntityId::index_test(3), vec![head1, Head::Null, head2])
 ///                  .await;
 ///
 /// assert_eq!(stash.concise_contents(), "I3>I1,_,I2");
@@ -97,7 +97,7 @@ pub struct Stash {
 #[derive(Default)]
 pub(super) struct StashInner {
     items:     Vec<Option<StashItem>>,
-    index:     Vec<(SubjectId, ItemId)>,
+    index:     Vec<(EntityId, ItemId)>,
     vacancies: Vec<ItemId>,
 }
 type ItemId = usize;
@@ -107,12 +107,12 @@ impl Stash {
         Default::default()
     }
 
-    /// Returns the number of subjects in the `Stash` including placeholders.
+    /// Returns the number of entities in the `Stash` including placeholders.
     pub fn _count(&self) -> usize {
         self.inner.lock().unwrap().index.len()
     }
 
-    /// Returns the number of subject heads in the `Stash`
+    /// Returns the number of entity heads in the `Stash`
     pub fn _head_count(&self) -> usize {
         self.iter().count()
     }
@@ -126,7 +126,7 @@ impl Stash {
         self.inner.lock().unwrap().items.is_empty()
     }
 
-    pub fn subject_ids(&self) -> Vec<SubjectId> {
+    pub fn entity_ids(&self) -> Vec<EntityId> {
         self.inner.lock().unwrap().index.iter().map(|i| i.0.clone()).collect()
     }
 
@@ -134,28 +134,28 @@ impl Stash {
     /// the stash, and the other [`Head`](crate::head::Head)s referenced by their edges (in
     /// slot-positional order).
     ///
-    /// This is represented as: *Subject id 1* > Relations *A,B*; *SubjectID 2* > Relations *C,D*
+    /// This is represented as: *Entity id 1* > Relations *A,B*; *EntityID 2* > Relations *C,D*
     ///
     /// For example:
     ///
     ///   I2>I1;I7>I2,_,I4
     ///
     ///   would indicate that the stash contains:
-    ///   * A Head for subject I2 (SubjectType::Index) with slot 0 pointing to I1.
-    ///   * A Head for subject I3 (SubjectType::Index) with slot 0 pointing to I2, slot 1 pointing to nothing, slot 2
+    ///   * A Head for entity I2 (EntityType::Index) with slot 0 pointing to I1.
+    ///   * A Head for entity I3 (EntityType::Index) with slot 0 pointing to I2, slot 1 pointing to nothing, slot 2
     ///     pointing to I4
     ///
     ///   Note that in this scenario, the stash _does not_ contain heads for I1 or I4, but knows of their existence.
     ///   They may have been in the stash previously, then removed because they were "descended" by and edge of another
     /// Head,   Or they may never have been added in the first place. Regardless, the stash needs to be aware of
     /// these edges.   These are "Phantom" members of the stash, and are used as placeholders in anticipation of
-    /// potential future traffic   on the part of those Subjects.
+    /// potential future traffic   on the part of those Entities.
     #[allow(dead_code)]
     pub fn concise_contents(&self) -> String {
         let inner = self.inner.lock().unwrap();
 
         let mut out = Vec::with_capacity(inner.items.len());
-        for &(subject_id, item_id) in inner.index.iter() {
+        for &(entity_id, item_id) in inner.index.iter() {
             let item = inner.items[item_id].as_ref().unwrap();
 
             let mut outstring = String::new();
@@ -163,26 +163,26 @@ impl Stash {
                 // This is a phantom member of the stash, whose purpose is only to serve as a placeholder
                 continue;
             }
-            outstring.push_str(&subject_id.concise_string());
+            outstring.push_str(&entity_id.concise_string());
 
             // determine the last occupied slot so we don't have
             let last_occupied_relation_slot = item.relations.iter().enumerate().filter(|&(_, x)| x.is_some()).last();
 
             if let Some((slot_id, _)) = last_occupied_relation_slot {
                 outstring.push_str(">");
-                let relation_subject_ids: String =
+                let relation_entity_ids: String =
                     item.relations
                         .iter()
                         .take(slot_id + 1)
                         .map(|slot| {
                             match slot {
-                                &Some(ritem_id) => inner.items[ritem_id].as_ref().unwrap().subject_id.concise_string(),
+                                &Some(ritem_id) => inner.items[ritem_id].as_ref().unwrap().entity_id.concise_string(),
                                 &None => "_".to_string(),
                             }
                         })
                         .collect::<Vec<String>>()
                         .join(",");
-                outstring.push_str(&relation_subject_ids[..]);
+                outstring.push_str(&relation_entity_ids[..]);
             }
 
             out.push(outstring);
@@ -196,50 +196,50 @@ impl Stash {
         StashIterator::new(&self.inner)
     }
 
-    /// Get Head (if resident) for the provided subject_id
-    pub fn get_head(&self, subject_id: SubjectId) -> Head {
+    /// Get Head (if resident) for the provided entity_id
+    pub fn get_head(&self, entity_id: EntityId) -> Head {
         let inner = self.inner.lock().unwrap();
 
-        match inner.get_item_id_for_subject(subject_id) {
+        match inner.get_item_id_for_entity(entity_id) {
             Some(item_id) => inner.items[item_id].as_ref().unwrap().head.clone(),
             None => Head::Null,
         }
     }
 
     /// Apply the a Head to the stash, such that we may use it for consistency enforcement of later queries.
-    /// Return the post-application Head which is a product of the MRH for the subject in question which was
-    /// already the stash (if any) and that which was provided. Automatically project relations for the subject in
+    /// Return the post-application Head which is a product of the Head for the entity in question which was
+    /// already the stash (if any) and that which was provided. Automatically project relations for the entity in
     /// question and remove any Heads which are referred to.
     ///
     /// Assuming tree-structured data (as is the case for index nodes) the post-compaction contents of the stash are
     /// logically equivalent to the pre-compaction contents, despite being physically smaller.
-    /// Note: Only Heads of SubjectType::IndexNode may be applied. All others will panic.
+    /// Note: Only Heads of EntityType::IndexNode may be applied. All others will panic.
     pub async fn apply_head(&self, slab: &SlabHandle, apply_head: &Head) -> Result<Head, WriteError> {
         // IMPORTANT! no locks may be held for longer than a single statement in this scope.
         // happens-before determination may require remote memo retrieval, which is a blocking operation.
 
-        match apply_head.subject_id() {
-            Some(SubjectId { stype: SubjectType::IndexNode,
+        match apply_head.entity_id() {
+            Some(EntityId { stype: EntityType::IndexNode,
                              .. }) => {},
             _ => {
-                panic!("Only SubjectType::IndexNode may be applied to a context. Attempted to apply {:?}",
+                panic!("Only EntityType::IndexNode may be applied to a context. Attempted to apply {:?}",
                        apply_head)
             },
         }
 
         // Lets be optimistic about concurrency. Calculate a new head from the existing one (if any)
         // And keep a count of edits so we can detect if we collide with anybody. We need to play this
-        // game because the stash is used by everybody. We need to sort out happens-before for MRH.apply_head,
+        // game because the stash is used by everybody. We need to sort out happens-before for Head.apply_head,
         // and to project relations. Can't hold a lock on its internals for nearly long enough to do that, lest
         // we run into deadlocks, or just make other threads wait. It is conceivable that this may be
         // substantially improved once the stash internals are switched to use atomics. Of course that's a
         // whole other can of worms.
 
-        let subject_id = apply_head.subject_id().unwrap();
+        let entity_id = apply_head.entity_id().unwrap();
 
         loop {
-            // Get the head and editcount for this specific subject id.
-            let mut item: ItemEditGuard = self.get_head_for_edit(subject_id);
+            // Get the head and editcount for this specific entity id.
+            let mut item: ItemEditGuard = self.get_head_for_edit(entity_id);
 
             if !item.apply_head(apply_head, slab).await? {
                 return Ok(item.get_head().clone());
@@ -250,7 +250,7 @@ impl Stash {
 
                 for link in links.iter() {
                     if let EdgeLink::Occupied { ref head, .. } = *link {
-                        // Prune subject heads which are descended by their parent nodes (topographical parent, not
+                        // Prune entity heads which are descended by their parent nodes (topographical parent, not
                         // causal) Once the stash is atomic/lock-free we should do this inside
                         // of set StashInner.set_relation. For now has to be separated out into
                         // a different step because happens-before may require memo-retrieval
@@ -271,11 +271,11 @@ impl Stash {
         }
     }
 
-    fn get_head_for_edit(&self, subject_id: SubjectId) -> ItemEditGuard {
-        ItemEditGuard::new(subject_id, self.inner.clone())
+    fn get_head_for_edit(&self, entity_id: EntityId) -> ItemEditGuard {
+        ItemEditGuard::new(entity_id, self.inner.clone())
     }
 
-    /// Prune a subject head from the `Stash` if it's descended by compare_head
+    /// Prune a entity head from the `Stash` if it's descended by compare_head
     ///
     /// The point of this function is to feed it the (non-contextual projected) child-edge from a parent tree node.
     /// If it descends what we have in the stash then the contents of the stash are redundant, and can be removed.
@@ -284,9 +284,9 @@ impl Stash {
     //  compaction without loss of meaning.
     pub async fn prune_head(&self, slab: &SlabHandle, compare_head: &Head) -> Result<bool, WriteError> {
         // compare_head is the non contextualized-projection of the edge head
-        if let &Head::Subject { subject_id, .. } = compare_head {
+        if let &Head::Entity { entity_id: entity_id, .. } = compare_head {
             loop {
-                let mut item: ItemEditGuard = self.get_head_for_edit(subject_id);
+                let mut item: ItemEditGuard = self.get_head_for_edit(entity_id);
 
                 if compare_head.descends_or_contains(item.get_head(), slab).await? {
                     // May yield here
@@ -311,7 +311,7 @@ impl Stash {
 
     /// Create a new [`Head`](crate::head::Head) for testing purposes, and immediately add it to
     /// the context Returns a clone of the newly created + added [`Head`](crate::head::Head)
-    pub async fn add_test_head(&self, slab: &SlabHandle, subject_id: SubjectId, relations: Vec<Head>)
+    pub async fn add_test_head(&self, slab: &SlabHandle, entity_id: EntityId, relations: Vec<Head>)
                                -> Head {
         use crate::slab::{
             EdgeSet,
@@ -322,18 +322,18 @@ impl Stash {
 
         let mut edgeset = EdgeSet::empty();
 
-        for (slot_id, mrh) in relations.iter().enumerate() {
-            if let &Head::Subject { .. } = mrh {
-                edgeset.insert(slot_id as RelationSlotId, mrh.clone())
+        for (slot_id, head) in relations.iter().enumerate() {
+            if let &Head::Entity { .. } = head {
+                edgeset.insert(slot_id as SlotId, head.clone())
             }
         }
 
-        let head = slab.new_memo(Some(subject_id),
+        let head = slab.new_memo(Some(entity_id),
                                  Head::Null,
                                  MemoBody::FullyMaterialized { v: HashMap::new(),
                                                                r: RelationSet::empty(),
                                                                e: edgeset,
-                                                               t: subject_id.stype, })
+                                                               t: entity_id.stype, })
                        .to_head();
 
         self.apply_head(slab, &head).await.expect("apply head")
@@ -341,20 +341,20 @@ impl Stash {
 }
 
 impl StashInner {
-    /// Fetch item id for a subject if present
-    pub fn get_item_id_for_subject(&self, subject_id: SubjectId) -> Option<ItemId> {
-        match self.index.binary_search_by(|x| x.0.cmp(&subject_id)) {
+    /// Fetch item id for a entity if present
+    pub fn get_item_id_for_entity(&self, entity_id: EntityId) -> Option<ItemId> {
+        match self.index.binary_search_by(|x| x.0.cmp(&entity_id)) {
             Ok(i) => Some(self.index[i].1),
             Err(_) => None,
         }
     }
 
-    fn assert_item(&mut self, subject_id: SubjectId) -> ItemId {
+    fn assert_item(&mut self, entity_id: EntityId) -> ItemId {
         let index = &mut self.index;
-        match index.binary_search_by(|x| x.0.cmp(&subject_id)) {
+        match index.binary_search_by(|x| x.0.cmp(&entity_id)) {
             Ok(i) => index[i].1,
             Err(i) => {
-                let item = StashItem::new(subject_id, Head::Null);
+                let item = StashItem::new(entity_id, Head::Null);
 
                 let item_id = if let Some(item_id) = self.vacancies.pop() {
                     self.items[item_id] = Some(item);
@@ -364,13 +364,13 @@ impl StashInner {
 
                     self.items.len() - 1
                 };
-                index.insert(i, (subject_id, item_id));
+                index.insert(i, (entity_id, item_id));
                 item_id
             },
         }
     }
 
-    fn set_relation(&mut self, item_id: ItemId, slot_id: RelationSlotId, maybe_rel_item_id: Option<ItemId>) {
+    fn set_relation(&mut self, item_id: ItemId, slot_id: SlotId, maybe_rel_item_id: Option<ItemId>) {
         let mut decrement: Option<ItemId> = None;
         {
             let item = self.items[item_id].as_mut().unwrap();
@@ -415,16 +415,16 @@ impl StashInner {
     }
 
     fn conditional_remove_item(&mut self, item_id: ItemId) {
-        let (remove, subject_id) = {
+        let (remove, entity_id) = {
             let item = self.items[item_id].as_ref().expect("increment_item on None");
-            (item.ref_count == 0 && item.head == Head::Null, item.subject_id)
+            (item.ref_count == 0 && item.head == Head::Null, item.entity_id)
         };
 
         if remove {
             self.items[item_id] = None;
             self.vacancies.push(item_id);
 
-            if let Ok(i) = self.index.binary_search_by(|x| x.0.cmp(&subject_id)) {
+            if let Ok(i) = self.index.binary_search_by(|x| x.0.cmp(&entity_id)) {
                 self.index.remove(i);
             }
         }
@@ -433,7 +433,7 @@ impl StashInner {
 
 #[derive(Debug)]
 struct StashItem {
-    subject_id:   SubjectId,
+    entity_id: EntityId,
     head: Head,
     relations:    Vec<Option<ItemId>>,
     edit_counter: usize,
@@ -441,8 +441,8 @@ struct StashItem {
 }
 
 impl StashItem {
-    fn new(subject_id: SubjectId, head: Head) -> Self {
-        StashItem { subject_id,
+    fn new(entity_id: EntityId, head: Head) -> Self {
+        StashItem { entity_id,
                     head,
                     // QUESTION: should we preallocate all possible relation slots? or manage the length of relations
                     // vec?
@@ -462,10 +462,10 @@ struct ItemEditGuard {
     inner_arc:    Arc<Mutex<StashInner>>,
 }
 impl ItemEditGuard {
-    fn new(subject_id: SubjectId, inner_arc: Arc<Mutex<StashInner>>) -> Self {
+    fn new(entity_id: EntityId, inner_arc: Arc<Mutex<StashInner>>) -> Self {
         let (item_id, head, edit_counter) = {
             let mut inner = inner_arc.lock().unwrap();
-            let item_id = inner.assert_item(subject_id);
+            let item_id = inner.assert_item(entity_id);
 
             // Increment to refer to the ItemEditGuard's usage
             inner.increment_item(item_id);
@@ -532,10 +532,10 @@ impl ItemEditGuard {
                 },
                 &EdgeLink::Occupied { slot_id,
                                       head: ref rel_head, } => {
-                    if let &Head::Subject { subject_id: rel_subject_id,
+                    if let &Head::Entity { entity_id: rel_entity_id,
                                                    .. } = rel_head
                     {
-                        let rel_item_id = inner.assert_item(rel_subject_id);
+                        let rel_item_id = inner.assert_item(rel_entity_id);
                         inner.set_relation(self.item_id, slot_id, Some(rel_item_id));
                     }
                 },
@@ -566,7 +566,7 @@ impl Drop for ItemEditGuard {
 
 pub struct StashIterator {
     inner:   Arc<Mutex<StashInner>>,
-    visited: Vec<SubjectId>,
+    visited: Vec<EntityId>,
 }
 
 impl StashIterator {
@@ -578,10 +578,10 @@ impl StashIterator {
 
 /// Rudimentary Head iterator. It operates under the assumptions that:
 /// 1. The contents of the stash may change mid-iteration
-/// 2. We do not wish to visit two Heads bearing the same subject_id twice
+/// 2. We do not wish to visit two Heads bearing the same entity_id twice
 /// It's possible however that there are some circumstances where we may want to violate #2,
-/// for instance if the Head for subject X is advanced, but we are mid iteration and
-/// have already issued an item for subject X. This may be a pertinent modality for some use cases.
+/// for instance if the Head for entity X is advanced, but we are mid iteration and
+/// have already issued an item for entity X. This may be a pertinent modality for some use cases.
 impl Iterator for StashIterator {
     type Item = Head;
 
@@ -590,8 +590,8 @@ impl Iterator for StashIterator {
 
         for item in inner.items.iter() {
             if let &Some(ref item) = item {
-                if item.head.is_some() && !self.visited.contains(&item.subject_id) {
-                    self.visited.push(item.subject_id);
+                if item.head.is_some() && !self.visited.contains(&item.entity_id) {
+                    self.visited.push(item.entity_id);
                     return Some(item.head.clone());
                 }
             }

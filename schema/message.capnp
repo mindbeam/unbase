@@ -2,7 +2,7 @@
 
 struct Memo {
   id @0         : u64;
-  subject_id @1 : u64;
+  entity_id @1 : u64;
   parents @3    : List(MemoRef)
   body : union {
   }

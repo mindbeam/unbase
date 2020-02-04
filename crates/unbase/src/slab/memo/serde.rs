@@ -4,7 +4,7 @@ use crate::{
     slab::{
         memoref::serde::MemoPeerSeed,
         slabref::serde::SlabRefSeed,
-        RelationSlotId,
+        SlotId,
     },
     util::serde::*,
 };
@@ -46,7 +46,7 @@ impl StatefulSerialize for Memo {
     {
         let mut seq = serializer.serialize_seq(Some(4))?;
         seq.serialize_element(&self.id)?;
-        seq.serialize_element(&self.subject_id)?;
+        seq.serialize_element(&self.entity_id)?;
         seq.serialize_element(&SerializeWrapper(&self.body, helper))?;
         seq.serialize_element(&SerializeWrapper(&self.parents, helper))?;
         seq.end()
@@ -105,10 +105,10 @@ impl StatefulSerialize for MemoBody {
                 sv.serialize_field("t", t)?;
                 sv.end()
             },
-            Peering(ref memo_id, ref subject_id, ref peerlist) => {
+            Peering(ref memo_id, ref entity_id, ref peerlist) => {
                 let mut sv = serializer.serialize_struct_variant("MemoBody", 6, "Peering", 3)?;
                 sv.serialize_field("i", memo_id)?;
-                sv.serialize_field("j", subject_id)?;
+                sv.serialize_field("j", entity_id)?;
                 sv.serialize_field("l", &SerializeWrapper(peerlist, helper))?;
                 sv.end()
             },
@@ -131,7 +131,7 @@ impl<'a> StatefulSerialize for &'a RelationSet {
     }
 }
 
-impl StatefulSerialize for (SubjectId, Head) {
+impl StatefulSerialize for (EntityId, Head) {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
@@ -175,7 +175,7 @@ impl<'a> Visitor for MemoSeed<'a> {
                 return Err(DeError::invalid_length(0, &self));
             },
         };
-        let subject_id: Option<SubjectId> = match visitor.visit()? {
+        let entity_id: Option<EntityId> = match visitor.visit()? {
             Some(value) => value,
             None => {
                 return Err(DeError::invalid_length(1, &self));
@@ -202,7 +202,7 @@ impl<'a> Visitor for MemoSeed<'a> {
         debug!("SERDE calling reconstitute_memo");
         let _memo = self.dest_slab
                         .agent
-                        .reconstitute_memo(id, subject_id, parents, body, self.origin_slabref, &self.peerlist)
+                        .reconstitute_memo(id, entity_id, parents, body, self.origin_slabref, &self.peerlist)
                         .0;
 
         Ok(())
@@ -343,14 +343,14 @@ impl<'a> Visitor for RelationSetSeed<'a> {
     fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
         where Visitor: MapVisitor
     {
-        let mut values: HashMap<RelationSlotId, Option<SubjectId>> = HashMap::new();
+        let mut values: HashMap<SlotId, Option<EntityId>> = HashMap::new();
 
         let _ = self.dest_slab;
         let _ = self.origin_slabref;
 
         while let Some(slot) = visitor.visit_key()? {
-            let maybe_subject_id = visitor.visit_value()?;
-            values.insert(slot, maybe_subject_id);
+            let maybe_entity_id = visitor.visit_value()?;
+            values.insert(slot, maybe_entity_id);
         }
 
         Ok(RelationSet(values))
@@ -381,12 +381,12 @@ impl<'a> Visitor for EdgeSetSeed<'a> {
     fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<Self::Value, Visitor::Error>
         where Visitor: MapVisitor
     {
-        let mut values: HashMap<RelationSlotId, Head> = HashMap::new();
+        let mut values: HashMap<SlotId, Head> = HashMap::new();
 
         while let Some(slot) = visitor.visit_key()? {
-            let mrh = visitor.visit_value_seed(HeadSeed { dest_slab:      self.dest_slab,
+            let head = visitor.visit_value_seed(HeadSeed { dest_slab:      self.dest_slab,
                                                                  origin_slabref: self.origin_slabref, })?;
-            values.insert(slot, mrh);
+            values.insert(slot, head);
         }
 
         Ok(EdgeSet(values))
@@ -504,12 +504,12 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
         where Visitor: MapVisitor
     {
         let mut memo_ids: Option<MemoId> = None;
-        let mut subject_id: Option<Option<SubjectId>> = None;
+        let mut entity_id: Option<Option<EntityId>> = None;
         let mut peerlist: Option<MemoPeerList> = None;
         while let Some(key) = visitor.visit_key()? {
             match key {
                 'i' => memo_ids = visitor.visit_value()?,
-                'j' => subject_id = Some(visitor.visit_value()?),
+                'j' => entity_id = Some(visitor.visit_value()?),
                 'l' => {
                     peerlist = Some(MemoPeerList::new(visitor.visit_value_seed(VecSeed(
                         MemoPeerSeed {
@@ -523,11 +523,11 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
 
         tracing::info!("{:?}, {:?}, {:?}",
                        memo_ids.is_some(),
-                       subject_id.is_some(),
+                       entity_id.is_some(),
                        peerlist.is_some());
-        if memo_ids.is_some() && subject_id.is_some() && peerlist.is_some() {
+        if memo_ids.is_some() && entity_id.is_some() && peerlist.is_some() {
             Ok(MemoBody::Peering(memo_ids.unwrap(),
-                                 subject_id.unwrap(),
+                                 entity_id.unwrap(),
                                  peerlist.unwrap()))
         } else {
             Err(DeError::invalid_length(0, &self))

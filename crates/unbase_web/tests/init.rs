@@ -9,13 +9,13 @@
 //
 //    let record_id;
 //    {
-//        let record = SubjectHandle::new_kv(&context_a, "animal_type","Cat").unwrap();
+//        let record = Entity::new_kv(&context_a, "animal_type","Cat").unwrap();
 //
 //        println!("Record {:?}", record );
 //        record_id = record.id;
 //    }
 //
-//    let record_retrieved = context_a.get_subject_by_id(record_id);
+//    let record_retrieved = context_a.get_entity_by_id(record_id);
 //
 //    assert!(record_retrieved.is_ok(), "Failed to retrieve record")
 //

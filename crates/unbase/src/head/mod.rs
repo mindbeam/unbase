@@ -13,12 +13,12 @@ use crate::{
         MemoId,
         MemoRef,
         RelationSet,
-        RelationSlotId,
+        SlotId,
         SlabHandle,
         SlabId,
         SlabRef,
-        SubjectId,
-        SubjectType,
+        EntityId,
+        EntityType,
         MAX_SLOTS,
     },
 };
@@ -64,9 +64,9 @@ use tracing::debug;
 
 pub enum Head {
     Null,
-    Subject {
+    Entity {
         owning_slab_id: SlabId,
-        subject_id:     SubjectId,
+        entity_id: EntityId,
         head:           Vec<MemoRef>,
     },
     Anonymous {
@@ -88,14 +88,14 @@ impl Head {
     //
     //    }
     pub fn new_index(slab: &SlabHandle, values: HashMap<String, String>) -> Head {
-        let id = slab.generate_subject_id(SubjectType::IndexNode);
+        let id = slab.generate_entity_id(EntityType::IndexNode);
 
         slab.new_memo(Some(id),
                       Head::Null,
                       MemoBody::FullyMaterialized { v: values,
                                                     r: RelationSet::empty(),
                                                     e: EdgeSet::empty(),
-                                                    t: SubjectType::IndexNode, })
+                                                    t: EntityType::IndexNode, })
             .to_head()
     }
 
@@ -105,10 +105,11 @@ impl Head {
         // If so, any memorefs that it descends must be removed
         let head = match self {
             Head::Null => {
-                if let Some(subject_id) = new.subject_id {
-                    *self = Head::Subject { owning_slab_id: new.owning_slab_id,
+                if let Some(entity_id) = new.entity_id {
+                    *self = Head::Entity { owning_slab_id: new.owning_slab_id,
                                                    head: vec![new.clone()],
-                                                   subject_id };
+                        entity_id: entity_id
+                    };
                 } else {
                     *self = Head::Anonymous { owning_slab_id: new.owning_slab_id,
                                                      head:           vec![new.clone()], };
@@ -117,7 +118,7 @@ impl Head {
                 return Ok(true);
             },
             Head::Anonymous { ref mut head, .. } => head,
-            Head::Subject { ref mut head, .. } => head,
+            Head::Entity { ref mut head, .. } => head,
         };
 
         // Conditionally add the new memoref only if it descends any memorefs in the head
@@ -217,7 +218,7 @@ impl Head {
                 }
                 Ok(applied)
             },
-            Head::Subject { ref head, .. } => {
+            Head::Entity { ref head, .. } => {
                 let mut applied = false;
                 for new in head.iter() {
                     if self.mut_apply_memoref(new, slab).await? {
@@ -252,10 +253,10 @@ impl Head {
         // TODO: revisit when beacons are implemented
         match *self {
             Head::Null => Ok(false),
-            Head::Subject { ref head, .. } | Head::Anonymous { ref head, .. } => {
+            Head::Entity { ref head, .. } | Head::Anonymous { ref head, .. } => {
                 match *other {
                     Head::Null => Ok(false),
-                    Head::Subject { head: ref other_head, .. }
+                    Head::Entity { head: ref other_head, .. }
                     | Head::Anonymous { head: ref other_head, .. } => {
                         if head.len() == 0 || other_head.len() == 0 {
                             println!("ONE IS ZERO");
@@ -281,7 +282,7 @@ impl Head {
     pub fn memo_ids(&self) -> Vec<MemoId> {
         match *self {
             Head::Null => Vec::new(),
-            Head::Subject { ref head, .. } | Head::Anonymous { ref head, .. } => {
+            Head::Entity { ref head, .. } | Head::Anonymous { ref head, .. } => {
                 head.iter().map(|m| m.id).collect()
             },
         }
@@ -290,7 +291,7 @@ impl Head {
     pub fn memo_summary(&self) -> String {
         match *self {
             Head::Null => "Null".to_string(),
-            Head::Subject { ref head, .. } | Head::Anonymous { ref head, .. } => {
+            Head::Entity { ref head, .. } | Head::Anonymous { ref head, .. } => {
                 head.iter()
                     .map(|mr| {
                         if let Some(memo) = mr.get_memo_if_resident() {
@@ -307,10 +308,10 @@ impl Head {
         }
     }
 
-    pub fn subject_id(&self) -> Option<SubjectId> {
+    pub fn entity_id(&self) -> Option<EntityId> {
         match *self {
             Head::Null | Head::Anonymous { .. } => None,
-            Head::Subject { subject_id, .. } => Some(subject_id),
+            Head::Entity { entity_id: entity_id, .. } => Some(entity_id),
         }
     }
 
@@ -318,7 +319,7 @@ impl Head {
         match *self {
             Head::Null => None,
             Head::Anonymous { owning_slab_id, .. } => Some(owning_slab_id),
-            Head::Subject { owning_slab_id, .. } => Some(owning_slab_id),
+            Head::Entity { owning_slab_id, .. } => Some(owning_slab_id),
         }
     }
 
@@ -333,7 +334,7 @@ impl Head {
         match *self {
             Head::Null => vec![],
             Head::Anonymous { ref head, .. } => head.clone(),
-            Head::Subject { ref head, .. } => head.clone(),
+            Head::Entity { ref head, .. } => head.clone(),
         }
     }
 
@@ -341,7 +342,7 @@ impl Head {
         match *self {
             Head::Null => VecDeque::new(),
             Head::Anonymous { ref head, .. } => VecDeque::from(head.clone()),
-            Head::Subject { ref head, .. } => VecDeque::from(head.clone()),
+            Head::Entity { ref head, .. } => VecDeque::from(head.clone()),
         }
     }
 
@@ -349,18 +350,18 @@ impl Head {
         match *self {
             Head::Null => 0,
             Head::Anonymous { ref head, .. } => head.len(),
-            Head::Subject { ref head, .. } => head.len(),
+            Head::Entity { ref head, .. } => head.len(),
         }
     }
 
     pub fn iter(&self) -> slice::Iter<MemoRef> {
-        // This feels pretty stupid. Probably means something is wrong with the factorization of MRH
+        // This feels pretty stupid. Probably means something is wrong with the factorization of Head
         static EMPTY: &'static [MemoRef] = &[];
 
         match *self {
             Head::Null => EMPTY.iter(), // HACK
             Head::Anonymous { ref head, .. } => head.iter(),
-            Head::Subject { ref head, .. } => head.iter(),
+            Head::Entity { ref head, .. } => head.iter(),
         }
     }
 
@@ -369,7 +370,7 @@ impl Head {
         let head = match self {
             Head::Null => return VecDeque::new(),
             Head::Anonymous { ref head, .. } => head,
-            Head::Subject { ref head, .. } => head,
+            Head::Entity { ref head, .. } => head,
         };
 
         head.iter()
@@ -401,7 +402,7 @@ impl Head {
         Ok(true)
     }
 
-    /// Notify whomever needs to know that a new subject has been created
+    /// Notify whomever needs to know that a new entity has been created
     #[tracing::instrument]
     pub async fn get_value(&mut self, slab: &SlabHandle, key: &str) -> Result<Option<String>, RetrieveError> {
         // TODO: consider creating a consolidated projection routine for most/all uses
@@ -420,9 +421,9 @@ impl Head {
         Err(RetrieveError::MemoLineageError)
     }
 
-    pub async fn get_relation(&mut self, slab: &SlabHandle, key: RelationSlotId)
-                              -> Result<Option<SubjectId>, RetrieveError> {
-        // println!("# Subject({}).get_relation({})",self.id,key);
+    pub async fn get_relation(&mut self, slab: &SlabHandle, key: SlotId)
+                              -> Result<Option<EntityId>, RetrieveError> {
+        // println!("# Entity({}).get_relation({})",self.id,key);
 
         let mut memostream = self.causal_memo_stream(slab.clone());
         while let Some(memo) = memostream.next().await {
@@ -432,9 +433,9 @@ impl Head {
                        memo.id,
                        memo.get_parent_head(),
                        relations);
-                if let Some(maybe_subject_id) = relations.get(&key) {
-                    return match *maybe_subject_id {
-                        Some(subject_id) => Ok(Some(subject_id)),
+                if let Some(maybe_entity_id) = relations.get(&key) {
+                    return match *maybe_entity_id {
+                        Some(entity_id) => Ok(Some(entity_id)),
                         None => Ok(None),
                     };
                 } else if materialized {
@@ -448,7 +449,7 @@ impl Head {
         Err(RetrieveError::MemoLineageError)
     }
 
-    pub async fn get_edge(&mut self, slab: &SlabHandle, key: RelationSlotId)
+    pub async fn get_edge(&mut self, slab: &SlabHandle, key: SlotId)
                           -> Result<Option<Head>, RetrieveError> {
         let mut memostream = self.causal_memo_stream(slab.clone());
 
@@ -480,13 +481,13 @@ impl Head {
         let mut vals = HashMap::new();
         vals.insert(key.to_string(), value.to_string());
 
-        let subject_id = self.subject_id();
+        let entity_id = self.entity_id();
 
         // TODO - do this in a single swap? (fairly certain that requires unsafe)
         let mut head = Head::Null;
         std::mem::swap(self, &mut head);
 
-        let mut new_head = slab.new_memo(subject_id, head, MemoBody::Edit(vals)).to_head();
+        let mut new_head = slab.new_memo(entity_id, head, MemoBody::Edit(vals)).to_head();
 
         std::mem::swap(self, &mut new_head);
 
@@ -496,22 +497,22 @@ impl Head {
         Ok(())
     }
 
-    pub async fn set_relation(&mut self, slab: &SlabHandle, key: RelationSlotId, relation: &Self)
+    pub async fn set_relation(&mut self, slab: &SlabHandle, key: SlotId, relation: &Self)
                               -> Result<(), WriteError> {
-        // println!("# Subject({}).set_relation({}, {})", &self.id, key, relation.id);
+        // println!("# Entity({}).set_relation({}, {})", &self.id, key, relation.id);
         let mut relationset = RelationSet::empty();
 
-        let subject_id = relation.subject_id().ok_or(WriteError::BadTarget)?;
+        let entity_id = relation.entity_id().ok_or(WriteError::BadTarget)?;
 
-        relationset.insert(key, subject_id);
+        relationset.insert(key, entity_id);
 
-        let subject_id = self.subject_id();
+        let entity_id = self.entity_id();
 
         // TODO - do this in a single swap? May require unsafe
         let mut head = Head::Null;
         std::mem::swap(self, &mut head);
 
-        let mut new_head = slab.new_memo(subject_id, head, MemoBody::Relation(relationset))
+        let mut new_head = slab.new_memo(entity_id, head, MemoBody::Relation(relationset))
                                .to_head();
 
         std::mem::swap(self, &mut new_head);
@@ -522,22 +523,22 @@ impl Head {
         Ok(())
     }
 
-    pub fn set_edge(&mut self, slab: &SlabHandle, key: RelationSlotId, target: Head) {
-        debug!("# Subject({:?}).set_edge({}, {:?})",
-               &self.subject_id(),
+    pub fn set_edge(&mut self, slab: &SlabHandle, key: SlotId, target: Head) {
+        debug!("# Entity({:?}).set_edge({}, {:?})",
+               &self.entity_id(),
                key,
-               target.subject_id());
+               target.entity_id());
 
         let mut edgeset = EdgeSet::empty();
         edgeset.insert(key, target);
 
-        let subject_id = self.subject_id();
+        let entity_id = self.entity_id();
 
         // TODO - do this in a single swap? May require unsafe
         let mut parents = Head::Null;
         std::mem::swap(self, &mut parents);
 
-        let mut new_head = slab.new_memo(subject_id, parents, MemoBody::Edge(edgeset)).to_head();
+        let mut new_head = slab.new_memo(entity_id, parents, MemoBody::Edge(edgeset)).to_head();
 
         std::mem::swap(self, &mut new_head);
 
@@ -563,7 +564,7 @@ impl Head {
 
     // Kind of a brute force way to do this
     // TODO: Consider calculating deltas during memoref application,
-    //       and use that to perform a minimum cost subject_head_link edit
+    //       and use that to perform a minimum cost entity_head_link edit
 
     // TODO: This projection method is probably wrong, as it does not consider how to handle concurrent edge-setting
     //       this problem applies to causal_memo_stream itself really, insofar as it should return sets of concurrent
@@ -627,7 +628,7 @@ impl Head {
                                            .map(|(slot_id, maybe_link)| {
                                                // Fill in the non-visited links with vacants
                                                match maybe_link {
-                                                   None => EdgeLink::Vacant { slot_id: slot_id as RelationSlotId, },
+                                                   None => EdgeLink::Vacant { slot_id: slot_id as SlotId, },
                                                    Some(ref link) => link.clone(),
                                                }
                                            })
@@ -660,7 +661,7 @@ impl Head {
                     visited[*slot_id as usize] = true;
 
                     match *rel_head {
-                        Head::Subject { .. } | Head::Anonymous { .. } => {
+                        Head::Entity { .. } | Head::Anonymous { .. } => {
                             edge_links.push(EdgeLink::Occupied { slot_id: *slot_id,
                                                                  head:    rel_head.clone(), });
                         },
@@ -688,9 +689,9 @@ impl fmt::Debug for Head {
                    .field("memos", &self.memo_summary())
                    .finish()
             },
-            Head::Subject { ref subject_id, .. } => {
-                fmt.debug_struct("Head::Subject")
-                   .field("subject_id", &subject_id)
+            Head::Entity { entity_id: ref entity_id, .. } => {
+                fmt.debug_struct("Head::Entity")
+                   .field("entity_id", &entity_id)
                    //                    .field("memo_refs",  head )
                    .field("memo", &self.memo_summary())
                    .finish()

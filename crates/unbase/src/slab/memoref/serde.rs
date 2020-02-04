@@ -31,7 +31,7 @@ impl StatefulSerialize for MemoRef {
 
         let mut seq = serializer.serialize_seq(Some(4))?;
         seq.serialize_element(&self.id)?;
-        seq.serialize_element(&self.subject_id)?;
+        seq.serialize_element(&self.entity_id)?;
         seq.serialize_element(&match &*self.ptr.read().unwrap() {
                                   &Remote => false,
                                   &Resident(_) => true,
@@ -52,7 +52,7 @@ impl StatefulSerialize for MemoRef {
 //
 // let mut sv = serializer.serialize_struct("Memoref", 4)?;
 // sv.serialize_field("memo_id",    &self.id)?;
-// sv.serialize_field("subject_id", &self.subject_id )?;
+// sv.serialize_field("entity_id", &self.entity_id )?;
 //
 // use super::MemoRefPtr::*;
 //
@@ -111,7 +111,7 @@ impl<'a> Visitor for MemoRefSeed<'a> {
                 return Err(DeError::invalid_length(0, &self));
             },
         };
-        let subject_id: Option<SubjectId> = match visitor.visit()? {
+        let entity_id: Option<EntityId> = match visitor.visit()? {
             Some(value) => value,
             None => {
                 return Err(DeError::invalid_length(1, &self));
@@ -140,7 +140,7 @@ impl<'a> Visitor for MemoRefSeed<'a> {
 
         Ok(self.dest_slab
                .agent
-               .assert_memoref(memo_id, subject_id, MemoPeerList::new(peers), None)
+               .assert_memoref(memo_id, entity_id, MemoPeerList::new(peers), None)
                .0)
     }
 }

@@ -14,19 +14,19 @@
                                                                      |            
                                                             -> Slab  v            
                                                           /   \--> Arc<SlabInner>   
-                                                         /              subject_subscriptions -\             
+                                                         /              entity_subscriptions -\
                               -> Context                /               unsubscribe_channel     |
                              /   \ Arc<ContextInner>   /                           ^            |
                             /        slab ------------/                            |           / 
-   SubjectHandle           /         root_index -                                (mpsc)       / 
+   Entity           /         root_index -                                (mpsc)       /
     context --------------/          stash *      \                                 |-?Weak?-/ 
-    subject -----                                  \                                |      (mpsc)  
+    entity -----                                  \                                |      (mpsc)
                  \                                  ---> IndexFixed                 |      /
                   \                                        root --------------.     |     /
                    \                                                           \    |    /
                     \                                                           \   |   /
                      \                                                           v  v  v
-                      ---------------------------------------------------------> Subject
+                      ---------------------------------------------------------> Entity
 
 
 * Context stash not covered in this diagram

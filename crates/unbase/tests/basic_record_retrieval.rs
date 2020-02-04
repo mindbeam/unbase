@@ -5,7 +5,7 @@ use unbase::{
     util::simulator::Simulator,
     Network,
     Slab,
-    SubjectHandle,
+    Entity,
 };
 
 use tracing::debug;
@@ -20,14 +20,14 @@ async fn basic_record_retrieval() {
 
     let record_id;
     {
-        let record = SubjectHandle::new_with_single_kv(&context_a, "animal_type", "Cat").await
+        let record = Entity::new_with_single_kv(&context_a, "animal_type", "Cat").await
                                                                                         .unwrap();
 
         debug!("Record {:?}", record);
         record_id = record.id;
     }
 
-    let record_retrieved = context_a.get_subject_by_id(record_id).await.unwrap();
+    let record_retrieved = context_a.get_entity_by_id(record_id).await.unwrap();
 
     assert!(record_retrieved.is_some(), "Failed to retrieve record")
 }
@@ -45,14 +45,14 @@ async fn basic_record_retrieval_simulator() {
 
     let record_id;
     {
-        let record = SubjectHandle::new_with_single_kv(&context_a, "animal_type", "Cat").await
+        let record = Entity::new_with_single_kv(&context_a, "animal_type", "Cat").await
                                                                                         .unwrap();
 
         debug!("Record {:?}", record);
         record_id = record.id;
     }
 
-    let record_retrieved = context_a.get_subject_by_id(record_id).await.expect("retrieval");
+    let record_retrieved = context_a.get_entity_by_id(record_id).await.expect("retrieval");
 
     assert!(record_retrieved.is_some(), "Failed to retrieve record")
 }

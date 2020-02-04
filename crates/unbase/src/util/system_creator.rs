@@ -7,7 +7,7 @@ use crate::{
         MemoBody,
         RelationSet,
         SlabHandle,
-        SubjectType,
+        EntityType,
     },
 };
 
@@ -18,11 +18,11 @@ impl SystemCreator {
         let mut values = HashMap::new();
         values.insert("tier".to_string(), 0.to_string());
 
-        let memoref = slab.new_memo_noparent(Some(slab.generate_subject_id(SubjectType::IndexNode)),
+        let memoref = slab.new_memo_noparent(Some(slab.generate_entity_id(EntityType::IndexNode)),
                                              MemoBody::FullyMaterialized { v: values,
                                                                            r: RelationSet::empty(),
                                                                            e: EdgeSet::empty(),
-                                                                           t: SubjectType::IndexNode, });
+                                                                           t: EntityType::IndexNode, });
 
         memoref.to_head()
     }
