@@ -376,24 +376,12 @@ mod test {
             debug!(%i);
             let sim = Simulator::<DummyPayload>::new();
 
-            sim.add_event(DummyPayload {},
-                          &Point3 { x: 0, y: 0, z: 0 },
-                          &Point3 { x: 10, y: 0, z: 0 });
-            sim.add_event(DummyPayload {},
-                          &Point3 { x: 0, y: 0, z: 0 },
-                          &Point3 { x: -10, y: 0, z: 0 });
-            sim.add_event(DummyPayload {},
-                          &Point3 { x: 0, y: 0, z: 0 },
-                          &Point3 { x: 30, y: 0, z: 0 });
-            sim.add_event(DummyPayload {},
-                          &Point3 { x: 0, y: 0, z: 0 },
-                          &Point3 { x: 0, y: 10, z: 0 });
-            sim.add_event(DummyPayload {},
-                          &Point3 { x: 0, y: 0, z: 0 },
-                          &Point3 { x: 20, y: 0, z: 0 });
-            sim.add_event(DummyPayload {},
-                          &Point3 { x: 0, y: 0, z: 0 },
-                          &Point3 { x: 11, y: 10, z: 0 });
+            sim.add_event(DummyPayload {}, &Point3 { x: 0, y: 0, z: 0 }, &Point3 { x: 10, y: 0, z: 0 });
+            sim.add_event(DummyPayload {}, &Point3 { x: 0, y: 0, z: 0 }, &Point3 { x: -10, y: 0, z: 0 });
+            sim.add_event(DummyPayload {}, &Point3 { x: 0, y: 0, z: 0 }, &Point3 { x: 30, y: 0, z: 0 });
+            sim.add_event(DummyPayload {}, &Point3 { x: 0, y: 0, z: 0 }, &Point3 { x: 0, y: 10, z: 0 });
+            sim.add_event(DummyPayload {}, &Point3 { x: 0, y: 0, z: 0 }, &Point3 { x: 20, y: 0, z: 0 });
+            sim.add_event(DummyPayload {}, &Point3 { x: 0, y: 0, z: 0 }, &Point3 { x: 11, y: 10, z: 0 });
 
             let seq: Vec<(u64, u64)> = sim.shared
                                           .lock()

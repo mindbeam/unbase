@@ -27,9 +27,7 @@ async fn main() {
     context.root_index().await.unwrap();
 
     println!("B - Searching for Ping record...");
-    let mut record = context.fetch_kv("action", "Ping", Duration::from_secs(30))
-                            .await
-                            .unwrap();
+    let mut record = context.fetch_kv("action", "Ping", Duration::from_secs(30)).await.unwrap();
     println!("B - Found Ping record.");
 
     let mut pongs = 0;

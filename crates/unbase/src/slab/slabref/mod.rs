@@ -1,13 +1,3 @@
-// SlabRef intends to provide an abstraction for refering to a remote slab.
-// Posessing a SlabRef does not confer ownership, or even imply locality.
-// It does however provide us with a way to refer to a slab abstractly,
-// and a means of getting messages to it.
-//
-// I labored a fair bit about whether this is materially different from
-// the sender itself, but I think it is important, at least conceptually.
-// Also, the internals of the sender could vary dramatically, whereas the
-// SlabRef can continue to serve its purpose without material change.
-
 pub mod serde;
 
 use super::*;
@@ -26,9 +16,11 @@ use std::{
     },
 };
 
-/// A reference to a Slab
+/// # A reference to a Slab
 ///
-/// The referenced slab may be resident locally or Remotely
+/// The referenced slab may be resident within the same process or within a foreign process
+/// Posessing a SlabRef does not confer ownership, or even imply locality. It does however provide us with a way to
+/// refer to a slab abstractly, and a means of getting messages to it.
 #[derive(Clone)]
 pub struct SlabRef(pub Arc<SlabRefInner>);
 impl Deref for SlabRef {
@@ -47,8 +39,6 @@ pub struct SlabRefInner {
 }
 
 impl SlabRef {
-    // pub fn new (to_slab_id: SlabId, owning_slab_id: SlabId, presence: Vec<Slab) -> SlabRef {
-    //}
     #[tracing::instrument]
     pub fn send(&self, from: &SlabRef, memoref: &MemoRef) {
         let tx = self.tx.lock().unwrap();

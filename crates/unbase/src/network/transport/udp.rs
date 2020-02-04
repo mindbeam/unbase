@@ -94,14 +94,13 @@ impl TransportUDP {
 
         let (tx_thread, tx_channel) = Self::setup_tx_thread(socket.clone(), bind_address.clone());
 
-        TransportUDP { shared:
-                           Arc::new(Mutex::new(TransportUDPInternal { socket,
-                                                                      rx_thread: None,
-                                                                      tx_thread: Some(tx_thread),
-                                                                      tx_channel:
-                                                                          Some(Arc::new(Mutex::new(Some(tx_channel)))),
-                                                                      network: None,
-                                                                      address: bind_address })), }
+        TransportUDP { shared: Arc::new(Mutex::new(TransportUDPInternal { socket,
+                                                                          rx_thread: None,
+                                                                          tx_thread: Some(tx_thread),
+                                                                          tx_channel:
+                                                                              Some(Arc::new(Mutex::new(Some(tx_channel)))),
+                                                                          network: None,
+                                                                          address: bind_address })), }
     }
 
     fn setup_tx_thread(socket: Arc<UdpSocket>, inbound_address: TransportAddressUDP)
@@ -132,7 +131,7 @@ impl TransportUDP {
     }
 
     pub fn seed_address_from_string(&self, address_string: String) {
-        let to_address = TransportAddressUDP { address: address_string, };
+        let to_address = TransportAddressUDP { address: address_string };
 
         let net;
         let my_address;
@@ -236,8 +235,7 @@ impl Transport for TransportUDP {
 
                     let packet_seed: PacketSeed =
                         PacketSeed { net:            &net,
-                                     source_address: TransportAddress::UDP(TransportAddressUDP { address:
-                                                                                                     src.to_string(), }), };
+                                     source_address: TransportAddress::UDP(TransportAddressUDP { address: src.to_string(), }), };
 
                     match packet_seed.deserialize(&mut deserializer) {
                         Ok(()) => {
@@ -322,14 +320,6 @@ impl DynamicDispatchTransmitter for TransmitterUDP {
 
 impl fmt::Debug for TransmitterUDP {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("TransmitterUDP")
-           .field("address", &self.address)
-           .finish()
-    }
-}
-
-impl Drop for TransmitterUDP {
-    fn drop(&mut self) {
-        // println!("# TransmitterUDP.drop");
+        fmt.debug_struct("TransmitterUDP").field("address", &self.address).finish()
     }
 }

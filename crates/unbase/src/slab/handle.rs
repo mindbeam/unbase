@@ -70,9 +70,7 @@ impl SlabHandle {
         let mut channel = self.agent.memo_wait_channel(memoref.id);
 
         // formulate the request
-        let request_memo = self.new_memo(None,
-                                         Head::Null,
-                                         MemoBody::MemoRequest(vec![memoref.id], self.my_ref.clone()));
+        let request_memo = self.new_memo(None, Head::Null, MemoBody::MemoRequest(vec![memoref.id], self.my_ref.clone()));
 
         use std::time;
         let duration = time::Duration::from_millis(1000);

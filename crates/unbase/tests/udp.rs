@@ -1,5 +1,3 @@
-#![feature(async_closure)]
-
 use futures::join;
 use futures_await_test::async_test;
 use std::time::Duration;
@@ -74,9 +72,7 @@ async fn test2_node_a() {
 
     let mut beast_a = Entity::new_with_single_kv(&context_a, "beast", "Lion").await
                                                                              .expect("write successful");
-    beast_a.set_value("sound", "Grraaawrrr")
-           .await
-           .expect("write successful");
+    beast_a.set_value("sound", "Grraaawrrr").await.expect("write successful");
 
     // Hang out so we can help task 2
     Delay::new(Duration::from_millis(500)).await;

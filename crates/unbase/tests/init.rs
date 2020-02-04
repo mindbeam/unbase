@@ -1,5 +1,3 @@
-#![feature(async_closure)]
-
 use futures::join;
 use std::time::Duration;
 use timer::Delay;
@@ -138,10 +136,8 @@ async fn avoid_unnecessary_chatter() {
 
         Delay::new(Duration::from_millis(100)).await;
 
-        debug!("Slab A count of MemoRefs present {}",
-               slab_a.count_of_memorefs_resident());
-        debug!("Slab A count of MemoRefs present {}",
-               slab_b.count_of_memorefs_resident());
+        debug!("Slab A count of MemoRefs present {}", slab_a.count_of_memorefs_resident());
+        debug!("Slab A count of MemoRefs present {}", slab_b.count_of_memorefs_resident());
         debug!("Slab A count of Memos received {}", slab_a.count_of_memos_received());
         debug!("Slab B count of Memos received {}", slab_a.count_of_memos_received());
         debug!("Slab A count of Memos redundantly received {}",
@@ -149,10 +145,8 @@ async fn avoid_unnecessary_chatter() {
         debug!("Slab B count of Memos redundantly received {}",
                slab_a.count_of_memos_reduntantly_received());
 
-        assert!(slab_a.count_of_memos_reduntantly_received() == 0,
-                "Redundant memos received");
-        assert!(slab_b.count_of_memos_reduntantly_received() == 0,
-                "Redundant memos received");
+        assert!(slab_a.count_of_memos_reduntantly_received() == 0, "Redundant memos received");
+        assert!(slab_b.count_of_memos_reduntantly_received() == 0, "Redundant memos received");
     }
 
     assert!(net.get_all_local_slabs().len() == 0);

@@ -142,8 +142,7 @@ impl Stash {
     ///
     ///   would indicate that the stash contains:
     ///   * A Head for entity I2 (EntityType::Index) with slot 0 pointing to I1.
-    ///   * A Head for entity I3 (EntityType::Index) with slot 0 pointing to I2, slot 1 pointing to nothing, slot 2
-    ///     pointing to I4
+    ///   * A Head for entity I3 (EntityType::Index) with slot 0 pointing to I2, slot 1 pointing to nothing, slot 2 pointing to I4
     ///
     ///   Note that in this scenario, the stash _does not_ contain heads for I1 or I4, but knows of their existence.
     ///   They may have been in the stash previously, then removed because they were "descended" by and edge of another
@@ -284,7 +283,7 @@ impl Stash {
     //  compaction without loss of meaning.
     pub async fn prune_head(&self, slab: &SlabHandle, compare_head: &Head) -> Result<bool, WriteError> {
         // compare_head is the non contextualized-projection of the edge head
-        if let &Head::Entity { entity_id: entity_id, .. } = compare_head {
+        if let &Head::Entity { entity_id, .. } = compare_head {
             loop {
                 let mut item: ItemEditGuard = self.get_head_for_edit(entity_id);
 
@@ -574,7 +573,7 @@ impl StashIterator {
     }
 }
 
-/// Rudimentary Head iterator. It operates under the assumptions that:
+/// Rudimentary iterator for the contents of the stash. It operates under the assumptions that:
 /// 1. The contents of the stash may change mid-iteration
 /// 2. We do not wish to visit two Heads bearing the same entity_id twice
 /// It's possible however that there are some circumstances where we may want to violate #2,

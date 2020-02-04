@@ -59,9 +59,7 @@ impl Delay {
 
         let id = set_timeout(&cb, millis);
 
-        Delay { id,
-                inner,
-                _closure: cb }
+        Delay { id, inner, _closure: cb }
     }
 }
 

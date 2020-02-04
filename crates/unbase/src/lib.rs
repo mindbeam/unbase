@@ -33,9 +33,8 @@
 //! let context = slab.create_context(); // Context is your view of the world. A "client" app would have one of these
 //!
 //! // Lets say one part of the app creates a record
-//! let mut original_record =
-//!     Entity::new_with_single_kv(&context, "beast", "Tiger").await
-//!                                                           .expect("The record creation didn't fail");
+//! let mut original_record = Entity::new_with_single_kv(&context, "beast", "Tiger").await
+//!                                                                                 .expect("The record creation didn't fail");
 //!
 //! // another part of the app happens to be looking for a Tiger record
 //! let mut record_copy = context.try_fetch_kv("beast", "Tiger")
@@ -54,21 +53,13 @@
 //! # async_std::task::block_on(run())
 //! ```
 
-#![feature(type_alias_impl_trait)]
-//#![feature(async_closure)]
 #![doc(html_root_url = "https://unba.se")]
-//#![recursion_limit = "42"]
-
-// extern crate core;
-// extern crate linked_hash_map;
-// extern crate itertools;
 
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
-//#[doc(inline)]
 pub mod context;
 pub mod entity;
 pub mod error;

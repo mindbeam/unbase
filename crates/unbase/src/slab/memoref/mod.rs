@@ -60,7 +60,7 @@ impl MemoRef {
             Some(entity_id) => {
                 Head::Entity { owning_slab_id: self.owning_slab_id,
                                entity_id,
-                               head:           vec![self.clone()], }
+                               head: vec![self.clone()] }
             },
         }
     }
@@ -123,9 +123,7 @@ impl MemoRef {
                 .read()
                 .unwrap()
                 .iter()
-                .any(|peer| {
-                    peer.slabref.0.slab_id == slabref.0.slab_id && peer.status != MemoPeeringStatus::NonParticipating
-                });
+                .any(|peer| peer.slabref.0.slab_id == slabref.0.slab_id && peer.status != MemoPeeringStatus::NonParticipating);
 
         status
     }
@@ -152,12 +150,7 @@ impl MemoRef {
         assert!(self.owning_slab_id == slab.my_ref.slab_id);
         // TODO get rid of clones here
 
-        if self.clone()
-               .get_memo(slab.clone())
-               .await?
-               .descends(&memoref, slab)
-               .await?
-        {
+        if self.clone().get_memo(slab.clone()).await?.descends(&memoref, slab).await? {
             Ok(true)
         } else {
             Ok(false)

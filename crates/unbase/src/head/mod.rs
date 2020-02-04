@@ -45,15 +45,8 @@ use futures::{
 use itertools::Itertools;
 use tracing::debug;
 
-// Head is a list of MemoRefs that constitute the "head" of a given causal chain
-//
-// This "head" is rather like a git HEAD, insofar as it is intended to contain only the youngest
-// descendents of a given causal chain. It provides mechanisms for applying memorefs, or applying
-// other Heads such that the mutated list may be pruned as appropriate given the above.
-
 // TODO: consider renaming to OwnedHead
 #[derive(Clone, PartialEq)]
-
 // TODO - consider changing this to a linkedlist instead of a Vec, because MOST of the time it's going to be a single
 // memoref This will allow us to save allocations, and potentially have a number of traversal operations happen entirely
 // on the stack? struct Link {
@@ -62,6 +55,11 @@ use tracing::debug;
 //    next: Option<Box<Link>>
 //}
 
+/// Head is a list of MemoRefs that constitute the "head" of a given causal chain
+///
+/// This "head" is rather like a git HEAD, insofar as it is intended to contain only the youngest
+/// descendents of a given causal chain. It provides mechanisms for applying memorefs, or applying
+/// other Heads such that the mutated list may be pruned as appropriate given the above.
 pub enum Head {
     Null,
     Entity {
@@ -84,9 +82,6 @@ pub struct HeadWithProvenance {
 /// Head takes &SlabHandle on all calls, because it is an agent of storage and referentiality, NOT an enforcer of
 /// consistency
 impl Head {
-    //    pub fn new_record( slab: &SlabHandle ){
-    //
-    //    }
     pub fn new_index(slab: &SlabHandle, values: HashMap<String, String>) -> Head {
         let id = slab.generate_entity_id(EntityType::IndexNode);
 
@@ -107,8 +102,8 @@ impl Head {
             Head::Null => {
                 if let Some(entity_id) = new.entity_id {
                     *self = Head::Entity { owning_slab_id: new.owning_slab_id,
-                                           head:           vec![new.clone()],
-                                           entity_id, };
+                                           head: vec![new.clone()],
+                                           entity_id };
                 } else {
                     *self = Head::Anonymous { owning_slab_id: new.owning_slab_id,
                                               head:           vec![new.clone()], };
@@ -179,20 +174,11 @@ impl Head {
             applied = true; // The memoref was "applied" to the Head
         }
 
-        // This memoref was applied if it was concurrent, or descends one or more previous memos
-
-        //        if applied {
-        //            debug!("Was applied - {:?}", self.memo_ids());
-        //        }else{
-        //            debug!("NOT applied - {:?}", self.memo_ids());
-        //        }
-
         Ok(applied)
     }
 
     #[tracing::instrument]
-    pub async fn mut_apply_memorefs(&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle)
-                                    -> Result<bool, WriteError> {
+    pub async fn mut_apply_memorefs(&mut self, new_memorefs: &Vec<MemoRef>, slab: &SlabHandle) -> Result<bool, WriteError> {
         let mut did_apply = false;
 
         for new in new_memorefs.iter() {
@@ -307,7 +293,7 @@ impl Head {
     pub fn entity_id(&self) -> Option<EntityId> {
         match *self {
             Head::Null | Head::Anonymous { .. } => None,
-            Head::Entity { entity_id: entity_id, .. } => Some(entity_id),
+            Head::Entity { entity_id, .. } => Some(entity_id),
         }
     }
 
@@ -505,8 +491,7 @@ impl Head {
         let mut head = Head::Null;
         std::mem::swap(self, &mut head);
 
-        let mut new_head = slab.new_memo(entity_id, head, MemoBody::Relation(relationset))
-                               .to_head();
+        let mut new_head = slab.new_memo(entity_id, head, MemoBody::Relation(relationset)).to_head();
 
         std::mem::swap(self, &mut new_head);
 
@@ -566,8 +551,7 @@ impl Head {
 
     /// Project all edge links based only on the causal history of this head.
     /// The name is pretty gnarly, and this is very ripe for refactoring, but at least it says what it does.
-    pub async fn project_all_edge_links_including_empties(&self, slab: &SlabHandle)
-                                                          -> Result<Vec<EdgeLink>, RetrieveError> {
+    pub async fn project_all_edge_links_including_empties(&self, slab: &SlabHandle) -> Result<Vec<EdgeLink>, RetrieveError> {
         let mut edge_links: Vec<Option<EdgeLink>> = Vec::with_capacity(MAX_SLOTS);
 
         // None is an indication that we've not yet visited this slot, and that it is thus eligible for setting
@@ -583,14 +567,13 @@ impl Head {
                     for (slot_id, rel_head) in &edgeset.0 {
                         // Only consider the non-visited slots
                         if let None = edge_links[*slot_id as usize] {
-                            edge_links[*slot_id as usize] =
-                                Some(match *rel_head {
-                                         Head::Null => EdgeLink::Vacant { slot_id: *slot_id },
-                                         _ => {
-                                             EdgeLink::Occupied { slot_id: *slot_id,
-                                                                  head:    rel_head.clone(), }
-                                         },
-                                     });
+                            edge_links[*slot_id as usize] = Some(match *rel_head {
+                                                                     Head::Null => EdgeLink::Vacant { slot_id: *slot_id },
+                                                                     _ => {
+                                                                         EdgeLink::Occupied { slot_id: *slot_id,
+                                                                                              head:    rel_head.clone(), }
+                                                                     },
+                                                                 });
                         }
                     }
 
@@ -601,14 +584,13 @@ impl Head {
                     for (slot_id, rel_head) in r.iter() {
                         // Only consider the non-visited slots
                         if let None = edge_links[*slot_id as usize] {
-                            edge_links[*slot_id as usize] =
-                                Some(match *rel_head {
-                                         Head::Null => EdgeLink::Vacant { slot_id: *slot_id },
-                                         _ => {
-                                             EdgeLink::Occupied { slot_id: *slot_id,
-                                                                  head:    rel_head.clone(), }
-                                         },
-                                     })
+                            edge_links[*slot_id as usize] = Some(match *rel_head {
+                                                                     Head::Null => EdgeLink::Vacant { slot_id: *slot_id },
+                                                                     _ => {
+                                                                         EdgeLink::Occupied { slot_id: *slot_id,
+                                                                                              head:    rel_head.clone(), }
+                                                                     },
+                                                                 })
                         }
                     }
                 },
@@ -682,8 +664,7 @@ impl fmt::Debug for Head {
                    .field("memos", &self.memo_summary())
                    .finish()
             },
-            Head::Entity { entity_id: ref entity_id,
-                           .. } => {
+            Head::Entity { ref entity_id, .. } => {
                 fmt.debug_struct("Head::Entity")
                    .field("entity_id", &entity_id)
                    //                    .field("memo_refs",  head )
@@ -713,14 +694,15 @@ impl fmt::Debug for CausalMemoStream {
     }
 }
 
-// Plausible Memo Structure:
-// /- E -> C -\
-// G ->              -> B -> A
-// head ^    \- F -> D -/
-// Desired iterator sequence: G, E, C, F, D, B, A ( Why? )
-// Consider:                  [G], [E,C], [F,D], [B], [A]
-// Arguably this should not be an iterator at all, but rather a recursive function
-// Going with the iterator for now in the interest of simplicity
+/// Plausible Memo Structure:
+/// /- E -> C -\
+/// G ->              -> B -> A
+/// head ^    \- F -> D -/
+/// Desired iterator sequence: G, E, C, F, D, B, A ( Why? )
+/// Consider:                  [G], [E,C], [F,D], [B], [A]
+///
+/// There are some problems with this having to do with the difficulty of knowing if a FullyMaterialized Memo has any
+/// concurrencies
 impl CausalMemoStream {
     #[tracing::instrument]
     pub fn from_head(head: &Head, slab: SlabHandle) -> Self {

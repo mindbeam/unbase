@@ -72,6 +72,10 @@ impl Network {
     /// In test cases, you want to create a wholly new unbase system.
     /// You should not be using this in production, except the *first* time ever for that system
     pub fn create_new_system() -> Network {
+        // TODO - we need a way to merge systems
+        // Must this be done with the root of one system subordinating to the root of another?
+        // Or perhaps we can allow systems to split AND merge?
+
         Self::new_inner(true)
     }
 
@@ -102,10 +106,7 @@ impl Network {
             // Can only have one is_local transport at a time. Filter out any other local transports when adding this
             // one
             let mut transports = self.transports.write().unwrap();
-            if let Some(removed) = transports.iter()
-                                             .position(|t| t.is_local())
-                                             .map(|e| transports.remove(e))
-            {
+            if let Some(removed) = transports.iter().position(|t| t.is_local()).map(|e| transports.remove(e)) {
                 removed.unbind_network(self);
             }
         }
@@ -269,8 +270,7 @@ impl Network {
     /// TODO: how do we decide if we want to accept this?
     ///       do we just take any system seed that is sent to us when unseeded?
     ///       Probably good enough for Alpha, but obviously not good enough for Beta
-    pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &Head, resident_slabref: &SlabRef)
-                                 -> bool {
+    pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &Head, resident_slabref: &SlabRef) -> bool {
         {
             if let Some(_) = *self.root_index_seed.read().unwrap() {
                 // TODO: scrutinize the received root_index_seed to see if our existing seed descends it, or it descends

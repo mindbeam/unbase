@@ -35,9 +35,7 @@ impl StatefulSerialize for Head {
                 sv.serialize_field("h", &SerializeWrapper(head, helper))?;
                 sv.end()
             },
-            Head::Entity { entity_id: ref entity_id,
-                           ref head,
-                           .. } => {
+            Head::Entity { ref entity_id, ref head, .. } => {
                 let mut sv = serializer.serialize_struct_variant("Head", 2, "Entity", 3)?;
                 sv.serialize_field("s", &entity_id)?;
                 sv.serialize_field("h", &SerializeWrapper(&head, helper))?;
@@ -151,7 +149,7 @@ impl<'a> Visitor for HeadAnonymousSeed<'a> {
             match key {
                 'h' => {
                     head = Some(visitor.visit_value_seed(VecSeed(MemoRefSeed { dest_slab:      self.dest_slab,
-                                                                        origin_slabref: self.origin_slabref, }))?)
+                                                                               origin_slabref: self.origin_slabref, }))?)
                 },
                 _ => {},
             }
@@ -196,7 +194,7 @@ impl<'a> Visitor for HeadEntitySeed<'a> {
                 's' => entity_id = Some(visitor.visit_value()?),
                 'h' => {
                     head = Some(visitor.visit_value_seed(VecSeed(MemoRefSeed { dest_slab:      self.dest_slab,
-                                                                        origin_slabref: self.origin_slabref, }))?)
+                                                                               origin_slabref: self.origin_slabref, }))?)
                 },
                 _ => {},
             }

@@ -114,8 +114,7 @@ impl SlabAgent {
                                          parents,
                                          body });
 
-        let (memoref, _had_memoref) =
-            self.assert_memoref(memo.id, memo.entity_id, MemoPeerList(Vec::new()), Some(memo));
+        let (memoref, _had_memoref) = self.assert_memoref(memo.id, memo.entity_id, MemoPeerList(Vec::new()), Some(memo));
         self.consider_emit_memo(&memoref);
 
         memoref
@@ -335,13 +334,12 @@ impl SlabAgent {
             //    B. and if so, what should be should we be using them for?
             //    C. Should we be sing that to determine the peered memo instead of the payload?
 
-            let peering_memoref =
-                self.new_memo(None,
-                              memoref.to_head(),
-                              MemoBody::Peering(memoref.id,
-                                                memoref.entity_id,
-                                                memoref.get_peerlist_for_peer(&self.my_ref,
-                                                                              Some(origin_slabref.slab_id))));
+            let peering_memoref = self.new_memo(None,
+                                                memoref.to_head(),
+                                                MemoBody::Peering(memoref.id,
+                                                                  memoref.entity_id,
+                                                                  memoref.get_peerlist_for_peer(&self.my_ref,
+                                                                                                Some(origin_slabref.slab_id))));
             origin_slabref.send(&self.my_ref, &peering_memoref);
         }
     }
@@ -395,8 +393,8 @@ impl SlabAgent {
                             if e.is_disconnected() {
                                 senders.swap_remove(i);
                             } else {
-                                panic!("one of the index_subscriptions queues is full, and I haven't implemented \
-                                        async sending yet")
+                                panic!("one of the index_subscriptions queues is full, and I haven't implemented async sending \
+                                        yet")
                             }
                         },
                     }
@@ -415,8 +413,8 @@ impl SlabAgent {
                             if e.is_disconnected() {
                                 senders.swap_remove(i);
                             } else {
-                                panic!("one of the entity_subscriptions queues is full, and I haven't implemented \
-                                        async sending yet")
+                                panic!("one of the entity_subscriptions queues is full, and I haven't implemented async sending \
+                                        yet")
                             }
                         },
                     }
@@ -451,29 +449,24 @@ impl SlabAgent {
             Head::Null => Head::Null,
             Head::Anonymous { ref head, .. } => {
                 Head::Anonymous { owning_slab_id: self.id,
-                                  head:
-                                      head.iter()
-                                          .map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos))
-                                          .collect(), }
+                                  head:           head.iter()
+                                                      .map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos))
+                                                      .collect(), }
             },
-            Head::Entity { entity_id: entity_id,
-                           ref head,
-                           .. } => {
+            Head::Entity { entity_id, ref head, .. } => {
                 Head::Entity { owning_slab_id: self.id,
                                entity_id:      entity_id.clone(),
-                               head:
-                                   head.iter()
-                                       .map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos))
-                                       .collect(), }
+                               head:           head.iter()
+                                                   .map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos))
+                                                   .collect(), }
             },
         }
     }
 
     #[tracing::instrument]
     pub fn localize_memoref(&self, memoref: &MemoRef, from_slabref: &SlabRef, include_memo: bool) -> MemoRef {
-        //        assert!(from_slabref.owning_slab_id == self.id,"MemoRef clone_for_slab owning slab should be
-        // identical");        assert!(from_slabref.slab_id != self.id,       "MemoRef clone_for_slab dest slab
-        // should not be identical");
+        assert!(from_slabref.owning_slab_id == self.id,
+                "MemoRef clone_for_slab owning slab should be identical");
 
         // TODO compare SlabRef pointer address rather than id
         if memoref.owning_slab_id == self.id {
@@ -485,17 +478,16 @@ impl SlabAgent {
         let peerlist = memoref.get_peerlist_for_peer(from_slabref, Some(self.id));
 
         // TODO - reduce the redundant work here. We're basically asserting the memoref twice
-        let memoref =
-            self.assert_memoref(memoref.id, memoref.entity_id, peerlist.clone(), match include_memo {
-                    true => {
-                        match *memoref.ptr.read().unwrap() {
-                            MemoRefPtr::Resident(ref m) => Some(self.localize_memo(m, from_slabref, &peerlist)),
-                            MemoRefPtr::Remote => None,
-                        }
-                    },
-                    false => None,
-                })
-                .0;
+        let memoref = self.assert_memoref(memoref.id, memoref.entity_id, peerlist.clone(), match include_memo {
+                              true => {
+                                  match *memoref.ptr.read().unwrap() {
+                                      MemoRefPtr::Resident(ref m) => Some(self.localize_memo(m, from_slabref, &peerlist)),
+                                      MemoRefPtr::Remote => None,
+                                  }
+                              },
+                              false => None,
+                          })
+                          .0;
 
         memoref
     }
@@ -636,16 +628,13 @@ impl SlabAgent {
             // doing it manually for now, because I think we might only want to do
             // a concise update to reflect our peering status change
 
-            let peering_memoref = self.new_memo(
-                                                None,
-                                                memoref.to_head(),
-                                                MemoBody::Peering(
-                memoref.id,
-                memoref.entity_id,
-                MemoPeerList::new(vec![MemoPeer { slabref: self.my_ref.clone(),
-                                                  status:  MemoPeeringStatus::Resident, }]),
-            ),
-            );
+            let peering_memoref =
+                self.new_memo(None,
+                              memoref.to_head(),
+                              MemoBody::Peering(memoref.id,
+                                                memoref.entity_id,
+                                                MemoPeerList::new(vec![MemoPeer { slabref: self.my_ref.clone(),
+                                                                                  status:  MemoPeeringStatus::Resident, }])));
 
             for peer in memoref.peerlist.read().unwrap().iter() {
                 peer.slabref.send(&self.my_ref, &peering_memoref);
@@ -682,16 +671,13 @@ impl SlabAgent {
             }
         }
 
-        let peering_memoref = self.new_memo(
-                                            None,
-                                            memoref.to_head(),
-                                            MemoBody::Peering(
-            memoref.id,
-            memoref.entity_id,
-            MemoPeerList::new(vec![MemoPeer { slabref: self.my_ref.clone(),
-                                              status:  MemoPeeringStatus::Participating, }]),
-        ),
-        );
+        let peering_memoref =
+            self.new_memo(None,
+                          memoref.to_head(),
+                          MemoBody::Peering(memoref.id,
+                                            memoref.entity_id,
+                                            MemoPeerList::new(vec![MemoPeer { slabref: self.my_ref.clone(),
+                                                                              status:  MemoPeeringStatus::Participating, }])));
 
         // self.consider_emit_memo(&memoref);
 
@@ -703,8 +689,7 @@ impl SlabAgent {
     }
 
     #[tracing::instrument]
-    pub fn assert_memoref(&self, memo_id: MemoId, entity_id: Option<EntityId>, peerlist: MemoPeerList,
-                          memo: Option<Memo>)
+    pub fn assert_memoref(&self, memo_id: MemoId, entity_id: Option<EntityId>, peerlist: MemoPeerList, memo: Option<Memo>)
                           -> (MemoRef, bool) {
         let had_memoref;
         let memoref = match self.state.write().unwrap().memorefs_by_id.entry(memo_id) {
@@ -781,8 +766,7 @@ impl SlabAgent {
         }
 
         for p in presence.iter() {
-            assert!(slab_id == p.slab_id,
-                    "presence slab_id does not match the provided slab_id");
+            assert!(slab_id == p.slab_id, "presence slab_id does not match the provided slab_id");
 
             let mut _maybe_slab = None;
             let args = if p.address.is_local() {
@@ -802,12 +786,8 @@ impl SlabAgent {
             // False if we've seen this presence already
 
             if slabref.apply_presence(p) {
-                let new_trans = self.net
-                                    .get_transmitter(&args)
-                                    .expect("assert_slabref net.get_transmitter");
-                let return_address = self.net
-                                         .get_return_address(&p.address)
-                                         .expect("return address not found");
+                let new_trans = self.net.get_transmitter(&args).expect("assert_slabref net.get_transmitter");
+                let return_address = self.net.get_return_address(&p.address).expect("return address not found");
 
                 *slabref.0.tx.lock().expect("tx.lock()") = new_trans;
                 *slabref.0.return_address.write().expect("return_address write lock") = return_address;
@@ -843,8 +823,6 @@ impl SlabAgent {
 
 impl std::fmt::Debug for SlabAgent {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-        fmt.debug_struct("Slab")
-           .field("state", &self.state.read().unwrap())
-           .finish()
+        fmt.debug_struct("Slab").field("state", &self.state.read().unwrap()).finish()
     }
 }

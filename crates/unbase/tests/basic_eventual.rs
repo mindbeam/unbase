@@ -1,7 +1,4 @@
-#![feature(async_closure)]
-
 use unbase::{
-    error::RetrieveError,
     util::simulator::Simulator,
     Entity,
     Network,
@@ -45,11 +42,7 @@ async fn basic_eventual() {
     assert!(rec_a1.is_ok(), "New entity should be created");
     let mut rec_a1 = rec_a1.unwrap();
 
-    assert!(rec_a1.get_value("animal_sound")
-                  .await
-                  .expect("retrieval")
-                  .expect("has value")
-            == "Moo",
+    assert!(rec_a1.get_value("animal_sound").await.expect("retrieval").expect("has value") == "Moo",
             "New entity should be internally consistent");
 
     // TODO: consolidation is necessary for eventual consistency to work

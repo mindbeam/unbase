@@ -145,8 +145,7 @@ impl Memo {
     }
 
     #[tracing::instrument]
-    pub fn descends<'a>(&'a self, memoref: &'a MemoRef, slab: &'a SlabHandle)
-                        -> BoxFuture<'a, Result<bool, RetrieveError>> {
+    pub fn descends<'a>(&'a self, memoref: &'a MemoRef, slab: &'a SlabHandle) -> BoxFuture<'a, Result<bool, RetrieveError>> {
         // Not really sure if this is right
 
         // TODO: parallelize this
@@ -184,17 +183,11 @@ impl MemoBody {
                 }
             },
             Relation(ref rel_set) => format!("RelationSet({})", rel_set.to_string()),
-            Edge(ref edge_set) => format!("EdgeSet"),
-            Edit(ref e) => format!("Edit"),
-            FullyMaterialized { ref v,
-                                ref r,
-                                ref e,
-                                ref t, } => format!("FullyMaterialized"),
-            PartiallyMaterialized { ref v,
-                                    ref r,
-                                    ref e,
-                                    ref t, } => format!("PartiallyMaterialized"),
-            Peering(ref memo_id, ref entity_id, ref peerlist) => format!("Peering"),
+            Edge(ref _edge_set) => format!("EdgeSet"),
+            Edit(ref _e) => format!("Edit"),
+            FullyMaterialized { .. } => format!("FullyMaterialized"),
+            PartiallyMaterialized { .. } => format!("PartiallyMaterialized"),
+            Peering(ref _memo_id, ref _entity_id, ref _peerlist) => format!("Peering"),
             MemoRequest(ref memo_ids, ref slabref) => {
                 format!("MemoRequest({} to {})", memo_ids.iter().join(","), slabref.slab_id)
             },

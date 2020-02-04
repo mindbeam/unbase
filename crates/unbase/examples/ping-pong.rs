@@ -45,7 +45,7 @@ async fn player_one() {
 
     let mut pings = 0;
 
-    while let Some(head) = rec_a1.observe().next().await {
+    while let Some(_head) = rec_a1.observe().next().await {
         // HACK - Presently we are relying on the newly issued index leaf for record consistency, which is applied
         // immediately after this event is sent
         Delay::new(Duration::from_millis(10)).await;
@@ -80,9 +80,7 @@ async fn player_two() {
     context_b.root_index().await.unwrap();
 
     println!("B - Searching for Ping record...");
-    let mut rec_b1 = context_b.fetch_kv("action", "Ping", Duration::from_secs(1))
-                              .await
-                              .unwrap();
+    let mut rec_b1 = context_b.fetch_kv("action", "Ping", Duration::from_secs(1)).await.unwrap();
     println!("B - Found Ping record.");
 
     let mut pongs = 0;

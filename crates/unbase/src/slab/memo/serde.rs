@@ -12,7 +12,6 @@ use crate::{
 use ::serde::{
     de::*,
     ser::*,
-    *,
 };
 use std::fmt;
 
@@ -461,7 +460,7 @@ impl<'a> Visitor for MBFullyMaterializedSeed<'a> {
             match key {
                 'r' => {
                     relations = Some(visitor.visit_value_seed(RelationSetSeed { dest_slab:      self.dest_slab,
-                                                                         origin_slabref: self.origin_slabref, })?)
+                                                                                origin_slabref: self.origin_slabref, })?)
                 },
                 'e' => {
                     edges = Some(visitor.visit_value_seed(EdgeSetSeed { dest_slab:      self.dest_slab,
@@ -510,13 +509,10 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
                 'i' => memo_ids = visitor.visit_value()?,
                 'j' => entity_id = Some(visitor.visit_value()?),
                 'l' => {
-                    peerlist = Some(MemoPeerList::new(visitor.visit_value_seed(VecSeed(
-                        MemoPeerSeed {
-                            dest_slab: self.dest_slab,
-                        },
-                    ))?))
-                }
-                _ => {}
+                    peerlist =
+                        Some(MemoPeerList::new(visitor.visit_value_seed(VecSeed(MemoPeerSeed { dest_slab: self.dest_slab, }))?))
+                },
+                _ => {},
             }
         }
 
@@ -525,9 +521,7 @@ impl<'a> Visitor for MBPeeringSeed<'a> {
                        entity_id.is_some(),
                        peerlist.is_some());
         if memo_ids.is_some() && entity_id.is_some() && peerlist.is_some() {
-            Ok(MemoBody::Peering(memo_ids.unwrap(),
-                                 entity_id.unwrap(),
-                                 peerlist.unwrap()))
+            Ok(MemoBody::Peering(memo_ids.unwrap(), entity_id.unwrap(), peerlist.unwrap()))
         } else {
             Err(DeError::invalid_length(0, &self))
         }

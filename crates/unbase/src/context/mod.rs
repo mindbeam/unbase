@@ -46,7 +46,6 @@ use futures::{
 };
 
 use tracing::{
-    debug,
     span,
     Level,
 };
@@ -306,9 +305,7 @@ impl Context {
                 let memobody = MemoBody::Edge(updated_edges);
                 let entity_id = parent_head.entity_id().unwrap();
 
-                let head = self.slab
-                               .new_memo(Some(entity_id), parent_head, memobody.clone())
-                               .to_head();
+                let head = self.slab.new_memo(Some(entity_id), parent_head, memobody.clone()).to_head();
 
                 self.apply_head(&head).await?;
             }
@@ -356,8 +353,7 @@ impl Context {
 
     /// Update a given Head with any relevant information to ensure that our consistency model invariants are met
     #[tracing::instrument(level = "info")]
-    pub(crate) async fn mut_update_index_head_for_consistency(&self, mut_head: &mut Head)
-                                                              -> Result<bool, RetrieveError> {
+    pub(crate) async fn mut_update_index_head_for_consistency(&self, mut_head: &mut Head) -> Result<bool, RetrieveError> {
         // TODO - think about immutable versions of this
 
         assert_ne!(mut_head.len(), 0);
@@ -377,8 +373,7 @@ impl Context {
     }
 
     #[tracing::instrument(level = "info")]
-    pub(crate) async fn mut_update_record_head_for_consistency(&self, mut_head: &mut Head)
-                                                               -> Result<bool, RetrieveError> {
+    pub(crate) async fn mut_update_record_head_for_consistency(&self, mut_head: &mut Head) -> Result<bool, RetrieveError> {
         // TODO - think about immutable versions of this
 
         assert_ne!(mut_head.len(), 0);
@@ -477,10 +472,8 @@ mod test {
         }
 
         // additional stuff on I2 should prevent it from being pruned by the I3 edge
-        let head3 = context.add_test_head(EntityId::index_test(3), vec![head2.clone()])
-                           .await;
-        let head4 = context.add_test_head(EntityId::index_test(4), vec![head3.clone()])
-                           .await;
+        let head3 = context.add_test_head(EntityId::index_test(3), vec![head2.clone()]).await;
+        let head4 = context.add_test_head(EntityId::index_test(4), vec![head3.clone()]).await;
 
         assert_eq!(context.stash.concise_contents(), "I2>I1;I4>I3", "Valid contents");
 
@@ -499,9 +492,7 @@ mod test {
         {
             // manually perform compaction
             let updated_head3 = context.stash.get_head(head3.entity_id().unwrap());
-            let head = slab.new_memo(head4.entity_id(),
-                                     head4,
-                                     MemoBody::Edge(EdgeSet::single(0, updated_head3)))
+            let head = slab.new_memo(head4.entity_id(), head4, MemoBody::Edge(EdgeSet::single(0, updated_head3)))
                            .to_head();
             context.apply_head(&head).await.unwrap();
         }
@@ -551,6 +542,8 @@ mod test {
 
         assert_eq!(context.stash.concise_contents(), "I4>I3", "Valid contents");
     }
+
+    // TODO POSTMERGE - restore these tests
 
     // #[unbase_test_util::async_test]
     // async fn context_manager_dual_indegree_zero() {

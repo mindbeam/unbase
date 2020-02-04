@@ -1,5 +1,3 @@
-#![feature(async_closure)]
-
 use futures::{
     future::RemoteHandle,
     StreamExt,
@@ -17,6 +15,8 @@ use unbase::{
     Network,
     Slab,
 };
+
+use tracing::debug;
 
 #[unbase_test_util::async_test]
 async fn eventual_basic() {
@@ -126,23 +126,17 @@ async fn eventual_detail() {
     let mut rec_b1 = rec_b1.unwrap();
     let mut rec_c1 = rec_c1.unwrap();
 
-    let mut rec_c1_clone = rec_c1.clone();
+    async fn update_last_observed_sound(tmp: Arc<Mutex<String>>, mut rec: Entity) {
+        let mut stream = rec.observe();
+        while let Some(_head) = stream.next().await {
+            let sound = rec.get_value("animal_sound").await.unwrap().unwrap();
+            *tmp.lock().unwrap() = sound.clone();
+            debug!("rec_c1 changed. animal_sound is {}", sound);
+        }
+    }
 
     let last_observed_sound_c = Arc::new(Mutex::new(String::new()));
-
-    let _applier: RemoteHandle<()>;
-    {
-        let last_observed_sound_c = last_observed_sound_c.clone();
-
-        _applier = spawn_with_handle((async move || {
-                                         let mut stream = rec_c1_clone.observe();
-                                         while let Some(_) = stream.next().await {
-                                             let sound = rec_c1_clone.get_value("animal_sound").await.unwrap().unwrap();
-                                             *last_observed_sound_c.lock().unwrap() = sound.clone();
-                                             // println!("rec_c1 changed. animal_sound is {}", sound );
-                                         }
-                                     })());
-    }
+    let _applier: RemoteHandle<()> = spawn_with_handle(update_last_observed_sound(last_observed_sound_c.clone(), rec_c1.clone()));
 
     simulator.quiesce().await;
 
@@ -171,9 +165,9 @@ async fn eventual_detail() {
     simulator.quiesce().await;
 
     // Nowwww it should have propagated
-    let expected_contents = "I9001>I9003;I9003>I9004;I9004>I9005;I9005>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,\
-                             _,_,_,_,_,_,_,_,_,_,_,_,I9006;I9006>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,\
-                             _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,R9002";
+    let expected_contents = "I9001>I9003;I9003>I9004;I9004>I9005;I9005>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,\
+                             _,_,_,_,_,_,_,I9006;I9006>_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,\
+                             _,_,_,_,_,_,R9002";
     assert_eq!(context_a.concise_contents(), expected_contents);
     assert_eq!(context_b.concise_contents(), expected_contents);
 

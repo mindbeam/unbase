@@ -2,39 +2,6 @@ use crate::util::serde::*;
 // use network::TransportAddress;
 use super::*;
 
-// impl<'a> StatefulSerialize for &'a SlabPresence {
-// fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
-// where S: Serializer
-// {
-// let mut sv = serializer.serialize_struct("SlabPresence", 3)?;
-// sv.serialize_field("slab_id",  &self.slab_id)?;
-//
-// sv.serialize_field("address", match self.address {
-// TransportAddress::Local   => helper.return_address,
-// TransportAddress::UDP(_)  => &self.address,
-// _ => return Err(SerError::custom("Address does not support serialization"))
-// })?;
-// sv.serialize_field("lifetime", &self.lifetime ) ?;
-// sv.end()
-// }
-// }
-// impl StatefulSerialize for SlabPresence {
-// fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
-// where S: Serializer
-// {
-// let mut sv = serializer.serialize_struct("SlabPresence", 3)?;
-// sv.serialize_field("slab_id",  &self.slab_id)?;
-//
-// sv.serialize_field("address", match self.address {
-// TransportAddress::Local   => helper.return_address,
-// TransportAddress::UDP(_)  => &self.address,
-// _ => return Err(SerError::custom("Address does not support serialization"))
-// })?;
-// sv.serialize_field("lifetime", &self.lifetime ) ?;
-// sv.end()
-// }
-// }
-
 impl StatefulSerialize for SlabRef {
     fn serialize<S>(&self, serializer: S, helper: &SerializeHelper) -> Result<S::Ok, S::Error>
         where S: Serializer

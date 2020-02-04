@@ -55,7 +55,7 @@ impl IndexFixed {
         loop {
             // TODO: refactor this in a way that is generalizable for strings and such
             // Could just assume we're dealing with whole bytes here, but I'd rather
-            // allow for ENTITY_MAX_RELATIONS <> 256. Values like 128, 512, 1024 may not be entirely ridiculous
+            // allow for MAX_SLOTS <> 256. Values like 128, 512, 1024 may not be entirely ridiculous
             let exponent: u32 = (self.depth as u32 - 1) - tier as u32;
             let x = MAX_SLOTS.pow(exponent as u32);
             let y = ((key / (x as u64)) % MAX_SLOTS as u64) as SlotId;
@@ -158,8 +158,7 @@ impl IndexFixed {
         panic!("Sanity error");
     }
 
-    pub async fn scan_first_kv(&mut self, context: &Context, key: &str, value: &str)
-                               -> Result<Option<Head>, RetrieveError> {
+    pub async fn scan_first_kv(&mut self, context: &Context, key: &str, value: &str) -> Result<Option<Head>, RetrieveError> {
         // TODO POSTMERGE - figure out how the hell to make this work with a closure
         //
         //        // TODO - make scan_concurrent or something like that.
@@ -275,10 +274,7 @@ mod test {
         }
 
         for i in 0..500 {
-            let mut rec = index.test_get_entity_handle(&context_a, i)
-                               .await
-                               .expect("Ok")
-                               .expect("Some");
+            let mut rec = index.test_get_entity_handle(&context_a, i).await.expect("Ok").expect("Some");
             let value = rec.get_value("record number").await.expect("Ok").expect("Some");
             assert_eq!(value, i.to_string());
         }
@@ -286,9 +282,7 @@ mod test {
         // assert_eq!( context_a.is_fully_materialized(), false );
         // context_a.fully_materialize();
 
-        let maybe_head = index.scan_first_kv(&context_a, "record number", "12345")
-                              .await
-                              .expect("Ok");
+        let maybe_head = index.scan_first_kv(&context_a, "record number", "12345").await.expect("Ok");
         assert!(maybe_head.is_some(), "Index scan for record 12345");
         assert_eq!(maybe_head.unwrap()
                              .get_value(&context_a.slab, "record number")

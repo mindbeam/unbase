@@ -74,9 +74,7 @@ impl Entity {
     #[tracing::instrument(level = "info")]
     pub async fn get_value(&mut self, key: &str) -> Result<Option<String>, RetrieveError> {
         let copy = self.head.clone();
-        let applied = self.context
-                          .mut_update_record_head_for_consistency(&mut self.head)
-                          .await?;
+        let applied = self.context.mut_update_record_head_for_consistency(&mut self.head).await?;
         tracing::info!("called mut_update_record_head_for_consistency. Applied: {:?}\n\tWas {:?}\n\tNow {:?}",
                        applied,
                        copy,
@@ -86,9 +84,7 @@ impl Entity {
     }
 
     pub async fn get_edge(&mut self, key: SlotId) -> Result<Option<Entity>, RetrieveError> {
-        self.context
-            .mut_update_record_head_for_consistency(&mut self.head)
-            .await?;
+        self.context.mut_update_record_head_for_consistency(&mut self.head).await?;
 
         match self.head.get_edge(&self.context.slab, key).await? {
             Some(head) => Ok(Some(self.context.get_entity_from_head(head).await?)),
@@ -97,9 +93,7 @@ impl Entity {
     }
 
     pub async fn get_relation(&mut self, key: SlotId) -> Result<Option<Entity>, RetrieveError> {
-        self.context
-            .mut_update_record_head_for_consistency(&mut self.head)
-            .await?;
+        self.context.mut_update_record_head_for_consistency(&mut self.head).await?;
 
         match self.head.get_relation(&self.context.slab, key).await? {
             Some(rel_entity_id) => self.context.get_entity(rel_entity_id).await,
