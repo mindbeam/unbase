@@ -13,10 +13,10 @@ use crate::{
     head::Head,
     slab::{
         EdgeLink,
-        SlotId,
-        SlabHandle,
         EntityId,
         EntityType,
+        SlabHandle,
+        SlotId,
         MAX_SLOTS,
     },
 };
@@ -88,7 +88,7 @@ use crate::{
 /// assert_eq!(stash.concise_contents(), "I3>I1,_,I2");
 /// # });
 /// ```
-/// 
+///
 /// See [concise_contents](Stash::concise_contents) for a simple way to visualize the contents of the stash
 #[derive(Clone, Default)]
 pub struct Stash {
@@ -220,7 +220,7 @@ impl Stash {
 
         match apply_head.entity_id() {
             Some(EntityId { stype: EntityType::IndexNode,
-                             .. }) => {},
+                            .. }) => {},
             _ => {
                 panic!("Only EntityType::IndexNode may be applied to a context. Attempted to apply {:?}",
                        apply_head)
@@ -311,8 +311,7 @@ impl Stash {
 
     /// Create a new [`Head`](crate::head::Head) for testing purposes, and immediately add it to
     /// the context Returns a clone of the newly created + added [`Head`](crate::head::Head)
-    pub async fn add_test_head(&self, slab: &SlabHandle, entity_id: EntityId, relations: Vec<Head>)
-                               -> Head {
+    pub async fn add_test_head(&self, slab: &SlabHandle, entity_id: EntityId, relations: Vec<Head>) -> Head {
         use crate::slab::{
             EdgeSet,
             MemoBody,
@@ -433,8 +432,8 @@ impl StashInner {
 
 #[derive(Debug)]
 struct StashItem {
-    entity_id: EntityId,
-    head: Head,
+    entity_id:    EntityId,
+    head:         Head,
     relations:    Vec<Option<ItemId>>,
     edit_counter: usize,
     ref_count:    usize,
@@ -455,7 +454,7 @@ impl StashItem {
 // Tentative design for ItemGuard
 struct ItemEditGuard {
     item_id:      ItemId,
-    head: Head,
+    head:         Head,
     links:        Option<Vec<EdgeLink>>,
     did_edit:     bool,
     edit_counter: usize,
@@ -533,7 +532,7 @@ impl ItemEditGuard {
                 &EdgeLink::Occupied { slot_id,
                                       head: ref rel_head, } => {
                     if let &Head::Entity { entity_id: rel_entity_id,
-                                                   .. } = rel_head
+                                           .. } = rel_head
                     {
                         let rel_item_id = inner.assert_item(rel_entity_id);
                         inner.set_relation(self.item_id, slot_id, Some(rel_item_id));
@@ -551,8 +550,7 @@ impl ItemEditGuard {
         // IMPORTANT - because we consume self, drop will run after we return, ths calling decrement_item
         //             which is crucial for the evaluation of item removal in the case that we
         //             just set head to Head::Null (essentially the same as unsetting)
-        return Ok(Some((mem::replace(&mut self.head, Head::Null),
-                        mem::replace(&mut self.links, None).unwrap())));
+        return Ok(Some((mem::replace(&mut self.head, Head::Null), mem::replace(&mut self.links, None).unwrap())));
     }
 }
 impl Drop for ItemEditGuard {

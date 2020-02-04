@@ -13,9 +13,9 @@ use unbase::{
         simulator::Simulator,
         task::spawn_with_handle,
     },
+    Entity,
     Network,
     Slab,
-    Entity,
 };
 
 #[unbase_test_util::async_test]
@@ -32,7 +32,7 @@ async fn eventual_basic() {
     let context_b = slab_b.create_context();
 
     let mut rec_a1 = Entity::new_with_single_kv(&context_a, "animal_sound", "Moo").await
-                                                                                         .expect("Entity A1");
+                                                                                  .expect("Entity A1");
     let record_id = rec_a1.id;
 
     assert!(rec_a1.get_value("animal_sound").await.unwrap().unwrap() == "Moo",

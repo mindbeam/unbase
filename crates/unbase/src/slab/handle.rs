@@ -21,14 +21,14 @@ use crate::{
     },
     slab::{
         agent::SlabAgent,
+        EntityId,
+        EntityType,
         Memo,
         MemoBody,
         MemoId,
         MemoRef,
         SlabAnticipatedLifetime,
         SlabPresence,
-        EntityId,
-        EntityType,
     },
     Network,
 };

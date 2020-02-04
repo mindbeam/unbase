@@ -35,7 +35,7 @@
 //! // Lets say one part of the app creates a record
 //! let mut original_record =
 //!     Entity::new_with_single_kv(&context, "beast", "Tiger").await
-//!                                                                  .expect("The record creation didn't fail");
+//!                                                           .expect("The record creation didn't fail");
 //!
 //! // another part of the app happens to be looking for a Tiger record
 //! let mut record_copy = context.try_fetch_kv("beast", "Tiger")
@@ -70,16 +70,16 @@ extern crate serde_json;
 
 //#[doc(inline)]
 pub mod context;
+pub mod entity;
 pub mod error;
-pub mod index;
 pub mod head;
+pub mod index;
 pub mod network;
 pub mod slab;
-pub mod entity;
 pub mod util;
 
 pub use crate::{
+    entity::Entity,
     network::Network,
     slab::Slab,
-    entity::Entity,
 };

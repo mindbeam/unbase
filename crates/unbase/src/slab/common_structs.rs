@@ -36,14 +36,14 @@ impl<'a> core::cmp::PartialEq<&'a str> for EntityId {
 impl EntityId {
     pub fn test(test_id: u64) -> Self {
         EntityId { id:    test_id,
-                    stype: EntityType::Record, }
+                   stype: EntityType::Record, }
     }
 
     /// Create a EntityId with a EntityType of IndexNode and a manually provided id
     /// Used by the test suite
     pub fn index_test(test_id: u64) -> Self {
         EntityId { id:    test_id,
-                    stype: EntityType::IndexNode, }
+                   stype: EntityType::IndexNode, }
     }
 
     /// Human readable version of the EntityID which denotes whether the entity is an (I)ndex or a (R)ecord type
@@ -195,13 +195,8 @@ impl Deref for RelationSet {
 // Can use a sorted vec + binary search
 #[derive(Clone, Debug)]
 pub enum EdgeLink {
-    Vacant {
-        slot_id: SlotId,
-    },
-    Occupied {
-        slot_id: SlotId,
-        head: Head,
-    },
+    Vacant { slot_id: SlotId },
+    Occupied { slot_id: SlotId, head: Head },
 }
 // TODO: consider making this a Vec
 #[derive(Clone, Debug, Default)]

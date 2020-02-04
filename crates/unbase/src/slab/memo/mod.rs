@@ -22,13 +22,13 @@ use crate::{
     },
     slab::{
         EdgeSet,
+        EntityId,
+        EntityType,
         MemoPeerList,
         MemoRef,
         RelationSet,
         SlabHandle,
         SlabId,
-        EntityId,
-        EntityType,
     },
 };
 use itertools::Itertools;
@@ -51,9 +51,9 @@ impl Deref for Memo {
 
 pub struct MemoInner {
     pub id:             u64,
-    pub entity_id:     Option<EntityId>,
+    pub entity_id:      Option<EntityId>,
     pub owning_slab_id: SlabId,
-    pub parents: Head,
+    pub parents:        Head,
     pub body:           MemoBody,
 }
 

@@ -269,8 +269,7 @@ impl Network {
     /// TODO: how do we decide if we want to accept this?
     ///       do we just take any system seed that is sent to us when unseeded?
     ///       Probably good enough for Alpha, but obviously not good enough for Beta
-    pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &Head,
-                                 resident_slabref: &SlabRef)
+    pub fn apply_root_index_seed(&self, _presence: &SlabPresence, root_index_seed: &Head, resident_slabref: &SlabRef)
                                  -> bool {
         {
             if let Some(_) = *self.root_index_seed.read().unwrap() {

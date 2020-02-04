@@ -6,8 +6,8 @@ use crate::{
     },
     head::Head,
     slab::{
-        SlotId,
         EntityId,
+        SlotId,
         MAX_SLOTS,
     },
 };
@@ -20,7 +20,7 @@ use std::{
 use tracing::debug;
 
 pub struct IndexFixed {
-    root: Head,
+    root:  Head,
     depth: u8,
 }
 
@@ -35,8 +35,7 @@ impl IndexFixed {
     }
 
     pub fn new_from_head(depth: u8, head: Head) -> IndexFixed {
-        Self { root: head,
-               depth }
+        Self { root: head, depth }
     }
 
     pub fn get_root_entity_id(&self) -> EntityId {
@@ -111,9 +110,8 @@ impl IndexFixed {
     /// Convenience method for the test suite
     #[doc(hidden)]
     #[cfg(test)]
-    pub(crate) async fn test_get_entity_handle(
-        &self, context: &Context, key: u64)
-        -> Result<Option<crate::entity::Entity>, RetrieveError> {
+    pub(crate) async fn test_get_entity_handle(&self, context: &Context, key: u64)
+                                               -> Result<Option<crate::entity::Entity>, RetrieveError> {
         match self.get(context, key).await? {
             Some(head) => {
                 let entity = context.get_entity_from_head(head).await?;
@@ -242,9 +240,9 @@ mod test {
     use crate::{
         index::IndexFixed,
         util::simulator::Simulator,
+        Entity,
         Network,
         Slab,
-        Entity,
     };
 
     #[unbase_test_util::async_test]
@@ -262,7 +260,7 @@ mod test {
         // First lets do a single index test
         let i = 12345;
         let record = Entity::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await
-                                                                                                      .unwrap();
+                                                                                               .unwrap();
         index.insert(&context_a, i, record.head.clone()).await.unwrap();
 
         let mut record2 = index.test_get_entity_handle(&context_a, 12345).await.unwrap().unwrap();
@@ -272,7 +270,7 @@ mod test {
         // Ok, now lets torture it a little
         for i in 0..500 {
             let record = Entity::new_with_single_kv(&context_a, "record number", &format!("{}", i)).await
-                                                                                                          .unwrap();
+                                                                                                   .unwrap();
             index.insert(&context_a, i, record.head.clone()).await.unwrap();
         }
 

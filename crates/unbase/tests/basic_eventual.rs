@@ -3,9 +3,9 @@
 use unbase::{
     error::RetrieveError,
     util::simulator::Simulator,
+    Entity,
     Network,
     Slab,
-    Entity,
 };
 
 use tracing::debug;
@@ -66,7 +66,11 @@ async fn basic_eventual() {
     //        panic!("sanity error - uninitialized context");
     //    };
 
-    assert!(context_b.get_entity_by_id(record_id).await.expect("query succeeded").is_none(), "new entity should not yet have conveyed to slab B");
+    assert!(context_b.get_entity_by_id(record_id)
+                     .await
+                     .expect("query succeeded")
+                     .is_none(),
+            "new entity should not yet have conveyed to slab B");
     assert!(context_c.get_entity_by_id(record_id)
                      .await
                      .expect("query succeeded")

@@ -6,9 +6,9 @@ use std::time::Duration;
 use timer::Delay;
 use unbase::{
     network::transport::TransportUDP,
+    Entity,
     Network,
     Slab,
-    Entity,
 };
 
 use tracing::info;
@@ -73,7 +73,7 @@ async fn test2_node_a() {
     Delay::new(Duration::from_millis(150)).await;
 
     let mut beast_a = Entity::new_with_single_kv(&context_a, "beast", "Lion").await
-                                                                                    .expect("write successful");
+                                                                             .expect("write successful");
     beast_a.set_value("sound", "Grraaawrrr")
            .await
            .expect("write successful");

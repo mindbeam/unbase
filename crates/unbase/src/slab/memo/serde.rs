@@ -191,7 +191,7 @@ impl<'a> Visitor for MemoSeed<'a> {
         };
 
         let parents: Head = match visitor.visit_seed(HeadSeed { dest_slab:      self.dest_slab,
-                                                                              origin_slabref: self.origin_slabref, })?
+                                                                origin_slabref: self.origin_slabref, })?
         {
             Some(value) => value,
             None => {
@@ -385,7 +385,7 @@ impl<'a> Visitor for EdgeSetSeed<'a> {
 
         while let Some(slot) = visitor.visit_key()? {
             let head = visitor.visit_value_seed(HeadSeed { dest_slab:      self.dest_slab,
-                                                                 origin_slabref: self.origin_slabref, })?;
+                                                           origin_slabref: self.origin_slabref, })?;
             values.insert(slot, head);
         }
 
@@ -420,8 +420,7 @@ impl<'a> Visitor for MBSlabPresenceSeed<'a> {
                 'p' => presence = visitor.visit_value()?,
                 'r' => {
                     root_index_seed = Some(visitor.visit_value_seed(HeadSeed { dest_slab:      self.dest_slab,
-                                                                                      origin_slabref:
-                                                                                          self.origin_slabref, })?)
+                                                                               origin_slabref: self.origin_slabref, })?)
                 },
                 _ => {},
             }

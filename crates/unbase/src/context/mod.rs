@@ -1,25 +1,25 @@
 pub mod stash;
 
 use crate::{
+    entity::Entity,
     error::{
         InvalidHead,
         RetrieveError,
         WriteError,
     },
-    index::IndexFixed,
     head::Head,
+    index::IndexFixed,
     slab::{
         EdgeLink,
         EdgeSet,
+        EntityId,
+        EntityType,
         MemoBody,
         MemoId,
         RelationSet,
-        SlotId,
         SlabHandle,
-        EntityId,
-        EntityType,
+        SlotId,
     },
-    entity::Entity,
 };
 
 use self::stash::Stash;
@@ -153,8 +153,8 @@ impl Context {
         match root_index.get(&self, entity_id.id).await? {
             Some(s) => {
                 let sh = Entity { id:      entity_id,
-                                         head:    s,
-                                         context: self.clone(), };
+                                  head:    s,
+                                  context: self.clone(), };
 
                 Ok(Some(sh))
             },
@@ -343,13 +343,13 @@ impl Context {
         let root_index = self.root_index().await?;
 
         match root_index.get(self, entity_id.id).await? {
-            Some(head) => Ok(Some(Entity {
-                id: head.entity_id().ok_or(RetrieveError::InvalidHead(
-                    InvalidHead::MissingEntityId,
-                ))?,
-                head,
-                context: self.clone(),
-            })),
+            Some(head) => {
+                Ok(Some(Entity { id:
+                                     head.entity_id()
+                                         .ok_or(RetrieveError::InvalidHead(InvalidHead::MissingEntityId))?,
+                                 head,
+                                 context: self.clone() }))
+            },
             None => Ok(None),
         }
     }
@@ -367,7 +367,7 @@ impl Context {
 
         let apply_head = match mut_head.entity_id() {
             Some(entity_id @ EntityId { stype: EntityType::IndexNode,
-                             .. }) => self.stash.get_head(entity_id),
+                            .. }) => self.stash.get_head(entity_id),
             _ => panic!("Can only be called for EntityType::IndexNode heads"),
         };
 
@@ -389,7 +389,7 @@ impl Context {
 
         let apply_head = match mut_head.entity_id() {
             Some(entity_id @ EntityId { stype: EntityType::Record,
-                             .. }) => {
+                            .. }) => {
                 // TODO: figure out a way to noop here in the case that the EntityHead in question
                 //       was pulled against a sufficiently identical context stash state.
                 //       Perhaps stash edit increment? how can we get this to be really granular?
@@ -415,9 +415,9 @@ impl Context {
         }
 
         Ok(Entity { id: head.entity_id()
-                                   .ok_or(RetrieveError::InvalidHead(InvalidHead::MissingEntityId))?,
-                           head,
-                           context: self.clone() })
+                            .ok_or(RetrieveError::InvalidHead(InvalidHead::MissingEntityId))?,
+                    head,
+                    context: self.clone() })
     }
 }
 
@@ -434,8 +434,8 @@ mod test {
     use crate::{
         slab::{
             EdgeSet,
-            MemoBody,
             EntityId,
+            MemoBody,
         },
         Network,
         Slab,

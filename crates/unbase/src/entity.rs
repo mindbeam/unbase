@@ -7,13 +7,13 @@ use crate::{
     head::Head,
     slab::{
         EdgeSet,
+        EntityId,
+        EntityType,
         MemoBody,
         MemoId,
         RelationSet,
-        SlotId,
         SlabHandle,
-        EntityId,
-        EntityType,
+        SlotId,
     },
 };
 
@@ -28,8 +28,8 @@ use tracing::debug;
 #[derive(Clone)]
 pub struct Entity {
     // TODO - remove the redundancy between id and head.entity_id()
-    pub id: EntityId,
-    pub(crate) head: Head,
+    pub id:             EntityId,
+    pub(crate) head:    Head,
     pub(crate) context: Context,
 }
 
@@ -54,8 +54,8 @@ impl Entity {
         context.update_indices(id, &head).await?;
 
         let handle = Entity { id,
-                                     head,
-                                     context: context.clone() };
+                              head,
+                              context: context.clone() };
 
         Ok(handle)
     }

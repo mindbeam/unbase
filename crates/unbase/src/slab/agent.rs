@@ -21,6 +21,8 @@ use crate::{
     slab::{
         state::SlabState,
         EdgeSet,
+        EntityId,
+        EntityType,
         Memo,
         MemoBody,
         MemoId,
@@ -35,8 +37,6 @@ use crate::{
         SlabId,
         SlabPresence,
         SlabRefInner,
-        EntityId,
-        EntityType,
     },
     Network,
 };
@@ -451,21 +451,21 @@ impl SlabAgent {
             Head::Null => Head::Null,
             Head::Anonymous { ref head, .. } => {
                 Head::Anonymous { owning_slab_id: self.id,
-                                         head:
-                                             head.iter()
-                                                 .map(|mr| {
-                                                     self.localize_memoref(mr, &local_from_slabref, include_memos)
-                                                 })
-                                                 .collect(), }
+                                  head:
+                                      head.iter()
+                                          .map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos))
+                                          .collect(), }
             },
-            Head::Entity { entity_id: entity_id, ref head, .. } => {
+            Head::Entity { entity_id: entity_id,
+                           ref head,
+                           .. } => {
                 Head::Entity { owning_slab_id: self.id,
-                                       entity_id:     entity_id.clone(),
-                                       head:
-                                           head.iter()
-                                               .map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos))
-                                               .collect(), }
-            }
+                               entity_id:      entity_id.clone(),
+                               head:
+                                   head.iter()
+                                       .map(|mr| self.localize_memoref(mr, &local_from_slabref, include_memos))
+                                       .collect(), }
+            },
         }
     }
 
@@ -516,8 +516,8 @@ impl SlabAgent {
     }
 
     #[tracing::instrument(skip(self), level = "debug")]
-    pub fn reconstitute_memo(&self, memo_id: MemoId, entity_id: Option<EntityId>, parents: Head,
-                             body: MemoBody, origin_slabref: &SlabRef, peerlist: &MemoPeerList)
+    pub fn reconstitute_memo(&self, memo_id: MemoId, entity_id: Option<EntityId>, parents: Head, body: MemoBody,
+                             origin_slabref: &SlabRef, peerlist: &MemoPeerList)
                              -> (Memo, MemoRef, bool) {
         debug!("SlabAgent({})::reconstitute_memo({:?})", self.id, body);
 
@@ -530,8 +530,7 @@ impl SlabAgent {
                                          parents,
                                          body });
 
-        let (memoref, had_memoref) =
-            self.assert_memoref(memo.id, memo.entity_id, peerlist.clone(), Some(memo.clone()));
+        let (memoref, had_memoref) = self.assert_memoref(memo.id, memo.entity_id, peerlist.clone(), Some(memo.clone()));
 
         {
             let mut state = self.state.write().unwrap();

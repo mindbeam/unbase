@@ -8,17 +8,17 @@ use crate::{
     slab::{
         EdgeLink,
         EdgeSet,
+        EntityId,
+        EntityType,
         Memo,
         MemoBody,
         MemoId,
         MemoRef,
         RelationSet,
-        SlotId,
         SlabHandle,
         SlabId,
         SlabRef,
-        EntityId,
-        EntityType,
+        SlotId,
         MAX_SLOTS,
     },
 };
@@ -66,7 +66,7 @@ pub enum Head {
     Null,
     Entity {
         owning_slab_id: SlabId,
-        entity_id: EntityId,
+        entity_id:      EntityId,
         head:           Vec<MemoRef>,
     },
     Anonymous {
@@ -77,8 +77,8 @@ pub enum Head {
 
 // TODO: consider renaming to ExternalHead or something like that
 pub struct HeadWithProvenance {
-    pub head: Head,
-    pub slabref:     SlabRef,
+    pub head:    Head,
+    pub slabref: SlabRef,
 }
 
 /// Head takes &SlabHandle on all calls, because it is an agent of storage and referentiality, NOT an enforcer of
@@ -107,12 +107,11 @@ impl Head {
             Head::Null => {
                 if let Some(entity_id) = new.entity_id {
                     *self = Head::Entity { owning_slab_id: new.owning_slab_id,
-                                                   head: vec![new.clone()],
-                        entity_id: entity_id
-                    };
+                                           head:           vec![new.clone()],
+                                           entity_id, };
                 } else {
                     *self = Head::Anonymous { owning_slab_id: new.owning_slab_id,
-                                                     head:           vec![new.clone()], };
+                                              head:           vec![new.clone()], };
                 }
 
                 return Ok(true);
@@ -256,8 +255,7 @@ impl Head {
             Head::Entity { ref head, .. } | Head::Anonymous { ref head, .. } => {
                 match *other {
                     Head::Null => Ok(false),
-                    Head::Entity { head: ref other_head, .. }
-                    | Head::Anonymous { head: ref other_head, .. } => {
+                    Head::Entity { head: ref other_head, .. } | Head::Anonymous { head: ref other_head, .. } => {
                         if head.len() == 0 || other_head.len() == 0 {
                             println!("ONE IS ZERO");
                             return Ok(false); // searching for positive descendency, not merely non-ascendency
@@ -282,9 +280,7 @@ impl Head {
     pub fn memo_ids(&self) -> Vec<MemoId> {
         match *self {
             Head::Null => Vec::new(),
-            Head::Entity { ref head, .. } | Head::Anonymous { ref head, .. } => {
-                head.iter().map(|m| m.id).collect()
-            },
+            Head::Entity { ref head, .. } | Head::Anonymous { ref head, .. } => head.iter().map(|m| m.id).collect(),
         }
     }
 
@@ -421,8 +417,7 @@ impl Head {
         Err(RetrieveError::MemoLineageError)
     }
 
-    pub async fn get_relation(&mut self, slab: &SlabHandle, key: SlotId)
-                              -> Result<Option<EntityId>, RetrieveError> {
+    pub async fn get_relation(&mut self, slab: &SlabHandle, key: SlotId) -> Result<Option<EntityId>, RetrieveError> {
         // println!("# Entity({}).get_relation({})",self.id,key);
 
         let mut memostream = self.causal_memo_stream(slab.clone());
@@ -449,8 +444,7 @@ impl Head {
         Err(RetrieveError::MemoLineageError)
     }
 
-    pub async fn get_edge(&mut self, slab: &SlabHandle, key: SlotId)
-                          -> Result<Option<Head>, RetrieveError> {
+    pub async fn get_edge(&mut self, slab: &SlabHandle, key: SlotId) -> Result<Option<Head>, RetrieveError> {
         let mut memostream = self.causal_memo_stream(slab.clone());
 
         while let Some(memo) = memostream.next().await {
@@ -497,8 +491,7 @@ impl Head {
         Ok(())
     }
 
-    pub async fn set_relation(&mut self, slab: &SlabHandle, key: SlotId, relation: &Self)
-                              -> Result<(), WriteError> {
+    pub async fn set_relation(&mut self, slab: &SlabHandle, key: SlotId, relation: &Self) -> Result<(), WriteError> {
         // println!("# Entity({}).set_relation({}, {})", &self.id, key, relation.id);
         let mut relationset = RelationSet::empty();
 
@@ -689,7 +682,8 @@ impl fmt::Debug for Head {
                    .field("memos", &self.memo_summary())
                    .finish()
             },
-            Head::Entity { entity_id: ref entity_id, .. } => {
+            Head::Entity { entity_id: ref entity_id,
+                           .. } => {
                 fmt.debug_struct("Head::Entity")
                    .field("entity_id", &entity_id)
                    //                    .field("memo_refs",  head )

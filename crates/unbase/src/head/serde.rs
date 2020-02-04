@@ -2,10 +2,10 @@ use crate::{
     head::Head,
     slab::{
         memoref_serde::*,
+        EntityId,
         MemoRef,
         SlabHandle,
         SlabRef,
-        EntityId,
     },
     util::serde::{
         DeError,
@@ -35,10 +35,9 @@ impl StatefulSerialize for Head {
                 sv.serialize_field("h", &SerializeWrapper(head, helper))?;
                 sv.end()
             },
-            Head::Entity {
-                entity_id: ref entity_id,
-                                   ref head,
-                                   .. } => {
+            Head::Entity { entity_id: ref entity_id,
+                           ref head,
+                           .. } => {
                 let mut sv = serializer.serialize_struct_variant("Head", 2, "Entity", 3)?;
                 sv.serialize_field("s", &entity_id)?;
                 sv.serialize_field("h", &SerializeWrapper(&head, helper))?;
@@ -86,7 +85,7 @@ impl<'a> Visitor for HeadSeed<'a> {
             (HeadVariant::Null, variant) => variant.visit_newtype_seed(HeadNullSeed {}),
             (HeadVariant::Anonymous, variant) => {
                 variant.visit_newtype_seed(HeadAnonymousSeed { dest_slab:      self.dest_slab,
-                                                              origin_slabref: self.origin_slabref, })
+                                                               origin_slabref: self.origin_slabref, })
             },
             (HeadVariant::Entity, variant) => {
                 variant.visit_newtype_seed(HeadEntitySeed { dest_slab:      self.dest_slab,
@@ -160,7 +159,7 @@ impl<'a> Visitor for HeadAnonymousSeed<'a> {
 
         if head.is_some() {
             Ok(Head::Anonymous { owning_slab_id: self.dest_slab.my_ref.slab_id,
-                                        head:           head.unwrap(), })
+                                 head:           head.unwrap(), })
         } else {
             Err(DeError::invalid_length(0, &self))
         }
@@ -205,8 +204,8 @@ impl<'a> Visitor for HeadEntitySeed<'a> {
 
         if head.is_some() && entity_id.is_some() {
             Ok(Head::Entity { owning_slab_id: self.dest_slab.my_ref.slab_id,
-                                      head:           head.unwrap(),
-                                      entity_id:     entity_id.unwrap(), })
+                              head:           head.unwrap(),
+                              entity_id:      entity_id.unwrap(), })
         } else {
             Err(DeError::invalid_length(0, &self))
         }

@@ -4,10 +4,10 @@ use crate::{
     head::Head,
     slab::{
         EdgeSet,
+        EntityType,
         MemoBody,
         RelationSet,
         SlabHandle,
-        EntityType,
     },
 };
 

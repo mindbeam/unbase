@@ -1,8 +1,8 @@
 use unbase::{
     util::simulator::Simulator,
+    Entity,
     Network,
     Slab,
-    Entity,
 };
 
 #[unbase_test_util::async_test]

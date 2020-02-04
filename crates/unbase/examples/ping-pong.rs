@@ -8,9 +8,9 @@ use std::time::Duration;
 use timer::Delay;
 use unbase::{
     network::transport::TransportUDP,
+    Entity,
     Network,
     Slab,
-    Entity,
 };
 
 /// This example is a rudimentary interaction between two remote nodes
@@ -41,8 +41,7 @@ async fn player_one() {
     Delay::new(Duration::from_millis(700)).await;
 
     println!("A - Sending Initial Ping");
-    let mut rec_a1 = Entity::new_with_single_kv(&context_a, "action", "Ping").await
-                                                                                    .unwrap();
+    let mut rec_a1 = Entity::new_with_single_kv(&context_a, "action", "Ping").await.unwrap();
 
     let mut pings = 0;
 
