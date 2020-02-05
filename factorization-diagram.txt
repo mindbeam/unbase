@@ -18,15 +18,15 @@
                               -> Context                /               unsubscribe_channel     |
                              /   \ Arc<ContextInner>   /                           ^            |
                             /        slab ------------/                            |           / 
-   Entity           /         root_index -                                (mpsc)       /
+   Entity                  /         root_index -                                (mpsc)       /
     context --------------/          stash *      \                                 |-?Weak?-/ 
-    entity -----                                  \                                |      (mpsc)
+    head --------                                  \                                |      (mpsc)
                  \                                  ---> IndexFixed                 |      /
                   \                                        root --------------.     |     /
                    \                                                           \    |    /
                     \                                                           \   |   /
                      \                                                           v  v  v
-                      ---------------------------------------------------------> Entity
+                      --------------------------------------------------------->  Head
 
 
 * Context stash not covered in this diagram
